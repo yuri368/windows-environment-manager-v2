@@ -66,17 +66,30 @@ class VariableMatchingTests(unittest.TestCase):
         self.assertEqual(result.missing_elements, ("A", "B"))
         self.assertEqual(result.matched_elements, ())
 
-    def test_append_empty_input_has_no_elements(self):
+    def test_append_empty_input_only_matches_existing_empty_value(self):
         for mode in ("+append", "-append", "append"):
-            for current in ("", "A;B"):
+            for current, expected in (
+                ("", VariableMatchStatus.MATCH),
+                ("A;B", VariableMatchStatus.VALUE_MISMATCH),
+                (";", VariableMatchStatus.VALUE_MISMATCH),
+            ):
                 with self.subTest(mode=mode, current=current):
                     result = match_variable(spec(mode), "", state(current))
-                    self.assertIs(result.status, VariableMatchStatus.MATCH)
+                    self.assertIs(result.status, expected)
                     self.assertEqual(result.matched_elements, ())
                     self.assertEqual(result.missing_elements, ())
                     self.assertEqual(dict(result.occurrence_counts), {})
             self.assertIs(match_variable(spec(mode), "", state(exists=False)).status,
                           VariableMatchStatus.KEY_MISSING)
+
+    def test_append_empty_selection_nonempty_windows_is_partial_scheme(self):
+        for mode in ("+append", "-append", "append"):
+            with self.subTest(mode=mode):
+                variable = match_variable(spec(mode), "", state("A;B"))
+                scheme = match_scheme("App", "Default", (variable,))
+                self.assertIs(variable.status, VariableMatchStatus.VALUE_MISMATCH)
+                self.assertIs(scheme.status, SchemeStatus.PARTIAL)
+                self.assertEqual((scheme.matched_count, scheme.total_count), (0, 1))
 
     def test_append_preserves_raw_path_and_reference_semantics(self):
         pairs = ((r"%JAVA_HOME%\bin", r"D:\Java\jdk8\bin"),
