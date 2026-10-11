@@ -103,6 +103,16 @@ def match_variable(
     if windows_state.scope != spec.scope or match_key(windows_state.name) != match_key(spec.name):
         raise ValidationError("现有变量与配置的名称或作用域不一致")
     target = TargetKey.from_spec(spec)
+    # An explicitly empty selection requires an existing, explicitly empty value.
+    # Without this branch, the empty required-element set is vacuously satisfied
+    # by every nonempty Windows value.
+    if spec.mode != "replace" and selected_value == "":
+        status = (VariableMatchStatus.KEY_MISSING if not windows_state.exists else
+                  VariableMatchStatus.MATCH if windows_state.value == "" else
+                  VariableMatchStatus.VALUE_MISMATCH)
+        return VariableMatch(spec.key, target, spec.mode, status, selected_value,
+                             windows_state=windows_state)
+
     if spec.mode == "replace":
         status = (VariableMatchStatus.KEY_MISSING if not windows_state.exists else
                   VariableMatchStatus.MATCH if windows_state.value == selected_value else
