@@ -38,7 +38,7 @@ COLORS = {
 }
 
 SPACING = {"base": 4, "field": 8, "group": 12, "section": 16, "workspace": 12}
-FONT_FAMILIES = ["Microsoft YaHei UI", "Microsoft YaHei", "Segoe UI"]
+FONT_FAMILIES = ["Microsoft YaHei UI", "Microsoft YaHei", "Segoe UI", "Segoe UI Symbol"]
 TYPE = {
     "dialog_title": {"size": 18, "weight": 500},
     "workspace_title": {"size": 16, "weight": 500},
@@ -60,7 +60,7 @@ def _resolve_style(source: str) -> str:
 
 STYLE = _resolve_style("""
 QWidget {
-    color: @ink@; font-family: "Microsoft YaHei UI", "Microsoft YaHei", "Segoe UI";
+    color: @ink@; font-family: "Microsoft YaHei UI", "Microsoft YaHei", "Segoe UI", "Segoe UI Symbol";
     font-size: @body_size@px; selection-background-color: @selected@; selection-color: @ink@;
 }
 QMainWindow, QDialog { background: @canvas@; }
@@ -82,6 +82,13 @@ QLabel#badge[tone="warm"] { background: @warning_surface@; color: @warning@; }
 QLabel#activationBadge { border-radius: 3px; padding: 1px 5px; font-size: @meta_size@px; font-weight: 400; }
 QLabel#activationBadge[activation="active"] { background: @selected@; color: @accent@; }
 QLabel#activationBadge[activation="inactive"] { background: @warning_surface@; color: @warning@; }
+QLabel#matchStatus { border-radius: 3px; padding: 1px 5px; font-size: @meta_size@px; font-weight: 500; }
+QLabel#matchStatus[matching="complete"] { background: @selected@; color: @accent@; }
+QLabel#matchStatus[matching="partial"] { background: @warning_surface@; color: @warning@; }
+QLabel#matchStatus[matching="unconfigured"], QLabel#matchStatus[matching="scanning"] {
+    background: @surface_muted@; color: @secondary@;
+}
+QLabel#matchStatus[matching="error"] { background: @danger_surface@; color: @danger@; }
 QLabel#code, QLineEdit#code, QPlainTextEdit#code {
     font-family: "Cascadia Mono", "Consolas", "Microsoft YaHei UI"; font-size: 13px;
 }
@@ -94,10 +101,13 @@ QFrame#editorInspector { background: transparent; border: none; }
 QFrame#card, QFrame#panel { background: @surface@; border: 1px solid @rule@; border-radius: 8px; }
 QFrame#compactVariable { background: @surface@; border: none; border-bottom: 1px solid @rule@; border-radius: 0; }
 QFrame#variableDetails { background: @surface_muted@; border: none; border-radius: 4px; }
+QFrame#conflictItem { background: @surface@; border: 1px solid @rule@; border-radius: 6px; }
 QFrame#toolbar { background: @canvas@; border: none; }
 QFrame#footer { background: @surface@; border: none; border-top: 1px solid @rule@; }
 QFrame#banner { background: @warning_surface@; border: 1px solid @warning_rule@; border-radius: 6px; }
 QFrame#divider { background: @rule@; border: none; min-height: 1px; max-height: 1px; }
+QProgressBar#scanProgress { background: @surface_muted@; border: none; border-radius: 3px; }
+QProgressBar#scanProgress::chunk { background: @accent@; border-radius: 3px; }
 QLineEdit, QPlainTextEdit, QTextEdit, QComboBox, QSpinBox {
     background: @input@; border: 1px solid @control_border@; border-radius: 5px;
     padding: 5px 8px; color: @text@; placeholder-text-color: @secondary@;
@@ -216,7 +226,7 @@ def apply_theme(app: QApplication) -> None:
     global _fonts_loaded
     if not _fonts_loaded:
         font_directory = Path(os.environ.get("WINDIR", "C:/Windows")) / "Fonts"
-        for filename in ("segoeui.ttf", "msyh.ttc", "msyhbd.ttc", "consola.ttf"):
+        for filename in ("segoeui.ttf", "seguisym.ttf", "msyh.ttc", "msyhbd.ttc", "consola.ttf"):
             path = font_directory / filename
             if path.exists():
                 QFontDatabase.addApplicationFont(str(path))

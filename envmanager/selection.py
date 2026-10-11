@@ -28,6 +28,12 @@ class SelectionSession:
         }
         self._selections: dict[str, Selection] = {}
         self._specs: dict[str, VariableSpec] = {}
+        self._revision = 0
+
+    @property
+    def revision(self) -> int:
+        """Monotonic count of user changes to selected source/value inputs."""
+        return self._revision
 
     def _last(self, spec: VariableSpec) -> tuple[str | None, str | None]:
         if spec.key in self._successful_selections:
@@ -85,6 +91,17 @@ class SelectionSession:
             snapshot.update(choice_label=choice.label, choice_value=choice.value)
         return snapshot
 
+    def snapshot_many(self, specs: Iterable[VariableSpec]) -> dict[str, dict[str, str]]:
+        """Copy each current source/value pair without changing running drafts."""
+        return {
+            spec.key: {
+                "source": selection.source,
+                "value": selection.value,
+            }
+            for spec in specs
+            for selection in (self._selections.get(spec.key) or self._initialize(spec),)
+        }
+
     def refresh_success(self, snapshots: dict[str, dict]) -> None:
         """Refresh persisted inputs without replacing initialized running drafts."""
         self._successful_selections = {
@@ -119,10 +136,13 @@ class SelectionSession:
         available = {source: value for source, _, value in self.sources(spec)}
         if source_id not in available:
             raise ValidationError(f"来源不可用：{source_id}")
+        changed = selection.source != source_id or selection.value != available[source_id]
         if source_id == "custom" and selection.custom_draft is None:
             selection.custom_draft = selection.value
         selection.source = source_id
         selection.value = available[source_id]
+        if changed:
+            self._revision += 1
         self._check(selection, spec)
         return selection
 
@@ -137,6 +157,7 @@ class SelectionSession:
         selection.source = "custom"
         selection.value = value
         selection.custom_draft = value
+        self._revision += 1
         self._check(selection, spec)
         return selection
 

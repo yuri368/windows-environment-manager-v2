@@ -2,7 +2,12 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
+
+if TYPE_CHECKING:
+    from .removal import RemovalCandidates, RemovalRequest, SkippedRemoval
+    from .sharing import SharedConflict, SharingAnalysis
+    from .switching import BatchSwitchDraft, OldSchemeCandidates, SwitchDraft
 
 
 class ConfigError(ValueError):
@@ -141,6 +146,14 @@ class ExecutionPlan:
     history_id: str | None = None
     applications: tuple[tuple[str, str], ...] = ()
     successful_selections: dict[str, dict] = field(default_factory=dict)
+    # Optional frozen inputs extend the original apply/restore plan contract.
+    # Tuples keep removal dependencies independent of mutable UI selection data.
+    option_revision: int | None = None
+    selection_revision: int | None = None
+    frozen_options: tuple[tuple[str, str], ...] = ()
+    frozen_selections: tuple[tuple[str, str, str], ...] = ()
+    dependencies: tuple[RegistryState, ...] = ()
+    metadata: dict = field(default_factory=dict)
 
     @property
     def needs_order(self) -> bool:
@@ -159,10 +172,111 @@ class OperationResult:
     changed_count: int = 0
     errors: tuple[str, ...] = ()
     notification_error: str | None = None
+    removed_element_count: int = 0
+    kept_shared_count: int = 0
+    skipped_count: int = 0
 
     @property
     def success(self) -> bool:
         return self.status in {"success", "no_change", "notification_failed"}
+
+
+@dataclass(frozen=True)
+class RemovalDraft:
+    """Read-only removal analysis awaiting per-conflict UI decisions."""
+
+    id: str
+    request: RemovalRequest
+    candidates: RemovalCandidates
+    analysis: SharingAnalysis
+    config_digest: str
+    state_revision: int
+    option_revision: int
+    selection_revision: int
+    selected_options: tuple[tuple[str, str], ...]
+    frozen_selections: tuple[tuple[str, str, str], ...]
+    selected_values: tuple[tuple[str, str], ...]
+    states: tuple[RegistryState, ...]
+
+    @property
+    def ordinary_atoms(self):
+        return self.analysis.ordinary_atoms
+
+    @property
+    def shared_conflicts(self) -> tuple[SharedConflict, ...]:
+        return self.analysis.shared_conflicts
+
+    @property
+    def skipped(self) -> tuple[SkippedRemoval, ...]:
+        return self.candidates.skipped
+
+
+@dataclass(frozen=True)
+class SchemeSwitchDraft:
+    """Service-owned frozen switch analysis with the common UI draft contract."""
+
+    id: str
+    core: SwitchDraft
+    config_digest: str
+    state_revision: int
+    option_revision: int
+    selection_revision: int
+    selected_options: tuple[tuple[str, str], ...]
+    frozen_selections: tuple[tuple[str, str, str], ...]
+    dependencies: tuple[RegistryState, ...]
+
+    @property
+    def app(self) -> str:
+        return self.core.app
+
+    @property
+    def new_option(self) -> str:
+        return self.core.new_option
+
+    @property
+    def candidates(self) -> OldSchemeCandidates:
+        return self.core.candidates
+
+    @property
+    def old_options(self) -> tuple[str, ...]:
+        return self.core.old_options
+
+    @property
+    def ordinary_atoms(self):
+        return self.core.ordinary_atoms
+
+    @property
+    def shared_conflicts(self) -> tuple[SharedConflict, ...]:
+        return self.core.shared_conflicts
+
+    @property
+    def skipped(self) -> tuple[SkippedRemoval, ...]:
+        return self.core.skipped
+
+    @property
+    def changes(self) -> tuple[PlanChange, ...]:
+        return self.core.changes
+
+    @property
+    def needs_order(self) -> bool:
+        return any(change.calculation and change.calculation.needs_order for change in self.changes)
+
+
+@dataclass(frozen=True)
+class BatchSchemeSwitchDraft(SchemeSwitchDraft):
+    core: BatchSwitchDraft
+
+    @property
+    def applications(self) -> tuple[tuple[str, str], ...]:
+        return self.core.applications
+
+    @property
+    def candidates_by_app(self):
+        return self.core.candidates_by_app
+
+    @property
+    def old_options_by_app(self):
+        return self.core.old_options_by_app
 
 
 class EnvironmentStore(Protocol):

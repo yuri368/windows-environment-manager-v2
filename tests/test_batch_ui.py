@@ -20,7 +20,7 @@ from envmanager.models import Calculation, ExecutionPlan, PlanChange, RegistrySt
 from envmanager.persistence import StateRepository
 from envmanager.service import EnvironmentService
 from envmanager.store import MemoryStore
-from envmanager.ui import HistoryDialog, MainWindow, OrderDialog, PreviewDialog
+from envmanager.ui import HistoryDialog, MainWindow, OldSchemeDialog, OrderDialog, PreviewDialog
 
 
 CONFIG = '''
@@ -135,7 +135,10 @@ class BatchUiTests(unittest.TestCase):
             calls.append((app_options, orders))
             return confirmed if orders else original
 
-        with patch.object(self.service, "plan_batch", side_effect=planning, create=True), \
+        # Legacy adapters still expose plan_batch only; retain that compatibility
+        # while Issue #2 tests exercise the new production two-stage entrypoint.
+        with patch.object(self.service, "prepare_batch_scheme_switch", None, create=True), \
+             patch.object(self.service, "plan_batch", side_effect=planning, create=True), \
              patch.object(OrderDialog, "exec", return_value=QDialog.DialogCode.Accepted) as sorting, \
              patch.object(PreviewDialog, "exec", return_value=QDialog.DialogCode.Rejected):
             self.window._apply()
@@ -175,7 +178,8 @@ class BatchUiTests(unittest.TestCase):
             self.assertIn("冲突", "\n".join(label.text() for label in dialog.findChildren(QLabel)))
             return QDialog.DialogCode.Rejected
 
-        with patch.object(self.service, "plan_batch", return_value=plan, create=True) as planning, \
+        with patch.object(self.service, "prepare_batch_scheme_switch", None, create=True), \
+             patch.object(self.service, "plan_batch", return_value=plan, create=True) as planning, \
              patch.object(OrderDialog, "exec") as sorting, \
              patch.object(PreviewDialog, "exec", new=reject_conflict):
             self.window._apply()
@@ -304,7 +308,16 @@ class RealBatchUiTests(unittest.TestCase):
         raise AssertionError(f"Missing application: {app}")
 
     def approved_apply(self, window, sorting=None):
+        def apply_without_old_removal(dialog):
+            # Existing scenarios apply fresh requirements. The new matching
+            # workflow can disclose 0/N partial alternatives; explicitly choose
+            # the dialog's "only apply" path rather than dismissing the review.
+            self.assertFalse(dialog.required)
+            self.assertEqual(dialog.selected_options(), ())
+            return QDialog.DialogCode.Accepted
+
         with patch.object(PreviewDialog, "exec", return_value=QDialog.DialogCode.Accepted), \
+             patch.object(OldSchemeDialog, "exec", new=apply_without_old_removal), \
              patch("envmanager.ui.QMessageBox.information", return_value=None), \
              patch("envmanager.ui.QMessageBox.warning", return_value=None) as warning:
             if sorting is None:

@@ -3,12 +3,20 @@ from __future__ import annotations
 import uuid
 import json
 from copy import deepcopy
+from dataclasses import replace
 from datetime import datetime, timezone
 
+from .detection import (DetectionRequest, DetectionSnapshot, recompute_for_selection,
+                        refresh_targets, scan_all)
 from .engine import calculate_batch, validate_value
-from .models import (ConflictError, ExecutionPlan, OperationResult, PlanChange,
-                     RegistryState, ValidationError, match_key)
+from .matching import TargetKey
+from .models import (BatchSchemeSwitchDraft, ConflictError, ExecutionPlan, OperationResult, PlanChange,
+                     RegistryState, RemovalDraft, SchemeSwitchDraft, ValidationError, match_key)
+from .removal import (RemovalKind, RemovalRequest, RemovalScope, build_removal_atoms,
+                      compose_removal, expand_sources)
 from .selection import SelectionSession
+from .sharing import ConflictDecision, classify_conflicts, protected_specs
+from .switching import finalize_switch, prepare_batch_switch, prepare_switch
 
 
 def _target(state):
@@ -38,6 +46,12 @@ class EnvironmentService:
         self._initialization_warnings = {}
         self._initialize_options(snapshot)
         self._issued_plans = {}
+        self._option_revision = 0
+        self._detection = None
+        self._detection_generation = 0
+        self._removal_drafts = {}
+        self._removal_snapshots = {}
+        self._switch_drafts = {}
 
     @staticmethod
     def _saved_selections(snapshot):
@@ -71,8 +85,12 @@ class EnvironmentService:
             raise ValidationError(f"{app}：方案不存在：{option}")
         if self._options.get(app) != option:
             self._options[app] = option
+            self._option_revision += 1
             self._initialization_warnings.pop(app, None)
             self._issued_plans.clear()
+            self._removal_drafts.clear()
+            self._removal_snapshots.clear()
+            self._switch_drafts.clear()
 
     def initialization_warning(self, app):
         return self._initialization_warnings.get(app)
@@ -87,13 +105,473 @@ class EnvironmentService:
         self.config = config
         self.selections = selections
         self._initialize_options(snapshot)
+        self._option_revision += 1
+        self._detection = None
         self._issued_plans.clear()
+        self._removal_drafts.clear()
+        self._removal_snapshots.clear()
+        self._switch_drafts.clear()
 
     def history(self):
         return self.state.history()
 
     def pending(self):
         return self.state.pending()
+
+    def _all_specs(self):
+        return tuple(spec for app in self.config.apps() for option in self.config.options(app)
+                     for spec in self.config.variables(app, option))
+
+    def _selection_inputs(self):
+        selections = self.selections.snapshot_many(self._all_specs())
+        values = {key: selection["value"] for key, selection in selections.items()}
+        frozen = tuple((key, selection["source"], selection["value"])
+                       for key, selection in selections.items())
+        return values, frozen
+
+    def detection_snapshot(self, force=False):
+        """Return one immutable generation; force refreshes current Windows data.
+
+        Editing an input reuses the raw Windows snapshot and recomputes every
+        affected scheme without another registry read. A configuration reload or
+        explicit refresh performs one read per distinct registry target.
+        """
+        values, _ = self._selection_inputs()
+        cache = self._detection
+        if force or cache is None or cache.config_digest != self.config.digest:
+            self._detection_generation += 1
+            cache = scan_all(self.config, values, self.store,
+                             generation=self._detection_generation,
+                             selection_revision=self.selections.revision)
+        elif cache.selection_revision != self.selections.revision:
+            self._detection_generation += 1
+            cache = recompute_for_selection(self.config, values, cache,
+                       generation=self._detection_generation,
+                       selection_revision=self.selections.revision)
+        self._detection = cache
+        return cache
+
+    def scan_all(self):
+        """Explicit read-only full refresh, suitable for startup/manual refresh."""
+        return self.detection_snapshot(force=True)
+
+    def prepare_detection_scan(self) -> DetectionRequest:
+        """Freeze a full-scan request on the caller thread without registry I/O."""
+        values, _ = self._selection_inputs()
+        self._detection_generation += 1
+        return DetectionRequest(self.config, values, self._detection_generation,
+                                self.selections.revision)
+
+    def run_detection_scan(self, request: DetectionRequest) -> DetectionSnapshot:
+        """Perform only the slow, read-only portion of a prepared scan."""
+        return scan_all(request.config, request.selection_values, self.store,
+                        generation=request.generation,
+                        selection_revision=request.selection_revision)
+
+    def accept_detection_scan(self, snapshot: DetectionSnapshot) -> DetectionSnapshot:
+        """Publish a worker result and reconcile edits made while it was running."""
+        if snapshot.config_digest != self.config.digest:
+            raise ConflictError("配置已变化，检测结果已失效，请重新刷新")
+        self._detection_generation = max(self._detection_generation, snapshot.generation)
+        if snapshot.selection_revision != self.selections.revision:
+            values, _ = self._selection_inputs()
+            self._detection_generation += 1
+            snapshot = recompute_for_selection(
+                self.config, values, snapshot,
+                generation=self._detection_generation,
+                selection_revision=self.selections.revision,
+            )
+        self._detection = snapshot
+        return snapshot
+
+    def _refresh_detection_after_operation(self, plan):
+        if self._detection is None or self._detection.config_digest != self.config.digest:
+            self._detection = None
+            return
+        values, _ = self._selection_inputs()
+        targets = tuple(dict.fromkeys(TargetKey(*_target(change.after))
+                                      for change in plan.changes
+                                      if TargetKey(*_target(change.after)) in self._detection.targets
+                                      or TargetKey(*_target(change.after)) in self._detection.read_errors))
+        self._detection_generation += 1
+        self._detection = refresh_targets(self.config, values, self.store, self._detection,
+                            targets, generation=self._detection_generation,
+                            selection_revision=self.selections.revision)
+
+    def _validate_frozen_inputs(self, item, snapshot):
+        if (snapshot["revision"] != item.state_revision
+                or self.config.digest != item.config_digest):
+            raise ConflictError("配置或持久化状态已改变，请重新预览")
+        if (item.option_revision is not None and self._option_revision != item.option_revision
+                or item.selection_revision is not None
+                and self.selections.revision != item.selection_revision):
+            raise ConflictError("选定方案、来源或输入已改变，请重新预览")
+        options = getattr(item, "frozen_options", getattr(item, "selected_options", ()))
+        if options and tuple(self._options.items()) != options:
+            raise ConflictError("选定方案已改变，请重新预览")
+        if item.frozen_selections and self._selection_inputs()[1] != item.frozen_selections:
+            raise ConflictError("选定来源或输入已改变，请重新预览")
+
+    def prepare_remove(self, request):
+        """Read and freeze actual matched removal objects without any writes."""
+        if self.pending():
+            raise ConflictError("存在未完成执行，请先在历史记录中检查并恢复")
+        if not isinstance(request, RemovalRequest):
+            raise ValidationError("撤销请求类型无效")
+        current = request.scope in {RemovalScope.VARIABLE, RemovalScope.SCHEME,
+                                    RemovalScope.BATCH_CURRENT}
+        options = dict(request.selected_options)
+        if current:
+            for app in request.selected_apps:
+                if app in self._options:
+                    options.setdefault(app, self.selected_option(app))
+        request = RemovalRequest(request.scope, request.selected_apps, options, request.variable_keys)
+        specs = expand_sources(self.config, request)
+        snapshot = self.state.snapshot()
+        values, frozen = self._selection_inputs()
+        detection = self.detection_snapshot(force=True)
+        states = {(target.scope, target.normalized_name): state
+                  for target, state in detection.targets.items()}
+        source_targets = {spec.target for spec in specs}
+        relevant = tuple(specs) + tuple(spec for spec in protected_specs(self.config, request.selected_apps)
+                                      if spec.target in source_targets)
+        relevant_keys = {spec.key for spec in relevant}
+        problems = [error for error in detection.errors if error.spec_key in relevant_keys]
+        if problems:
+            raise ValidationError("无法分析撤销或共享保护：" + "；".join(dict.fromkeys(
+                f"{error.app} / {error.option}：{error.message}" for error in problems)))
+        candidates = build_removal_atoms(specs, states, values)
+        analysis = classify_conflicts(self.config, request.selected_apps, candidates.atoms, states, values)
+        # Activation bookkeeping also depends on the remaining matched objects
+        # in the recorded active scheme, so those keys join the frozen inputs.
+        dependencies = set(source_targets)
+        for app in request.selected_apps:
+            active = snapshot["active"].get(app)
+            if active and active["option"] in self.config.options(app):
+                dependencies.update(spec.target for spec in self.config.variables(app, active["option"]))
+        draft = RemovalDraft(uuid.uuid4().hex, request, candidates, analysis, self.config.digest,
+                    snapshot["revision"], self._option_revision, self.selections.revision,
+                    tuple(self._options.items()), frozen, tuple(values.items()),
+                    tuple(state for target, state in states.items() if target in dependencies))
+        self._removal_drafts[draft.id] = draft
+        self._removal_snapshots[draft.id] = deepcopy(snapshot)
+        return draft
+
+    @staticmethod
+    def _atom_metadata(atom):
+        return {"atom_id": atom.atom_id, "target": list(atom.target), "kind": atom.kind.value,
+                "element_key": atom.element_key, "display_value": atom.display_value,
+                "occurrence_count": atom.occurrence_count,
+                "sources": [vars(source) for source in atom.sources]}
+
+    def _active_after_removal(self, draft, changes, snapshot, decisions):
+        active = deepcopy(snapshot["active"])
+        if not changes:
+            return active
+        states = {_target(state): state for state in draft.states}
+        states.update({_target(change.after): change.after for change in changes})
+        values = dict(draft.selected_values)
+        covered = {(source.app, source.option) for source in draft.candidates.requested_sources}
+        for app in draft.request.selected_apps:
+            activation = active.get(app)
+            if not activation or (app, activation["option"]) not in covered:
+                continue
+            if activation["option"] not in self.config.options(app):
+                continue
+            if any(decisions[conflict.atom.atom_id] == ConflictDecision.KEEP
+                   and any(source.app == app and source.option == activation["option"]
+                           for source in conflict.atom.sources)
+                   for conflict in draft.shared_conflicts):
+                continue
+            specs = self.config.variables(app, activation["option"])
+            if any(spec.target not in states for spec in specs):
+                continue  # An unreadable dependency cannot prove complete removal.
+            active_values = dict(values)
+            for effect in activation["effects"]:
+                if effect.get("record_key") in active_values:
+                    active_values[effect["record_key"]] = effect["selected_value"]
+            try:
+                remaining = build_removal_atoms(specs, states, active_values)
+            except ValidationError:
+                continue  # An invalid legacy activation is insufficient proof.
+            empty_requirements = any(spec.mode != "replace" and active_values[spec.key] == ""
+                                     and states[spec.target].exists for spec in specs)
+            if not remaining.atoms and not empty_requirements:
+                active.pop(app)
+        return active
+
+    def finalize_remove(self, draft_id, decisions=None):
+        """Compose one final change per key; unspecified shared objects stay."""
+        draft = self._removal_drafts.get(draft_id)
+        if draft is None:
+            raise ConflictError("撤销草案已失效，请重新预览")
+        snapshot = self.state.snapshot()
+        self._validate_frozen_inputs(draft, snapshot)
+        if self.pending():
+            raise ConflictError("存在未完成执行，请先恢复")
+        decisions = decisions or {}
+        states = {_target(state): state for state in draft.states}
+        changes = compose_removal(draft.ordinary_atoms, draft.shared_conflicts, decisions, states)
+        resolved = {conflict.atom.atom_id: ConflictDecision(
+                    decisions.get(conflict.atom.atom_id, ConflictDecision.KEEP))
+                    for conflict in draft.shared_conflicts}
+        removed = tuple(draft.ordinary_atoms) + tuple(conflict.atom for conflict in draft.shared_conflicts
+                      if resolved[conflict.atom.atom_id] == ConflictDecision.REMOVE)
+        metrics = {"removed_element_count": sum(atom.occurrence_count for atom in removed
+                                                if atom.kind == RemovalKind.LIST_ELEMENT),
+                   "removed_atom_count": len(removed),
+                   "removed_key_count": sum(atom.kind == RemovalKind.WHOLE_KEY for atom in removed),
+                   "kept_shared_count": sum(value == ConflictDecision.KEEP for value in resolved.values()),
+                   "skipped_count": len(draft.skipped)}
+        warnings = [f"{atom.target[0]} / {states[atom.target].name}：将删除整个环境变量"
+                    for atom in removed if atom.kind == RemovalKind.WHOLE_KEY]
+        for change in changes:
+            self.store.check_permission(change.before.scope)
+            if change.before.scope == "System":
+                warnings.append(f"{change.before.name}：操作系统级变量，需要管理员权限")
+        for conflict in draft.shared_conflicts:
+            if resolved[conflict.atom.atom_id] == ConflictDecision.REMOVE:
+                consumers = "、".join(f"{consumer.app} / {consumer.option}" for consumer in conflict.consumers)
+                warnings.append(f"{states[conflict.atom.target].name} / {conflict.atom.display_value}：撤销将影响 {consumers}")
+        metadata = {"request": {"scope": draft.request.scope.value,
+                    "selected_apps": [app for app in self.config.apps() if app in draft.request.selected_apps],
+                    "selected_options": dict(draft.request.selected_options),
+                    "variable_keys": list(draft.request.variable_keys)},
+                    "protected_applications": [
+                        {"app": app, "options": list(self.config.options(app))}
+                        for app in self.config.apps() if app not in draft.request.selected_apps],
+                    "sources": [vars(source) for source in draft.candidates.requested_sources],
+                    "atoms": [self._atom_metadata(atom) for atom in draft.candidates.atoms],
+                    "ordinary_atoms": [atom.atom_id for atom in draft.ordinary_atoms],
+                    "shared_conflicts": [{"atom_id": conflict.atom.atom_id,
+                        "consumers": [vars(consumer) for consumer in conflict.consumers],
+                        "decision": resolved[conflict.atom.atom_id].value}
+                        for conflict in draft.shared_conflicts],
+                    "decisions": {key: value.value for key, value in resolved.items()},
+                    "skipped_items": [{"source": vars(item.source), "target": list(item.target),
+                                       "reason": item.reason, "display_value": item.display_value}
+                                      for item in draft.skipped],
+                    "metrics": metrics}
+        applications = tuple((app, draft.request.selected_options.get(app, "*"))
+                             for app in self.config.apps() if app in draft.request.selected_apps)
+        app, option = applications[0]
+        return self._issue(ExecutionPlan(uuid.uuid4().hex, app, option, "remove", changes,
+                    draft.config_digest, draft.state_revision, draft.selected_values,
+                    warnings=tuple(dict.fromkeys(warnings)),
+                    active_after=self._active_after_removal(draft, changes, snapshot, resolved),
+                    applications=applications, option_revision=draft.option_revision,
+                    selection_revision=draft.selection_revision,
+                    frozen_options=draft.selected_options, frozen_selections=draft.frozen_selections,
+                    dependencies=draft.states, metadata=metadata))
+
+    def prepare_scheme_switch(self, app, new_option, old_options=None, orders=None):
+        """Freeze a live old/new scheme transition before any Windows writes.
+
+        A unique complete old match can be suggested without application
+        history. Ambiguous candidates remain an explicit caller decision, and
+        partial matches are used only when listed in old_options.
+        """
+        if self.pending():
+            raise ConflictError("存在未完成执行，请先在历史记录中检查并恢复")
+        if app not in self.config.applications or new_option not in self.config.options(app):
+            raise ValidationError("切换的应用或新方案不存在")
+        self.select_option(app, new_option)
+        snapshot = self.state.snapshot()
+        values, frozen = self._selection_inputs()
+        detection = self.detection_snapshot(force=True)
+        candidate_targets = {spec.target for option in self.config.options(app)
+                             for spec in self.config.variables(app, option)}
+        relevant = {spec.key for spec in self._all_specs()
+                    if spec.app == app or spec.target in candidate_targets}
+        errors = [error for error in detection.errors if error.spec_key in relevant]
+        if errors:
+            raise ValidationError("无法分析方案切换或共享保护：" + "；".join(dict.fromkeys(
+                f"{error.app} / {error.option}：{error.message}" for error in errors)))
+        core = prepare_switch(self.config, app, new_option, detection.targets, values,
+                              old_options=old_options, detection=detection, orders=orders)
+        dependencies = candidate_targets | {_target(change.before) for change in core.changes}
+        draft = SchemeSwitchDraft(uuid.uuid4().hex, core, self.config.digest,
+                    snapshot["revision"], self._option_revision, self.selections.revision,
+                    tuple(self._options.items()), frozen,
+                    tuple(state for target, state in core.states.items() if target in dependencies))
+        self._switch_drafts[draft.id] = draft
+        return draft
+
+    def prepare_batch_scheme_switch(self, app_options, old_options=None, orders=None):
+        """Freeze all selected applications against a single global Windows scan."""
+        if self.pending():
+            raise ConflictError("存在未完成执行，请先在历史记录中检查并恢复")
+        requested = (dict(app_options) if isinstance(app_options, dict) else
+                     {app: self.selected_option(app) for app in app_options})
+        if not requested or set(requested) - set(self.config.apps()):
+            raise ValidationError("请选择有效的应用进行方案切换")
+        for app, option in requested.items():
+            if option not in self.config.options(app):
+                raise ValidationError("切换的应用或新方案不存在")
+        for app, option in requested.items():
+            self.select_option(app, option)
+        snapshot = self.state.snapshot()
+        values, frozen = self._selection_inputs()
+        detection = self.detection_snapshot(force=True)
+        candidate_targets = {spec.target for app in requested for option in self.config.options(app)
+                             for spec in self.config.variables(app, option)}
+        relevant = {spec.key for spec in self._all_specs()
+                    if spec.app in requested or spec.target in candidate_targets}
+        errors = [error for error in detection.errors if error.spec_key in relevant]
+        if errors:
+            raise ValidationError("无法分析方案切换或共享保护：" + "；".join(dict.fromkeys(
+                f"{error.app} / {error.option}：{error.message}" for error in errors)))
+        core = prepare_batch_switch(self.config, requested, detection.targets, values,
+                                    old_options=old_options, detection=detection, orders=orders)
+        dependencies = candidate_targets | {_target(change.before) for change in core.changes}
+        draft = BatchSchemeSwitchDraft(uuid.uuid4().hex, core, self.config.digest,
+                    snapshot["revision"], self._option_revision, self.selections.revision,
+                    tuple(self._options.items()), frozen,
+                    tuple(state for target, state in core.states.items() if target in dependencies))
+        self._switch_drafts[draft.id] = draft
+        return draft
+
+    @staticmethod
+    def _switch_atom_removed(atom, after):
+        if atom.kind == RemovalKind.WHOLE_KEY:
+            return not after.exists or after.value != atom.display_value
+        keys = {match_key(item) for item in after.value.split(";")} if after.exists and after.value else set()
+        return atom.element_key not in keys
+
+    def finalize_scheme_switch(self, draft_id, decisions=None, orders=None):
+        """Turn frozen net impacts and explicit decisions into a safe final plan."""
+        return self._finalize_scheme_switch(draft_id, decisions, orders)
+
+    def finalize_batch_scheme_switch(self, draft_id, decisions=None, orders=None):
+        if not isinstance(self._switch_drafts.get(draft_id), BatchSchemeSwitchDraft):
+            raise ConflictError("批次切换草案已失效，请重新预览")
+        return self._finalize_scheme_switch(draft_id, decisions, orders)
+
+    def _finalize_scheme_switch(self, draft_id, decisions=None, orders=None):
+        draft = self._switch_drafts.get(draft_id)
+        if draft is None:
+            raise ConflictError("方案切换草案已失效，请重新预览")
+        snapshot = self.state.snapshot()
+        self._validate_frozen_inputs(draft, snapshot)
+        if self.pending():
+            raise ConflictError("存在未完成执行，请先恢复")
+        try:
+            result = finalize_switch(draft.core, decisions, orders=orders)
+        except ConflictError as exc:
+            if "新的共享冲突" in str(exc):
+                # This draft never disclosed the new consumers; existing user
+                # consent cannot authorize a newly discovered net impact.
+                self._switch_drafts.pop(draft_id, None)
+            raise
+        values = draft.core.selected_values
+        is_batch = isinstance(draft, BatchSchemeSwitchDraft)
+        applications = draft.applications if is_batch else ((draft.app, draft.new_option),)
+        old_by_app = draft.old_options_by_app if is_batch else {draft.app: draft.old_options}
+        selections = {spec.key: self.selections.snapshot(spec) for spec in draft.core.new_specs}
+        new_by_target = {}
+        for spec in draft.core.new_specs:
+            new_by_target.setdefault(spec.target, []).append(spec)
+        plan_id = uuid.uuid4().hex
+        changes, confirmed = [], []
+        effects_by_app = {app: [] for app, _ in applications}
+        warnings = list(result.warnings)
+        for change in result.changes:
+            target = _target(change.before)
+            new_specs = new_by_target.get(target, ())
+            contributions = tuple({"app": spec.app, "option": spec.option, "record_key": spec.key,
+                                   "mode": spec.mode, "selected_value": values[spec.key]}
+                                  for spec in new_specs)
+            if not new_specs:
+                contributions = tuple({"app": source.app, "option": source.option,
+                                       "record_key": source.spec_key, "mode": "remove",
+                                       "selected_value": source.selected_value,
+                                       "atom_id": atom.atom_id}
+                                      for atom in draft.core.old_atoms if atom.target == target
+                                      for source in atom.sources)
+            change = replace(change, contributions=contributions)
+            changes.append(change)
+            if change.changed:
+                self.store.check_permission(change.before.scope)
+                if change.before.scope == "System":
+                    warnings.append(f"{change.before.name}：操作系统级变量，需要管理员权限")
+                if not change.after.exists:
+                    warnings.append(f"{change.before.scope} / {change.before.name}：将删除整个环境变量")
+            if change.after.registry_type == 1 and "%" in (change.after.value or ""):
+                warnings.append(f"{change.after.name}：保留 REG_SZ，百分号引用将按原始文本保存")
+            for spec in new_specs:
+                effect = _effect(replace(change, mode=spec.mode, selected_value=values[spec.key],
+                                        record_key=spec.key))
+                effect["group_id"] = plan_id
+                effects_by_app[spec.app].append(effect)
+                selection_warning = self.selections.get(spec).warning
+                if selection_warning:
+                    warnings.append(f"{spec.app} / {spec.name}：{selection_warning}")
+                if change.calculation and not change.calculation.needs_order and change.mode == "append":
+                    confirmed.append((spec.key, tuple(change.calculation.items)))
+        for app, _ in applications:
+            initialization = self.initialization_warning(app)
+            if initialization:
+                warnings.append(f"{app}：{initialization}")
+        active_after = deepcopy(snapshot["active"])
+        for app, option in applications:
+            active_after[app] = {"option": option, "effects": effects_by_app[app]}
+        after = {_target(change.after): change.after for change in changes}
+        all_atoms = {atom.atom_id: atom for atom in draft.core.old_atoms}
+        all_atoms.update({conflict.atom.atom_id: conflict.atom for conflict in result.shared_conflicts})
+        removed_atoms = tuple(atom for atom in all_atoms.values()
+                              if atom.target in after and self._switch_atom_removed(atom, after[atom.target]))
+        ordinary = tuple(atom for atom in result.ordinary_impacts
+                         if self._switch_atom_removed(atom, after[atom.target]))
+        sources = [{"app": spec.app, "option": spec.option, "spec_key": spec.key,
+                    "mode": spec.mode, "selected_value": values[spec.key]}
+                   for app, _ in applications for option in old_by_app[app]
+                   for spec in self.config.variables(app, option)]
+        metadata = {"kind": "scheme_switch",
+                    "request": {"scope": "scheme_switch", "selected_apps": [draft.app],
+                                "selected_options": {draft.app: draft.new_option},
+                                "old_options": list(draft.old_options)},
+                    "protected_applications": [
+                        {"app": app, "options": list(self.config.options(app))}
+                        for app in self.config.apps() if app != draft.app],
+                    "old_options": list(draft.old_options), "new_option": draft.new_option,
+                    "candidates": {"complete": list(draft.candidates.complete),
+                                   "partial": list(draft.candidates.partial)},
+                    "sources": sources, "new_selections": deepcopy(selections),
+                    "atoms": [self._atom_metadata(atom) for atom in all_atoms.values()],
+                    "removed_atoms": [atom.atom_id for atom in removed_atoms],
+                    "ordinary_atoms": [atom.atom_id for atom in ordinary],
+                    "shared_conflicts": [{"atom_id": conflict.atom.atom_id,
+                        "consumers": [vars(consumer) for consumer in conflict.consumers],
+                        "decision": result.decisions[conflict.atom.atom_id].value}
+                        for conflict in result.shared_conflicts],
+                    "decisions": {key: value.value for key, value in result.decisions.items()},
+                    "skipped_items": [{"source": vars(item.source), "target": list(item.target),
+                                       "reason": item.reason, "display_value": item.display_value}
+                                      for item in result.skipped],
+                    "metrics": vars(result.metrics)}
+        if is_batch:
+            metadata.update({"kind": "batch_scheme_switch",
+                "request": {"scope": "batch_scheme_switch", "selected_apps": [app for app, _ in applications],
+                            "selected_options": dict(applications),
+                            "old_options": {app: list(old_by_app[app]) for app, _ in applications}},
+                "protected_applications": [{"app": app, "options": list(self.config.options(app))}
+                                           for app in self.config.apps() if app not in old_by_app],
+                "switches": [{"app": app, "old_options": list(old_by_app[app]), "new_option": option}
+                             for app, option in applications],
+                "candidates_by_app": {app: {"complete": list(candidate.complete),
+                                           "partial": list(candidate.partial)}
+                                      for app, candidate in draft.candidates_by_app.items()}})
+            for key in ("old_options", "new_option", "candidates"):
+                metadata.pop(key)
+        return self._issue(ExecutionPlan(plan_id, draft.app, draft.new_option,
+                    "switch" if any(old_by_app.values()) else "apply", tuple(changes),
+                    draft.config_digest, draft.state_revision,
+                    tuple((spec.key, values[spec.key]) for spec in draft.core.new_specs),
+                    tuple(confirmed), tuple(dict.fromkeys(warnings)), active_after=active_after,
+                    applications=applications, successful_selections=selections,
+                    option_revision=draft.option_revision, selection_revision=draft.selection_revision,
+                    frozen_options=draft.selected_options, frozen_selections=draft.frozen_selections,
+                    dependencies=draft.dependencies, metadata=metadata))
 
     def _issue(self, plan):
         self._issued_plans[plan.id] = deepcopy(plan)
@@ -333,10 +811,13 @@ class EnvironmentService:
             raise ConflictError("排序尚未确认或存在冲突，不能执行")
         with self.state.execution_lock():
             snapshot = self.state.snapshot()
-            if snapshot["revision"] != plan.state_revision or self.config.digest != plan.config_digest:
-                raise ConflictError("配置或持久化状态已改变，请重新预览")
+            self._validate_frozen_inputs(plan, snapshot)
             if plan.action != "recover" and self.pending():
                 raise ConflictError("存在未完成执行，请先恢复")
+            for dependency in plan.dependencies:
+                actual = self.store.read(dependency.scope, dependency.name)
+                if not actual.same_content(dependency):
+                    raise ConflictError(f"{actual.scope} / {actual.name} 的撤销或共享依赖已改变，请重新预览")
             for change in plan.changes:
                 actual = self.store.read(change.before.scope, change.before.name)
                 if not actual.same_content(change.before):
@@ -358,6 +839,16 @@ class EnvironmentService:
                   "status": "prepared", "message": "执行记录已保存，尚未写入",
                   "changes": [_effect(c) for c in plan.changes], "attempted": [], "verified": [],
                   "snapshot_before": snapshot, "warnings": list(plan.warnings)}
+            if plan.metadata:
+                op["metadata"] = deepcopy(plan.metadata)
+            if plan.frozen_selections:
+                op["frozen_selections"] = [list(item) for item in plan.frozen_selections]
+                op["frozen_options"] = [list(item) for item in plan.frozen_options]
+                op["config_digest"] = plan.config_digest
+                op["selection_revision"] = plan.selection_revision
+                op["option_revision"] = plan.option_revision
+            if plan.dependencies:
+                op["dependencies"] = [state.to_dict() for state in plan.dependencies]
             self.state.save_operation(op)  # Failure here prevents every registry write.
             self._issued_plans.pop(plan.id, None)
             mutated = False
@@ -427,10 +918,11 @@ class EnvironmentService:
                     if committed:
                         self.selections.refresh_last(durable_snapshot["last_values"])
                         self.selections.refresh_success(self._saved_selections(durable_snapshot))
+                        self._refresh_detection_after_operation(plan)
                         return OperationResult(durable_op["status"], "执行与状态均已核实提交，提交接口返回异常",
                             plan.id, sum(c.changed for c in plan.changes),
                             errors=(f"提交返回异常：{type(exc).__name__}；已核实持久化结果",),
-                            notification_error=notification_error)
+                            notification_error=notification_error, **self._result_metrics(plan))
                     if not uncommitted:
                         return OperationResult("state_commit_failed", "注册表已验证，状态提交结果无法核实；请保留状态文件并重新启动检查",
                             plan.id, sum(c.changed for c in plan.changes),
@@ -441,8 +933,16 @@ class EnvironmentService:
             committed_snapshot = self.state.snapshot()
             self.selections.refresh_last(committed_snapshot["last_values"])
             self.selections.refresh_success(self._saved_selections(committed_snapshot))
+            self._refresh_detection_after_operation(plan)
             return OperationResult(op["status"], op["message"], plan.id,
-                                   sum(c.changed for c in plan.changes), notification_error=notification_error)
+                                   sum(c.changed for c in plan.changes), notification_error=notification_error,
+                                   **self._result_metrics(plan))
+
+    @staticmethod
+    def _result_metrics(plan):
+        metrics = plan.metadata.get("metrics", {})
+        return {name: metrics.get(name, 0) for name in
+                ("removed_element_count", "kept_shared_count", "skipped_count")}
 
     def _rollback(self, plan, op, failure, mutated):
         stage = "状态提交失败" if op.get("failure_stage") == "state_commit" else "执行失败"
@@ -483,5 +983,6 @@ class EnvironmentService:
         except Exception:
             status = "state_commit_failed"
             errors.append("状态日志提交失败；重新启动后检查未完成执行")
+        self._refresh_detection_after_operation(plan)
         return OperationResult(status, op["message"], plan.id, errors=tuple(errors + incomplete),
                                notification_error=notification_error)
