@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "windows-environment-manager-v2"
+version = "2.0.0"
+description = "A Windows environment variable profile manager"
+license = {text = "GPL-3.0-only"}
+requires-python = ">=3.11"
+dependencies = ["PySide6==6.11.2", "tomlkit==0.13.3"]
+
+[tool.setuptools.packages.find]
+include = ["envmanager*"]
+
+[tool.setuptools.package-data]
+envmanager = ["assets/*.svg"]
