@@ -12,7 +12,14 @@ V2 是面向 Windows 10/11 的全新实现，按“应用 → 方案 → 变量�
 
 普通用户从 GitHub Release 下载 `EnvironmentManagerV2-2.0.0-windows-x64-setup.exe`，双击进入中文安装向导。程序内置 Python 和 Qt；安装后可从桌面或开始菜单打开 GUI，完成页默认勾选“立即启动”。使用正式界面时按标准 Windows UAC 提示确认管理员权限即可，无需运行命令或安装开发环境。
 
-安装版的个人配置保存在 `%LOCALAPPDATA%\EnvironmentManagerV2\config\env.toml`，首次运行从内置示例创建。请在配置编辑器中把示例路径改成实际安装路径；安装和升级不改写 Windows 环境变量，也不会覆盖个人配置。下面的 Python 环境和启动脚本说明面向源码运行及开发者。
+安装版的个人配置保存在 `%LOCALAPPDATA%\EnvironmentManagerV2\config\env.toml`，首次运行从内置示例创建。请在配置编辑器中把示例路径改成实际安装路径；安装和升级不改写 Windows 环境变量，也不会覆盖个人配置。
+
+
+
+
+
+
+下面的 Python 环境和启动脚本说明面向源码运行及开发者。
 
 - Windows 10 1809 或更新版本 / Windows 11；当前安装包为 x64
 - Python 3.11 或更新版本
