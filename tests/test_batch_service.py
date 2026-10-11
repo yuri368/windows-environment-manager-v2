@@ -62,7 +62,7 @@ PYTHON_HOME = {default_value='python',scope='User',mode='replace',editable=true}
         service, store = self.make(text, [existing("Path", "A;B;B;C", registry_type=2)])
         plan = service.plan_batch(["Back", "FrontB", "FrontA"])
         self.assertEqual(len(plan.changes), 1)
-        self.assertEqual(plan.changes[0].after.value, "X;Y;A;B;B;C;Z")
+        self.assertEqual(plan.changes[0].after.value, "X;Y;A;B;C;Z")
         self.assertEqual(len(plan.changes[0].contributions), 3)
         self.assertTrue(service.execute(plan).success)
         self.assertEqual(len(store.writes), 1)
@@ -78,7 +78,7 @@ PYTHON_HOME = {default_value='python',scope='User',mode='replace',editable=true}
 
     def test_direction_conflict_blocks_every_target(self):
         text = config(("One", "Default", {"A": record("changed"), "Path": record("X", "+append")}),
-                      ("Two", "Default", {"Path": record("x", "-append")}))
+                      ("Two", "Default", {"Path": record("X", "-append")}))
         service, store = self.make(text, [existing("A", "before"), existing("Path", "P")])
         plan = service.plan_batch(["One", "Two"])
         self.assertFalse(plan.can_execute)
@@ -101,11 +101,11 @@ PYTHON_HOME = {default_value='python',scope='User',mode='replace',editable=true}
         with self.assertRaises(ConflictError):
             service.execute(pending)
         change = pending.changes[0]
-        order = ("Y", "B", "X", "A", "B")
+        order = ("Y", "B", "X", "A", "x")
         plan = service.plan_batch(["Front", "Back", "Manual"], {change.record_key: order})
         self.assertTrue(plan.can_execute)
         self.assertTrue(service.execute(plan).success)
-        self.assertEqual(store.read("User", "Path").value, "Y;B;X;A;B")
+        self.assertEqual(store.read("User", "Path").value, "Y;B;X;A;x")
         self.assertEqual(len(store.writes), 1)
         for app in ("Front", "Back", "Manual"):
             key = service.config.variables(app, "Default")[0].key

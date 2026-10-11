@@ -117,10 +117,10 @@ class BatchUiTests(unittest.TestCase):
         self.window.select_all_button.click()
         self.assertEqual(self.window.checked_apps, {"Alpha", "Beta"})
         spec = self.service.config.variables("Alpha", "Second")[0]
-        self.service.selections.edit(spec, "   ")
+        self.service.selections.edit(spec, "A\x00B")
         self.window._select_app("Beta")
         self.assertFalse(self.window.apply_button.isEnabled())
-        self.assertEqual(self.service.selections.get(spec).value, "   ")
+        self.assertEqual(self.service.selections.get(spec).value, "A\x00B")
         self.window.clear_selection_button.click()
         self.assertTrue(self.window.apply_button.isEnabled())
 

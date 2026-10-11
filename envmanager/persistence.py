@@ -27,10 +27,28 @@ class StateRepository:
         with self._connect() as connection:
             connection.execute("CREATE TABLE IF NOT EXISTS snapshot (id INTEGER PRIMARY KEY CHECK(id=1), data TEXT NOT NULL)")
             connection.execute("CREATE TABLE IF NOT EXISTS operations (id TEXT PRIMARY KEY, data TEXT NOT NULL)")
+            connection.execute("CREATE TABLE IF NOT EXISTS preferences (key TEXT PRIMARY KEY, data TEXT NOT NULL)")
             initial = {"revision": 0, "last_values": {}, "active": {}, "orders": {},
                        "successful_applications": {}}
             connection.execute("INSERT OR IGNORE INTO snapshot VALUES (1, ?)", (self._json(initial),))
         self.snapshot()  # Reject malformed state instead of silently resetting it.
+
+    def cleanup_settings(self):
+        with self._connect() as connection:
+            row = connection.execute("SELECT data FROM preferences WHERE key='cleanup'").fetchone()
+        value = json.loads(row[0]) if row else {}
+        if (not isinstance(value, dict) or set(value) - {"trim_whitespace", "remove_empty", "deduplicate"}
+                or any(type(flag) is not bool for flag in value.values())):
+            raise ValueError("自动整理设置无效，请保留状态文件并检查")
+        return value
+
+    def set_cleanup_settings(self, value):
+        from .elements import CleanupSettings
+        from dataclasses import asdict
+        validated = asdict(CleanupSettings(**value))
+        with self._connect() as connection:
+            connection.execute("INSERT INTO preferences VALUES ('cleanup', ?) "
+                               "ON CONFLICT(key) DO UPDATE SET data=excluded.data", (self._json(validated),))
 
     @staticmethod
     def _json(value):

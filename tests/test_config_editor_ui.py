@@ -453,9 +453,9 @@ class ConfigEditorUiTests(unittest.TestCase):
                     expected = "BAD=NAME"
                 else:
                     dialog.mode_combo.setCurrentIndex(dialog.mode_combo.findData("append"))
-                    dialog.default_editor.editor.setPlainText("A;;B")
+                    dialog.default_editor.editor.setPlainText("A\x00B")
                     repair = dialog.default_editor.editor
-                    expected = "A;;B"
+                    expected = "A\x00B"
                 dialog.record_scroll.verticalScrollBar().setValue(0)
                 self.assertFalse(dialog._commit_form())
                 self.app.processEvents()

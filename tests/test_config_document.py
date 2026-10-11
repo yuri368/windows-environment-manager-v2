@@ -17,6 +17,35 @@ def spec(app="App", option="Default", name="Path", scope="User", mode="replace",
 
 
 class DocumentTests(unittest.TestCase):
+    def test_special_raw_strings_round_trip_and_consistency_is_atomic(self):
+        item = replace(spec(name="RAW", value="  A;A;B\t ",
+                            choices=(Choice("空白", " \t "), Choice("空", ""))), special=True)
+        doc = ConfigurationDocument("# preserve\n")
+        doc.put_record(item)
+        self.assertIn("special = true", doc.text)
+        self.assertEqual(doc.records("App", "Default"), (item,))
+        source = doc.text
+        with self.assertRaises(ConfigError):
+            doc.put_record(replace(item, app="Other", name="raw", special=False))
+        self.assertEqual(doc.text, source)
+        # A copy preserves the target-wide attribute; User/System remain separate.
+        doc.put_record(replace(item, app="Other", option="Copy"))
+        doc.put_record(replace(item, app="SystemApp", scope="System", special=False))
+        old = doc.records("App", "Default")[0]
+        source = doc.text
+        with self.assertRaises(ConfigError):
+            doc.put_record(replace(old, special=False), original=old)
+        self.assertEqual(doc.text, source)
+
+    def test_special_field_can_be_removed_for_an_unshared_target(self):
+        item = replace(spec(name="RAW", value=" A;B "), special=True)
+        doc = ConfigurationDocument("")
+        doc.put_record(item)
+        ordinary = replace(item, special=False)
+        doc.put_record(ordinary, original=item)
+        self.assertNotIn("special", doc.text)
+        self.assertEqual(doc.records("App", "Default"), (ordinary,))
+
     def test_blank_comment_draft_add_and_last_delete(self):
         doc = ConfigurationDocument("# keep this comment\r\n")
         self.assertEqual(doc.groups(), ())

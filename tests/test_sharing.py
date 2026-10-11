@@ -60,7 +60,7 @@ class SharingTests(unittest.TestCase):
         result = self.analyze(source, other, actual="A;B;C")
         self.assertEqual(result.shared_conflicts, ())
 
-    def test_list_removal_breaks_matching_replace_whole_value(self):
+    def test_element_removal_protects_matching_ordinary_replace_element(self):
         source = spec()
         other = spec(app="Scala", value="A;B;C", mode="replace")
         result = self.analyze(source, other)
@@ -69,21 +69,57 @@ class SharingTests(unittest.TestCase):
                          (other.app, other.option, other.key, "replace"))
         self.assertIn("replace", consumer.reason)
 
-    def test_whole_delete_protects_matching_replace_and_partial_list(self):
+    def test_ordinary_replace_protects_each_existing_shared_element(self):
         source = spec(value="A;B;C", mode="replace")
         same = spec(app="Scala", value="A;B;C", mode="replace")
         partial = spec(app="Hadoop", value="B;missing")
         unmatched = spec(app="Maven", value="missing")
         result = self.analyze(source, same, partial, unmatched)
-        self.assertEqual([c.app for c in result.shared_conflicts[0].consumers], ["Scala", "Hadoop"])
-        self.assertIn("B", result.shared_conflicts[0].consumers[1].reason)
+        self.assertEqual([c.atom.display_value for c in result.shared_conflicts], ["A", "B", "C"])
+        self.assertEqual([c.app for c in result.shared_conflicts[0].consumers], ["Scala"])
+        self.assertEqual([c.app for c in result.shared_conflicts[1].consumers], ["Scala", "Hadoop"])
+        self.assertIn("B", result.shared_conflicts[1].consumers[1].reason)
 
-    def test_whole_delete_breaks_matched_empty_append_key_existence(self):
-        source = spec(value="A;B;C", mode="replace")
+    def test_exact_empty_removal_protects_matched_empty_state(self):
+        source = spec(value="", mode="replace")
         empty = spec(app="Scala", value="")
-        result = self.analyze(source, empty)
+        result = self.analyze(source, empty, actual="")
         self.assertEqual(len(result.shared_conflicts), 1)
         self.assertIn("键存在", result.shared_conflicts[0].consumers[0].reason)
+
+    def test_empty_selection_has_no_protection_of_nonempty_windows_value(self):
+        source = spec(value="A;B;C", mode="replace")
+        result = self.analyze(source, spec(app="Scala", value=""))
+        self.assertEqual(len(result.ordinary_atoms), 3)
+        self.assertEqual(result.shared_conflicts, ())
+
+    def test_partial_ordinary_replace_protects_only_present_elements(self):
+        source = spec(value="A;C")
+        other = spec(app="Scala", value="A;B", mode="replace")
+        result = self.analyze(source, other, actual="A;C")
+        self.assertEqual([c.atom.display_value for c in result.shared_conflicts], ["A"])
+        self.assertEqual([a.display_value for a in result.ordinary_atoms], ["C"])
+
+    def test_special_whole_value_conflict_defaults_keep_and_can_remove(self):
+        source = spec(value="  A;B  ", mode="replace", special=True)
+        other = spec(app="Scala", value="  A;B  ", mode="replace", special=True)
+        result = self.analyze(source, other, actual="  A;B  ")
+        conflict = result.shared_conflicts[0]
+        states = snapshots(RegistryState("Path", "User", True, "  A;B  ", 2))
+        self.assertEqual(compose_removal((), (conflict,), {}, states), ())
+        changes = compose_removal((), (conflict,), {conflict.atom.atom_id: "remove"}, states)
+        self.assertFalse(changes[0].after.exists)
+        self.assertEqual(changes[0].before.value, "  A;B  ")
+
+    def test_cleanup_of_retained_shared_target_keeps_one_effective_copy(self):
+        source = spec(value="A")
+        other = spec(app="Scala", value="A;missing", mode="replace")
+        result = self.analyze(source, other, actual=" A ;A;;\t")
+        states = snapshots(RegistryState("Path", "User", True, " A ;A;;\t", 2))
+        changes = compose_removal((), result.shared_conflicts, {}, states)
+        self.assertEqual(changes[0].after.value, "A")
+        self.assertEqual(changes[0].contributions[0]["decision"], "keep")
+        self.assertEqual(changes[0].contributions[-1]["kind"], "cleanup")
 
     def test_each_options_own_selected_value_controls_protection(self):
         source = spec()

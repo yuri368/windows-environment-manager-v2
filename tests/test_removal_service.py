@@ -6,6 +6,7 @@ import tempfile
 import unittest
 
 from envmanager.matching import SchemeStatus
+from envmanager.elements import CleanupSettings
 from envmanager.models import ConflictError, PermissionDenied, RegistryState, ValidationError
 from envmanager.persistence import StateRepository
 from envmanager.removal import RemovalRequest, RemovalScope
@@ -44,7 +45,7 @@ class RemovalServiceTests(unittest.TestCase):
         configuration = config(("App", "Default", [("HOME", "home", "replace", "User"),
                                                       ("Path", "X;Y", "+append", "User")]))
         service, store = self.make(configuration, [raw("HOME", "home", kind=2),
-                                                   raw("Path", "BASE;x;Y;x;KEEP", kind=2)])
+                                                   raw("Path", "BASE;X;Y;X;KEEP", kind=2)])
         original_preferences = deepcopy(self.repo.snapshot())
         draft = service.prepare_remove(self.request())
         self.assertEqual(len(draft.candidates.atoms), 3)
@@ -55,7 +56,7 @@ class RemovalServiceTests(unittest.TestCase):
         result = service.execute(plan)
         self.assertTrue(result.success)
         self.assertEqual(result.changed_count, 2)
-        self.assertEqual(result.removed_element_count, 3)
+        self.assertEqual(result.removed_element_count, 4)
         self.assertFalse(store.read("User", "HOME").exists)
         self.assertEqual(store.read("User", "Path").value, "BASE;KEEP")
         self.assertEqual(store.read("User", "Path").registry_type, 2)
@@ -66,7 +67,7 @@ class RemovalServiceTests(unittest.TestCase):
         logged = self.repo.operation(result.operation_id)
         self.assertEqual(logged["action"], "remove")
         self.assertEqual(logged["metadata"]["request"]["scope"], "scheme")
-        self.assertEqual(logged["metadata"]["metrics"]["removed_element_count"], 3)
+        self.assertEqual(logged["metadata"]["metrics"]["removed_element_count"], 4)
 
     def test_partial_match_skips_wrong_replace_and_missing_element(self):
         configuration = config(("App", "Default", [("HOME", "intended", "replace", "User"),
@@ -130,17 +131,18 @@ class RemovalServiceTests(unittest.TestCase):
         self.assertEqual(result.kept_shared_count, 1)
         self.assertEqual(result.removed_element_count, 1)
 
-    def test_same_target_sources_collapsed_and_empty_list_preserves_existing_key_type(self):
+    def test_same_target_names_collapsed_but_case_sensitive_elements_remain_independent(self):
         configuration = config(("App", "One", [("Path", "X", "+append", "User")]),
                                ("App", "Two", [("PATH", "x", "-append", "User")]))
         service, store = self.make(configuration, [raw("Path", "x;X", kind=2)])
         draft = service.prepare_remove(self.request(RemovalScope.APPLICATION_ALL))
-        self.assertEqual(len(draft.candidates.atoms), 1)
-        self.assertEqual(len(draft.candidates.atoms[0].sources), 2)
+        self.assertEqual(len(draft.candidates.atoms), 2)
+        self.assertEqual([atom.element_key for atom in draft.candidates.atoms], ["X", "x"])
+        self.assertEqual([len(atom.sources) for atom in draft.candidates.atoms], [1, 1])
         result = service.execute(service.finalize_remove(draft.id))
         self.assertEqual(result.changed_count, 1)
         self.assertEqual(result.removed_element_count, 2)
-        self.assertTrue(store.read("User", "Path").same_content(raw("Path", "", kind=2)))
+        self.assertFalse(store.read("User", "Path").exists)
         self.assertEqual(len(store.writes), 1)
 
     def test_delete_empty_replace_is_true_absence_and_restore_recovers_empty(self):
@@ -225,16 +227,39 @@ class RemovalServiceTests(unittest.TestCase):
     def test_removal_history_restore_returns_true_raw_snapshot_and_preferences_unchanged(self):
         configuration = config(("App", "Default", [("HOME", "home", "replace", "User"),
                                                       ("Path", "X", "+append", "User")]))
-        service, store = self.make(configuration, [raw("HOME", "home"), raw("Path", "A;x;x;B", kind=2)])
+        original_path = " A ;X;X;;\t; B ;"
+        service, store = self.make(configuration, [raw("HOME", "home"), raw("Path", original_path, kind=2)])
         preferences = deepcopy(self.repo.snapshot())
         removed = self.remove(service, self.request())
+        self.assertEqual(store.read("User", "Path").value, "A;B")
         restored = service.execute(service.plan_restore(removed.operation_id))
         self.assertTrue(restored.success)
         self.assertTrue(store.read("User", "HOME").same_content(raw("HOME", "home")))
-        self.assertTrue(store.read("User", "Path").same_content(raw("Path", "A;x;x;B", kind=2)))
+        self.assertTrue(store.read("User", "Path").same_content(raw("Path", original_path, kind=2)))
         for key in ("last_values", "successful_applications", "orders"):
             self.assertEqual(self.repo.snapshot()[key], preferences[key])
         self.assertEqual(self.repo.operation(removed.operation_id)["status"], "restored")
+
+    def test_disabled_cleanup_removal_uses_exact_unmatched_raw_slices(self):
+        configuration = config(("App", "Default", [("Path", "B", "replace", "User")]))
+        service, store = self.make(configuration, [raw("Path", " A ;B;; C ", kind=2)])
+        service.set_cleanup_settings(CleanupSettings(False, False, False))
+        snapshot = service.detection_snapshot().schemes[("App", "Default")]
+        self.assertEqual(snapshot.variables[0].matched_elements, ("B",))
+        result = self.remove(service, self.request())
+        self.assertTrue(result.success)
+        self.assertTrue(store.read("User", "Path").same_content(raw("Path", " A ;; C ", kind=2)))
+
+    def test_partial_replace_shared_element_defaults_keep_and_unshared_remove(self):
+        configuration = config(("App", "Default", [("Path", "A;C", "replace", "User")]),
+                               ("Other", "Default", [("Path", "A;B", "replace", "User")]))
+        service, store = self.make(configuration, [raw("Path", "A;C", kind=2)])
+        draft = service.prepare_remove(self.request())
+        self.assertEqual([c.atom.display_value for c in draft.shared_conflicts], ["A"])
+        self.assertEqual([a.display_value for a in draft.ordinary_atoms], ["C"])
+        result = service.execute(service.finalize_remove(draft.id))
+        self.assertTrue(result.success)
+        self.assertTrue(store.read("User", "Path").same_content(raw("Path", "A", kind=2)))
 
     def test_partial_remove_and_kept_shared_content_retain_active_marker(self):
         configuration = config(("App", "Default", [("A", "a", "replace", "User"),
@@ -253,7 +278,7 @@ class RemovalServiceTests(unittest.TestCase):
         self.remove(service, self.request(), {draft.shared_conflicts[0].atom.atom_id: ConflictDecision.REMOVE})
         self.assertNotIn("App", self.repo.snapshot()["active"])
         self.assertEqual(self.repo.snapshot()["successful_applications"], prefs)
-        self.assertEqual(store.read("User", "Path").value, "")
+        self.assertFalse(store.read("User", "Path").exists)
 
     def test_failure_after_second_delete_rolls_back_before_states_without_preferences(self):
         configuration = config(("App", "Default", [("EARLY", "a", "replace", "User"),
@@ -277,7 +302,7 @@ class RemovalServiceTests(unittest.TestCase):
         store.denied_scopes.add("System")
         with self.assertRaises(PermissionDenied):
             service.finalize_remove(draft.id)
-        service.selections.edit(configuration.variables("Other", "Default")[0], "B;;C")
+        service.selections.edit(configuration.variables("Other", "Default")[0], "B\0C")
         with self.assertRaises(ValidationError):
             service.prepare_remove(self.request())
         self.assertEqual(store.writes, [])
@@ -311,7 +336,7 @@ class RemovalServiceTests(unittest.TestCase):
         configuration = config(("App", "Default", [("A", "a", "replace", "User")]),
                                ("Other", "Default", [("Path", "B", "+append", "User")]))
         service, store = self.make(configuration, [raw("A", "a")])
-        service.selections.edit(configuration.variables("Other", "Default")[0], "B;;C")
+        service.selections.edit(configuration.variables("Other", "Default")[0], "B\0C")
         result = self.remove(service, self.request())
         self.assertTrue(result.success)
         self.assertFalse(store.read("User", "A").exists)

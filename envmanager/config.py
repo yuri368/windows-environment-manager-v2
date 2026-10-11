@@ -13,7 +13,7 @@ from .models import Choice, Configuration, ConfigError, ConflictError, Validatio
 
 
 _REQUIRED = frozenset({"default_value", "scope", "mode", "editable"})
-_OPTIONAL = frozenset({"choices"})
+_OPTIONAL = frozenset({"choices", "special"})
 
 
 def _assignment_shapes(text: str) -> dict[tuple[str, str, str], tuple[str, int]]:
@@ -134,6 +134,7 @@ def _variable(app: str, option: str, name: str, data: object, location: str) -> 
     scope = data["scope"]
     mode = data["mode"]
     editable = data["editable"]
+    special = data.get("special", False)
     if not isinstance(default, str):
         raise ConfigError(f"{location}.default_value: 必须是字符串")
     if scope not in ("User", "System") or not isinstance(scope, str):
@@ -142,8 +143,12 @@ def _variable(app: str, option: str, name: str, data: object, location: str) -> 
         raise ConfigError(f"{location}.mode: 无效操作模式")
     if type(editable) is not bool:
         raise ConfigError(f"{location}.editable: 必须是布尔值")
+    if type(special) is not bool:
+        raise ConfigError(f"{location}.special: 必须是布尔值")
+    if special and mode != "replace":
+        raise ConfigError(f"{location}.special: 特殊变量只允许 replace 模式")
     try:
-        validate_value(default, mode)
+        validate_value(default, mode, special)
     except ValidationError as exc:
         raise ConfigError(f"{location}.default_value: {exc}") from exc
 
@@ -164,7 +169,7 @@ def _variable(app: str, option: str, name: str, data: object, location: str) -> 
             if not isinstance(value, str):
                 raise ConfigError(f"{place}.value: 必须是字符串")
             try:
-                validate_value(value, mode)
+                validate_value(value, mode, special)
             except ValidationError as exc:
                 raise ConfigError(f"{place}.value: {exc}") from exc
             if label in labels or value in values:
@@ -172,7 +177,7 @@ def _variable(app: str, option: str, name: str, data: object, location: str) -> 
             labels.add(label)
             values.add(value)
             choices.append(Choice(label, value))
-    return VariableSpec(app, option, name, scope, mode, editable, default, tuple(choices))
+    return VariableSpec(app, option, name, scope, mode, editable, default, tuple(choices), special)
 
 
 def parse_config(text: str) -> Configuration:
@@ -230,6 +235,17 @@ def parse_config(text: str) -> Configuration:
         if app in default_options and default_options[app] not in options:
             raise ConfigError(f"[{app}].default_option: 引用的默认方案 {default_options[app]!r} 不存在")
         applications[app] = options
+    targets: dict[tuple[str, str], VariableSpec] = {}
+    for options in applications.values():
+        for specs in options.values():
+            for spec in specs:
+                previous = targets.get(spec.target)
+                if previous is not None and previous.special != spec.special:
+                    raise ConfigError(
+                        f"[{spec.app}.{spec.option}].{spec.name}.special: 同一目标 "
+                        f"{spec.scope}/{spec.name} 与 [{previous.app}.{previous.option}] "
+                        "的 special 定义不一致")
+                targets.setdefault(spec.target, spec)
     return Configuration(applications, hashlib.sha256(text.encode("utf-8")).hexdigest(), default_options)
 
 

@@ -119,7 +119,7 @@ class BatchServiceReviewTests(unittest.TestCase):
         self.assertTrue(service.execute(plan).success)
         self.assertEqual([item.value for item in store.writes], ["N;BASE;M"])
 
-    def test_joint_switch_different_historical_baselines_blocks_removal(self):
+    def test_joint_switch_uses_live_elements_despite_different_historical_baselines(self):
         config = configuration(("First", "Old", {"Path": variable("X")}),
                                ("First", "New", {"Path": variable("N")}),
                                ("Second", "Old", {"Path": variable("Y")}),
@@ -131,9 +131,11 @@ class BatchServiceReviewTests(unittest.TestCase):
         before = deepcopy(self.repository.snapshot())
         write_count = len(store.writes)
         plan = service.plan_batch({"First": "New", "Second": "New"})
-        self.assertFalse(plan.can_execute)
-        with self.assertRaises(ConflictError):
-            service.execute(plan)
+        self.assertTrue(plan.can_execute)
+        self.assertEqual(plan.changes[0].after.value, "N;M;BASE")
+        self.assertEqual(plan.metadata["switches"], [
+            {"app": "First", "old_options": ["Old"], "new_option": "New"},
+            {"app": "Second", "old_options": ["Old"], "new_option": "New"}])
         self.assertEqual(len(store.writes), write_count)
         self.assertEqual(store.read("User", "Path").value, "Y;X;BASE")
         self.assertEqual(self.repository.snapshot(), before)

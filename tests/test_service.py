@@ -166,26 +166,28 @@ Path = [
         old = service.config.variables("App", "Old")[0]
         self.assertEqual(self.repo.snapshot()["last_values"][old.key], "X")
 
-    def test_switch_stops_on_external_change(self):
+    def test_switch_without_matching_old_preserves_external_snapshot_in_preview(self):
         source = config(("App", "Old", {"A": record("old")}),
                         ("App", "New", {"A": record("new")}))
         service, store = self.service(source, [existing("A", "base")])
         service.execute(service.plan("App", "Old"))
         store.write(existing("A", "external"))
         plan = service.plan("App", "New")
-        self.assertFalse(plan.can_execute)
-        with self.assertRaises(ConflictError):
-            service.execute(plan)
+        self.assertTrue(plan.can_execute)
+        self.assertEqual(plan.changes[0].before.value, "external")
+        self.assertEqual(plan.metadata["switches"][0]["old_options"], [])
         self.assertEqual(store.read("User", "A").value, "external")
 
-    def test_switch_checks_old_effect_not_in_new_option(self):
+    def test_partial_old_is_not_implicitly_removed_or_restored_from_history(self):
         source = config(("App", "Old", {"A": record("a1"), "B": record("b1")}),
                         ("App", "New", {"A": record("a2")}))
         service, store = self.service(source, [existing("A", "a0"), existing("B", "b0")])
         self.assertTrue(service.execute(service.plan("App", "Old")).success)
         store.write(existing("B", "external"))
         plan = service.plan("App", "New")
-        self.assertFalse(plan.can_execute)
+        self.assertTrue(plan.can_execute)
+        self.assertEqual(plan.metadata["switches"][0]["old_options"], [])
+        self.assertEqual(tuple(c.before.name for c in plan.changes), ("A",))
         self.assertEqual(store.read("User", "B").value, "external")
         self.assertEqual(self.repo.snapshot()["active"]["App"]["option"], "Old")
 
@@ -208,13 +210,14 @@ Path = [
         self.assertFalse(plan.can_execute)
         self.assertEqual(store.read("User", "Path").value, "Y;X;A")
 
-    def test_shared_replace_owner_blocks_append(self):
+    def test_shared_ordinary_replace_elements_allow_safe_append(self):
         source = config(("First", "Default", {"Path": record("X", "replace")}),
                         ("Second", "Default", {"Path": record("Y", "+append")}))
         service, store = self.service(source, [existing("Path", "A")])
         self.assertTrue(service.execute(service.plan("First", "Default")).success)
         plan = service.plan("Second", "Default")
-        self.assertFalse(plan.can_execute)
+        self.assertTrue(plan.can_execute)
+        self.assertEqual(plan.changes[0].after.value, "Y;X")
         self.assertEqual(store.read("User", "Path").value, "X")
 
     def test_write_mutates_then_raises_rolls_back_all_attempts(self):

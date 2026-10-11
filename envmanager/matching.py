@@ -9,6 +9,7 @@ from types import MappingProxyType
 from typing import Iterable, Mapping
 
 from .engine import validate_value
+from .elements import effective_elements, normalize_element
 from .models import RegistryState, ValidationError, VariableSpec, match_key
 from .store import validate_state
 
@@ -58,6 +59,7 @@ class VariableMatch:
     windows_state: RegistryState | None = None
     occurrence_counts: Mapping[str, int] = field(default_factory=dict)
     error: DetectionError | None = None
+    extra_elements: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "occurrence_counts",
@@ -72,6 +74,14 @@ class VariableMatch:
     @property
     def available(self) -> bool:
         return self.error is None and self.status is not None
+
+    @property
+    def complete_match(self) -> bool:
+        return self.status is VariableMatchStatus.MATCH
+
+    @property
+    def key_exists(self) -> bool:
+        return bool(self.windows_state and self.windows_state.exists)
 
 
 @dataclass(frozen=True)
@@ -92,13 +102,13 @@ class SchemeMatch:
 def match_variable(
     spec: VariableSpec, selected_value: str, windows_state: RegistryState,
 ) -> VariableMatch:
-    """Match content without writing, expanding references, or normalizing text.
+    """Normalize ordinary elements in memory; preserve raw Windows snapshots.
 
     Invalid selected inputs or unreadable registry data raise ValidationError;
     callers must represent these as detection errors rather than business states.
     Registry type is validated but does not participate in content comparison.
     """
-    validate_value(selected_value, spec.mode)
+    validate_value(selected_value, spec.mode, special=spec.special)
     validate_state(windows_state)
     if windows_state.scope != spec.scope or match_key(windows_state.name) != match_key(spec.name):
         raise ValidationError("现有变量与配置的名称或作用域不一致")
@@ -106,32 +116,39 @@ def match_variable(
     # An explicitly empty selection requires an existing, explicitly empty value.
     # Without this branch, the empty required-element set is vacuously satisfied
     # by every nonempty Windows value.
-    if spec.mode != "replace" and selected_value == "":
+    if not spec.special and not effective_elements(selected_value):
         status = (VariableMatchStatus.KEY_MISSING if not windows_state.exists else
                   VariableMatchStatus.MATCH if windows_state.value == "" else
                   VariableMatchStatus.VALUE_MISMATCH)
         return VariableMatch(spec.key, target, spec.mode, status, selected_value,
-                             windows_state=windows_state)
+                             windows_state=windows_state,
+                             extra_elements=effective_elements(windows_state.value or ""))
 
-    if spec.mode == "replace":
+    if spec.special:
         status = (VariableMatchStatus.KEY_MISSING if not windows_state.exists else
                   VariableMatchStatus.MATCH if windows_state.value == selected_value else
                   VariableMatchStatus.VALUE_MISMATCH)
         return VariableMatch(spec.key, target, spec.mode, status, selected_value,
-                             windows_state=windows_state)
+                             matched_elements=(selected_value,) if status is VariableMatchStatus.MATCH else (),
+                             missing_elements=() if status is VariableMatchStatus.MATCH else (selected_value,),
+                             windows_state=windows_state,
+                             occurrence_counts={selected_value: int(status is VariableMatchStatus.MATCH)},
+                             extra_elements=(windows_state.value,) if windows_state.exists and
+                             status is not VariableMatchStatus.MATCH else ())
 
-    # Retain the first original spelling of each selected equivalence class.
-    originals: dict[str, str] = {}
-    for item in selected_value.split(";") if selected_value else ():
-        originals.setdefault(match_key(item), item)
-    counts = (Counter(match_key(item) for item in windows_state.value.split(";"))
-              if windows_state.exists and windows_state.value else Counter())
-    matched = tuple(originals[key] for key in originals if counts[key])
-    missing = tuple(originals[key] for key in originals if not counts[key])
+    required = effective_elements(selected_value)
+    actual = effective_elements(windows_state.value or "") if windows_state.exists else ()
+    counts = (Counter(item for raw in (windows_state.value or "").split(";")
+                      if (item := normalize_element(raw))) if windows_state.exists else Counter())
+    matched = tuple(item for item in required if counts[item])
+    missing = tuple(item for item in required if not counts[item])
+    extra = tuple(item for item in actual if item not in set(required))
     status = (VariableMatchStatus.KEY_MISSING if not windows_state.exists else
-              VariableMatchStatus.ELEMENTS_PARTIAL if missing else VariableMatchStatus.MATCH)
+              VariableMatchStatus.ELEMENTS_PARTIAL if missing or (spec.mode == "replace" and extra)
+              else VariableMatchStatus.MATCH)
     return VariableMatch(spec.key, target, spec.mode, status, selected_value, matched, missing,
-                         windows_state, {originals[key]: counts[key] for key in originals})
+                         windows_state, {item: counts[item] for item in dict.fromkeys((*required, *actual))},
+                         extra_elements=extra)
 
 
 def match_scheme(app: str, option: str, variables: Iterable[VariableMatch]) -> SchemeMatch:

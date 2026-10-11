@@ -6,15 +6,16 @@ All inputs are snapshots. This module never reads or writes Windows or history.
 from __future__ import annotations
 
 import json
-from collections import Counter
 from dataclasses import dataclass, field, replace
 from enum import Enum
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Iterable, Mapping, Sequence
 
 from .engine import REG_EXPAND_SZ, REG_SZ, validate_value
+from .elements import CleanupSettings, cleanup_value, effective_elements, normalize_element
+from .matching import match_variable
 from .models import (
-    Configuration, ConflictError, PlanChange, RegistryState, ValidationError,
+    Calculation, Configuration, ConflictError, PlanChange, RegistryState, ValidationError,
     VariableSpec, match_key,
 )
 
@@ -52,6 +53,7 @@ class RemovalRequest:
 class RemovalKind(str, Enum):
     WHOLE_KEY = "whole_key"
     LIST_ELEMENT = "list_element"
+    EMPTY_VALUE = "empty_value"
 
 
 @dataclass(frozen=True)
@@ -158,20 +160,13 @@ def selected_input(spec: VariableSpec, selected_values: Mapping[str, str]) -> st
         value = selected_values[spec.key]
     except KeyError as exc:
         raise ValidationError(f"缺少变量的当前选定值：{spec.key}") from exc
-    validate_value(value, spec.mode)
+    validate_value(value, spec.mode, special=spec.special)
     return value
 
 
 def input_elements(value: str) -> tuple[str, ...]:
-    """First spelling of each case-insensitive input, with no normalization."""
-    seen: set[str] = set()
-    result: list[str] = []
-    for element in value.split(";") if value else ():
-        key = match_key(element)
-        if key not in seen:
-            seen.add(key)
-            result.append(element)
-    return tuple(result)
+    """Stable normalized, case-sensitive nonempty elements."""
+    return effective_elements(value)
 
 
 def build_removal_atoms(
@@ -179,7 +174,7 @@ def build_removal_atoms(
     states: Mapping[TargetKey, RegistryState],
     selected_values: Mapping[str, str],
 ) -> RemovalCandidates:
-    """Keep only replace equality or actual list occurrences, merging sources."""
+    """Keep actual ordinary elements, exact empty states or exact special values."""
     sources: list[RemovalSource] = []
     atoms: dict[str, RemovalAtom] = {}
     skipped: list[SkippedRemoval] = []
@@ -193,23 +188,25 @@ def build_removal_atoms(
         source = RemovalSource(spec.app, spec.option, spec.key, spec.mode, value)
         sources.append(source)
         candidates: list[RemovalAtom] = []
-        if spec.mode == "replace":
-            if not state.exists or state.value != value:
+        matched = match_variable(spec, value, state)
+        if spec.special or not input_elements(value):
+            required_value = value if spec.special else ""
+            if not state.exists or state.value != required_value:
                 skipped.append(SkippedRemoval(source, spec.target,
                                "key_missing" if not state.exists else "value_mismatch", value))
             else:
-                candidates.append(RemovalAtom(spec.target, RemovalKind.WHOLE_KEY,
-                                              None, value, (source,)))
+                candidates.append(RemovalAtom(spec.target, RemovalKind.WHOLE_KEY if spec.special
+                                              else RemovalKind.EMPTY_VALUE,
+                                              None, required_value, (source,)))
         else:
             elements = input_elements(value)
             if not elements:
                 skipped.append(SkippedRemoval(source, spec.target, "empty_input", value))
-            counts = Counter(match_key(item) for item in state.value.split(";")) if state.exists and state.value else Counter()
             for element in elements:
-                key = match_key(element)
-                if counts[key]:
+                key = element
+                if key in matched.matched_elements:
                     candidates.append(RemovalAtom(spec.target, RemovalKind.LIST_ELEMENT,
-                                                  key, element, (source,), counts[key]))
+                                                  key, element, (source,), matched.occurrence_counts[key]))
                 else:
                     skipped.append(SkippedRemoval(source, spec.target,
                                    "element_missing" if state.exists else "key_missing", element))
@@ -225,6 +222,7 @@ def compose_removal(
     shared_conflicts: Sequence[SharedConflict],
     decisions: Mapping[str, ConflictDecision | str],
     states: Mapping[TargetKey, RegistryState],
+    cleanup: CleanupSettings | None = None,
 ) -> tuple[PlanChange, ...]:
     """Compose ordinary removals and explicit shared REMOVE into one change/key.
 
@@ -257,29 +255,43 @@ def compose_removal(
     by_target: dict[TargetKey, list[RemovalAtom]] = {}
     for atom in removed.values():
         by_target.setdefault(atom.target, []).append(atom)
+    for atom in kept.values():
+        by_target.setdefault(atom.target, [])
     changes: list[PlanChange] = []
     for target, atoms in by_target.items():
         before = snapshot_state(states, target)
-        whole = any(atom.kind == RemovalKind.WHOLE_KEY for atom in atoms)
+        whole = any(atom.kind in (RemovalKind.WHOLE_KEY, RemovalKind.EMPTY_VALUE) for atom in atoms)
         retained = [atom for atom in kept.values() if atom.target == target]
         if whole and any(atom.kind == RemovalKind.LIST_ELEMENT for atom in retained):
             raise ConflictError(f"整键删除与列表元素保留互斥：{target}")
         if not before.exists:
             raise ValidationError("撤销对象对应的键已不存在，必须重新分析")
         for atom in atoms:
-            if atom.kind == RemovalKind.WHOLE_KEY:
+            if atom.kind in (RemovalKind.WHOLE_KEY, RemovalKind.EMPTY_VALUE):
                 if before.value != atom.display_value:
                     raise ValidationError("完整变量已改变，必须重新分析撤销")
-            elif atom.element_key not in {match_key(x) for x in before.value.split(";")}:
+            elif atom.element_key not in effective_elements(before.value):
                 raise ValidationError("待撤销元素已不存在，必须重新分析")
+        original = before.value.split(";")
+        uncleaned = before.value
         if whole:
             after = RegistryState(before.name, before.scope, False)
         else:
             remove_keys = {atom.element_key for atom in atoms}
-            original = before.value.split(";") if before.value else []
-            after = RegistryState(before.name, before.scope, True,
-                                  ";".join(x for x in original if match_key(x) not in remove_keys),
-                                  before.registry_type)
+            remaining = [x for x in original if normalize_element(x) not in remove_keys]
+            uncleaned = ";".join(remaining)
+            special_target = any(atom.kind == RemovalKind.WHOLE_KEY for atom in retained)
+            if atoms and not effective_elements(uncleaned):
+                after = RegistryState(before.name, before.scope, False)
+            else:
+                final = uncleaned if special_target else cleanup_value(uncleaned, cleanup)
+                after = RegistryState(before.name, before.scope, True, final, before.registry_type)
+        for atom in retained:
+            if atom.kind == RemovalKind.LIST_ELEMENT and (not after.exists or
+                    atom.element_key not in effective_elements(after.value)):
+                raise ConflictError(f"撤销结果不能丢失保留的共享元素：{target}")
+            if atom.kind in (RemovalKind.WHOLE_KEY, RemovalKind.EMPTY_VALUE) and not after.same_content(before):
+                raise ConflictError(f"撤销结果不能改变保留的共享值状态：{target}")
         contributions: list[dict] = []
         for atom in atoms + retained:
             conflict = conflicts_by_id.get(atom.atom_id)
@@ -292,5 +304,13 @@ def compose_removal(
                 "consumers": [vars(consumer) for consumer in conflict.consumers] if conflict else [],
             })
         if not before.same_content(after):
-            changes.append(PlanChange(before, after, "remove", "", contributions=tuple(contributions)))
+            cleaned = after.exists and after.value != uncleaned
+            warnings = ("已自动整理普通元素的空白、空项或重复项",) if cleaned else ()
+            if cleaned:
+                contributions.append({"kind": "cleanup", "before_value": uncleaned,
+                                      "after_value": after.value, "decision": "cleanup"})
+            calculation = Calculation(after, tuple((after.value or "").split(";")) if after.exists else (),
+                                      warnings=warnings, original_items=tuple(original))
+            changes.append(PlanChange(before, after, "remove", "", calculation=calculation,
+                                      contributions=tuple(contributions)))
     return tuple(changes)

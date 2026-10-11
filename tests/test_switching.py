@@ -11,8 +11,8 @@ from envmanager.switching import (AmbiguousOldSchemeError, finalize_switch,
                                   identify_old_options, prepare_switch)
 
 
-def spec(option="8", value="A", *, app="Java", name="Path", mode="+append", scope="User"):
-    return VariableSpec(app, option, name, scope, mode, True, value)
+def spec(option="8", value="A", *, app="Java", name="Path", mode="+append", scope="User", special=False):
+    return VariableSpec(app, option, name, scope, mode, True, value, special=special)
 
 
 def config_for(*specs):
@@ -127,7 +127,7 @@ class SwitchCompositionTests(unittest.TestCase):
         self.assertEqual(result.changes[1].after.registry_type, 2)
         self.assertEqual(result.metrics.removed_whole_key_count, 0)
 
-    def test_old_only_target_is_removed_and_empty_list_key_is_preserved(self):
+    def test_old_only_targets_are_deleted_after_last_effective_element(self):
         home = spec(name="OLD_HOME", value="old", mode="replace")
         old = spec()
         new = spec("17", "new", name="NEW_HOME", mode="replace")
@@ -137,9 +137,9 @@ class SwitchCompositionTests(unittest.TestCase):
                                                values(home, old, new)))
         by_name = {change.after.name: change.after for change in result.changes}
         self.assertFalse(by_name["OLD_HOME"].exists)
-        self.assertEqual(by_name["Path"], path(""))
+        self.assertEqual(by_name["Path"], RegistryState("Path", "User", False))
         self.assertEqual(by_name["NEW_HOME"].value, "new")
-        self.assertEqual(result.metrics.removed_whole_key_count, 1)
+        self.assertEqual(result.metrics.removed_whole_key_count, 2)
 
     def test_manual_order_uses_existing_engine_contract(self):
         old, new = spec(), spec("17", "B", mode="append")
@@ -211,7 +211,7 @@ class SwitchProtectionTests(unittest.TestCase):
         draft = prepare_switch(config_for(old, new, same, one, two, three), "Java", "17", snapshots(path()),
                                values(old, new, same, one, two, three), old_options=("8",))
         self.assertEqual(tuple((consumer.app, consumer.option) for consumer in draft.shared_conflicts[0].consumers),
-                         (("Scala", "One"), ("Scala", "Two"), ("Maven", "Three")))
+                     (("Scala", "One"), ("Maven", "Three")))
 
     def test_new_replace_cannot_discard_protected_append_without_remove(self):
         old, new = spec(), spec("17", "NewRaw", mode="replace")
@@ -225,28 +225,28 @@ class SwitchProtectionTests(unittest.TestCase):
         self.assertEqual(result.changes[0].after.value, "NewRaw")
         self.assertEqual(result.metrics.removed_element_count, 2)
 
-    def test_new_replace_cannot_overwrite_protected_exact_replace(self):
+    def test_new_replace_checks_each_protected_ordinary_replace_element(self):
         old, new = spec(), spec("17", "NewRaw", mode="replace")
         protected = spec("Exact", "A;Other", app="Scala", mode="replace")
         draft = prepare_switch(config_for(old, new, protected), "Java", "17", snapshots(path()), values(old, new, protected))
-        self.assertEqual(len(draft.shared_conflicts), 1)
-        self.assertEqual(draft.shared_conflicts[0].atom.kind.value, "whole_key")
+        self.assertEqual(tuple(c.atom.display_value for c in draft.shared_conflicts), ("A", "Other"))
+        self.assertTrue(all(c.atom.kind.value == "list_element" for c in draft.shared_conflicts))
         with self.assertRaises(ConflictError):
             finalize_switch(draft)
-        self.assertEqual(finalize_switch(draft, {draft.shared_conflicts[0].atom.atom_id: "remove"}).changes[0].after.value,
+        self.assertEqual(finalize_switch(draft, {c.atom.atom_id: "remove" for c in draft.shared_conflicts}).changes[0].after.value,
                          "NewRaw")
 
-    def test_new_append_reorder_can_break_protected_exact_replace(self):
+    def test_new_append_reorder_preserves_kept_ordinary_replace_elements(self):
         old, new = spec(value="Old"), spec("17", "Common")
         protected = spec("Exact", "Other;Common;Old", app="Scala", mode="replace")
         draft = prepare_switch(config_for(old, new, protected), "Java", "17", snapshots(path("Other;Common;Old")),
                                values(old, new, protected))
-        with self.assertRaises(ConflictError):
-            finalize_switch(draft)
+        self.assertEqual(tuple(c.atom.display_value for c in draft.shared_conflicts), ("Old",))
+        self.assertEqual(finalize_switch(draft).changes[0].after.value, "Common;Other;Old")
         result = finalize_switch(draft, {draft.shared_conflicts[0].atom.atom_id: "remove"})
         self.assertEqual(result.changes[0].after.value, "Common;Other")
 
-    def test_old_whole_delete_shared_with_append_defaults_to_keep_key(self):
+    def test_old_ordinary_replace_removes_unshared_elements_and_keeps_shared_element(self):
         old = spec(name="OLD_HOME", mode="replace", value="A;B")
         new = spec("17", "new", name="NEW_HOME", mode="replace")
         other = spec("Shared", "B", name="OLD_HOME", app="Scala")
@@ -254,8 +254,9 @@ class SwitchProtectionTests(unittest.TestCase):
                            RegistryState("NEW_HOME", "User", False))
         draft = prepare_switch(config_for(old, new, other), "Java", "17", states, values(old, new, other))
         result = finalize_switch(draft)
-        self.assertEqual(result.changes[0].after.value, "A;B")
-        self.assertFalse(result.changes[0].changed)
+        self.assertEqual(result.changes[0].after.value, "B")
+        self.assertTrue(result.changes[0].changed)
+        self.assertEqual(result.metrics.removed_element_count, 1)
         self.assertTrue(finalize_switch(draft, {draft.shared_conflicts[0].atom.atom_id: "remove"}).changes[0].changed)
 
     def test_partial_protected_append_only_protects_actual_matched_elements(self):
@@ -266,10 +267,10 @@ class SwitchProtectionTests(unittest.TestCase):
         self.assertEqual(finalize_switch(draft).changes[0].after.value, "New;A;Other")
 
     def test_shared_conflict_ids_are_stable_and_unknown_decision_rejected(self):
-        old, new, other = spec(), spec("17", "New"), spec("Shared", "a", app="Scala")
+        old, new, other = spec(), spec("17", "New"), spec("Shared", "A", app="Scala")
         config = config_for(old, new, other)
         one = prepare_switch(config, "Java", "17", snapshots(path()), values(old, new, other))
-        two = prepare_switch(config, "Java", "17", snapshots(path("a;Other")), values(old, new, other))
+        two = prepare_switch(config, "Java", "17", snapshots(path(" A ;Other")), values(old, new, other))
         self.assertEqual(one.shared_conflicts[0].atom.atom_id, two.shared_conflicts[0].atom.atom_id)
         with self.assertRaises(ValidationError):
             finalize_switch(one, {"unknown": "remove"})
@@ -288,19 +289,19 @@ class SwitchProtectionTests(unittest.TestCase):
         removed = finalize_switch(draft, {draft.shared_conflicts[0].atom.atom_id: "remove"})
         self.assertEqual(removed.changes[0].after.value, "Other")
 
-    def test_final_order_cannot_introduce_an_unconfirmed_shared_conflict(self):
+    def test_final_order_preserves_ordinary_replace_set_without_shared_conflict(self):
         old = spec(name="OLD_HOME", value="old", mode="replace")
         new = spec("17", "A", mode="append")
         other = spec("Exact", "Other;A", app="Scala", mode="replace")
         states = snapshots(path("Other;A"), RegistryState("OLD_HOME", "User", True, "old", 1))
         draft = prepare_switch(config_for(old, new, other), "Java", "17", states, values(old, new, other))
         self.assertEqual(draft.shared_conflicts, ())
-        with self.assertRaisesRegex(ConflictError, "新的共享冲突"):
-            finalize_switch(draft, orders={new.key: ("A", "Other")})
+        self.assertEqual(finalize_switch(draft, orders={new.key: ("A", "Other")}).changes[1].after.value,
+                         "A;Other")
         ordered_draft = prepare_switch(config_for(old, new, other), "Java", "17", states, values(old, new, other),
                                        orders={new.key: ("A", "Other")})
-        self.assertEqual(len(ordered_draft.shared_conflicts), 1)
-        self.assertEqual(finalize_switch(ordered_draft, {ordered_draft.shared_conflicts[0].atom.atom_id: "remove"}).changes[1].after.value,
+        self.assertEqual(ordered_draft.shared_conflicts, ())
+        self.assertEqual(finalize_switch(ordered_draft).changes[1].after.value,
                          "A;Other")
 
 

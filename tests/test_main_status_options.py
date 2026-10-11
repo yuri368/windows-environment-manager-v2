@@ -139,8 +139,10 @@ class MainStatusOptionTests(unittest.TestCase):
         self.window._select_app("Python")
         self.window.option_combo.setCurrentText("Python312")
         card = self.window.cards[0]
-        card.editor.setText("   ")
-        card.editor.textEdited.emit("   ")
+        # Ordinary edge whitespace is valid input in vNext; NUL remains
+        # invalid and exercises the same persistent validation feedback.
+        card.editor.setText("313\x00invalid")
+        card.editor.textEdited.emit("313\x00invalid")
         self.app.processEvents()
         row = self.row("Python")
         self.assertEqual(row.option_combo.currentText(), "Python312")

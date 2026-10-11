@@ -9,8 +9,8 @@ from envmanager.matching import (DetectionError, SchemeStatus, TargetKey,
 from envmanager.models import RegistryState, ValidationError, VariableSpec
 
 
-def spec(mode="replace", value="A", scope="User", name="Path"):
-    return VariableSpec("App", "Default", name, scope, mode, True, value)
+def spec(mode="replace", value="A", scope="User", name="Path", special=False):
+    return VariableSpec("App", "Default", name, scope, mode, True, value, special=special)
 
 
 def state(value="A", exists=True, kind=1, scope="User", name="Path"):
@@ -19,13 +19,25 @@ def state(value="A", exists=True, kind=1, scope="User", name="Path"):
 
 
 class VariableMatchingTests(unittest.TestCase):
-    def test_replace_is_strict_complete_string(self):
+    def test_ordinary_replace_matches_exact_effective_set(self):
         record = spec(value="A;B")
-        for current in ("a;B", "B;A", "A;B ", " A;B", "A", "A;B;C"):
+        for current in ("B;A", "A;B ", " A;B", "A;A;B;;\t"):
             with self.subTest(current=current):
                 result = match_variable(record, "A;B", state(current))
-                self.assertIs(result.status, VariableMatchStatus.VALUE_MISMATCH)
-                self.assertEqual(result.matched_elements, ())
+                self.assertIs(result.status, VariableMatchStatus.MATCH)
+                self.assertEqual(result.matched_elements, ("A", "B"))
+        for current, matched, missing, extra in (
+            ("a;B", ("B",), ("A",), ("a",)),
+            ("A", ("A",), ("B",), ()),
+            ("A;B;C", ("A", "B"), (), ("C",)),
+            ("a;b", (), ("A", "B"), ("a", "b")),
+        ):
+            with self.subTest(current=current):
+                result = match_variable(record, "A;B", state(current))
+                self.assertIs(result.status, VariableMatchStatus.ELEMENTS_PARTIAL)
+                self.assertEqual(result.matched_elements, matched)
+                self.assertEqual(result.missing_elements, missing)
+                self.assertEqual(result.extra_elements, extra)
         self.assertIs(match_variable(record, "A;B", state("A;B")).status,
                       VariableMatchStatus.MATCH)
 
@@ -43,9 +55,9 @@ class VariableMatchingTests(unittest.TestCase):
                     self.assertIs(result.status, VariableMatchStatus.MATCH)
                     self.assertEqual(result.windows_state.registry_type, kind)
 
-    def test_all_append_modes_ignore_order_and_case(self):
+    def test_all_append_modes_ignore_order_and_trim_ascii_whitespace(self):
         for mode in ("+append", "-append", "append"):
-            for current in ("Other;b;a", "b;Other;A", "a;B;Other"):
+            for current in ("Other;B;A", "B;Other; A ", "\tA;B;Other"):
                 with self.subTest(mode=mode, current=current):
                     result = match_variable(spec(mode), "A;B", state(current))
                     self.assertIs(result.status, VariableMatchStatus.MATCH)
@@ -55,15 +67,15 @@ class VariableMatchingTests(unittest.TestCase):
     def test_append_partial_progress_and_windows_duplicate_counts(self):
         result = match_variable(spec("append"), "a;A;B;b;C", state("A;a;Other;b;B;b"))
         self.assertIs(result.status, VariableMatchStatus.ELEMENTS_PARTIAL)
-        self.assertEqual(result.matched_elements, ("a", "B"))
+        self.assertEqual(result.matched_elements, ("a", "A", "B", "b"))
         self.assertEqual(result.missing_elements, ("C",))
-        self.assertEqual(dict(result.occurrence_counts), {"a": 2, "B": 3, "C": 0})
-        self.assertEqual(dict(result.duplicate_counts), {"a": 2, "B": 3})
+        self.assertEqual(dict(result.occurrence_counts), {"a": 1, "A": 1, "B": 1, "b": 2, "C": 0, "Other": 1})
+        self.assertEqual(dict(result.duplicate_counts), {"b": 2})
 
     def test_missing_append_reports_all_unique_input_elements(self):
         result = match_variable(spec("append"), "A;a;B", state(exists=False))
         self.assertIs(result.status, VariableMatchStatus.KEY_MISSING)
-        self.assertEqual(result.missing_elements, ("A", "B"))
+        self.assertEqual(result.missing_elements, ("A", "a", "B"))
         self.assertEqual(result.matched_elements, ())
 
     def test_append_empty_input_only_matches_existing_empty_value(self):
@@ -94,7 +106,7 @@ class VariableMatchingTests(unittest.TestCase):
     def test_append_preserves_raw_path_and_reference_semantics(self):
         pairs = ((r"%JAVA_HOME%\bin", r"D:\Java\jdk8\bin"),
                  (r"D:\Tools", "D:\\Tools\\"),
-                 (r"D:\Tools", "D:/Tools"), ("A", " A"), ("A", "A "))
+                 (r"D:\Tools", "D:/Tools"), ("A", "\u00a0A"), ("A", "A\u00a0"))
         for selected, current in pairs:
             with self.subTest(selected=selected, current=current):
                 result = match_variable(spec("append"), selected, state(current))
@@ -110,15 +122,31 @@ class VariableMatchingTests(unittest.TestCase):
         original = state(current)
         result = match_variable(spec("append"), "a", original)
         self.assertIs(result.status, VariableMatchStatus.MATCH)
-        self.assertEqual(result.occurrence_counts["a"], 2)
+        self.assertEqual(result.occurrence_counts["a"], 1)
         self.assertIs(result.windows_state, original)
         self.assertEqual(original.value, current)
 
     def test_invalid_selection_is_error_not_missing(self):
-        for value in (" ", "A;", ";A", "A;;B", "A; ;B", "A\0B", None):
+        for value in ("A\0B", None):
             with self.subTest(value=value):
                 with self.assertRaises(ValidationError):
                     match_variable(spec("append"), value, state(exists=False))
+
+    def test_normalized_config_lists_are_accepted(self):
+        for value in (" A;", ";A", "A;;", "A; ;A"):
+            result = match_variable(spec("append"), value, state("A"))
+            self.assertTrue(result.complete_match)
+            self.assertEqual(result.matched_elements, ("A",))
+
+    def test_special_values_are_exact_raw_strings(self):
+        for value in ("  A;B  ", "", "A;;A\t"):
+            record = spec(value=value, special=True)
+            result = match_variable(record, value, state(value))
+            self.assertTrue(result.complete_match)
+            self.assertEqual(result.matched_elements, (value,))
+            wrong = match_variable(record, value, state(value + " "))
+            self.assertIs(wrong.status, VariableMatchStatus.VALUE_MISMATCH)
+            self.assertEqual(wrong.matched_elements, ())
 
     def test_invalid_state_or_wrong_target_is_error(self):
         bad_states = (state(kind=3), state(scope="System"), state(name="OTHER"),

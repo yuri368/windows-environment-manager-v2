@@ -6,9 +6,11 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Iterable, Mapping
 
-from .models import Configuration, RegistryState, ValidationError, VariableSpec, match_key
+from .models import Configuration, RegistryState, ValidationError, VariableSpec
+from .elements import effective_elements
+from .matching import match_variable
 from .removal import (
-    RemovalAtom, RemovalKind, TargetKey, input_elements, selected_input, snapshot_state,
+    RemovalAtom, RemovalKind, TargetKey, selected_input, snapshot_state,
 )
 
 
@@ -57,30 +59,26 @@ def find_protected_consumers(
     state = snapshot_state(states, atom.target)
     if not state.exists:
         return ()
-    actual_keys = {match_key(x) for x in state.value.split(";")} if state.value else set()
     consumers: dict[str, ProtectedConsumer] = {}
     for spec in specs:
         if spec.target != atom.target:
             continue
         selected = selected_input(spec, selected_values)
+        matched = match_variable(spec, selected, state)
         reason: str | None = None
-        if spec.mode == "replace":
-            if state.value == selected:
+        if spec.special:
+            if matched.complete_match:
                 if atom.kind == RemovalKind.WHOLE_KEY:
-                    reason = "整键删除会破坏当前完全匹配的 replace 完整值"
-                elif atom.element_key in actual_keys:
-                    reason = f"删除元素 {atom.display_value!r} 会破坏当前完全匹配的 replace 完整值"
+                    reason = "整键删除会破坏当前匹配的特殊完整值"
+        elif not effective_elements(selected):
+            if matched.complete_match and atom.kind in (RemovalKind.EMPTY_VALUE, RemovalKind.WHOLE_KEY):
+                reason = "删除键会破坏已匹配的键存在且为空状态"
         else:
-            matched = tuple(x for x in input_elements(selected) if match_key(x) in actual_keys)
             if atom.kind == RemovalKind.WHOLE_KEY:
-                if matched:
-                    reason = "整键删除会移除已匹配的列表元素：" + ";".join(matched)
-                elif not selected:
-                    # Empty append still requires the key to exist; deleting it
-                    # destroys that matched requirement although it has no atom.
-                    reason = "整键删除会破坏空追加输入所要求的键存在状态"
-            elif any(match_key(x) == atom.element_key for x in matched):
-                reason = f"删除已匹配的列表元素：{atom.display_value}"
+                if matched.matched_elements:
+                    reason = "整键删除会移除已匹配的元素：" + ";".join(matched.matched_elements)
+            elif atom.kind == RemovalKind.LIST_ELEMENT and atom.element_key in matched.matched_elements:
+                reason = f"删除 {spec.mode} 已匹配的元素：{atom.display_value}"
         if reason:
             consumers[spec.key] = ProtectedConsumer(spec.app, spec.option, spec.key, spec.mode, reason)
     return tuple(consumers.values())

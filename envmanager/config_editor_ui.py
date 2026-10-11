@@ -578,6 +578,14 @@ class ConfigEditorDialog(QDialog):
         self.editable_check = QCheckBox("允许自定义输入")
         self.editable_check.toggled.connect(self._form_changed)
         layout.addWidget(self.editable_check)
+        self.special_check = QCheckBox("特殊完整值（仅 replace）")
+        self.special_check.setToolTip("完整原始字符串保留空白和分号，不拆分或整理；同一目标的全部方案必须一致。")
+        self.special_check.toggled.connect(self._form_changed)
+        special_field = QVBoxLayout()
+        special_field.setSpacing(4)
+        special_field.addWidget(self.special_check)
+        self._inspector_fields[self.special_check] = special_field
+        layout.addLayout(special_field)
         self.app_combo.setToolTip("可输入新应用名称，将当前变量移动到该应用。")
         self.option_combo.setToolTip("可输入新方案名称，将当前变量移动到该方案。")
         layout.addStretch()
@@ -893,14 +901,15 @@ class ConfigEditorDialog(QDialog):
         self.form_heading.setText(spec.name)
         self.form_context.setText(f"{spec.app} / {spec.option}")
         self._fill_form(spec.app, spec.option, spec.name, spec.scope, spec.mode,
-                        spec.editable, spec.default_value, spec.choices)
+                        spec.editable, spec.default_value, spec.choices, spec.special)
         self._resize_choices()
         self._form_base = self._form_signature()
         self.form_error.setVisible(False)
         self._syncing = False
 
     def _fill_form(self, app: str, option: str, name: str, scope: str, mode: str,
-                   editable: bool, default: str, choices: tuple[Choice, ...]) -> None:
+                   editable: bool, default: str, choices: tuple[Choice, ...],
+                   special: bool = False) -> None:
         self.app_combo.clear()
         self.app_combo.addItems(sorted({a for a, _ in (self.session.document.groups() if self.session.document else ())}))
         self.app_combo.setCurrentText(app)
@@ -910,6 +919,7 @@ class ConfigEditorDialog(QDialog):
         self.scope_combo.setCurrentIndex(self.scope_combo.findData(scope))
         self.mode_combo.setCurrentIndex(self.mode_combo.findData(mode))
         self.editable_check.setChecked(editable)
+        self.special_check.setChecked(special)
         self.default_editor.set_exact_text(default)
         self.choices.setRowCount(0)
         for choice in choices:
@@ -932,7 +942,7 @@ class ConfigEditorDialog(QDialog):
             default = ("invalid", self.default_editor.editor.toPlainText())
         return (self.app_combo.currentText(), self.option_combo.currentText(), self.name_edit.text(),
                 self.scope_combo.currentData(), self.mode_combo.currentData(), self.editable_check.isChecked(),
-                default, tuple(self._choices_data()))
+                default, tuple(self._choices_data()), self.special_check.isChecked())
 
     def _choices_data(self) -> list[tuple[str, str]]:
         result = []
@@ -980,7 +990,8 @@ class ConfigEditorDialog(QDialog):
             raise ValueError("应用、方案和变量名均不能为空")
         return VariableSpec(app, option, name, self.scope_combo.currentData(), self.mode_combo.currentData(),
                             self.editable_check.isChecked(), self.default_editor.exact_text(),
-                            tuple(Choice(label, value) for label, value in self._choices_data()))
+                            tuple(Choice(label, value) for label, value in self._choices_data()),
+                            self.special_check.isChecked())
 
     def _commit_form(self) -> bool:
         if not self._form_active:
@@ -1011,6 +1022,8 @@ class ConfigEditorDialog(QDialog):
             target = self.choices
         elif ".scope" in message:
             target = self.scope_combo
+        elif "special" in message:
+            target = self.special_check
         elif ".mode" in message:
             target = self.mode_combo
 
