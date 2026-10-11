@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import ctypes
 import os
 import sys
 import tempfile
@@ -14,6 +15,18 @@ from .service import EnvironmentService
 from .store import MemoryStore, WindowsStore
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+
+def window_is_visible(window):
+    if not window.isVisible():
+        return False
+    if sys.platform == "win32":
+        from ctypes import wintypes
+        check = ctypes.WinDLL("user32", use_last_error=True).IsWindowVisible
+        check.argtypes = [wintypes.HWND]
+        check.restype = wintypes.BOOL
+        return bool(check(int(window.winId())))
+    return True
 
 
 def resolve_config_path(requested=None, *, demo=False, readonly=False):
@@ -127,6 +140,8 @@ def main(argv=None):
             def save_screenshot():
                 nonlocal exit_code
                 try:
+                    if not window_is_visible(window):
+                        raise RuntimeError("主窗口未显示，截图验证失败")
                     output = args.screenshot.resolve()
                     output.parent.mkdir(parents=True, exist_ok=True)
                     if not window.grab().save(str(output)):

@@ -86,7 +86,9 @@ def relaunch_as_administrator(argv: list[str]) -> int:
     prefix = [] if getattr(sys, "frozen", False) else ["-m", "envmanager"]
     info.lpParameters = subprocess.list2cmdline([*prefix, *argv, ELEVATED_ARGUMENT])
     info.lpDirectory = os.getcwd()
-    info.nShow = 0  # The Python launcher is hidden; Qt shows its own GUI.
+    # SW_HIDE is inherited by Qt's first ShowWindow call and hides the GUI
+    # even after window.show(). The frozen executable/pythonw has no console.
+    info.nShow = 1  # SW_SHOWNORMAL: show the relaunched application window.
     com_initialized = initialize(None, 0x2 | 0x4) >= 0
     try:
         if not execute(ctypes.byref(info)):

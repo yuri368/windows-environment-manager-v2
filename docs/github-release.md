@@ -24,7 +24,7 @@
 
 当前安装包支持 Windows 10 1809 或更新版本和 Windows 11 x64，与 [Qt 6.11 支持平台](https://doc.qt.io/qt-6.11/supported-platforms.html) 一致。
 
-发布文件位于 `dist`：`EnvironmentManagerV2-2.0.0-windows-x64-setup.exe`、对应源码 ZIP 和两份 SHA-256 文件。源码 ZIP 使用明确的文件清单，不包含 `env.toml`、SQLite 历史库、配置备份、`.venv` 或本地 QA 截图。README 中的公开截图由示例配置和模拟存储生成。
+发布文件位于 `dist`：`EnvironmentManagerV2-2.0.1-windows-x64-setup.exe`、对应源码 ZIP 和两份 SHA-256 文件。源码 ZIP 使用明确的文件清单，不包含 `env.toml`、SQLite 历史库、配置备份、`.venv` 或本地 QA 截图。README 中的公开截图由示例配置和模拟存储生成。
 
 ## 上传仓库
 
@@ -43,7 +43,7 @@ git push -u origin main
 
 确认暂存清单只有发布所需文件。`.gitignore` 会排除个人配置和本地运行数据，但不会撤销已经跟踪的文件；如果先前提交过个人配置，应先单独检查仓库历史。
 
-随后创建 `v2.0.0` 标签和 GitHub Release，附上安装包、对应源码 ZIP 和 SHA-256 文件。在 Release 描述开头指明普通用户下载 `windows-x64-setup.exe`；源码 ZIP 用于审阅、修改与重新构建。
+随后创建 `v2.0.1` 标签和 GitHub Release，附上安装包、对应源码 ZIP 和 SHA-256 文件。在 Release 描述开头指明普通用户下载 `windows-x64-setup.exe`；源码 ZIP 用于审阅、修改与重新构建。
 
 ## 下载后的首次运行
 

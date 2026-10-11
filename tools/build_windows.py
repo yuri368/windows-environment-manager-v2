@@ -92,6 +92,7 @@ def main():
     if not args.freeze_only and (not args.iscc or not args.iscc.is_file()):
         parser.error("ISCC.exe not found.")
     metadata = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]
+    distribution_dir = ROOT / "dist" / "windows" / metadata["version"]
     build = ROOT / "build" / "windows"
     build.mkdir(parents=True, exist_ok=True)
     icon = build / "app.ico"
@@ -99,7 +100,7 @@ def main():
     command = [sys.executable, "-m", "PyInstaller", "--noconfirm", "--clean", "--onedir", "--windowed",
                "--name", "EnvironmentManagerV2", "--icon", str(icon),
                "--paths", str(ROOT), "--specpath", str(build), "--workpath", str(build / "work"),
-               "--distpath", str(ROOT / "dist" / "windows"), "--noupx",
+               "--distpath", str(distribution_dir), "--noupx",
                "--add-data", f"{ROOT / 'env.example.toml'};.",
                "--add-data", f"{ROOT / 'LICENSE'};.",
                "--add-data", f"{ROOT / 'envmanager/assets'};envmanager/assets",
@@ -107,7 +108,7 @@ def main():
                "--copy-metadata", "shiboken6", "--copy-metadata", "tomlkit",
                str(ROOT / "packaging" / "gui_entry.py")]
     subprocess.run(command, cwd=ROOT, env=build_environment(), check=True)
-    bundle = ROOT / "dist" / "windows" / "EnvironmentManagerV2"
+    bundle = distribution_dir / "EnvironmentManagerV2"
     shutil.copy2(icon, bundle / "app.ico")
     shutil.copy2(ROOT / "LICENSE", bundle / "LICENSE")
     shutil.copy2(ROOT / "THIRD_PARTY_NOTICES.md", bundle / "THIRD_PARTY_NOTICES.md")

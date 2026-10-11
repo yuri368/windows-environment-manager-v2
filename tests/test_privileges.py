@@ -143,7 +143,7 @@ class NativePrivilegeTests(unittest.TestCase):
             self.assertEqual(captured["argv"], [*arguments, privileges.ELEVATED_ARGUMENT])
             self.assertEqual(captured["cwd"], directory)
         self.assertEqual(self.info["verb"], "runas")
-        self.assertEqual(self.info["show"], 0)
+        self.assertEqual(self.info["show"], 1)
         self.assertEqual(self.info["mask"], 0x540)
         self.kernel.CloseHandle.assert_called_once_with(123)
         self.ole.CoUninitialize.assert_called_once()
@@ -166,6 +166,7 @@ class NativePrivilegeTests(unittest.TestCase):
         self.assertIn("--demo", self.info["parameters"])
         self.assertIn("配置 有空格.toml", self.info["parameters"])
         self.assertIn(privileges.ELEVATED_ARGUMENT, self.info["parameters"])
+        self.assertEqual(self.info["show"], 1)
 
     def test_wait_failure_closes_process_handle(self):
         self.shell.ShellExecuteExW.side_effect = self.successful_execute
