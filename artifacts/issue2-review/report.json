@@ -1,0 +1,36 @@
+{
+  "captures": [
+    {
+      "file": "matching-main.png",
+      "size": [
+        1190,
+        790
+      ]
+    },
+    {
+      "file": "matching-narrow.png",
+      "size": [
+        850,
+        560
+      ]
+    },
+    {
+      "file": "shared-conflicts.png",
+      "size": [
+        760,
+        560
+      ]
+    },
+    {
+      "file": "removal-preview.png",
+      "size": [
+        840,
+        700
+      ]
+    }
+  ],
+  "registry_writes": 0,
+  "notifications": 0,
+  "state_revision": 0,
+  "shared_conflicts": 2
+}
