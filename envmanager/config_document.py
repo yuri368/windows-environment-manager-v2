@@ -43,6 +43,8 @@ def _inline(spec: VariableSpec) -> InlineTable:
     entry["scope"] = _string(spec.scope)
     entry["mode"] = _string(spec.mode)
     entry["editable"] = spec.editable
+    if spec.special:
+        entry["special"] = True
     if spec.choices:
         choices = tomlkit.array()
         for choice in spec.choices:
@@ -92,6 +94,11 @@ def _update_inline(entry: InlineTable, spec: VariableSpec, previous: VariableSpe
         entry["mode"] = _string(spec.mode)
     if previous.editable != spec.editable:
         entry["editable"] = spec.editable
+    if previous.special != spec.special:
+        if spec.special:
+            entry["special"] = True
+        elif "special" in entry:
+            del entry["special"]
     if previous.choices != spec.choices:
         if spec.choices:
             entry["choices"] = _inline(spec)["choices"]

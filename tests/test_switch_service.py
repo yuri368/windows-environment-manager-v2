@@ -112,8 +112,8 @@ class SwitchServiceTests(unittest.TestCase):
         service, store = self.make(configuration, [raw("Path", "BASE;OLD")])
         draft = service.prepare_scheme_switch("Java", "New")
         self.assertEqual(len(draft.shared_conflicts), 1)
-        with self.assertRaises(ConflictError):
-            service.finalize_scheme_switch(draft.id)
+        kept = service.finalize_scheme_switch(draft.id)
+        self.assertEqual(kept.changes[0].after.value, "NEW;BASE;OLD")
         decision = {draft.shared_conflicts[0].atom.atom_id: "remove"}
         result = service.execute(service.finalize_scheme_switch(draft.id, decision))
         self.assertTrue(result.success)

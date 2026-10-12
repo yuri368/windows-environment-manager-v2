@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
 )
 
 from .matching import SchemeStatus, VariableMatchStatus
+from .elements import CleanupSettings, effective_elements, normalize_element
 from .models import ConflictError, ExecutionPlan, PlanChange, RegistryState, VariableSpec, match_key
 from .removal import RemovalKind, RemovalRequest, RemovalScope
 from .sharing import ConflictDecision
@@ -106,22 +107,27 @@ def _scheme_presentation(scheme) -> tuple[str, str, str, str]:
     return "○ 尚未配置", "unconfigured", progress, "方案目标变量在 Windows 中均不存在"
 
 
-def _variable_presentation(result) -> tuple[str, str, str]:
+def _variable_presentation(result, special: bool = False) -> tuple[str, str, str]:
     if result is None:
         return "… 检测中", "scanning", "尚未取得 Windows 检测结果"
     if not result.available:
         return "× 检测错误", "error", result.error.message if result.error else "检测结果不可用"
     if result.status is VariableMatchStatus.MATCH:
-        if result.mode == "replace":
+        if special:
             return "✓ 匹配", "complete", "Windows 原始值与当前选定值完全相同"
+        if not effective_elements(result.selected_value):
+            return "✓ 匹配空值", "complete", "Windows 目标键存在且原始值为空"
+        if result.mode == "replace":
+            return "✓ 匹配", "complete", "Windows 有效元素与当前选定元素集合完全相同"
         total = len(result.matched_elements) + len(result.missing_elements)
         return f"✓ 匹配 {len(result.matched_elements)}/{total}", "complete", "选定的列表元素均已存在"
     if result.status is VariableMatchStatus.KEY_MISSING:
         return "○ 尚未配置", "unconfigured", "Windows 中不存在此变量"
     if result.status is VariableMatchStatus.VALUE_MISMATCH:
-        return "! 不匹配", "partial", "Windows 原始值与当前选定值不同，不列入撤销"
+        return "! 不匹配", "partial", ("Windows 原始值与特殊完整值不同，不列入撤销" if special else
+                                       "空输入仅匹配存在且原始值为空的键，不列入撤销")
     total = len(result.matched_elements) + len(result.missing_elements)
-    return f"! 匹配 {len(result.matched_elements)}/{total}", "partial", "仅已匹配的列表元素可撤销"
+    return f"! 匹配 {len(result.matched_elements)}/{total}", "partial", "仅实际匹配的配置元素可撤销；配置外元素保留"
 
 
 def _set_match_label(label: QLabel, text: str, tone: str, tooltip: str) -> None:
@@ -376,7 +382,7 @@ class VariableCard(QFrame):
         top.addWidget(name, 1)
         scope = "用户" if spec.scope == "User" else "系统"
         mode = {"replace": "替换", "+append": "前置", "-append": "后置", "append": "自定义排序"}[spec.mode]
-        metadata = _label(f"{scope} · {mode}", "meta")
+        metadata = _label(f"{scope} · {mode}" + (" · 特殊完整值" if spec.special else ""), "meta")
         metadata.setWordWrap(False)
         top.addWidget(metadata)
         self.match_label = _label("", "matchStatus")
@@ -384,7 +390,7 @@ class VariableCard(QFrame):
         top.addWidget(self.match_label)
         self.remove_button = _button("撤销此项", self._remove, "quiet")
         self.remove_button.setAccessibleName(f"撤销 {spec.name} 的实际匹配内容")
-        self.remove_button.setToolTip("预览撤销本条变量当前实际匹配的整键或列表元素")
+        self.remove_button.setToolTip("预览撤销实际匹配的" + ("特殊完整值（删除整键）" if spec.special else "普通元素或唯一空值"))
         top.addWidget(self.remove_button)
         outer.addLayout(top)
 
@@ -473,22 +479,27 @@ class VariableCard(QFrame):
             message = (result.error.message if result and result.error else
                        self.detection_error or "尚未取得检测结果")
             return message, "无可撤销内容", False
-        if result.mode == "replace":
+        if self.spec.special:
             if result.status is VariableMatchStatus.MATCH:
                 return "原始字符串完全匹配", "完整变量（撤销时删除整个键）", True
             if result.status is VariableMatchStatus.VALUE_MISMATCH:
                 return "原始字符串不匹配", "值不匹配，不列入撤销", False
             return "Windows 中不存在此变量", "变量不存在，不列入撤销", False
+        if not effective_elements(result.selected_value):
+            if result.status is VariableMatchStatus.MATCH:
+                return "目标键存在且原始值为唯一空值", "撤销匹配空值（删除变量键）", True
+            return "空输入未匹配原始空值状态", "无可撤销匹配空值", False
         matched = "；".join(result.matched_elements) or "无"
         missing = "；".join(result.missing_elements) or "无"
         duplicates = [f"{item} × {count}" for item, count in result.duplicate_counts.items()]
         detail = f"已匹配：{matched}；缺失：{missing}"
+        detail += "；额外：" + ("；".join(result.extra_elements) or "无")
         if duplicates:
             detail += "；重复：" + "；".join(duplicates)
         removable = bool(result.matched_elements)
         removal = ("；".join(result.matched_elements) if removable else "无可撤销匹配元素")
         if removable and duplicates:
-            removal += "（撤销会移除全部大小写匹配副本）"
+            removal += "（撤销会移除全部等值副本，区分大小写）"
         return detail, removal, removable
 
     def _toggle_details(self) -> None:
@@ -579,7 +590,7 @@ class VariableCard(QFrame):
             else:
                 self.existing_info.setText(_value(state.value, state.exists, self.hidden))
                 self.existing_type.setText(_registry_type(state))
-            match_text, match_tone, match_tip = _variable_presentation(self.match_result)
+            match_text, match_tone, match_tip = _variable_presentation(self.match_result, self.spec.special)
             if self.detection_error:
                 match_text, match_tone, match_tip = "× 检测错误", "error", self.detection_error
             _set_match_label(self.match_label, match_text, match_tone, match_tip)
@@ -609,12 +620,12 @@ class FullValueDialog(QDialog):
         self.editable = editable
         self.sensitive = sensitive
         self.visible_value = not sensitive
-        self.escaped = "\r" in value
+        self.escaped = any(char in value for char in ("\r", "\u2028", "\u2029"))
         outer = QVBoxLayout(self)
         outer.setContentsMargins(24, 22, 24, 22)
         outer.setSpacing(13)
         outer.addWidget(_label("完整变量值", "title"))
-        instruction = ("原值含回车符，使用 JSON 转义文本显示和编辑（\\r、\\n、\\\\），以保留原始字符。"
+        instruction = ("原值含特殊换行符，使用 JSON 转义文本显示和编辑（\\r、\\n、\\u2028、\\u2029、\\\\），以保留原始字符。"
                        if self.escaped else "此窗口保留换行、空格和分号。编辑后需先预览并确认应用。")
         outer.addWidget(_label(instruction, "muted"))
         if sensitive:
@@ -637,7 +648,10 @@ class FullValueDialog(QDialog):
         outer.addWidget(buttons)
 
     def _display(self, value: str) -> str:
-        return json.dumps(value, ensure_ascii=False)[1:-1] if self.escaped else value
+        if not self.escaped:
+            return value
+        return (json.dumps(value, ensure_ascii=False)[1:-1]
+                .replace("\u2028", "\\u2028").replace("\u2029", "\\u2029"))
 
     def _accept(self) -> None:
         try:
@@ -680,8 +694,8 @@ class OrderDialog(QDialog):
         self.resize(660, 510)
         calculation = change.calculation
         self.initial = tuple(calculation.items) if calculation else ()
-        self.added = {match_key(x) for x in (calculation.added if calculation else ())}
-        self.moved = {match_key(x) for x in (calculation.moved if calculation else ())}
+        self.added = {normalize_element(x) for x in (calculation.added if calculation else ())}
+        self.moved = {normalize_element(x) for x in (calculation.moved if calculation else ())}
         self.sensitive = _sensitive(change.after.name)
         self.visible_values = not self.sensitive
         outer = QVBoxLayout(self)
@@ -742,7 +756,7 @@ class OrderDialog(QDialog):
             shown = f"（原始值中的纯空白项 · {len(value)} 个字符）"
         else:
             shown = value
-        item = QListWidgetItem(shown + ("   · 新增" if match_key(value) in self.added else "   · 移动" if match_key(value) in self.moved else ""))
+        item = QListWidgetItem(shown + ("   · 新增" if normalize_element(value) in self.added else "   · 移动" if normalize_element(value) in self.moved else ""))
         item.setData(Qt.ItemDataRole.UserRole, value)
         if self.visible_values and not value.strip():
             item.setToolTip("读取时原始值中已存在，排序将保留原文。原始字符串：" + json.dumps(value, ensure_ascii=False))
@@ -791,6 +805,7 @@ class SharedConflictDialog(QDialog):
         super().__init__(parent)
         self.conflicts = tuple(conflicts)
         self.decision_boxes: dict[str, QComboBox] = {}
+        self.target_groups: dict[tuple[str, str], QFrame] = {}
         self._sensitive_rows = []
         self.setWindowTitle("共享环境变量冲突")
         self.resize(760, 560)
@@ -808,8 +823,8 @@ class SharedConflictDialog(QDialog):
         self.show_sensitive.toggled.connect(self._refresh_sensitive_values)
         tools.addWidget(self.show_sensitive)
         tools.addStretch(1)
-        tools.addWidget(_button("全部保留", lambda: self._set_all(ConflictDecision.KEEP), "quiet"))
-        remove_all = _button("全部撤销", lambda: self._set_all(ConflictDecision.REMOVE), "danger")
+        tools.addWidget(_button("全部保留共享项", lambda: self._set_all(ConflictDecision.KEEP), "quiet"))
+        remove_all = _button("全部撤销共享项", lambda: self._set_all(ConflictDecision.REMOVE), "danger")
         remove_all.setToolTip("仅改变本窗口中的共享冲突对象")
         tools.addWidget(remove_all)
         outer.addLayout(tools)
@@ -823,25 +838,40 @@ class SharedConflictDialog(QDialog):
         rows.setAlignment(Qt.AlignmentFlag.AlignTop)
         for conflict in self.conflicts:
             atom = conflict.atom
+            target = f"{atom.target[0]} / {atom.target[1]}"
+            group_key = (atom.target[0], match_key(atom.target[1]))
+            if group_key not in self.target_groups:
+                group = QFrame()
+                group.setObjectName("conflictItem")
+                grouped = QVBoxLayout(group)
+                grouped.setContentsMargins(12, 10, 12, 10)
+                grouped.setSpacing(8)
+                kind = "特殊完整值" if atom.kind is RemovalKind.WHOLE_KEY else "普通变量"
+                group_title = ElidingLabel(f"{target} · {kind}", "name")
+                group_title.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+                grouped.addWidget(group_title)
+                self.target_groups[group_key] = group
+                rows.addWidget(group)
+            grouped = self.target_groups[group_key].layout()
             sources = "；".join(dict.fromkeys(f"{source.app} / {source.option}"
                                              for source in atom.sources))
             consumers = "；".join(dict.fromkeys(f"{consumer.app} / {consumer.option}"
                                                 for consumer in conflict.consumers))
-            item = QFrame()
-            item.setObjectName("conflictItem")
+            item = QWidget()
+            item.setObjectName("conflictRow")
             layout = QVBoxLayout(item)
-            layout.setContentsMargins(12, 10, 12, 10)
+            layout.setContentsMargins(0, 4, 0, 4)
             layout.setSpacing(5)
             heading = QHBoxLayout()
-            kind = "完整变量" if atom.kind is RemovalKind.WHOLE_KEY else "列表元素"
-            target = f"{atom.target[0]} / {atom.target[1]}"
-            title = ElidingLabel(f"{target} · {kind}", "name")
+            kind = ("特殊完整值" if atom.kind is RemovalKind.WHOLE_KEY else
+                    "存在且为空的状态" if atom.kind is RemovalKind.EMPTY_VALUE else "元素")
+            title = ElidingLabel(kind, "muted")
             title.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
             heading.addWidget(title, 1)
             decision = QComboBox()
             decision.setObjectName("conflictDecision")
-            decision.addItem("保留", ConflictDecision.KEEP.value)
-            decision.addItem("撤销", ConflictDecision.REMOVE.value)
+            decision.addItem("保留完整值" if atom.kind is RemovalKind.WHOLE_KEY else "保留", ConflictDecision.KEEP.value)
+            decision.addItem("撤销整键" if atom.kind is RemovalKind.WHOLE_KEY else "撤销", ConflictDecision.REMOVE.value)
             decision.setCurrentIndex(0)
             sensitive = _sensitive(atom.target[1])
             shown_value = _value(atom.display_value, hidden=sensitive)
@@ -855,7 +885,8 @@ class SharedConflictDialog(QDialog):
             self.decision_boxes[atom.atom_id] = decision
             heading.addWidget(decision)
             layout.addLayout(heading)
-            value_prefix = "完整变量值：" if atom.kind is RemovalKind.WHOLE_KEY else "元素："
+            value_prefix = ("完整原始值：" if atom.kind is RemovalKind.WHOLE_KEY else
+                            "空值状态：" if atom.kind is RemovalKind.EMPTY_VALUE else "元素：")
             value = _label(value_prefix + shown_value, "code")
             value.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
             layout.addWidget(value)
@@ -870,7 +901,7 @@ class SharedConflictDialog(QDialog):
             if sensitive:
                 self._sensitive_rows.append((value, value_prefix, atom.display_value,
                                              risk, risks, decision, target))
-            rows.addWidget(item)
+            grouped.addWidget(item)
         scroll.setWidget(body)
         outer.addWidget(scroll, 1)
         self.summary = _label("", "selectionSummary")
@@ -908,6 +939,53 @@ class SharedConflictDialog(QDialog):
 
     def decisions(self) -> dict[str, str]:
         return {atom_id: box.currentData() for atom_id, box in self.decision_boxes.items()}
+
+
+class CleanupSettingsDialog(QDialog):
+    """Keep write-cleanup controls together and folded until deliberately opened."""
+
+    def __init__(self, settings: CleanupSettings, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("高级设置")
+        self.resize(480, 230)
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(20, 18, 20, 18)
+        outer.setSpacing(12)
+        outer.addWidget(_label("高级设置", "title"))
+        outer.addWidget(_label("普通值整理只作用于本次执行涉及的目标，实际结果在最终预览中确认。", "muted"))
+        self.advanced_toggle = QPushButton("普通值写入自动整理")
+        self.advanced_toggle.setObjectName("quiet")
+        self.advanced_toggle.setCheckable(True)
+        self.advanced_toggle.setIcon(icon("chevron_right"))
+        outer.addWidget(self.advanced_toggle)
+        self.cleanup_options = QWidget()
+        options = QVBoxLayout(self.cleanup_options)
+        options.setContentsMargins(8, 0, 8, 0)
+        options.setSpacing(8)
+        self.cleanup_checks = {}
+        for name, title in (("trim_whitespace", "清理元素首尾的空格和制表符"),
+                            ("remove_empty", "清理无效空元素"),
+                            ("deduplicate", "按大小写敏感规则去重")):
+            checkbox = QCheckBox(title)
+            checkbox.setChecked(getattr(settings, name))
+            self.cleanup_checks[name] = checkbox
+            options.addWidget(checkbox)
+        options.addWidget(_label("检测始终使用统一元素规则。特殊完整值、历史恢复和失败回滚不进行整理。", "meta"))
+        outer.addWidget(self.cleanup_options)
+        self.cleanup_options.hide()
+        self.advanced_toggle.toggled.connect(self.cleanup_options.setVisible)
+        self.advanced_toggle.toggled.connect(lambda expanded: self.advanced_toggle.setIcon(
+            icon("chevron_down" if expanded else "chevron_right")))
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        buttons.button(QDialogButtonBox.StandardButton.Ok).setText("保存设置")
+        buttons.button(QDialogButtonBox.StandardButton.Ok).setObjectName("primary")
+        buttons.button(QDialogButtonBox.StandardButton.Cancel).setText("取消")
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        outer.addWidget(buttons)
+
+    def settings(self) -> CleanupSettings:
+        return CleanupSettings(**{name: box.isChecked() for name, box in self.cleanup_checks.items()})
 
 
 class OldSchemeDialog(QDialog):
@@ -1164,10 +1242,15 @@ class PreviewDialog(QDialog):
                 layout.addWidget(_label(
                     "撤销对象与共享决定" if change.mode == "remove" else "本次选定输入", "muted"))
                 for contribution in contributions:
+                    if contribution.get("kind") == "cleanup":
+                        before_cleanup = _value(contribution.get("before_value", ""), hidden=hidden)
+                        after_cleanup = _value(contribution.get("after_value", ""), hidden=hidden)
+                        layout.addWidget(_label("自动整理：" + before_cleanup + " → " + after_cleanup, "muted"))
+                        continue
                     if "sources" in contribution:
                         decision = contribution.get("decision", "remove")
-                        kind = ("完整变量" if contribution.get("kind") == "whole_key"
-                                else "列表元素")
+                        kind = ("特殊完整值" if contribution.get("kind") == "whole_key" else
+                                "唯一空值状态" if contribution.get("kind") == "empty_value" else "元素")
                         action = "保留" if decision == "keep" else "撤销"
                         display = _value(contribution.get("display_value", ""), hidden=hidden)
                         item = _label(f"{action} {kind}：{display}",
@@ -1230,19 +1313,23 @@ class PreviewDialog(QDialog):
             divider.setObjectName("divider")
             values.addWidget(divider, 2, 0, 1, 3)
             layout.addLayout(values)
-            if self.plan.action in {"remove", "switch"} and change.before.exists:
-                if not change.after.exists:
-                    layout.addWidget(_label("将删除整个环境变量键", "error"))
-                elif self.plan.action == "switch" and change.mode == "replace":
+            if change.before.exists and not change.after.exists:
+                layout.addWidget(_label("将删除整个环境变量键", "error"))
+                if change.before.scope == "System":
+                    layout.addWidget(_label("系统作用域删除需要管理员权限，并可能影响其他用户和系统程序。", "error"))
+                if match_key(change.before.name) in {"PATH", "SYSTEMROOT", "WINDIR", "COMSPEC", "PATHEXT", "TEMP", "TMP"}:
+                    layout.addWidget(_label("将删除关键环境变量；请检查依赖此变量的程序和系统功能。", "error"))
+            elif self.plan.action in {"remove", "switch"} and change.before.exists:
+                if self.plan.action == "switch" and change.mode == "replace":
                     if change.changed:
                         layout.addWidget(_label("将替换完整变量值", "muted"))
                 else:
-                    after_keys = {match_key(item) for item in change.after.value.split(";")}
+                    after_keys = set(effective_elements(change.after.value))
                     removed = []
                     seen = set()
                     for item in change.before.value.split(";"):
-                        key = match_key(item)
-                        if key not in after_keys and key not in seen:
+                        key = normalize_element(item)
+                        if key and key not in after_keys and key not in seen:
                             seen.add(key)
                             removed.append(item)
                     if removed:
@@ -1615,9 +1702,22 @@ class MainWindow(QMainWindow):
         menu.addAction("编辑原始 TOML", self._edit_config)
         menu.addSeparator()
         menu.addAction("打开配置文件", self._open_config)
+        menu.addSeparator()
+        menu.addAction("高级设置", self._advanced_settings)
         self.config_button.setMenu(menu)
         bar.addWidget(self.config_button)
         return toolbar
+
+    def _advanced_settings(self) -> None:
+        dialog = CleanupSettingsDialog(self.service.cleanup_settings, self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        try:
+            self.service.set_cleanup_settings(dialog.settings())
+        except Exception as exc:
+            QMessageBox.warning(self, "设置未保存", str(exc))
+            return
+        self.feedback.setText("高级设置已保存；新的预览将按当前整理选项计算。")
 
     def _build_manifest(self) -> QFrame:
         manifest = QFrame()

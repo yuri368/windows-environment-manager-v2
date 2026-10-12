@@ -10,6 +10,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
+from envmanager.elements import CleanupSettings
 from envmanager.engine import calculate
 from envmanager.models import PlanChange, RegistryState, VariableSpec
 from envmanager.theme import apply_theme
@@ -25,7 +26,7 @@ class OrderAnomaliesUiTests(unittest.TestCase):
     def dialog(self, value, selected="X", name="Path"):
         spec = VariableSpec("App", "Default", name, "System", "append", True, selected)
         before = RegistryState(name, "System", True, value, 2)
-        calculation = calculate(spec, selected, before)
+        calculation = calculate(spec, selected, before, cleanup=CleanupSettings(False, False, False))
         dialog = OrderDialog(PlanChange(before, calculation.result, "append", selected, calculation=calculation))
         self.addCleanup(dialog.deleteLater)
         self.addCleanup(dialog.close)
@@ -41,7 +42,7 @@ class OrderAnomaliesUiTests(unittest.TestCase):
         self.assertIn("1 个空项", dialog.existing_notice.text())
         dialog.list.setCurrentRow(2)
         dialog._move_to(1)
-        confirmed = calculate(spec, "X", before, dialog.order())
+        confirmed = calculate(spec, "X", before, dialog.order(), CleanupSettings(False, False, False))
         self.assertEqual(confirmed.result.value, "A;;B;X")
         self.assertEqual(dialog.order().count(""), 1)
         dialog._restore()
@@ -56,7 +57,7 @@ class OrderAnomaliesUiTests(unittest.TestCase):
         self.assertIn("纯空白项", dialog.list.item(3).text())
         self.assertEqual(dialog.list.item(3).data(Qt.ItemDataRole.UserRole), "  ")
         self.assertEqual(dialog.list.item(4).data(Qt.ItemDataRole.UserRole), "\t")
-        self.assertEqual(calculate(spec, "X", before, dialog.order()).result.value, ";A;;  ;\t;B;;X")
+        self.assertEqual(calculate(spec, "X", before, dialog.order(), CleanupSettings(False, False, False)).result.value, ";A;;  ;\t;B;;X")
 
     def test_empty_existing_value_and_empty_input_do_not_create_a_list_item(self):
         spec, before, dialog = self.dialog("", selected="")

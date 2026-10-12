@@ -1,5 +1,7 @@
 # TOML 编辑器验收记录
 
+> 历史验收归档：本页记录当时配置编辑器的执行结果；vNext 的统一元素、特殊值、共享与整理验收见 [vnext-verification.md](vnext-verification.md)。
+
 验收日期：2026-10-09。
 
 | 要求 | 实现与直接验证证据 |

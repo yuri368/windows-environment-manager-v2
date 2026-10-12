@@ -44,7 +44,7 @@ class SelectionSession:
         else:
             return None, None
         try:
-            validate_value(value, spec.mode)
+            validate_value(value, spec.mode, spec.special)
         except ValidationError as exc:
             return None, f"上次应用值无效，已使用默认值：{exc}"
         return value, None
@@ -80,7 +80,7 @@ class SelectionSession:
     def snapshot(self, spec: VariableSpec) -> dict:
         """Capture a successful input with stable candidate identity."""
         selection = self.get(spec)
-        validate_value(selection.value, spec.mode)
+        validate_value(selection.value, spec.mode, spec.special)
         snapshot = {"source": selection.source, "value": selection.value}
         if selection.source.startswith("choice:"):
             candidates = {f"choice:{index}": choice
@@ -125,7 +125,7 @@ class SelectionSession:
     @staticmethod
     def _check(selection: Selection, spec: VariableSpec) -> None:
         try:
-            validate_value(selection.value, spec.mode)
+            validate_value(selection.value, spec.mode, spec.special)
         except ValidationError as exc:
             selection.error = str(exc)
         else:

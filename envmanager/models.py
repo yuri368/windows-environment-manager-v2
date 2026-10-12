@@ -27,7 +27,7 @@ class PermissionDenied(RuntimeError):
 
 
 def match_key(value: str) -> str:
-    """Case insensitive matching without expanding one character into several."""
+    """Variable-name identity only; values use case-sensitive element equality."""
     return "".join(c.upper() if len(c.upper()) == 1 else c for c in value)
 
 
@@ -51,6 +51,7 @@ class VariableSpec:
     editable: bool
     default_value: str
     choices: tuple[Choice, ...] = ()
+    special: bool = False
 
     @property
     def key(self) -> str:
@@ -197,6 +198,7 @@ class RemovalDraft:
     frozen_selections: tuple[tuple[str, str, str], ...]
     selected_values: tuple[tuple[str, str], ...]
     states: tuple[RegistryState, ...]
+    cleanup_settings: tuple[tuple[str, bool], ...] = ()
 
     @property
     def ordinary_atoms(self):

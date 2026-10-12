@@ -1,5 +1,5 @@
 #ifndef AppVersion
-  #define AppVersion "2.0.1"
+  #define AppVersion "2.1.0"
 #endif
 #ifndef BundleDir
   #error BundleDir must point to the standalone application directory

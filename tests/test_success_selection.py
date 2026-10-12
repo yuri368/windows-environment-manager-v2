@@ -56,12 +56,22 @@ class SuccessfulSelectionTests(unittest.TestCase):
 
     def test_invalid_successful_input_falls_back_to_current_default(self):
         item = spec()
-        for snapshot in ({"source": "custom", "value": "A;;B"},
-                         {"source": "last", "value": " "}, {"source": "last"}, None):
+        for snapshot in ({"source": "custom", "value": "A\x00B"},
+                         {"source": "last", "value": 1}, {"source": "last"}, None):
             with self.subTest(snapshot=snapshot):
                 selection = SelectionSession({item.key: "older"}, {item.key: snapshot}).get(item)
                 self.assertEqual((selection.source, selection.value), ("default", "Default"))
                 self.assertTrue(selection.warning)
+
+    def test_successful_raw_inputs_retain_cleanable_slices(self):
+        item = spec()
+        for source, raw in (('custom', ' A;;A; '), ('last', ' \t ')):
+            with self.subTest(source=source, raw=raw):
+                session = SelectionSession({}, {item.key: {'source': source, 'value': raw}})
+                selection = session.get(item)
+                self.assertEqual((selection.source, selection.value), (source, raw))
+                self.assertEqual(session.snapshot(item)['value'], raw)
+                self.assertIsNone(selection.warning)
 
     def test_empty_successful_input_is_present(self):
         item = spec(default_value="")

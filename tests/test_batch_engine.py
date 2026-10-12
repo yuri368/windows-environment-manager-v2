@@ -3,6 +3,7 @@ from __future__ import annotations
 import unittest
 
 from envmanager.engine import calculate, calculate_batch
+from envmanager.elements import CleanupSettings
 from envmanager.models import RegistryState, ValidationError, VariableSpec
 
 
@@ -16,6 +17,20 @@ def state(value="A;B;A;C", *, exists=True, registry_type=1):
 
 
 class BatchEngineTests(unittest.TestCase):
+    def test_replace_equal_sets_still_have_order_conflict(self):
+        with self.assertRaises(ValidationError):
+            calculate_batch([(spec('replace'), 'A;B'), (spec('replace', 'Second'), 'B;A')], state('B;A'))
+        # Differences removed by the enabled cleanup settings have one final output.
+        result = calculate_batch([(spec('replace'), ' A ;B;A'), (spec('replace', 'Second'), 'A;B')], state())
+        self.assertEqual(result.result.value, 'A;B')
+        with self.assertRaises(ValidationError):
+            calculate_batch([(spec('replace'), ' A ;B;A'), (spec('replace', 'Second'), 'A;B')], state(),
+                            cleanup=CleanupSettings(False, False, False))
+
+    def test_case_distinct_front_and_back_are_independent(self):
+        result = calculate_batch([(spec('+append'), 'X'), (spec('-append', 'Other'), 'x')], state(' X ; x ;Z'))
+        self.assertEqual(result.result.value, 'X;Z;x')
+
     def test_single_contribution_preserves_original_api(self):
         for mode in ("replace", "+append", "-append", "append"):
             with self.subTest(mode=mode):
@@ -27,19 +42,19 @@ class BatchEngineTests(unittest.TestCase):
                          (spec("+append", "Second"), "x;Y"),
                          (spec("-append", "Third"), "C;Z")]
         result = calculate_batch(contributions, state())
-        self.assertEqual(result.result.value, "a;X;Y;B;C;Z")
-        self.assertEqual(result.added, ("X", "Y", "Z"))
-        self.assertEqual(result.deduplicated, ("A", "a", "x"))
+        self.assertEqual(result.result.value, "a;X;x;Y;A;B;C;Z")
+        self.assertEqual(result.added, ("a", "X", "x", "Y", "Z"))
+        self.assertEqual(result.deduplicated, ("A", "a"))
         self.assertEqual(calculate_batch(contributions, result.result).result.value, result.result.value)
 
     def test_front_back_overlap_is_conflict(self):
         with self.assertRaisesRegex(ValidationError, "置前和置后"):
-            calculate_batch([(spec("+append"), "X"), (spec("-append", "Other"), "x")], state())
+            calculate_batch([(spec("+append"), "X"), (spec("-append", "Other"), "X")], state())
 
     def test_replace_exact_input_and_mixed_modes_conflict(self):
         identical = [(spec("replace"), "raw;;text"), (spec("replace", "Other"), "raw;;text")]
         self.assertEqual(calculate_batch(identical, state(registry_type=2)).result,
-                         RegistryState("Path", "User", True, "raw;;text", 2))
+                         RegistryState("Path", "User", True, "raw;text", 2))
         for contributions in ([(spec("replace"), "A"), (spec("replace", "Other"), "a")],
                               [(spec("replace"), "A"), (spec("+append", "Other"), "A")]):
             with self.subTest(contributions=contributions), self.assertRaises(ValidationError):
@@ -50,7 +65,7 @@ class BatchEngineTests(unittest.TestCase):
                          (spec("append", "Manual"), "C;Z")]
         initial = calculate_batch(contributions, state("B;A;A;B;C;; "))
         self.assertTrue(initial.needs_order)
-        self.assertEqual(initial.items, ("B", "a", "B", "C", "", " ", "X", "Y", "Z"))
+        self.assertEqual(initial.items, ("B", "A", "C", "a", "X", "Y", "Z"))
         confirmed = tuple(reversed(initial.items))
         result = calculate_batch(contributions, state("B;A;A;B;C;; "), confirmed)
         self.assertFalse(result.needs_order)
@@ -59,15 +74,16 @@ class BatchEngineTests(unittest.TestCase):
             with self.subTest(invalid=invalid), self.assertRaises(ValidationError):
                 calculate_batch(contributions, state("B;A;A;B;C;; "), invalid)
 
-    def test_unmatched_existing_abnormal_items_and_duplicates_are_untouched(self):
+    def test_unmatched_existing_slices_are_untouched_when_cleanup_disabled(self):
         original = "A;; ;A; B ;"
-        result = calculate_batch([(spec("+append"), "X"), (spec("-append", "Other"), "Y")], state(original))
+        result = calculate_batch([(spec("+append"), "X"), (spec("-append", "Other"), "Y")], state(original),
+                                 cleanup=CleanupSettings(False, False, False))
         self.assertEqual(result.result.value, "X;" + original + ";Y")
-        self.assertEqual(len(result.warnings), 2)
+        self.assertEqual(result.warnings, ())
 
     def test_empty_inputs_preserve_existing_or_create_present_empty(self):
         contributions = [(spec("+append"), ""), (spec("-append", "Other"), "")]
-        self.assertEqual(calculate_batch(contributions, state("A;;B")).result.value, "A;;B")
+        self.assertEqual(calculate_batch(contributions, state("A;;B")).result.value, "A;B")
         for existing in (state(""), state(exists=False)):
             result = calculate_batch(contributions, existing).result
             self.assertEqual((result.exists, result.value, result.registry_type), (True, "", 1))
@@ -82,7 +98,7 @@ class BatchEngineTests(unittest.TestCase):
         with self.assertRaises(ValidationError):
             calculate_batch([(spec("+append"), "X"), (spec("-append", "Other"), "Y")], state(registry_type=7))
         with self.assertRaises(ValidationError):
-            calculate_batch([(spec("+append"), "X;;Y"), (spec("-append", "Other"), "Z")], state())
+            calculate_batch([(spec("+append"), "X\x00Y"), (spec("-append", "Other"), "Z")], state())
         with self.assertRaises(ValidationError):
             calculate_batch([(spec("+append"), "X" * 16383), (spec("-append", "Other"), "Y" * 16383)], state("A"))
 

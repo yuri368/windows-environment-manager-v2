@@ -83,7 +83,7 @@ class BatchSwitchingTests(unittest.TestCase):
             with self.subTest(requested=requested, old_options=old_options), self.assertRaises(ValidationError):
                 self.prepare(specs, path(), requested, old_options=old_options)
 
-    def test_final_order_requires_new_shared_conflict_confirmation(self):
+    def test_final_order_keeps_ordinary_replace_elements_without_conflict(self):
         old = spec(name="OLD_HOME", value="old", mode="replace")
         new = spec("17", "A", mode="append")
         peer = spec("New", "value", name="PEER_HOME", mode="replace", app="Maven")
@@ -93,15 +93,13 @@ class BatchSwitchingTests(unittest.TestCase):
                            RegistryState("PEER_HOME", "User", False))
         draft = prepare_batch_switch(config_for(*specs), {"Java": "17", "Maven": "New"}, states, values(*specs))
         self.assertEqual(draft.shared_conflicts, ())
-        with self.assertRaisesRegex(ConflictError, "新的共享冲突"):
-            finalize_switch(draft, orders={new.key: ("A", "Other")})
+        ordered = finalize_switch(draft, orders={new.key: ("A", "Other")})
+        self.assertEqual(next(c for c in ordered.changes if c.before.name == "Path").after.value, "A;Other")
         refreshed = prepare_batch_switch(config_for(*specs), {"Java": "17", "Maven": "New"}, states,
             values(*specs), old_options=dict(draft.old_options_by_app), orders={new.key: ("A", "Other")})
         self.assertEqual(refreshed.old_options_by_app, draft.old_options_by_app)
-        self.assertEqual(len(refreshed.shared_conflicts), 1)
-        with self.assertRaises(ConflictError):
-            finalize_switch(refreshed)
-        confirmed = finalize_switch(refreshed, {refreshed.shared_conflicts[0].atom.atom_id: ConflictDecision.REMOVE})
+        self.assertEqual(refreshed.shared_conflicts, ())
+        confirmed = finalize_switch(refreshed)
         self.assertEqual(next(change for change in confirmed.changes if change.before.name == "Path").after.value,
                          "A;Other")
 

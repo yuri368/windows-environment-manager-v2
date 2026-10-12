@@ -122,14 +122,14 @@ class Issue2UiTests(unittest.TestCase):
         configuration = config(
             ("App", "Default", [("Path", "A;MISSING", "+append", "User")]))
         window, _, store = self.make_window(
-            configuration, [raw("Path", "BASE;a;A")])
+            configuration, [raw("Path", "BASE;A; A ")])
         card = window.cards[0]
         self.assertIn("匹配 1/2", card.match_label.text())
         self.assertTrue(card.remove_button.isEnabled())
         self.assertIn("已匹配：A", card.matching_info.text())
         self.assertIn("缺失：MISSING", card.matching_info.text())
         self.assertIn("× 2", card.matching_info.text())
-        self.assertIn("全部大小写匹配副本", card.removal_info.text())
+        self.assertIn("全部等值副本，区分大小写", card.removal_info.text())
         self.assertEqual(store.writes, [])
 
     def test_five_visible_entrypoints_build_exact_removal_scopes(self):
@@ -355,7 +355,7 @@ class Issue2UiTests(unittest.TestCase):
         preview = PreviewDialog(plan)
         self.addCleanup(preview.deleteLater)
         labels = "\n".join(label.text() for label in preview.findChildren(QLabel))
-        self.assertIn("Windows 当前值与方案不匹配", labels)
+        self.assertIn("Windows 列表中没有该元素", labels)
         self.assertNotIn("value_mismatch", labels)
         self.assertEqual(store.writes, [])
 

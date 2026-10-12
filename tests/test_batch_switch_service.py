@@ -70,7 +70,7 @@ class BatchSwitchServiceTests(unittest.TestCase):
         detected = service.detection_snapshot()
         self.assertEqual(detected.schemes[("Java", "17")].status, SchemeStatus.COMPLETE)
         self.assertEqual(detected.schemes[("Maven", "New")].status, SchemeStatus.COMPLETE)
-        self.assertEqual(result.removed_element_count, 2)
+        self.assertEqual(result.removed_element_count, 3)
 
     def test_one_checked_manual_scheme_uses_new_api_without_active_history(self):
         service, store = self.make()
@@ -151,11 +151,13 @@ class BatchSwitchServiceTests(unittest.TestCase):
         self.assertEqual(store.read("User", "Path").value, "MNEW;BASE;NEW")
         self.assertEqual(len(store.writes), 1)
 
-    def test_old_plan_batch_api_keeps_existing_apply_semantics(self):
+    def test_compatibility_plan_batch_uses_live_switch_semantics(self):
         service, _ = self.make()
         plan = service.plan_batch({"Java": "17"})
         path_change = next(item for item in plan.changes if item.before.name.upper() == "PATH")
-        self.assertIn("OLD", path_change.after.value.split(";"))
+        self.assertNotIn("OLD", path_change.after.value.split(";"))
+        self.assertEqual(plan.metadata["switches"], [
+            {"app": "Java", "old_options": ["8"], "new_option": "17"}])
 
     def test_reprepare_sort_retains_explicit_old_choices_and_shared_keep(self):
         configuration = config(

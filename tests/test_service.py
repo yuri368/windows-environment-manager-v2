@@ -166,26 +166,28 @@ Path = [
         old = service.config.variables("App", "Old")[0]
         self.assertEqual(self.repo.snapshot()["last_values"][old.key], "X")
 
-    def test_switch_stops_on_external_change(self):
+    def test_switch_without_matching_old_preserves_external_snapshot_in_preview(self):
         source = config(("App", "Old", {"A": record("old")}),
                         ("App", "New", {"A": record("new")}))
         service, store = self.service(source, [existing("A", "base")])
         service.execute(service.plan("App", "Old"))
         store.write(existing("A", "external"))
         plan = service.plan("App", "New")
-        self.assertFalse(plan.can_execute)
-        with self.assertRaises(ConflictError):
-            service.execute(plan)
+        self.assertTrue(plan.can_execute)
+        self.assertEqual(plan.changes[0].before.value, "external")
+        self.assertEqual(plan.metadata["switches"][0]["old_options"], [])
         self.assertEqual(store.read("User", "A").value, "external")
 
-    def test_switch_checks_old_effect_not_in_new_option(self):
+    def test_partial_old_is_not_implicitly_removed_or_restored_from_history(self):
         source = config(("App", "Old", {"A": record("a1"), "B": record("b1")}),
                         ("App", "New", {"A": record("a2")}))
         service, store = self.service(source, [existing("A", "a0"), existing("B", "b0")])
         self.assertTrue(service.execute(service.plan("App", "Old")).success)
         store.write(existing("B", "external"))
         plan = service.plan("App", "New")
-        self.assertFalse(plan.can_execute)
+        self.assertTrue(plan.can_execute)
+        self.assertEqual(plan.metadata["switches"][0]["old_options"], [])
+        self.assertEqual(tuple(c.before.name for c in plan.changes), ("A",))
         self.assertEqual(store.read("User", "B").value, "external")
         self.assertEqual(self.repo.snapshot()["active"]["App"]["option"], "Old")
 
@@ -208,13 +210,14 @@ Path = [
         self.assertFalse(plan.can_execute)
         self.assertEqual(store.read("User", "Path").value, "Y;X;A")
 
-    def test_shared_replace_owner_blocks_append(self):
+    def test_shared_ordinary_replace_elements_allow_safe_append(self):
         source = config(("First", "Default", {"Path": record("X", "replace")}),
                         ("Second", "Default", {"Path": record("Y", "+append")}))
         service, store = self.service(source, [existing("Path", "A")])
         self.assertTrue(service.execute(service.plan("First", "Default")).success)
         plan = service.plan("Second", "Default")
-        self.assertFalse(plan.can_execute)
+        self.assertTrue(plan.can_execute)
+        self.assertEqual(plan.changes[0].after.value, "Y;X")
         self.assertEqual(store.read("User", "Path").value, "X")
 
     def test_write_mutates_then_raises_rolls_back_all_attempts(self):
@@ -401,6 +404,42 @@ Path = [
         with self.assertRaises(ConflictError):
             service.execute(restore)
         self.assertEqual(store.read("User", "A").value, "external")
+
+    def test_restore_of_created_system_variable_warns_before_delete(self):
+        source = config(("App", "Default", {"CUSTOM_SYSTEM": record("A", scope="System")}))
+        service, store = self.service(source)
+        applied = service.execute(service.plan("App", "Default"))
+        self.assertTrue(applied.success)
+        restore = service.plan_restore(applied.operation_id)
+        self.assertEqual(restore.action, "restore")
+        self.assertTrue(restore.changes[0].before.exists)
+        self.assertFalse(restore.changes[0].after.exists)
+        self.assertTrue(any("System / CUSTOM_SYSTEM" in warning and
+                            "删除" in warning and "管理员权限" in warning
+                            for warning in restore.warnings))
+        self.assertEqual(len(store.writes), 1)
+        self.assertTrue(service.execute(restore).success)
+        self.assertFalse(store.read("System", "CUSTOM_SYSTEM").exists)
+
+    def test_crash_recovery_of_created_system_variable_warns_before_delete(self):
+        source = config(("App", "Default", {"CUSTOM_SYSTEM": record("A", scope="System")}))
+        store = MutateThenFailStore(fail_name="CUSTOM_SYSTEM", exception_type=KeyboardInterrupt)
+        service = EnvironmentService(parse_config(source), store, self.repo)
+        applied = service.plan("App", "Default")
+        with self.assertRaises(KeyboardInterrupt):
+            service.execute(applied)
+        recovery = service.plan_recover(applied.id)
+        self.assertEqual(recovery.action, "recover")
+        self.assertTrue(recovery.can_execute)
+        self.assertTrue(recovery.changes[0].before.exists)
+        self.assertFalse(recovery.changes[0].after.exists)
+        self.assertTrue(any("System / CUSTOM_SYSTEM" in warning and
+                            "删除" in warning and "管理员权限" in warning
+                            for warning in recovery.warnings))
+        self.assertEqual(len(store.writes), 1)
+        self.assertTrue(service.execute(recovery).success)
+        self.assertFalse(store.read("System", "CUSTOM_SYSTEM").exists)
+        self.assertEqual(service.pending(), [])
 
     def test_reload_changed_definition_discards_old_custom_draft(self):
         source = config(("App", "Default", {"A": record("old")}))

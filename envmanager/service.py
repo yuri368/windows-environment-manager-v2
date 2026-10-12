@@ -3,12 +3,13 @@ from __future__ import annotations
 import uuid
 import json
 from copy import deepcopy
-from dataclasses import replace
+from dataclasses import asdict, replace
 from datetime import datetime, timezone
 
 from .detection import (DetectionRequest, DetectionSnapshot, recompute_for_selection,
                         refresh_targets, scan_all)
 from .engine import calculate_batch, validate_value
+from .elements import CleanupSettings, effective_elements
 from .matching import TargetKey
 from .models import (BatchSchemeSwitchDraft, ConflictError, ExecutionPlan, OperationResult, PlanChange,
                      RegistryState, RemovalDraft, SchemeSwitchDraft, ValidationError, match_key)
@@ -52,6 +53,19 @@ class EnvironmentService:
         self._removal_drafts = {}
         self._removal_snapshots = {}
         self._switch_drafts = {}
+
+    @property
+    def cleanup_settings(self):
+        return CleanupSettings(**self.state.cleanup_settings())
+
+    def set_cleanup_settings(self, settings):
+        if not isinstance(settings, CleanupSettings):
+            raise ValidationError("自动整理设置类型无效")
+        self.state.set_cleanup_settings(asdict(settings))
+        self._issued_plans.clear()
+        self._removal_drafts.clear()
+        self._removal_snapshots.clear()
+        self._switch_drafts.clear()
 
     @staticmethod
     def _saved_selections(snapshot):
@@ -199,6 +213,12 @@ class EnvironmentService:
                             selection_revision=self.selections.revision)
 
     def _validate_frozen_inputs(self, item, snapshot):
+        expected_cleanup = (getattr(item, "cleanup_settings", ()) or
+                            getattr(item, "metadata", {}).get("cleanup_settings"))
+        if expected_cleanup and dict(expected_cleanup) != asdict(self.cleanup_settings):
+            raise ConflictError("自动整理设置已改变，请重新预览")
+        if hasattr(item, "core") and item.core.cleanup != self.cleanup_settings:
+            raise ConflictError("自动整理设置已改变，请重新预览")
         if (snapshot["revision"] != item.state_revision
                 or self.config.digest != item.config_digest):
             raise ConflictError("配置或持久化状态已改变，请重新预览")
@@ -252,7 +272,8 @@ class EnvironmentService:
         draft = RemovalDraft(uuid.uuid4().hex, request, candidates, analysis, self.config.digest,
                     snapshot["revision"], self._option_revision, self.selections.revision,
                     tuple(self._options.items()), frozen, tuple(values.items()),
-                    tuple(state for target, state in states.items() if target in dependencies))
+                    tuple(state for target, state in states.items() if target in dependencies),
+                    tuple(asdict(self.cleanup_settings).items()))
         self._removal_drafts[draft.id] = draft
         self._removal_snapshots[draft.id] = deepcopy(snapshot)
         return draft
@@ -294,9 +315,7 @@ class EnvironmentService:
                 remaining = build_removal_atoms(specs, states, active_values)
             except ValidationError:
                 continue  # An invalid legacy activation is insufficient proof.
-            empty_requirements = any(spec.mode != "replace" and active_values[spec.key] == ""
-                                     and states[spec.target].exists for spec in specs)
-            if not remaining.atoms and not empty_requirements:
+            if not remaining.atoms:
                 active.pop(app)
         return active
 
@@ -311,7 +330,8 @@ class EnvironmentService:
             raise ConflictError("存在未完成执行，请先恢复")
         decisions = decisions or {}
         states = {_target(state): state for state in draft.states}
-        changes = compose_removal(draft.ordinary_atoms, draft.shared_conflicts, decisions, states)
+        changes = compose_removal(draft.ordinary_atoms, draft.shared_conflicts, decisions, states,
+                                  cleanup=CleanupSettings(**dict(draft.cleanup_settings)))
         resolved = {conflict.atom.atom_id: ConflictDecision(
                     decisions.get(conflict.atom.atom_id, ConflictDecision.KEEP))
                     for conflict in draft.shared_conflicts}
@@ -320,11 +340,13 @@ class EnvironmentService:
         metrics = {"removed_element_count": sum(atom.occurrence_count for atom in removed
                                                 if atom.kind == RemovalKind.LIST_ELEMENT),
                    "removed_atom_count": len(removed),
-                   "removed_key_count": sum(atom.kind == RemovalKind.WHOLE_KEY for atom in removed),
+                   "removed_key_count": sum(not change.after.exists for change in changes),
                    "kept_shared_count": sum(value == ConflictDecision.KEEP for value in resolved.values()),
                    "skipped_count": len(draft.skipped)}
-        warnings = [f"{atom.target[0]} / {states[atom.target].name}：将删除整个环境变量"
-                    for atom in removed if atom.kind == RemovalKind.WHOLE_KEY]
+        warnings = [f"{change.before.scope} / {change.before.name}：将删除整个环境变量"
+                    for change in changes if not change.after.exists]
+        warnings.extend(warning for change in changes if change.calculation
+                        for warning in change.calculation.warnings)
         for change in changes:
             self.store.check_permission(change.before.scope)
             if change.before.scope == "System":
@@ -388,7 +410,8 @@ class EnvironmentService:
             raise ValidationError("无法分析方案切换或共享保护：" + "；".join(dict.fromkeys(
                 f"{error.app} / {error.option}：{error.message}" for error in errors)))
         core = prepare_switch(self.config, app, new_option, detection.targets, values,
-                              old_options=old_options, detection=detection, orders=orders)
+                              old_options=old_options, detection=detection, orders=orders,
+                              cleanup=self.cleanup_settings)
         dependencies = candidate_targets | {_target(change.before) for change in core.changes}
         draft = SchemeSwitchDraft(uuid.uuid4().hex, core, self.config.digest,
                     snapshot["revision"], self._option_revision, self.selections.revision,
@@ -422,7 +445,8 @@ class EnvironmentService:
             raise ValidationError("无法分析方案切换或共享保护：" + "；".join(dict.fromkeys(
                 f"{error.app} / {error.option}：{error.message}" for error in errors)))
         core = prepare_batch_switch(self.config, requested, detection.targets, values,
-                                    old_options=old_options, detection=detection, orders=orders)
+                                    old_options=old_options, detection=detection, orders=orders,
+                                    cleanup=self.cleanup_settings)
         dependencies = candidate_targets | {_target(change.before) for change in core.changes}
         draft = BatchSchemeSwitchDraft(uuid.uuid4().hex, core, self.config.digest,
                     snapshot["revision"], self._option_revision, self.selections.revision,
@@ -433,9 +457,9 @@ class EnvironmentService:
 
     @staticmethod
     def _switch_atom_removed(atom, after):
-        if atom.kind == RemovalKind.WHOLE_KEY:
+        if atom.kind in (RemovalKind.WHOLE_KEY, RemovalKind.EMPTY_VALUE):
             return not after.exists or after.value != atom.display_value
-        keys = {match_key(item) for item in after.value.split(";")} if after.exists and after.value else set()
+        keys = set(effective_elements(after.value)) if after.exists else set()
         return atom.element_key not in keys
 
     def finalize_scheme_switch(self, draft_id, decisions=None, orders=None):
@@ -481,14 +505,14 @@ class EnvironmentService:
             contributions = tuple({"app": spec.app, "option": spec.option, "record_key": spec.key,
                                    "mode": spec.mode, "selected_value": values[spec.key]}
                                   for spec in new_specs)
-            if not new_specs:
+            if not new_specs and not change.contributions:
                 contributions = tuple({"app": source.app, "option": source.option,
                                        "record_key": source.spec_key, "mode": "remove",
                                        "selected_value": source.selected_value,
                                        "atom_id": atom.atom_id}
                                       for atom in draft.core.old_atoms if atom.target == target
                                       for source in atom.sources)
-            change = replace(change, contributions=contributions)
+            change = replace(change, contributions=change.contributions + contributions)
             changes.append(change)
             if change.changed:
                 self.store.check_permission(change.before.scope)
@@ -501,6 +525,14 @@ class EnvironmentService:
             for spec in new_specs:
                 effect = _effect(replace(change, mode=spec.mode, selected_value=values[spec.key],
                                         record_key=spec.key))
+                # Preserve the legacy explicit history-deactivation baseline;
+                # live switching itself never uses this historical state.
+                previous = snapshot["active"].get(spec.app, {}).get("effects", ())
+                previous_effect = next((entry for entry in previous
+                    if _target(RegistryState.from_dict(entry["after"])) == target), None)
+                if (previous_effect and previous_effect.get("safe", False)
+                        and change.before.same_content(RegistryState.from_dict(previous_effect["after"]))):
+                    effect["before"] = deepcopy(previous_effect["before"])
                 effect["group_id"] = plan_id
                 effects_by_app[spec.app].append(effect)
                 selection_warning = self.selections.get(spec).warning
@@ -574,6 +606,20 @@ class EnvironmentService:
                     dependencies=draft.dependencies, metadata=metadata))
 
     def _issue(self, plan):
+        deletion_risks = []
+        for change in plan.changes:
+            if not change.before.exists or change.after.exists:
+                continue
+            target = f"{change.before.scope} / {change.before.name}"
+            if change.before.scope == "System":
+                deletion_risks.append(f"{target}：将删除系统级环境变量，需要管理员权限")
+            if match_key(change.before.name) in {"PATH", "SYSTEMROOT", "WINDIR", "COMSPEC", "PATHEXT"}:
+                deletion_risks.append(f"{target}：删除系统关键环境变量可能影响命令查找或应用启动")
+        if deletion_risks:
+            plan = replace(plan, warnings=tuple(dict.fromkeys(plan.warnings + tuple(deletion_risks))))
+        if plan.action in {"apply", "switch", "remove"}:
+            plan = replace(plan, metadata={**plan.metadata,
+                           "cleanup_settings": asdict(self.cleanup_settings)})
         self._issued_plans[plan.id] = deepcopy(plan)
         return plan
 
@@ -613,130 +659,38 @@ class EnvironmentService:
         return self.plan_batch({app: option}, orders)
 
     def plan_batch(self, app_options, orders=None):
-        """Resolve all selected applications into one write per registry target."""
-        snapshot = self.state.snapshot()
-        self.selections.refresh_last(snapshot["last_values"])
-        self.selections.refresh_success(self._saved_selections(snapshot))
+        """Compatibility entry into the same live net-state switch engine as UI.
+
+        Shared KEEP defaults and ambiguous old schemes remain blocking conflicts
+        here; callers needing decisions use the prepare/finalize APIs.
+        """
         requested = (dict(app_options) if isinstance(app_options, dict) else
                      {app: self.selected_option(app) for app in app_options})
-        if not requested:
-            raise ValidationError("请至少选择一个应用")
-        if set(requested) - set(self.config.apps()):
-            raise ValidationError("所选应用已不存在，请重新选择")
-        applications = tuple((app, requested[app]) for app in self.config.apps() if app in requested)
-        for app, option in applications:
+        if not requested or set(requested) - set(self.config.apps()):
+            raise ValidationError("请至少选择一个实际存在的应用")
+        for app, option in requested.items():
+            if option not in self.config.options(app):
+                raise ValidationError("选定方案不存在")
             self.select_option(app, option)
-        orders = orders or {}
-        switching = {app for app, option in applications
-                     if app in snapshot["active"] and snapshot["active"][app]["option"] != option}
-        conflicts, warnings = [], []
-        actuals, virtual, merged = {}, {}, {}
-
-        def read(scope, name):
-            target = scope, match_key(name)
-            if target not in actuals:
-                actuals[target] = self.store.read(scope, name)
-            return actuals[target]
-
-        for app, _ in applications:
-            if app not in switching:
-                continue
-            undone, problems = self._undo(app, snapshot, switching)
-            conflicts.extend(problems)
-            for change in undone:
-                target = _target(change.before)
-                actuals.setdefault(target, change.before)
-                if target in virtual and not virtual[target].same_content(change.after):
-                    conflicts.append(f"{change.before.scope} / {change.before.name}：共享方案的原始状态不同，不能安全共同撤销")
-                else:
-                    virtual[target] = change.after
-                    merged[target] = change
-        if self.pending():
-            conflicts.append("存在未完成执行，请先在历史记录中检查并恢复")
-        values, confirmed, success_selections = [], [], {}
-        groups, effects_by_app = {}, {}
-        for app, option in applications:
-            activation = snapshot["active"].get(app)
-            effects_by_app[app] = {} if app in switching or not activation else {
-                _target(RegistryState.from_dict(e["after"])): deepcopy(e) for e in activation["effects"]}
-            if self.initialization_warning(app):
-                warnings.append(f"{app}：{self.initialization_warning(app)}")
             for spec in self.config.variables(app, option):
-                selection = self.selections.get(spec)
-                validate_value(selection.value, spec.mode)
-                groups.setdefault(spec.target, []).append((spec, selection.value))
-                values.append((spec.key, selection.value))
-                success_selections[spec.key] = self.selections.snapshot(spec)
-                if selection.warning:
-                    warnings.append(f"{app} / {spec.name}：{selection.warning}")
-        batch_id = uuid.uuid4().hex
-        for target, records in groups.items():
-            spec = records[0][0]
-            actual = read(spec.scope, spec.name)
-            existing = virtual.get(target, actual)
-            self.store.check_permission(spec.scope)
-            contributions = tuple({"app": item.app, "option": item.option, "record_key": item.key,
-                                   "mode": item.mode, "selected_value": value}
-                                  for item, value in records)
-            order_key = (spec.key if len(records) == 1 else
-                         json.dumps(["batch-target", spec.scope, target[1]], ensure_ascii=False))
-            modes = {item.mode for item, _ in records}
-            mode = "append" if "append" in modes else next(iter(modes)) if len(modes) == 1 else "batch_append"
-            selected = records[0][1] if len(records) == 1 else "\n".join(value for _, value in records)
-            try:
-                cal = calculate_batch(records, existing, orders.get(order_key))
-            except ValidationError as exc:
-                conflicts.append(f"{spec.scope} / {spec.name}：{exc}")
-                merged[target] = PlanChange(actual, existing, mode, selected, order_key,
-                                           contributions=contributions)
-                continue
-            change = PlanChange(actual, cal.result, mode, selected, order_key, cal, contributions)
-            merged[target] = change
-            for item, value in records:
-                effects = effects_by_app[item.app]
-                effect = _effect(PlanChange(existing, cal.result, item.mode, value, item.key,
-                                           cal, contributions))
-                effect["group_id"] = batch_id
-                if target in effects:
-                    old_effect = effects[target]
-                    old_after = RegistryState.from_dict(old_effect["after"])
-                    effect["before"] = old_effect["before"]
-                    effect["safe"] = old_effect.get("safe", False) and actual.same_content(old_after)
-                    if not effect["safe"]:
-                        warnings.append(f"{item.app} / {item.name}：检测到外部变更，本次以实际值计算，后续自动撤销会被阻止")
-                    effect["previous_inputs"] = old_effect.get("previous_inputs", []) + [old_effect["selected_value"]]
-                effects[target] = effect
-            shared = [name for name, activation in snapshot["active"].items() if name not in requested
-                      and any(_target(RegistryState.from_dict(e["after"])) == target
-                              for e in activation["effects"])]
-            if shared:
-                warnings.append(f"{spec.scope} / {spec.name}：与 {', '.join(shared)} 共享，请检查本次替换或移动的影响")
-                if change.changed and "replace" in modes:
-                    conflicts.append(f"{spec.scope} / {spec.name}：替换会影响其他激活应用，请先协调或停用共享方案")
-                elif change.changed and any(e["mode"] == "replace"
-                     for shared_app in shared for e in snapshot["active"][shared_app]["effects"]
-                     if _target(RegistryState.from_dict(e["after"])) == spec.target):
-                    conflicts.append(f"{spec.scope} / {spec.name}：其他激活方案要求完整替换值，不能同时追加")
-            if spec.scope == "System":
-                warnings.append(f"{spec.name}：操作系统级变量，需要管理员权限")
-            if cal.result.registry_type == 1 and "%" in (cal.result.value or ""):
-                warnings.append(f"{spec.name}：保留 REG_SZ，百分号引用将按原始文本保存")
-            warnings.extend(cal.warnings)
-            if mode == "append" and not cal.needs_order:
-                confirmed.extend((item.key, tuple(cal.items)) for item, _ in records)
-        active_after = deepcopy(snapshot["active"])
-        for app, option in applications:
-            active_after[app] = {"option": option, "effects": list(effects_by_app[app].values())}
-        changes = tuple(merged.values())
-        for change in changes:
-            if change.changed:
-                self.store.check_permission(change.before.scope)
+                validate_value(self.selections.get(spec).value, spec.mode, spec.special)
+        try:
+            draft = self.prepare_batch_scheme_switch(requested, orders=orders)
+            return self.finalize_batch_scheme_switch(draft.id, orders=orders)
+        except ConflictError as exc:
+            problems = (str(exc),)
+        except ValidationError as exc:
+            # Keep the original blocked-plan contract for incompatible batches.
+            # Invalid inputs/read errors still propagate to the caller.
+            if not any(phrase in str(exc) for phrase in ("冲突", "多个 replace", "置前和置后")):
+                raise
+            problems = (str(exc),)
+        applications = tuple((app, requested[app]) for app in self.config.apps() if app in requested)
         app, option = applications[0]
-        return self._issue(ExecutionPlan(batch_id, app, option,
-            "switch" if switching else "apply", changes, self.config.digest, snapshot["revision"],
-            tuple(values), tuple(confirmed), tuple(dict.fromkeys(warnings)),
-            tuple(dict.fromkeys(conflicts)), active_after,
-            applications=applications, successful_selections=success_selections))
+        snapshot = self.state.snapshot()
+        return self._issue(ExecutionPlan(uuid.uuid4().hex, app, option, "apply", (),
+                self.config.digest, snapshot["revision"], conflicts=problems,
+                active_after=deepcopy(snapshot["active"]), applications=applications))
 
     def plan_deactivate(self, app):
         snapshot = self.state.snapshot()

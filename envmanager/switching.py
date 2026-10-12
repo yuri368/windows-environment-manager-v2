@@ -14,9 +14,10 @@ from types import MappingProxyType
 from typing import Mapping, Sequence
 
 from .detection import DetectionSnapshot
+from .elements import CleanupSettings, cleanup_value, effective_elements, normalize_element
 from .engine import calculate_batch
 from .matching import DetectionError, SchemeStatus, match_scheme, match_variable
-from .models import (Configuration, ConflictError, PlanChange, RegistryState,
+from .models import (Calculation, Configuration, ConflictError, PlanChange, RegistryState,
                      ValidationError, VariableSpec, match_key)
 from .removal import (RemovalAtom, RemovalKind, RemovalSource, SkippedRemoval,
                       TargetKey, build_removal_atoms, compose_removal,
@@ -74,6 +75,7 @@ class SwitchDraft:
     changes: tuple[PlanChange, ...]
     warnings: tuple[str, ...] = ()
     orders: Mapping[str, tuple[str, ...]] = field(default_factory=dict)
+    cleanup: CleanupSettings = field(default_factory=CleanupSettings)
 
     def __post_init__(self) -> None:
         for name in ("states", "selected_values", "orders"):
@@ -183,14 +185,14 @@ def _order_key(records: Sequence[VariableSpec]) -> str:
 
 
 def _compose(old_atoms, new_specs, states, selected_values, orders, kept_ids=frozenset(),
-             kept_whole_targets=frozenset()):
+             kept_whole_targets=frozenset(), cleanup=None):
     new_by_target: dict[TargetKey, list[VariableSpec]] = {}
     for spec in new_specs:
         new_by_target.setdefault(spec.target, []).append(spec)
     # A common list item remains in the virtual state, so adding the new scheme
     # does not manufacture a removal, duplicate, or shared-deletion conflict.
     retained_new_keys = {
-        target: {match_key(item) for spec in specs if spec.mode != "replace"
+        target: {item for spec in specs if not spec.special
                  for item in input_elements(selected_input(spec, selected_values))}
         for target, specs in new_by_target.items()
     }
@@ -199,7 +201,10 @@ def _compose(old_atoms, new_specs, states, selected_values, orders, kept_ids=fro
                     not (atom.kind is RemovalKind.LIST_ELEMENT and
                          atom.element_key in retained_new_keys.get(atom.target, set())))
     virtual = dict(states)
-    for change in compose_removal(removed, (), {}, states):
+    # Compose against raw slices first; the final target is cleaned once, after
+    # the new inputs have established their front/back/manual order.
+    for change in compose_removal(removed, (), {}, states,
+                                  cleanup=CleanupSettings(False, False, False)):
         virtual[(change.after.scope, match_key(change.after.name))] = change.after
     targets = tuple(dict.fromkeys([atom.target for atom in old_atoms] + list(new_by_target)))
     changes: list[PlanChange] = []
@@ -212,27 +217,51 @@ def _compose(old_atoms, new_specs, states, selected_values, orders, kept_ids=fro
         existing = snapshot_state(virtual, target)
         specs = new_by_target.get(target)
         if not specs:
-            changes.append(PlanChange(before, existing, "remove", ""))
+            target_atoms = tuple(atom for atom in old_atoms if atom.target == target)
+            ordinary_target = any(atom.kind is RemovalKind.LIST_ELEMENT for atom in target_atoms)
+            uncleaned = existing.value
+            if existing.exists and ordinary_target:
+                existing = replace(existing, value=cleanup_value(uncleaned, cleanup))
+            cleaned = existing.exists and ordinary_target and existing.value != uncleaned
+            cleanup_warnings = ("已自动整理普通元素的空白、空项或重复项",) if cleaned else ()
+            contributions = [{"atom_id": atom.atom_id, "kind": atom.kind.value,
+                              "element_key": atom.element_key, "display_value": atom.display_value,
+                              "occurrence_count": atom.occurrence_count,
+                              "decision": "keep" if atom.atom_id in kept_ids or target in kept_whole_targets
+                                          else "remove",
+                              "sources": [vars(source) for source in atom.sources]}
+                             for atom in target_atoms]
+            if cleaned:
+                contributions.append({"kind": "cleanup", "before_value": uncleaned,
+                                      "after_value": existing.value, "decision": "cleanup"})
+                warnings.extend(cleanup_warnings)
+            calculation = (Calculation(existing,
+                            tuple(existing.value.split(";")) if existing.exists else (),
+                            warnings=cleanup_warnings,
+                            original_items=tuple(before.value.split(";")) if before.exists else ())
+                           if ordinary_target else None)
+            changes.append(PlanChange(before, existing, "remove", "", calculation=calculation,
+                                      contributions=tuple(contributions)))
             continue
         records = tuple((spec, selected_input(spec, selected_values)) for spec in specs)
         order_key = _order_key(specs)
         confirmed_order = orders.get(order_key)
         if confirmed_order is not None:
-            initial = calculate_batch(records, existing)
+            initial = calculate_batch(records, existing, cleanup=cleanup)
             if initial.needs_order and isinstance(confirmed_order, tuple) and all(
                     isinstance(item, str) for item in confirmed_order):
                 # An order reviewed after KEEP can contain old shared items that
                 # the preliminary REMOVE composition omits. Project only these
                 # explicitly removed items; unknown entries remain invalid.
-                expected_keys = {match_key(item) for item in initial.items}
+                expected_keys = {normalize_element(item) for item in initial.items}
                 removed_keys = {atom.element_key for atom in removed if atom.target == target
                                 and atom.kind is RemovalKind.LIST_ELEMENT}
                 removed_whole = any(atom.target == target and atom.kind is RemovalKind.WHOLE_KEY
                                     for atom in removed)
                 if removed_whole and before.value:
-                    removed_keys.update(match_key(item) for item in before.value.split(";"))
+                    removed_keys.update(normalize_element(item) for item in before.value.split(";"))
                 projected = tuple(item for item in confirmed_order
-                                  if match_key(item) in expected_keys or match_key(item) not in removed_keys)
+                                  if normalize_element(item) in expected_keys or normalize_element(item) not in removed_keys)
                 discarded = Counter(confirmed_order) - Counter(projected)
                 original_items = Counter(before.value.split(";")) if before.exists and before.value else Counter()
                 if discarded - original_items:
@@ -242,14 +271,14 @@ def _compose(old_atoms, new_specs, states, selected_values, orders, kept_ids=fro
                 restored_keys = {atom.element_key for atom in old_atoms if atom.target == target
                                  and atom.atom_id in kept_ids and atom.kind is RemovalKind.LIST_ELEMENT}
                 if target in kept_whole_targets and before.value:
-                    restored_keys.update(match_key(item) for item in before.value.split(";"))
-                if missing and not extra and all(match_key(item) in restored_keys for item in missing):
+                    restored_keys.update(normalize_element(item) for item in before.value.split(";"))
+                if missing and not extra and all(normalize_element(item) in restored_keys for item in missing):
                     # KEEP changed the list since this order was reviewed. Ask
                     # for a fresh complete order instead of extending consent.
                     confirmed_order = None
                 else:
                     confirmed_order = projected
-        calculation = calculate_batch(records, existing, confirmed_order)
+        calculation = calculate_batch(records, existing, confirmed_order, cleanup=cleanup)
         after = calculation.result
         # The final transition writes a still-existing key once; virtual removal
         # must not accidentally change the original registry string type.
@@ -266,11 +295,9 @@ def _compose(old_atoms, new_specs, states, selected_values, orders, kept_ids=fro
 
 
 def _net_removed(atom: RemovalAtom, after: RegistryState) -> bool:
-    if atom.kind is RemovalKind.WHOLE_KEY:
+    if atom.kind in (RemovalKind.WHOLE_KEY, RemovalKind.EMPTY_VALUE):
         return not after.exists or after.value != atom.display_value
-    return not after.exists or atom.element_key not in {
-        match_key(item) for item in after.value.split(";") if after.value
-    }
+    return not after.exists or atom.element_key not in effective_elements(after.value)
 
 
 def _new_sources(new_specs, target, selected_values):
@@ -301,24 +328,25 @@ def _net_conflicts(protected, old_atoms, new_specs, states, selected_values, cha
             continue
         value = selected_input(spec, selected_values)
         sources = _new_sources(new_specs, spec.target, selected_values)
-        whole = RemovalAtom(spec.target, RemovalKind.WHOLE_KEY, None, before.value, sources)
-        if spec.mode == "replace":
+        if spec.special:
+            whole = RemovalAtom(spec.target, RemovalKind.WHOLE_KEY, None, before.value, sources)
             if before.value == value and (not after.exists or after.value != value):
-                add(whole, spec, "切换的最终状态会破坏当前完全匹配的 replace 完整值")
+                add(whole, spec, "最终状态会破坏匹配的特殊完整值")
+            continue
+        if not effective_elements(value):
+            if before.value == "" and (not after.exists or after.value != ""):
+                empty = RemovalAtom(spec.target, RemovalKind.EMPTY_VALUE, None, "", sources)
+                add(empty, spec, "最终状态会破坏存在且为空的共享状态")
             continue
         actual = before.value.split(";") if before.value else ()
-        actual_keys = {match_key(item) for item in actual}
-        after_keys = {match_key(item) for item in after.value.split(";")} if after.exists and after.value else set()
-        matched = tuple(item for item in input_elements(value) if match_key(item) in actual_keys)
-        if not after.exists and (matched or not value):
-            add(whole, spec, "切换的最终状态会删除当前已匹配需求所在的完整变量")
-        else:
-            for item in matched:
-                key = match_key(item)
-                if key not in after_keys:
-                    atom = RemovalAtom(spec.target, RemovalKind.LIST_ELEMENT, key, item, sources,
-                                       sum(match_key(x) == key for x in actual))
-                    add(atom, spec, "切换的最终状态会移除已匹配的列表元素：" + item)
+        actual_keys = set(effective_elements(before.value))
+        after_keys = set(effective_elements(after.value)) if after.exists else set()
+        matched = tuple(item for item in input_elements(value) if item in actual_keys)
+        for item in matched:
+            if item not in after_keys:
+                atom = RemovalAtom(spec.target, RemovalKind.LIST_ELEMENT, item, item, sources,
+                                   sum(normalize_element(x) == item for x in actual))
+                add(atom, spec, "最终状态会移除已匹配的元素：" + item)
     return tuple(SharedConflict(atom, tuple(consumers.values())) for atom, consumers in conflicts.values())
 
 
@@ -359,6 +387,7 @@ def prepare_switch(
     old_options: Sequence[str] | None = None,
     detection: DetectionSnapshot | None = None,
     orders: Mapping[str, tuple[str, ...]] | None = None,
+    cleanup: CleanupSettings | None = None,
 ) -> SwitchDraft:
     """Freeze one switch; infer only a unique completely matched old scheme."""
     frozen_states = _states(states)
@@ -370,7 +399,9 @@ def prepare_switch(
     new_specs = tuple(config.variables(app, new_option))
     protected = protected_specs(config, (app,))
     initial_orders = dict(orders or {})
-    changes, warnings = _compose(old.atoms, new_specs, frozen_states, frozen_values, initial_orders)
+    cleanup = cleanup if cleanup is not None else CleanupSettings()
+    changes, warnings = _compose(old.atoms, new_specs, frozen_states, frozen_values, initial_orders,
+                                cleanup=cleanup)
     conflicts = _net_conflicts(protected, old.atoms, new_specs, frozen_states, frozen_values, changes)
     after = {(change.after.scope, match_key(change.after.name)): change.after for change in changes}
     conflict_ids = {conflict.atom.atom_id for conflict in conflicts}
@@ -380,7 +411,7 @@ def prepare_switch(
                      and atom.atom_id not in conflict_ids and atom.target not in whole_conflict_targets)
     return SwitchDraft(config.digest, app, new_option, candidates, chosen, old.atoms, old.skipped,
                        new_specs, protected, frozen_states, frozen_values, ordinary, conflicts,
-                       changes, warnings, initial_orders)
+                       changes, warnings, initial_orders, cleanup)
 
 
 def prepare_batch_switch(
@@ -389,6 +420,7 @@ def prepare_batch_switch(
     old_options: Mapping[str, Sequence[str]] | None = None,
     detection: DetectionSnapshot | None = None,
     orders: Mapping[str, tuple[str, ...]] | None = None,
+    cleanup: CleanupSettings | None = None,
 ) -> BatchSwitchDraft:
     """Resolve old schemes first, then compose all new requirements together."""
     requested = dict(app_options)
@@ -409,7 +441,9 @@ def prepare_batch_switch(
     new_specs = tuple(spec for app, option in applications for spec in config.variables(app, option))
     protected = protected_specs(config, requested)
     initial_orders = dict(orders or {})
-    changes, warnings = _compose(old.atoms, new_specs, frozen_states, frozen_values, initial_orders)
+    cleanup = cleanup if cleanup is not None else CleanupSettings()
+    changes, warnings = _compose(old.atoms, new_specs, frozen_states, frozen_values, initial_orders,
+                                cleanup=cleanup)
     conflicts = _net_conflicts(protected, old.atoms, new_specs, frozen_states, frozen_values, changes)
     after = {(change.after.scope, match_key(change.after.name)): change.after for change in changes}
     conflict_ids = {conflict.atom.atom_id for conflict in conflicts}
@@ -420,7 +454,7 @@ def prepare_batch_switch(
     app, option = applications[0]
     return BatchSwitchDraft(config.digest, app, option, candidates_by_app[app], old_by_app[app],
                             old.atoms, old.skipped, new_specs, protected, frozen_states, frozen_values,
-                            ordinary, conflicts, changes, warnings, initial_orders,
+                            ordinary, conflicts, changes, warnings, initial_orders, cleanup,
                             applications, candidates_by_app, old_by_app)
 
 
@@ -433,19 +467,10 @@ def _require_kept_conflicts(conflicts, decisions, states, selected_values, prote
         atom = conflict.atom
         result = after[atom.target]
         for consumer in conflict.consumers:
-            spec = by_key[consumer.spec_key]
-            if spec.mode == "replace":
-                satisfied = result.exists and result.value == selected_input(spec, selected_values)
-            elif atom.kind is RemovalKind.WHOLE_KEY:
-                before = snapshot_state(states, atom.target)
-                actual = {match_key(item) for item in before.value.split(";")} if before.value else set()
-                needed = {match_key(item) for item in input_elements(selected_input(spec, selected_values))} & actual
-                current = {match_key(item) for item in result.value.split(";")} if result.exists and result.value else set()
-                satisfied = result.exists and needed.issubset(current)
+            if atom.kind in (RemovalKind.WHOLE_KEY, RemovalKind.EMPTY_VALUE):
+                satisfied = result.exists and result.value == atom.display_value
             else:
-                satisfied = result.exists and atom.element_key in {
-                    match_key(item) for item in result.value.split(";") if result.value
-                }
+                satisfied = result.exists and atom.element_key in effective_elements(result.value)
             if not satisfied:
                 raise ConflictError(f"新方案与保留的共享要求无法同时满足：{result.scope} / {result.name}，"
                                     f"{consumer.app} / {consumer.option}（{atom.display_value}）")
@@ -466,7 +491,7 @@ def finalize_switch(
         raise ValidationError("共享对象决定必须是 KEEP 或 REMOVE") from exc
     kept = frozenset(key for key, decision in resolved.items() if decision is ConflictDecision.KEEP)
     kept_whole_targets = frozenset(conflict.atom.target for conflict in draft.shared_conflicts
-                                  if conflict.atom.kind is RemovalKind.WHOLE_KEY
+                                  if conflict.atom.kind in (RemovalKind.WHOLE_KEY, RemovalKind.EMPTY_VALUE)
                                   and conflict.atom.atom_id in kept)
     if any(conflict.atom.kind is RemovalKind.LIST_ELEMENT and
            conflict.atom.target in kept_whole_targets and
@@ -474,7 +499,8 @@ def finalize_switch(
            for conflict in draft.shared_conflicts):
         raise ConflictError("完整变量保留与同目标列表元素撤销互斥")
     changes, warnings = _compose(draft.old_atoms, draft.new_specs, draft.states, draft.selected_values,
-                                draft.orders if orders is None else dict(orders), kept, kept_whole_targets)
+                                draft.orders if orders is None else dict(orders), kept, kept_whole_targets,
+                                draft.cleanup)
     final_conflicts = _net_conflicts(draft.protected, draft.old_atoms, draft.new_specs, draft.states,
                                     draft.selected_values, changes)
     known = {conflict.atom.atom_id: {consumer.spec_key for consumer in conflict.consumers}
@@ -499,7 +525,7 @@ def finalize_switch(
             removed_elements[conflict.atom.atom_id] = conflict.atom
     metrics = SwitchMetrics(
         sum(change.changed for change in changes),
-        sum(atom.kind is RemovalKind.WHOLE_KEY and not after[atom.target].exists for atom in removed),
+        sum(change.before.exists and not change.after.exists for change in changes),
         sum(atom.occurrence_count for atom in removed_elements.values()),
         sum(len(change.calculation.added) for change in changes if change.calculation),
         len(kept), len(draft.skipped),
