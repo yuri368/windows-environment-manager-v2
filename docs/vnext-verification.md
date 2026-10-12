@@ -4,13 +4,14 @@
 
 ## 2026-10-12 实际执行结果
 
-在本机 Windows 与仓库 `.venv` 中运行最终源码，`python -m unittest discover -s tests -v` 的实际结果为 **492 项通过，555.126 秒，0 失败、0 错误、0 跳过**。完整日志为 `artifacts/vnext-full-test-audited.log`，该目录为本地忽略的验收产物。
+在本机 Windows 与仓库 `.venv` 中运行最终 2.1.0 源码，`python -m unittest discover -s tests -v` 的实际结果为 **502 项通过，560.136 秒，0 失败、0 错误、0 跳过**。完整日志为 `artifacts/vnext-full-test-delivery-final-2.1.0.log`，该目录为本地忽略的验收产物。
 
 全量结果包含：
 
 - `test_vnext_acceptance.py` 的 39 项用例：T01–T31 及五种范围实际执行、冻结快照、有效空输入、额外元素重复统计。五范围参数化回归包含 15 个场景，分别验证最终状态、共享默认保留、无关目标不整理、每目标一次写，以及 prepare/finalize 后的外部快照变化拒绝。
 - `test_vnext_switch_details.py` 的 6 项用例：旧方案独有目标整理预览、全部 8 种设置组合、特殊值保留、同服务和跨服务设置冻结、精确历史恢复。
 - `test_vnext_ui.py` 的 12 项 Qt 用例：独立共享决策、特殊整键提示、部分匹配和空值撤销预览、各动作的 System/关键变量删除提示、完整值编辑器的 CR/U+2028/U+2029 原文保留、设置折叠和持久化。
+- `test_manual_windows_acceptance.py` 的 10 项纯边界用例：GUID 与目标白名单、既有目标冲突、仅清理已确认状态、拒绝外部文本/类型变更、写后异常回滚、双作用域配置、独立目录参数及高 DPI 线程上下文恢复。它们使用 MemoryStore 或 mock，不执行 UAC、窗口操作或宿主环境变量写入。
 - `test_matching.py` 验证所有普通模式的空选定值仍记录实际额外元素及重复次数；`test_service.py` 验证真实服务恢复/崩溃恢复计划在删除普通 System 目标前给出删除和管理员权限警告。
 - 全部既有配置、选择、四种模式、批量、切换、事务、历史和界面回归；3 项隔离 WindowsStore 测试和 1 项原生 HWND 可见性测试。
 
@@ -73,7 +74,7 @@
 
 实际权限检查为当前进程无管理员权限，`WindowsStore.check_permission("User")` 成功，`check_permission("System")` 返回没有写入权限且需管理员启动；检查仅请求打开权限，不修改注册表。结果保存在 `artifacts/vnext-permission-check.log`。
 
-本轮没有改写实际 User/System 环境变量。当前非管理员令牌无法执行真实 HKLM 写入；UAC 需要人工同意，未作为无人值守验收执行。实际环境变更通知和新进程读取、提权后的主窗口、安装目录运行与新版安装包仍需人工验收。此次交付为源码升级，没有构建或安装新版发布包；这些发布步骤不属于本次核心语义升级的开发交付。
+后续人工同意 UAC 的独立 Windows 验收已在实际 HKCU/HKLM 的 GUID 临时变量上执行：应用、普通/特殊撤销、关闭整理、空值删除、历史恢复、真实写后失败回滚与全部临时目标清理均通过。2.1.0 安装、个人配置/历史保全、不依赖系统 Python 的安装目录启动，以及安装版自身 UAC 后的原生可见窗口和正常退出也已通过。详细证据及尚未验证的平台、交互安装/卸载和外部程序环境刷新项目见 [Windows 验收报告](vnext-windows-verification.md)。标准自动化测试仍不改写宿主环境变量。
 
 ## 规范条款完成审计
 
@@ -87,25 +88,28 @@
 | §7：五范围、来源合并、其他应用全部方案保护、普通部分匹配/空状态/特殊整值共享 | `removal.expand_sources()` / `build_removal_atoms()`；`sharing.protected_specs()` / `classify_conflicts()`；`switching._net_conflicts()` | T18–T20/T29/T30，五范围实际执行及快照变化的 15 个场景，默认保留和独立强制撤销测试 |
 | §7.4/§9：按目标分组、逐项决定、默认保留、bulk 仅共享、正常项最终预览、advanced 折叠 | `SharedConflictDialog`、`PreviewDialog`、`CleanupSettingsDialog`、`VariableCard` | T20/T25，普通/特殊/空值真实按钮和预览回归，设置持久化零注册表写入，原生及模拟截图视觉验收 |
 | §8：切换净状态、批量歧义、每目标一次写、冻结/重新比较、成功值独立性 | `switching._compose()`；`engine.calculate_batch()`；`service._validate_frozen_inputs()` / `execute()`；`selection` | T21/T31，切换单次写、批量排序、配置/选择/来源/设置/Windows 快照变化拒绝、成功偏好仅成功后提交测试 |
-| §4.3/§8：历史恢复/失败回滚原始存在性、文本、类型，不整理；所有动作删除风险和权限 | `plan_restore()` / `plan_recover()` / `_rollback()` 直接恢复快照；`_issue()` 通用风险；`PreviewDialog` 通用删键分支 | T22/T23/T25，写后异常/崩溃/提交失败/外部变化保护、System 恢复/崩溃恢复删键警告，隔离真实注册表和实际权限拒绝检查 |
-| §12：编辑后全配置校验、文档/示例统一、31 场景、旧功能回归、平台边界如实报告 | `ConfigurationDocument._commit()` 原子验证；配置编辑器特殊属性；当前 AGENTS/README/示例/统一规范；Issue #2 | 创建/复制/修改 special 一致性和失败草稿不变、精确 TOML 往返、全量 492 项通过；上文矩阵、文件清单及平台限制 |
+| §4.3/§8：历史恢复/失败回滚原始存在性、文本、类型，不整理；所有动作删除风险和权限 | `plan_restore()` / `plan_recover()` / `_rollback()` 直接恢复快照；`_issue()` 通用风险；`PreviewDialog` 通用删键分支 | T22/T23/T25，写后异常/崩溃/提交失败/外部变化保护、System 恢复/崩溃恢复删键警告，隔离适配测试、实际双作用域事务、UAC 和安装启动 |
+| §12：编辑后全配置校验、文档/示例统一、31 场景、旧功能回归、平台边界如实报告 | `ConfigurationDocument._commit()` 原子验证；配置编辑器特殊属性；当前 AGENTS/README/示例/统一规范；Issue #2 | 创建/复制/修改 special 一致性和失败草稿不变、精确 TOML 往返、全量 502 项通过；上文矩阵、文件清单及平台限制 |
 
 ## 本轮修改文件
 
 本轮独立开发分支为 `feat/core-semantics-vnext-20261012`。PR #3 的空追加值修复和回归测试已先行纳入分支；新版普通元素、特殊值和空值规则在此基础上统一实施。
 
-以下 48 个文件包含本轮源码、测试、示例与文档变更：
+以下 55 个文件包含本轮源码、测试、示例与文档变更：
 
 ```text
 AGENTS.md
 README.md
 docs/core-semantics-vnext.md
+docs/github-release.md
 docs/issue-2.md
 docs/toml-editor-architecture.md
 docs/toml-editor-verification.md
 docs/ui-design.md
 docs/vnext-verification.md
+docs/vnext-windows-verification.md
 env.example.toml
+envmanager/__init__.py
 envmanager/config.py
 envmanager/config_document.py
 envmanager/config_editor_ui.py
@@ -120,6 +124,8 @@ envmanager/service.py
 envmanager/sharing.py
 envmanager/switching.py
 envmanager/ui.py
+packaging/installer.iss
+pyproject.toml
 tests/test_batch_engine.py
 tests/test_batch_service.py
 tests/test_batch_service_review.py
@@ -132,6 +138,7 @@ tests/test_detection.py
 tests/test_domain.py
 tests/test_issue2_ui.py
 tests/test_main_status_options.py
+tests/test_manual_windows_acceptance.py
 tests/test_matching.py
 tests/test_order_anomalies_ui.py
 tests/test_removal.py
@@ -145,4 +152,5 @@ tests/test_ui.py
 tests/test_vnext_acceptance.py
 tests/test_vnext_switch_details.py
 tests/test_vnext_ui.py
+tools/manual_windows_acceptance.py
 ```

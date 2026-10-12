@@ -1,3 +1,3 @@
-"""Windows environment scheme manager, rewritten for the v1.2 contract."""
+"""Windows environment scheme manager with unified vNext element semantics."""
 
-__version__ = "2.0.0"
+__version__ = "2.1.0"
