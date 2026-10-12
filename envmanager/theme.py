@@ -215,7 +215,7 @@ QComboBox#manifestOption::drop-down { width: 18px; }
 QComboBox#manifestOption::down-arrow { width: 10px; height: 10px; }
 QComboBox#manifestOption:hover { background: @surface@; border-color: @control_hover@; }
 QComboBox#manifestOption:focus { border-color: @focus@; }
-QComboBox#detailOption { font-size: 12px; padding: 0px 24px 0px 8px; }
+QComboBox#detailOption { font-size: 12px; padding: 0px 24px 0px 31px; }
 QComboBox#detailOption::drop-down { width: 24px; }
 QComboBox#detailOption::down-arrow { width: 10px; height: 10px; }
 QTreeWidget { padding: 4px 0; background: transparent; border: none; }

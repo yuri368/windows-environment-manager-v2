@@ -91,13 +91,8 @@ class MainStatusOptionTests(unittest.TestCase):
         popup = view.window()
         screen = combo.screen().availableGeometry().adjusted(4, 4, -4, -4)
         self.assertTrue(screen.contains(popup.geometry()), (screen, popup.geometry()))
-        if screen.width() >= 248:
-            self.assertGreaterEqual(popup.width(), 210)
-            self.assertLessEqual(popup.width(), 248)
-            if view.verticalScrollBar().maximum() == 0:
-                self.assertEqual(popup.width(), 236)
-        else:
-            self.assertLessEqual(popup.width(), screen.width())
+        expected = max(166, combo.width()) if combo.compact else combo.width()
+        self.assertEqual(popup.width(), min(expected, screen.width()))
         self.assertEqual(view.horizontalScrollBar().maximum(), 0)
 
     def test_two_manifest_options_are_both_fully_visible_after_popup_show(self):
@@ -151,6 +146,8 @@ class MainStatusOptionTests(unittest.TestCase):
                 if combo is detail:
                     self.assertEqual(view.window().geometry().right(),
                                      combo.mapToGlobal(QPoint(combo.width() - 1, 0)).x())
+                    self.assertEqual(view.window().x(), combo.mapToGlobal(QPoint(0, 0)).x())
+                    self.assertEqual(combo._text_rect().left(), 32)
                 else:
                     sidebar = QRect(self.window.app_list.mapToGlobal(QPoint(0, 0)),
                                     self.window.app_list.size())

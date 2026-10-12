@@ -19,7 +19,7 @@
           ],
           "font_pixels": 12,
           "popup_size": [
-            236,
+            166,
             68
           ],
           "row_heights": [
@@ -43,7 +43,7 @@
           ],
           "font_pixels": 12,
           "popup_size": [
-            236,
+            207,
             68
           ],
           "row_heights": [
@@ -56,7 +56,7 @@
             4,
             4
           ],
-          "popup_right": 310,
+          "popup_right": 304,
           "control_right": 304
         }
       ],
@@ -85,11 +85,11 @@
           "file": "rail-scheme-desktop-100pct.png",
           "source": "native desktop crop",
           "logical_size": [
-            260,
+            231,
             132
           ],
           "pixels": [
-            260,
+            231,
             132
           ],
           "dpr": 1.0,
@@ -117,7 +117,7 @@
           ],
           "font_pixels": 12,
           "popup_size": [
-            236,
+            166,
             68
           ],
           "row_heights": [
@@ -141,7 +141,7 @@
           ],
           "font_pixels": 12,
           "popup_size": [
-            236,
+            207,
             68
           ],
           "row_heights": [
@@ -154,7 +154,7 @@
             4,
             4
           ],
-          "popup_right": 310,
+          "popup_right": 304,
           "control_right": 304
         }
       ],
@@ -169,11 +169,11 @@
           "file": "target-scheme-desktop-150pct.png",
           "source": "native desktop crop",
           "logical_size": [
-            260,
+            190,
             139
           ],
           "pixels": [
-            390,
+            285,
             209
           ],
           "dpr": 1.5,
@@ -186,11 +186,11 @@
           "file": "rail-scheme-desktop-150pct.png",
           "source": "native desktop crop",
           "logical_size": [
-            260,
+            231,
             132
           ],
           "pixels": [
-            390,
+            347,
             198
           ],
           "dpr": 1.5,
@@ -218,7 +218,7 @@
           ],
           "font_pixels": 12,
           "popup_size": [
-            236,
+            166,
             68
           ],
           "row_heights": [
@@ -242,7 +242,7 @@
           ],
           "font_pixels": 12,
           "popup_size": [
-            236,
+            166,
             68
           ],
           "row_heights": [
@@ -255,7 +255,7 @@
             4,
             4
           ],
-          "popup_right": 333,
+          "popup_right": 238,
           "control_right": 232
         }
       ],
@@ -270,11 +270,11 @@
           "file": "target-scheme-desktop-200pct.png",
           "source": "native desktop crop",
           "logical_size": [
-            260,
+            190,
             139
           ],
           "pixels": [
-            520,
+            380,
             278
           ],
           "dpr": 2.0,
@@ -287,11 +287,11 @@
           "file": "rail-scheme-desktop-200pct.png",
           "source": "native desktop crop",
           "logical_size": [
-            260,
+            190,
             132
           ],
           "pixels": [
-            520,
+            380,
             264
           ],
           "dpr": 2.0,
@@ -302,5 +302,16 @@
         }
       ]
     }
-  ]
+  ],
+  "long_name_capture": {
+    "file": "target-long-name-desktop-200pct.png",
+    "fixture": "apache-maven-3.9.11-portable-release; real service on MemoryStore",
+    "control_width": 166,
+    "popup_width": 166,
+    "native_visible": true,
+    "full_tooltip_and_accessible_name_preserved": true,
+    "browsing_writes": 0,
+    "state_history_configuration_unchanged": true,
+    "generator": "tools/capture_equal_long_selector.py"
+  }
 }

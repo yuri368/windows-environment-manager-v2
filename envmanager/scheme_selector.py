@@ -19,7 +19,7 @@ def _popup_status(status):
 
 def _row_fonts(font):
     fonts = []
-    for pixels in (12, 10, 11):
+    for pixels in (12, 11):
         item = QFont(font)
         item.setPixelSize(pixels)
         fonts.append(item)
@@ -32,7 +32,7 @@ class OptionStatusDelegate(QStyledItemDelegate):
         metrics = [QFontMetrics(font) for font in fonts]
         # The popup has a deliberate width budget. Full labels remain in the
         # model and accessible descriptions, rather than enlarging the window.
-        return QSize(228, max(30, max(metric.height() for metric in metrics) + 10))
+        return QSize(0, max(30, max(metric.height() for metric in metrics) + 10))
 
     def paint(self, painter: QPainter, option, index):
         # Never delegate the text to the native combo/menu painter: it reserves
@@ -49,9 +49,8 @@ class OptionStatusDelegate(QStyledItemDelegate):
         elif option.state & QStyle.StateFlag.State_MouseOver:
             painter.setBrush(QColor(COLORS["hover"]))
             painter.drawRoundedRect(option.rect, 4, 4)
-        name_font, marker_font, count_font = _row_fonts(option.font)
+        name_font, count_font = _row_fonts(option.font)
         name_metrics = QFontMetrics(name_font)
-        marker_metrics = QFontMetrics(marker_font)
         count_metrics = QFontMetrics(count_font)
         view = self.parent()
         combo = view.parent() if view else None
@@ -67,26 +66,14 @@ class OptionStatusDelegate(QStyledItemDelegate):
         suffix_width = count_metrics.horizontalAdvance(suffix)
         right = option.rect.adjusted(28, 0, -10, 0)
         label_rect = right.adjusted(0, 0, -(suffix_width + 12 if suffix else 0), 0)
-        marker = " · 默认" if status.get("default") else ""
-        if status.get("active"):
-            marker += " · 已激活"
         name = index.data() or ""
-        name_width = name_metrics.horizontalAdvance(name)
-        marker_width = marker_metrics.horizontalAdvance(marker)
-        # Only retain auxiliary labels if the complete name also fits. Long
-        # names use all remaining space; the trailing result never gets clipped.
-        if name_width + marker_width > label_rect.width():
-            marker = ""
+        # Auxiliary default/activation information lives in the complete
+        # tooltip and accessible description; the compact row shows name/count.
         text = name_metrics.elidedText(name, Qt.TextElideMode.ElideRight,
                                       max(0, label_rect.width()))
         painter.setFont(name_font)
         painter.setPen(QColor(COLORS["ink"]))
         painter.drawText(label_rect, Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft, text)
-        if marker:
-            painter.setFont(marker_font)
-            painter.setPen(QColor(COLORS["secondary"]))
-            painter.drawText(label_rect.adjusted(name_width, 0, 0, 0),
-                             Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft, marker)
         tone = status.get("tone", "scanning")
         color = {"complete": "accent", "partial": "warning", "error": "danger"}.get(tone, "secondary")
         painter.setPen(QColor(COLORS[color]))
@@ -109,6 +96,7 @@ class OptionComboBox(QComboBox):
         view = QListView(self)
         view.setObjectName("optionPopup")
         view.setMouseTracking(True)
+        view.setResizeMode(QListView.ResizeMode.Adjust)
         view.setItemDelegate(OptionStatusDelegate(view))
         view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
@@ -157,20 +145,28 @@ class OptionComboBox(QComboBox):
         return QSize(80 if self.compact else 166, self.minimumSizeHint().height())
 
     def displayedText(self):
+        return self.fontMetrics().elidedText(self.currentText(), Qt.TextElideMode.ElideRight,
+                                             max(0, self._text_rect().width() - 4))
+
+    def _text_rect(self):
         option = QStyleOptionComboBox()
         self.initStyleOption(option)
-        field = self.style().subControlRect(QStyle.ComplexControl.CC_ComboBox, option,
-                                            QStyle.SubControl.SC_ComboBoxEditField, self)
-        return self.fontMetrics().elidedText(self.currentText(), Qt.TextElideMode.ElideRight,
-                                             max(0, field.width() - 4))
+        return self.style().subControlRect(QStyle.ComplexControl.CC_ComboBox, option,
+                                          QStyle.SubControl.SC_ComboBoxEditField, self)
 
     def paintEvent(self, event):
         painter = QStylePainter(self)
         option = QStyleOptionComboBox()
         self.initStyleOption(option)
         painter.drawComplexControl(QStyle.ComplexControl.CC_ComboBox, option)
-        option.currentText = self.displayedText()
-        painter.drawControl(QStyle.ControlElement.CE_ComboBoxLabel, option)
+        painter.setFont(self.font())
+        painter.setPen(self.palette().color(self.foregroundRole()))
+        painter.drawText(self._text_rect(), Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft,
+                         self.displayedText())
+        if not self.compact and self.currentIndex() >= 0:
+            painter.setPen(QColor(COLORS["accent"] if self.isEnabled() else COLORS["disabled"]))
+            painter.drawText(self.rect().adjusted(14, 0, 0, 0),
+                             Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft, "✓")
 
     def showPopup(self):
         view = self.view()
@@ -178,10 +174,9 @@ class OptionComboBox(QComboBox):
         # Keep the entire frameless popup inside the current work area.
         screen = self.screen().availableGeometry().adjusted(4, 4, -4, -4)
         margins = view.contentsMargins()
-        chrome_width = margins.left() + margins.right()
-        if self.count() > self.maxVisibleItems():
-            chrome_width += view.verticalScrollBar().sizeHint().width()
-        width = min(max(236, min(248, view.sizeHintForColumn(0) + chrome_width)), screen.width())
+        # Opening must not turn the primary selector into a wider panel.
+        # Scrollbars consume the existing width; long names elide in that budget.
+        width = min(max(166, self.width()) if self.compact else self.width(), screen.width())
         view.setMinimumWidth(width)
         view.setMaximumWidth(width)
         # Windows' scroll effect temporarily hides the actual popup and shows
