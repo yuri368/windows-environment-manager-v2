@@ -32,14 +32,75 @@ from envmanager.privileges import is_administrator
 from envmanager.removal import RemovalRequest, RemovalScope
 from envmanager.service import EnvironmentService
 from envmanager.store import REG_SZ, WindowsStore
-from tools.manual_windows_acceptance import (Evidence, NativeWindows, ScopedAcceptanceStore,
+from tools.manual_windows_acceptance import (Evidence, NativeWindows as BaseNativeWindows, ScopedAcceptanceStore,
                                             absolute_path, arguments as common_arguments,
-                                            canonical_test_id, durable_json, record, require)
+                                            canonical_test_id, durable_json, record, require, same_executable)
 
 MAIN_TITLE = "环境变量方案管理器"
 CONFLICT_TITLE = "共享环境变量冲突"
 SPECIAL_VALUE = "  A;B\t  "
 UIA_ACTIONS = frozenset({"snapshot", "expand", "collapse", "remove_preview", "cancel", "scroll_down", "scroll_up"})
+
+
+class NativeWindows(BaseNativeWindows):
+    """Capture the verified UIA child popup even when EnumWindows omits it."""
+    def __init__(self):
+        super().__init__()
+        self.u.IsChild.argtypes, self.u.IsChild.restype = [wintypes.HWND, wintypes.HWND], wintypes.BOOL
+        self.u.GetAncestor.argtypes, self.u.GetAncestor.restype = [wintypes.HWND, wintypes.UINT], wintypes.HWND
+
+    def popup_window(self, window, exe, launch_after):
+        root = {"pid": window["pid"], "hwnd": window["popup_root_hwnd"]}
+        checked_window(self, root, exe, launch_after)
+        hwnd = window["hwnd"]
+        pid = wintypes.DWORD()
+        self.u.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+        require(pid.value == root["pid"] and hwnd != root["hwnd"], "popup native PID/HWND mismatch")
+        process = self.process(pid.value)
+        require(process and same_executable(process["exe"], exe) and
+                process["process_started"] >= launch_after and process["token_elevated"],
+                "popup process identity/token changed")
+        require(self.u.IsChild(root["hwnd"], hwnd) or self.u.GetAncestor(hwnd, 3) == root["hwnd"],
+                "popup is not a native child or owned popup of the verified main window")
+        require(self.u.IsWindowVisible(hwnd) and not self.u.IsIconic(hwnd), "popup is not visible")
+        with self.physical_coordinates():
+            rect = wintypes.RECT()
+            require(bool(self.u.GetWindowRect(hwnd, ctypes.byref(rect))), "popup GetWindowRect failed")
+        native_rect = [rect.left, rect.top, rect.right, rect.bottom]
+        require(popup_rect_matches(native_rect, window["popup_uia_rect"]),
+                "popup native frame differs from its verified UIA bounds")
+        return {**process, **window, "rect": native_rect, "title": "",
+                "nativeIsWindowVisible": True, "minimized": False, "coordinate_units": "physical_pixels"}
+
+
+def popup_rect_matches(native_rect, uia_rect):
+    """Accept only the popup frame itself, including a small native border."""
+    if len(native_rect) != 4 or len(uia_rect) != 4:
+        return False
+    x, y, width, height = uia_rect
+    if width <= 0 or height <= 0:
+        return False
+    edges = (x, y, x + width, y + height)
+    return (native_rect[2] > native_rect[0] and native_rect[3] > native_rect[1] and
+            all(abs(native - uia) <= 4 for native, uia in zip(native_rect, edges)))
+
+
+def dropdown_popup(main, payload):
+    require(payload.get("pid") == main["pid"] and payload.get("root_hwnd") == main["hwnd"],
+            "dropdown snapshot target mismatch")
+    nodes = [node for node in payload.get("nodes", [])
+             if node.get("pid") == main["pid"] and node.get("type") == "ControlType.List"
+             and node.get("automation_id", "").endswith(".detailOption.optionPopup")
+             and not node.get("offscreen", True) and node.get("enabled", False)]
+    require(len(nodes) == 1, "UIA did not expose one visible scheme popup")
+    node = nodes[0]
+    require(type(node.get("hwnd")) is int and node["hwnd"] > 0 and node["hwnd"] != main["hwnd"],
+            "UIA scheme popup has no independent native HWND")
+    rect = node.get("rect", [])
+    require(len(rect) == 4 and all(type(value) in (int, float) for value in rect) and
+            rect[2] > 0 and rect[3] > 0, "UIA scheme popup has invalid bounds")
+    return {"pid": main["pid"], "hwnd": node["hwnd"], "popup_root_hwnd": main["hwnd"],
+            "popup_uia_rect": rect}
 
 
 def names_for(test_id):
@@ -212,6 +273,8 @@ def uia_command(script, window, action):
 
 
 def checked_window(native, window, exe, launch_after):
+    if "popup_root_hwnd" in window:
+        return native.popup_window(window, exe, launch_after)
     found = [item for item in native.windows(exe, launch_after, include_owned=True)
              if item["pid"] == window["pid"] and item["hwnd"] == window["hwnd"]
              and item["token_elevated"] and item["nativeIsWindowVisible"]]
@@ -325,43 +388,60 @@ def installed_gui(args, names, config, evidence):
     native = NativeWindows()
     main = wait_window(native, args, launch_after, MAIN_TITLE)
     time.sleep(1)
-    details = {"installed_main": None, "dropdown": None, "conflict": None, "uia_error": None}
+    details = {"installed_main": None, "dropdown": None, "conflict": None, "uia_error": None,
+               "checks": {}, "uia_errors": []}
     dialog = None
     expanded = False
+    current_check = "main"
+    def incomplete(check, exc):
+        error = {"check": check, "type": type(exc).__name__, "message": str(exc),
+                 "traceback": traceback.format_exc()}
+        details["checks"][check] = "partial"
+        details["uia_errors"].append(error)
+        details["uia_error"] = details["uia_error"] or error
+        evidence.phase("installed " + check + " acceptance", "incomplete", error=error)
+
     try:
         details["installed_main"] = capture(native, main, args.exe, launch_after, evidence, "installed-main.png")
+        details["checks"]["main"] = "passed"
         initial = uia(native, main, args.exe, launch_after, evidence, "snapshot", "main")
-        require(any(node.get("name") == "当前详情应用方案" and node.get("type") == "ControlType.ComboBox"
-                    for node in initial.get("nodes", [])), "installed Qt did not expose the scheme ComboBox in UIA")
         # Wait for the product's initial read-only scan to enable the preview button.
         for index in range(15):
             if any(node.get("name") == "撤销方案" and node.get("enabled") for node in initial.get("nodes", [])):
                 break
             time.sleep(0.5)
             initial = uia(native, main, args.exe, launch_after, evidence, "snapshot", f"scan-{index}")
-        before = {window["hwnd"] for window in native.windows(args.exe, launch_after, include_owned=True)
-                  if window["pid"] == main["pid"] and window["nativeIsWindowVisible"]}
-        expanded_state = uia(native, main, args.exe, launch_after, evidence, "expand", "dropdown-open")
-        expanded = True
-        require(any(node.get("name") == "当前详情应用方案" and node.get("expanded") == "Expanded"
-                    for node in expanded_state.get("nodes", [])), "UIA did not confirm expanded scheme dropdown")
-        dropdown_windows = [window for window in native.windows(args.exe, launch_after, include_owned=True)
-                            if window["pid"] == main["pid"] and window["nativeIsWindowVisible"]
-                            and window["hwnd"] not in before and window["title"] != CONFLICT_TITLE]
-        capture(native, main, args.exe, launch_after, evidence, "installed-dropdown-main.png")
-        if len(dropdown_windows) == 1:
-            details["dropdown"] = capture(native, dropdown_windows[0], args.exe, launch_after, evidence,
+        current_check = "dropdown"
+        try:
+            require(any(node.get("name") == "当前详情应用方案" and node.get("type") == "ControlType.ComboBox"
+                        for node in initial.get("nodes", [])), "installed Qt did not expose the scheme ComboBox in UIA")
+            # Expand can succeed before a provider snapshot fails; always collapse afterward.
+            expanded = True
+            expanded_state = uia(native, main, args.exe, launch_after, evidence, "expand", "dropdown-open")
+            require(any(node.get("name") == "当前详情应用方案" and node.get("expanded") == "Expanded"
+                        for node in expanded_state.get("nodes", [])), "UIA did not confirm expanded scheme dropdown")
+            capture(native, main, args.exe, launch_after, evidence, "installed-dropdown-main.png")
+            popup = dropdown_popup(main, expanded_state)
+            details["dropdown"] = capture(native, popup, args.exe, launch_after, evidence,
                                            "installed-dropdown-popup.png")
-            popup_snapshot = uia(native, dropdown_windows[0], args.exe, launch_after, evidence,
+            popup_snapshot = uia(native, popup, args.exe, launch_after, evidence,
                                  "snapshot", "dropdown-popup")
             option_text = "\n".join(node.get("name", "") for node in
                                      expanded_state.get("nodes", []) + popup_snapshot.get("nodes", []))
             require("Default" in option_text and "Alternate_Long_Public_Option_Label" in option_text,
                     "UIA dropdown did not expose both complete QA option labels")
-        else:
-            raise RuntimeError("dropdown popup could not be uniquely captured by native HWND; acceptance incomplete")
-        uia(native, main, args.exe, launch_after, evidence, "collapse", "dropdown-close")
-        expanded = False
+            details["checks"]["dropdown"] = "passed"
+        except Exception as exc:
+            incomplete("dropdown", exc)
+        finally:
+            if expanded:
+                collapsed = uia(native, main, args.exe, launch_after, evidence, "collapse", "dropdown-close")
+                require(any(node.get("name") == "当前详情应用方案" and node.get("expanded") == "Collapsed"
+                            for node in collapsed.get("nodes", [])), "UIA did not confirm collapsed scheme dropdown")
+                expanded = False
+        # Dropdown evidence is independent of the shared-conflict dialog. Proceed
+        # after a verified safe collapse even when dropdown capture is partial.
+        current_check = "conflict"
         uia(native, main, args.exe, launch_after, evidence, "remove_preview", "remove-preview")
         dialog = wait_window(native, args, launch_after, CONFLICT_TITLE, main["pid"], timeout=15)
         time.sleep(0.5)
@@ -385,9 +465,11 @@ def installed_gui(args, names, config, evidence):
         remaining = native.windows(args.exe, launch_after, include_owned=True)
         require(not any(window["pid"] == main["pid"] and window["title"] == CONFLICT_TITLE
                         and window["nativeIsWindowVisible"] for window in remaining), "conflict Cancel did not close dialog")
+        details["checks"]["conflict"] = "passed"
     except Exception as exc:
-        details["uia_error"] = {"type": type(exc).__name__, "message": str(exc), "traceback": traceback.format_exc()}
-        evidence.phase("installed UIA interaction acceptance", "incomplete", error=details["uia_error"])
+        incomplete("dropdown_collapse" if expanded else current_check, exc)
+        details["checks"].setdefault("dropdown", "skipped")
+        details["checks"].setdefault("conflict", "skipped")
     finally:
         # Cancel only our same-PID conflict dialog; never invoke a confirmation.
         dialogs = [item for item in native.windows(args.exe, launch_after, include_owned=True)

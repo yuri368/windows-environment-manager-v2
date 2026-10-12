@@ -2,16 +2,20 @@
 from __future__ import annotations
 
 from pathlib import Path
+from contextlib import nullcontext
 import os
 import subprocess
 import tempfile
+from types import SimpleNamespace
 import unittest
+from unittest.mock import Mock, patch
 
 from envmanager.config import parse_config
 from envmanager.store import MemoryStore
 from tools.manual_windows_acceptance import Evidence, ScopedAcceptanceStore
-from tools.manual_windows_gui_acceptance import (SPECIAL_VALUE, UIA_ACTIONS, UIA_SCRIPT, fixture_config,
-                                                names_for, prepare_fixture, uia_command,
+from tools.manual_windows_gui_acceptance import (SPECIAL_VALUE, UIA_ACTIONS, UIA_SCRIPT, NativeWindows,
+                                                dropdown_popup, fixture_config, installed_gui,
+                                                names_for, popup_rect_matches, prepare_fixture, uia_command,
                                                 validate_conflict_snapshot)
 
 GUID = "51a868c4-ec2b-4f30-999f-673d31c0ef76"
@@ -108,6 +112,132 @@ class GuiFixtureBoundaryTests(unittest.TestCase):
         snapshot["nodes"][2]["offscreen"] = True
         self.assertFalse(validate_conflict_snapshot(snapshot, self.names, [0, 0, 800, 600])[
                          "scroll_not_needed"])
+
+    def popup_snapshot(self):
+        return {"pid": 1234, "root_hwnd": 4321, "nodes": [
+            {"pid": 1234, "hwnd": 5678, "type": "ControlType.List", "offscreen": False,
+             "enabled": True, "automation_id": "QApplication.MainWindow.detailOption.optionPopup",
+             "rect": [1782, 216, 778, 140]}]}
+
+    def test_popup_uses_unique_real_uia_child_hwnd_and_physical_bounds(self):
+        popup = dropdown_popup({"pid": 1234, "hwnd": 4321}, self.popup_snapshot())
+        self.assertEqual(popup["hwnd"], 5678)
+        self.assertEqual(popup["popup_root_hwnd"], 4321)
+        self.assertTrue(popup_rect_matches([1782, 216, 2560, 356], popup["popup_uia_rect"]))
+        self.assertFalse(popup_rect_matches([0, 0, 2560, 1440], popup["popup_uia_rect"]))
+        self.assertFalse(popup_rect_matches([1782, 216, 2560, 356], [1782, 216, 0, 140]))
+        self.assertFalse(popup_rect_matches([1782, 216, 2560, 356], [float("nan"), 216, 778, 140]))
+        for change in ({"pid": 9}, {"hwnd": 0}, {"hwnd": 4321}, {"offscreen": True},
+                       {"automation_id": "unrelated.optionPopup"}, {"rect": [1, 2, -1, 40]}):
+            payload = self.popup_snapshot()
+            payload["nodes"][0].update(change)
+            with self.subTest(change=change), self.assertRaises(AssertionError):
+                dropdown_popup({"pid": 1234, "hwnd": 4321}, payload)
+        payload = self.popup_snapshot()
+        payload["nodes"] *= 2
+        with self.assertRaises(AssertionError):
+            dropdown_popup({"pid": 1234, "hwnd": 4321}, payload)
+
+    def popup_native(self):
+        native = object.__new__(NativeWindows)
+        root = {"pid": 1234, "hwnd": 4321, "token_elevated": True, "nativeIsWindowVisible": True}
+        native.windows = Mock(return_value=[root])  # EnumWindows deliberately omits child.
+        native.process = Mock(return_value={"pid": 1234, "exe": str(self.directory / "qa.exe"),
+                                            "process_started": 20, "token_elevated": True})
+        native.physical_coordinates = nullcontext
+        def pid(hwnd, pointer):
+            pointer._obj.value = 1234
+            return 1
+        def rect(hwnd, pointer):
+            pointer._obj.left, pointer._obj.top = 1782, 216
+            pointer._obj.right, pointer._obj.bottom = 2560, 356
+            return True
+        native.u = SimpleNamespace(GetWindowThreadProcessId=Mock(side_effect=pid),
+                                   IsChild=Mock(return_value=True), GetAncestor=Mock(return_value=4321),
+                                   IsWindowVisible=Mock(return_value=True), IsIconic=Mock(return_value=False),
+                                   GetWindowRect=Mock(side_effect=rect))
+        return native
+
+    def test_popup_native_identity_relation_visibility_and_bounds_are_rechecked(self):
+        popup = dropdown_popup({"pid": 1234, "hwnd": 4321}, self.popup_snapshot())
+        native = self.popup_native()
+        result = native.popup_window(popup, self.directory / "qa.exe", 10)
+        self.assertEqual(result["rect"], [1782, 216, 2560, 356])
+        self.assertTrue(result["nativeIsWindowVisible"])
+        for boundary in ("foreign_pid", "other_executable", "older_process", "not_elevated",
+                         "unrelated_window", "hidden", "main_frame"):
+            native = self.popup_native()
+            if boundary == "foreign_pid":
+                native.u.GetWindowThreadProcessId.side_effect = lambda hwnd, pointer: setattr(pointer._obj, "value", 9)
+            elif boundary == "other_executable":
+                native.process.return_value["exe"] = str(self.directory / "other.exe")
+            elif boundary == "older_process":
+                native.process.return_value["process_started"] = 1
+            elif boundary == "not_elevated":
+                native.process.return_value["token_elevated"] = False
+            elif boundary == "unrelated_window":
+                native.u.IsChild.return_value = False
+                native.u.GetAncestor.return_value = 999
+            elif boundary == "hidden":
+                native.u.IsWindowVisible.return_value = False
+            else:
+                native.u.GetWindowRect.side_effect = lambda hwnd, pointer: True
+            with self.subTest(boundary=boundary), self.assertRaises(AssertionError):
+                native.popup_window(popup, self.directory / "qa.exe", 10)
+
+    def test_partial_dropdown_still_collapses_and_accepts_independent_conflict(self):
+        main = {"pid": 1234, "hwnd": 4321, "title": "环境变量方案管理器"}
+        dialog = {"pid": 1234, "hwnd": 5678, "title": "共享环境变量冲突"}
+        native = Mock()
+        native.windows.return_value = []
+        actions = []
+        def action(native, window, exe, launch_after, evidence, name, label):
+            actions.append(name)
+            if name in ("expand", "collapse"):
+                return {"pid": 1234, "root_hwnd": 4321, "nodes": [
+                    {"name": "当前详情应用方案", "type": "ControlType.ComboBox",
+                     "expanded": "Expanded" if name == "expand" else "Collapsed"}]}
+            return {"nodes": [{"name": "当前详情应用方案", "type": "ControlType.ComboBox"},
+                              {"name": "撤销方案", "enabled": True}]}
+        validation = {name: True for name in ("grouping_verified", "default_keep_verified",
+                     "cancel_visible_inside_frame", "preview_visible_inside_frame", "content_fully_visible")}
+        validation["vertical_scrollable"] = False
+        with patch("tools.manual_windows_gui_acceptance.NativeWindows", return_value=native), \
+             patch("tools.manual_windows_gui_acceptance.wait_window", side_effect=[main, dialog]), \
+             patch("tools.manual_windows_gui_acceptance.uia", side_effect=action), \
+             patch("tools.manual_windows_gui_acceptance.capture", return_value={"rect": [0, 0, 800, 600]}), \
+             patch("tools.manual_windows_gui_acceptance.validate_conflict_snapshot", return_value=validation), \
+             patch("tools.manual_windows_gui_acceptance.time.sleep"):
+            details = installed_gui(SimpleNamespace(exe=self.directory / "qa.exe", gui_timeout=2), self.names,
+                                    self.directory / "qa.toml", Evidence(self.directory))
+        self.assertEqual(details["checks"], {"main": "passed", "dropdown": "partial", "conflict": "passed"})
+        self.assertEqual(details["uia_errors"][0]["check"], "dropdown")
+        self.assertLess(actions.index("collapse"), actions.index("remove_preview"))
+        self.assertIn("cancel", actions)
+        self.assertNotIn("confirm", actions)
+        native.close.assert_called_once()
+
+    def test_unverified_collapse_blocks_preview_and_closes_qa_process(self):
+        main = {"pid": 1234, "hwnd": 4321, "title": "环境变量方案管理器"}
+        native = Mock()
+        native.windows.return_value = []
+        initial = {"nodes": [{"name": "当前详情应用方案", "type": "ControlType.ComboBox"},
+                             {"name": "撤销方案", "enabled": True}]}
+        expanded = {"pid": 1234, "root_hwnd": 4321, "nodes": [
+            {"name": "当前详情应用方案", "expanded": "Expanded"}]}
+        with patch("tools.manual_windows_gui_acceptance.NativeWindows", return_value=native), \
+             patch("tools.manual_windows_gui_acceptance.wait_window", return_value=main), \
+             patch("tools.manual_windows_gui_acceptance.uia", side_effect=[initial, expanded, {"nodes": []},
+                                                                         {"nodes": []}]) as actions, \
+             patch("tools.manual_windows_gui_acceptance.capture", return_value={"rect": [0, 0, 800, 600]}), \
+             patch("tools.manual_windows_gui_acceptance.time.sleep"):
+            details = installed_gui(SimpleNamespace(exe=self.directory / "qa.exe", gui_timeout=2), self.names,
+                                    self.directory / "qa.toml", Evidence(self.directory))
+        self.assertEqual(details["checks"]["dropdown"], "partial")
+        self.assertEqual(details["checks"]["dropdown_collapse"], "partial")
+        self.assertEqual(details["checks"]["conflict"], "skipped")
+        self.assertNotIn("remove_preview", [call.args[6] for call in actions.call_args_list])
+        native.close.assert_called_once()
 
     @unittest.skipUnless(os.name == "nt", "PowerShell Parser/assembly read-only check is Windows-specific")
     def test_powershell_script_syntax_and_builtin_uia_assembly_load(self):

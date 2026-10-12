@@ -57,7 +57,7 @@ python tools/manual_windows_acceptance.py --work-dir <绝对验收目录> --exe 
 
 验收工具已修正为在 PMv2 线程上下文中读取物理像素尺寸并完成拍摄，随后恢复先前 DPI 上下文；相关纯边界测试及真实线程上下文进入/恢复检查通过。补拍所需的额外 UAC 被取消（Windows 错误 1223），补拍进程没有启动，因此完整高 DPI 正式窗口截图仍待人工补拍。安装版演示完整截图已检查，布局可读。
 
-本地真实注册表与 UAC 结果见 `artifacts/vnext-delivery-2.1.0/real-windows/result.json`；安装版演示截图为 `installed-demo.png`。截图和本地证据不包含在对应源码 ZIP 中。
+本地真实注册表与 UAC 结果见 `artifacts/vnext-delivery-2.1.0/real-windows/result.json`；安装版演示截图为 `installed-demo.png`。这些本地证据不包含在对应源码 ZIP 中。2.1.1 已补充正式安装版 200% 缩放完整主窗口截图与工作区修复验证；下拉和共享弹窗仍待补验，最新结果见 [Issue #5 验证记录](issue-5-verification.md)。
 
 ## 验证边界
 
