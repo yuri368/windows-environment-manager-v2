@@ -8,6 +8,10 @@ Windows 10 / 11 · 中文图形界面 · 支持用户变量与系统变量 · �
 
 ![Windows 环境变量方案管理器主界面](docs/images/main-window.png)
 
+主工作台采用 Compact Hybrid 紧凑布局，批量选择、方案准备和变量明细同时可见。配置编辑器将应用导航、配置总览与变量属性并排展示，保留原始 TOML、草稿撤销重做和保存差异确认。
+
+![原生 TOML 配置编辑器](docs/images/config-editor.png)
+
 ## 这是什么？
 
 如果你装过 Java、Python、Node.js 或其他需要环境变量的软件，大概遇到过这些麻烦：

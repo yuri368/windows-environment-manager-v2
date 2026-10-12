@@ -3,6 +3,7 @@ from __future__ import annotations
 import uuid
 import json
 from copy import deepcopy
+from contextlib import contextmanager
 from dataclasses import asdict, replace
 from datetime import datetime, timezone
 
@@ -37,6 +38,16 @@ def _effect(change):
 
 
 class EnvironmentService:
+    # Reload replaces these objects rather than mutating saved references. The
+    # configuration transaction can therefore restore the exact prior runtime,
+    # including valid frozen previews, without copying stores or durable state.
+    _CONFIGURATION_RUNTIME_FIELDS = (
+        "config", "selections", "_options", "_initialization_warnings",
+        "_option_revision", "_detection", "_detection_generation",
+        "_issued_plans", "_removal_drafts", "_removal_snapshots",
+        "_switch_drafts", "_configuration_save_error",
+    )
+
     def __init__(self, config, store, state_repository):
         self.config = config
         self.store = store
@@ -53,6 +64,33 @@ class EnvironmentService:
         self._removal_drafts = {}
         self._removal_snapshots = {}
         self._switch_drafts = {}
+        self._configuration_save_error = None
+
+    @property
+    def configuration_save_error(self):
+        """An unresolved file save blocks writes until a successful reload."""
+        return self._configuration_save_error
+
+    def block_configuration_operations(self, message):
+        self._configuration_save_error = message
+
+    def _require_configuration_ready(self):
+        if self._configuration_save_error:
+            raise ConflictError(self._configuration_save_error)
+
+    @contextmanager
+    def configuration_transaction(self):
+        """Rollback the entire configuration runtime when preparation/save fails.
+
+        Only reload runs inside this boundary; registry, persisted selections and
+        execution history are deliberately outside it and must not be modified.
+        """
+        previous = {name: getattr(self, name) for name in self._CONFIGURATION_RUNTIME_FIELDS}
+        try:
+            yield
+        except Exception:
+            self.__dict__.update(previous)
+            raise
 
     @property
     def cleanup_settings(self):
@@ -110,21 +148,25 @@ class EnvironmentService:
         return self._initialization_warnings.get(app)
 
     def reload(self, config):
-        selections = deepcopy(self.selections)
-        selections.reconcile(spec for options in config.applications.values()
-                             for specs in options.values() for spec in specs)
-        snapshot = self.state.snapshot()
-        selections.refresh_last(snapshot["last_values"])
-        selections.refresh_success(self._saved_selections(snapshot))
-        self.config = config
-        self.selections = selections
-        self._initialize_options(snapshot)
-        self._option_revision += 1
-        self._detection = None
-        self._issued_plans.clear()
-        self._removal_drafts.clear()
-        self._removal_snapshots.clear()
-        self._switch_drafts.clear()
+        with self.configuration_transaction():
+            selections = deepcopy(self.selections)
+            selections.reconcile(spec for options in config.applications.values()
+                                 for specs in options.values() for spec in specs)
+            snapshot = self.state.snapshot()
+            selections.refresh_last(snapshot["last_values"])
+            selections.refresh_success(self._saved_selections(snapshot))
+            self.config = config
+            self.selections = selections
+            self._options = dict(self._options)
+            self._initialization_warnings = dict(self._initialization_warnings)
+            self._initialize_options(snapshot)
+            self._option_revision += 1
+            self._detection = None
+            self._issued_plans = {}
+            self._removal_drafts = {}
+            self._removal_snapshots = {}
+            self._switch_drafts = {}
+            self._configuration_save_error = None
 
     def history(self):
         return self.state.history()
@@ -213,6 +255,7 @@ class EnvironmentService:
                             selection_revision=self.selections.revision)
 
     def _validate_frozen_inputs(self, item, snapshot):
+        self._require_configuration_ready()
         expected_cleanup = (getattr(item, "cleanup_settings", ()) or
                             getattr(item, "metadata", {}).get("cleanup_settings"))
         if expected_cleanup and dict(expected_cleanup) != asdict(self.cleanup_settings):
@@ -234,6 +277,7 @@ class EnvironmentService:
 
     def prepare_remove(self, request):
         """Read and freeze actual matched removal objects without any writes."""
+        self._require_configuration_ready()
         if self.pending():
             raise ConflictError("存在未完成执行，请先在历史记录中检查并恢复")
         if not isinstance(request, RemovalRequest):
@@ -393,6 +437,7 @@ class EnvironmentService:
         history. Ambiguous candidates remain an explicit caller decision, and
         partial matches are used only when listed in old_options.
         """
+        self._require_configuration_ready()
         if self.pending():
             raise ConflictError("存在未完成执行，请先在历史记录中检查并恢复")
         if app not in self.config.applications or new_option not in self.config.options(app):
@@ -422,6 +467,7 @@ class EnvironmentService:
 
     def prepare_batch_scheme_switch(self, app_options, old_options=None, orders=None):
         """Freeze all selected applications against a single global Windows scan."""
+        self._require_configuration_ready()
         if self.pending():
             raise ConflictError("存在未完成执行，请先在历史记录中检查并恢复")
         requested = (dict(app_options) if isinstance(app_options, dict) else
@@ -606,6 +652,7 @@ class EnvironmentService:
                     dependencies=draft.dependencies, metadata=metadata))
 
     def _issue(self, plan):
+        self._require_configuration_ready()
         deletion_risks = []
         for change in plan.changes:
             if not change.before.exists or change.after.exists:
@@ -632,6 +679,7 @@ class EnvironmentService:
         Shared KEEP defaults and ambiguous old schemes remain blocking conflicts
         here; callers needing decisions use the prepare/finalize APIs.
         """
+        self._require_configuration_ready()
         requested = (dict(app_options) if isinstance(app_options, dict) else
                      {app: self.selected_option(app) for app in app_options})
         if not requested or set(requested) - set(self.config.apps()):
@@ -736,6 +784,7 @@ class EnvironmentService:
             self.store.delete(state.scope, state.name)
 
     def execute(self, plan):
+        self._require_configuration_ready()
         issued = self._issued_plans.get(plan.id)
         if issued is None or issued != plan:
             raise ConflictError("执行计划无效或已被修改，请重新预览")

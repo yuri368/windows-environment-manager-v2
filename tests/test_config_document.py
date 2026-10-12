@@ -9,6 +9,9 @@ from envmanager.config import parse_config
 from envmanager.config_document import ConfigurationDocument
 from envmanager.config_editing import ConfigEditingSession
 from envmanager.models import Choice, ConfigError, VariableSpec
+from envmanager.persistence import StateRepository
+from envmanager.service import EnvironmentService
+from envmanager.store import MemoryStore
 
 
 def spec(app="App", option="Default", name="Path", scope="User", mode="replace",
@@ -296,26 +299,21 @@ class DocumentTests(unittest.TestCase):
         source = ("# old\r\n[App.Default]\r\n"
                   "Path = {default_value=\"A\u2028B\u2029C\",scope=\"User\",mode=\"replace\",editable=true}\r\n")
 
-        class Service:
-            def __init__(self):
-                self.config = parse_config(source)
-                self.selections = object()
-                self._issued_plans = {}
-
-            def reload(self, configuration):
-                self.config = configuration
-
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "config.toml"
             path.write_bytes(source.encode("utf-8"))
             session = ConfigEditingSession(path)
             session.replace_text(source.replace("# old", "# new"))
-            service = Service()
+            store = MemoryStore()
+            service = EnvironmentService(parse_config(source), store, StateRepository(Path(directory) / "state"))
             session.save(service)
             self.assertEqual(path.read_bytes(), session.text.encode("utf-8"))
             self.assertNotIn("\n", session.text.replace("\r\n", ""))
             self.assertEqual(parse_config(path.read_bytes().decode("utf-8")).variables("App", "Default")[0].default_value,
                              "A\u2028B\u2029C")
+            self.assertEqual(service.config.variables("App", "Default")[0].default_value, "A\u2028B\u2029C")
+            self.assertEqual(store.writes, [])
+            self.assertEqual(store.notifications, 0)
 
 
 if __name__ == "__main__":

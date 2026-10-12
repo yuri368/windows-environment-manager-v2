@@ -194,32 +194,36 @@ class ConfigEditingSession:
                 raise ConflictError("配置文件已移动、删除或无法读取；原草稿已保留") from exc
             if actual != self._baseline:
                 raise ConflictError("配置文件已被其他程序修改；原草稿已保留，请重新加载")
-            old_config = service.config
-            old_selections = service.selections
-            old_plans = dict(getattr(service, "_issued_plans", {}))
             prepared = False
+            unresolved = None
             try:
-                # Prepare the runtime first so a refresh failure leaves disk unchanged.
-                service.reload(config)
-                prepared = True
-                if self.dirty:
-                    save_config(self.path, self._text, expected_content=self._baseline)
-            except Exception as exc:
-                try:
-                    persisted = self.path.read_bytes()
-                except OSError:
-                    persisted = None
-                if prepared and persisted == self._text.encode("utf-8"):
-                    # The replace may complete before a filesystem error reaches us.
-                    self.save_warning = f"保存接口返回 {type(exc).__name__}，已核实磁盘配置与草稿完全一致"
-                else:
-                    service.config = old_config
-                    service.selections = old_selections
-                    if hasattr(service, "_issued_plans"):
-                        service._issued_plans = old_plans
-                    if prepared and persisted is None:
-                        raise ConflictError("保存结果无法核实；草稿与原运行时状态已保留，请检查磁盘文件后重新加载") from exc
-                    raise
+                with service.configuration_transaction():
+                    # Prepare before writing; a reload failure leaves disk intact.
+                    service.reload(config)
+                    prepared = True
+                    try:
+                        if self.dirty:
+                            save_config(self.path, self._text, expected_content=self._baseline)
+                    except Exception as exc:
+                        try:
+                            persisted = self.path.read_bytes()
+                        except OSError:
+                            persisted = None
+                        if persisted == self._text.encode("utf-8"):
+                            # The replace can complete before an error reaches us.
+                            self.save_warning = f"保存接口返回 {type(exc).__name__}，已核实磁盘配置与草稿完全一致"
+                        elif persisted == self._baseline:
+                            # Confirmed unchanged disk: restore the complete old
+                            # runtime and retain the editable draft.
+                            raise
+                        else:
+                            unresolved = "保存结果无法核实；草稿与原运行时状态已保留，环境变量操作已阻止；请检查磁盘文件并重新加载配置"
+                            raise ConflictError(unresolved) from exc
+            except Exception:
+                if prepared and unresolved:
+                    # Set the safety gate after the transaction restored old state.
+                    service.block_configuration_operations(unresolved)
+                raise
             self._baseline = self._text.encode("utf-8")
             self._history, self._cursor = [self._text], 0
             self._reparse()

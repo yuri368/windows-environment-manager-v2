@@ -28,18 +28,14 @@ colors:
   warning-rule: "#E3D1AF"
   scroll: "#BBC4B4"
 typography:
+  title:
+    fontFamily: "Microsoft YaHei UI, Microsoft YaHei, Segoe UI"
+    fontSize: "18px"
+    fontWeight: 500
   body:
     fontFamily: "Microsoft YaHei UI, Microsoft YaHei, Segoe UI"
     fontSize: "13px"
     fontWeight: 400
-  title:
-    fontFamily: "Microsoft YaHei UI, Microsoft YaHei, Segoe UI"
-    fontSize: "16px"
-    fontWeight: 500
-  dialog-title:
-    fontFamily: "Microsoft YaHei UI, Microsoft YaHei, Segoe UI"
-    fontSize: "18px"
-    fontWeight: 500
   section:
     fontFamily: "Microsoft YaHei UI, Microsoft YaHei, Segoe UI"
     fontSize: "13px"
@@ -48,10 +44,6 @@ typography:
     fontFamily: "Microsoft YaHei UI, Microsoft YaHei, Segoe UI"
     fontSize: "12px"
     fontWeight: 400
-  action:
-    fontFamily: "Microsoft YaHei UI, Microsoft YaHei, Segoe UI"
-    fontSize: "13px"
-    fontWeight: 500
   code:
     fontFamily: "Cascadia Mono, Consolas, Microsoft YaHei UI"
     fontSize: "13px"
@@ -72,12 +64,18 @@ components:
   button-primary:
     backgroundColor: "{colors.accent}"
     textColor: "{colors.input}"
-    typography: "{typography.action}"
+    typography: "{typography.body}"
     rounded: "{rounded.sm}"
     padding: "5px 10px"
   button-secondary:
     backgroundColor: "{colors.hover}"
     textColor: "{colors.accent}"
+    typography: "{typography.body}"
+    rounded: "{rounded.sm}"
+    padding: "5px 10px"
+  button-quiet:
+    backgroundColor: "transparent"
+    textColor: "{colors.ink}"
     typography: "{typography.body}"
     rounded: "{rounded.sm}"
     padding: "5px 10px"
@@ -87,160 +85,149 @@ components:
     typography: "{typography.body}"
     rounded: "{rounded.sm}"
     padding: "5px 8px"
-  card:
+  manifest-row:
+    backgroundColor: "{colors.inventory}"
+    textColor: "{colors.ink}"
+    typography: "{typography.body}"
+    height: "48px"
+    padding: "4px 8px"
+  variable-row:
     backgroundColor: "{colors.surface}"
     textColor: "{colors.ink}"
-    rounded: "{rounded.lg}"
-  button-quiet:
-    backgroundColor: "transparent"
-    textColor: "{colors.ink}"
     typography: "{typography.body}"
-    rounded: "{rounded.sm}"
-    padding: "5px 10px"
-  manifest-row:
-    textColor: "{colors.ink}"
-    typography: "{typography.body}"
-    height: "56px"
+    height: "48px"
     padding: "4px 8px"
-  editor-index:
+  editor-browser:
+    backgroundColor: "{colors.inventory}"
     textColor: "{colors.ink}"
     typography: "{typography.body}"
-    height: "30px"
-    rounded: "{rounded.nav}"
-  badge:
-    backgroundColor: "{colors.surface-muted}"
-    textColor: "{colors.secondary}"
-    rounded: "{rounded.xs}"
-    padding: "3px 7px"
-  activation-status:
-    backgroundColor: "{colors.selected}"
-    textColor: "{colors.accent}"
-    typography: "{typography.meta}"
-    rounded: "{rounded.nav}"
-    padding: "1px 5px"
+    width: "224px"
+  editor-property-value:
+    backgroundColor: "{colors.input}"
+    textColor: "{colors.text}"
+    typography: "{typography.code}"
+    height: "72px"
+    rounded: "{rounded.sm}"
 ---
 
 # Design System: Windows 环境变量方案管理器 V2
 
 ## Overview
 
-**Creative North Star: "档案检索清单"**
+**Creative North Star: "紧凑的方案工作台"**
 
-把常用工作做成一份随时可见的应用清单：主工作区先扫描批量选择、各自方案和变量输入，再查看详情并统一预览。配置编辑器沿用清单与记录详情并列的关系，让用户切换变量时仍看得到当前应用与方案。浅暖灰纸面、墨色正文和受控的深绿操作色服务于清晰阅读；平面分区、细线和间距承担层次。
+界面把 Windows 环境变量的批量方案准备和精确配置编辑呈现在原生 PySide6 工作区中。浅暖灰画布、白色内容面、细分隔线和克制的深绿强调帮助用户快速识别当前对象与操作；字体层级与紧凑对齐负责信息密度，Qt 原生窗口、控件、键盘行为和 DPI 缩放保持一致。
 
-密度来自对齐和折叠，而非加粗和堆叠层级。主界面每行并列应用、方案和简要状态；变量名、当前选定值与作用域/模式容易扫读，参考值默认收起。编辑器提供扁平应用列表、方案选择器、变量表和跨应用搜索，再让值编辑与属性设置共享顶部对齐的工作面。
+主工作台用约 270px 应用栏、右侧方案明细与固定底部操作区组织流程。列表行把批量复选、详情导航和方案选择分成独立操作，以计数表达匹配状态；变量表用行式字段呈现，检查依据按需展开。配置编辑器使用应用/方案/变量导航、方案范围总览与单条记录属性表单，原始 TOML 和保存差异仍是正式编辑流程的一部分。
 
 **Key Characteristics:**
-- 批量选择优先，详情与批次选择相互独立。
-- 暖灰画布、石灰清单面与白色内容区，以明度分区而非阴影造层。
-- 原始文本、临时草稿、校验、显式保存与执行前预览保持可见且可控。
+- 紧凑桌面密度，以真实内容和可读性决定控件尺寸。
+- 应用导航、批量选择、当前准备方案、系统激活方案和配置默认方案彼此明确。
+- 配置草稿、原始文本、校验、差异保存和执行前预览边界清楚。
 
-**The Inventory Rule.** 展开一条记录时，应用清单仍留在工作区中。
+**The Separate Intent Rule.** 勾选只决定批量范围，点击应用主体只切换详情；方案选择只改变当前会话选择。
 
 ## Colors
 
-色彩以温和的石灰和纸白托住墨色文字；深绿只标记主要执行、选中和正向状态，错误与警告使用各自克制的暖色。
+暖灰与灰绿色中性色承载清单和分区，白色用于工作面与输入；深绿只强调主要动作、焦点和正向选择，警告与错误各用语义色。
 
 ### Primary
-- **松针绿**：主要执行按钮与成功/选中提示使用深绿；悬停和按下逐级加深。
+- **松针绿**：用于主操作、有效焦点和明确的正向选择；悬停与按下逐步加深。
 
 ### Secondary
-- **浅鼠尾草**：选中与普通悬停以低饱和绿灰背景提示位置，不与主要操作抢焦点。
-- **暖警示赭**：提示状态使用赭色文字和淡暖底色，和错误红区分。
-- **砖红**：输入错误与危险操作提示采用红色文字或浅红底。
-
-应用激活状态使用文字与小色标共同呈现：已激活为绿色，尚未激活为淡黄色。状态与批量勾选、当前方案草稿相互独立；输入无效仍使用红色反馈，并保留真实激活方案信息。
+- **鼠尾草绿灰**：用于选中和悬停底色，帮助定位而不与主要操作争夺注意力。
+- **暖赭色**：用于警告状态和待处理信息，与错误色区分。
+- **砖红色**：用于输入错误和危险操作提示。
 
 ### Neutral
-- **暖纸画布**：窗口底色。
-- **石灰清单面**：应用清单和编辑器索引的背景。
-- **纸白内容面**：变量详情、标题栏和页脚。
-- **墨色**：主要文字；较浅墨绿灰承担正文和辅助说明。
-- **细线灰绿**：分割线、边框与表格行界线。
+- **暖灰画布**：主窗口和对话框背景。
+- **清单灰绿**：应用栏与编辑器导航区域。
+- **纸白工作面**：详情区、编辑表单、页眉和底部操作栏。
+- **墨色与灰绿文字**：主体内容和次级说明。
+- **细线灰绿**：分隔线、输入边框和表格行界线。
 
-**The Sparse Accent Rule.** 主要绿只承担执行和明确的选择反馈；常规信息靠文字层级与中性色区分。
+激活、匹配、勾选和目标方案是不同状态。匹配结果以短计数或文本呈现；`0/N` 表示未匹配或需配置，检测失败单独呈现错误，不借用绿色完成状态。
+
+**The Sparse Accent Rule.** 常规信息靠文字层级与中性色区分；强调色只承担操作、焦点和明确状态。
 
 ## Typography
 
 **Display Font:** Microsoft YaHei UI（优先），Microsoft YaHei、Segoe UI 依次回退  
 **Body Font:** Microsoft YaHei UI（优先），Microsoft YaHei、Segoe UI 依次回退  
-**Label/Mono Font:** Cascadia Mono、Consolas、Microsoft YaHei UI（代码和值视图）
-
-**Character:** 原生 Windows 文字形态，中文和拉丁字母保持一致；以常规字重为主，少量中等字重用于标题与字段名。没有代码依据的行高或字距不作规定。
+**Label/Mono Font:** Cascadia Mono、Consolas、Microsoft YaHei UI（代码、路径、原始值）
 
 ### Hierarchy
-- **对话框标题**（500，18px）：独立预览、排序和历史窗口的主标题。
-- **工作区标题**（500，16px）：主窗口和编辑器页面标题。
-- **区段与字段名**（500，13px）：变量名和区段标识。
-- **正文**（400，13px）：输入、按钮和主要内容。
-- **元信息**（400，12px）：作用域、模式、数量和次要状态。
-- **源码与代码值**（400，13px）：优先使用 Cascadia Mono，其后回退 Consolas。
+- **标题**（500，18px）：工作区与对话框标题。
+- **区段与字段名**（500，13px）：分组标题、变量名和表头重点。
+- **正文**（400，13px）：主要内容、输入和按钮。
+- **元信息**（400，12px）：作用域、模式、计数和辅助说明。
+- **代码与原始值**（400，13px）：保留原始字符串的精确呈现与编辑。
 
-**The Quiet Weight Rule.** 正文和列表以常规字重为主，工作区标题与主动作使用 500；不要用大号粗体盖过变量和值。表头等原生控件可能保留自身文字样式。
+普通信息保持常规字重；不以巨型标题或重复粗体挤压变量和值的阅读空间。
 
 ## Layout
 
-应用程序是原生 PySide6/Qt 桌面界面，保留键盘与控件状态反馈。通用间距以 4px 为基数；字段间 8px、分组 12px、区段 16px、工作区边距 12px。主界面左侧批量应用清单约 300px，应用行约 56px，方案直接显示在行内；右侧呈现当前详情，底部摘要与当前内容对应的主按钮固定可达。变量参考信息默认折叠。窄窗口保持双栏可用并让内容滚动，错误信息贴近需修复的字段。
+界面使用 Qt 逻辑像素和字体度量，间距按 4px 基数组织：基础 4px、字段 8px、分组 12px、区段 16px、工作区 12px。按钮和输入保持紧凑的原生操作热区，滚动区各自独立。
 
-编辑器左侧是应用索引，初始宽度约 240px（可调范围 216–272px）；应用行约 30px 高、不加图标，普通高度下最多展示六行后滚动，短窗口会缩减可见行数以保留三组标题动作。应用和方案标题可点击打开对应概览；应用、方案和变量各自的标题行右侧将新增与删除入口并列。应用概览摘要行右侧提供方案选择器，列出“全部方案”和该应用的所有方案，即使仅有一个方案也保留控件。“全部方案”展示当前应用的聚合记录但不改变左侧当前方案；选择具体方案进入其概览，并与左侧方案选择同步。新增、删除和设默认方案仍按左侧当前方案上下文执行。选择器只在概览页出现，表单页不重复展示。方案选择器下方另有设默认方案；动作按钮统一使用简短文字，提示中保留完整对象说明。变量列表使用独立的 48px 作用域列。搜索覆盖所有应用、方案和变量，搜索状态下匹配结果表替代变量表，应用与方案导航仍保留。右侧值与属性从顶部对齐；默认值编辑区约 72px，候选表只在有项目时出现，两个候选项约 90px 高。无候选时用短状态文案代替空表。属性字段不包卡片，保持相邻可读；窄编辑器将属性栏移到值与候选项下方。
+主工作台左侧应用清单约 270px，应用行约 48px；右侧显示当前应用与目标方案、变量行和可展开的 Windows 对照/检测详情。底部操作栏固定可见，始终说明预览目标范围。应用行中的批量复选框不切换详情；点击行主体导航详情。每个应用可有自己的会话方案选择，系统当前激活方案与配置默认方案各自显示。匹配状态压缩为计数或短文字；长方案名省略显示并提供完整提示。变量行约 48px，以作用域、模式、来源、当前选定值、检测和操作字段支持快速扫描；长值可通过提示或专用完整值查看器读取。
 
-**The Visible Inventory Rule.** 内容展开时保留所在清单，主操作摘要固定于页脚，局部滚动只用于超出当前窗口的内容。
+配置编辑器左侧 browser 初始 224px，可在 216–256px 间调整。中间总览与右侧单条记录属性表单在宽布局下并排；低于 1020px 时总览与属性区上下堆叠，保持独立滚动而不丢失所选记录。属性表单使用紧凑网格，不包大卡片；精确默认值编辑器高 72px。跨方案记录总览的“全部方案”只用于筛选和定位，不是新增、删除或设默认方案的操作上下文。实际操作方案由左侧导航明确呈现。原始 TOML、草稿、保存差异、撤销重做和文件变更提示保持在同一正式会话中。
 
-主界面方案选择器按实际字体、图标与样式留白计算宽度；常用方案名称完整可见，超长名称明确省略并保留完整提示。下拉列表按实际行高计算尺寸，常规短列表完整显示，长列表支持滚动。排序窗口为读取到的原始值中的空段和纯空白项显示明确标签，原始字符串保持不变；标签不判断这些内容由 Windows 或其他软件创建。
+**The Independent Scroll Rule.** 内容超出可见区域时只滚动所属清单或工作区；固定操作区和关键动作仍可达。
+
+**The Overview Scope Rule.** 总览过滤范围不改变当前方案操作上下文；选择总览记录时明确定位到它所属的真实方案和变量。
 
 ## Elevation & Depth
 
-界面以平面色块和细分隔线组织工作区，不使用投影阴影。清单、内容、表单和页脚通过暖灰、石灰与纸白的色调差异分层；控件状态以边框或浅色填充变化表达。
+界面以浅暖灰、清单灰绿、纸白和 1px 细线建立层次，不使用投影阴影。输入聚焦、选中、悬停和错误通过边框或轻色填充反馈。
 
-**The Flat Surface Rule.** 静态界面以色调和规则线建立空间，避免卡片阴影与装饰性浮层。
+**The Flat Surface Rule.** 静态空间由明度与分隔线组织，不用阴影和装饰卡片取代信息层级。
 
 ## Shapes
 
-常用控件和按钮采用轻柔的小圆角（5px），徽标和变量详情等局部小块用 4px；警示横幅为 6px，预览卡片为 8px。分隔线使用 1px 规则线。主变量行保持方正、无外框，仅以底部分隔线收尾。
+常用输入与按钮使用轻柔小圆角（5px）；局部小标签和导航采用 3–4px，警告区域使用 6px，预览内容容器可用 8px。变量行保持方正无外框，以底部分隔线收尾。状态颜色始终配有可读文字。
 
 ## Components
 
 ### Buttons
-- **Primary:** 深绿填充、白字、中等字重；圆角 5px，内边距 5px × 10px。用于预览/应用或确认执行等当前主操作。
-- **Secondary:** 浅绿灰底色配绿色文字，用于次级、可逆的草稿操作。
-- **Quiet:** 透明背景和边框，仅在悬停或键盘焦点时显出淡色反馈；用于工具栏与行内动作。
-- **Hover / Focus:** 悬停转为浅色底并加深边线；焦点使用绿色边线；禁用状态降低对比度。
-
-### Chips
-- 状态徽标使用浅中性底色和辅助文字；当前选中使用浅鼠尾草底色与深绿字，警告使用淡赭底色。
-
-### Cards / Containers
-- 工作区清单与内容面是无阴影的大平面。
-- 可操作变量行只用底部分隔线；警示容器使用淡暖底和细边线。
-- 执行预览中的变更卡片使用纸白底、细线边框和 8px 圆角。
+- **Primary:** 深绿填充、白字和中等字重，用于预览、确认或明确保存。
+- **Secondary:** 浅绿灰底和深绿文字，用于可逆的次级动作。
+- **Quiet:** 工具栏、筛选与行内动作使用透明底，悬停和键盘焦点时出现轻反馈。
 
 ### Inputs / Fields
-- 输入使用白底、灰绿细边线和 5px 圆角，内边距 5px × 8px。
-- 悬停边线加深；键盘焦点变为绿色边线；非法输入使用错误红边；禁用输入使用浅灰绿底。
-- 选择框和单行文本输入保留原生可键盘操作行为，常规高度约 30px；配置编辑器的多行精确默认值区为 72px。
+- 输入采用白底、灰绿细边、5px 圆角和紧凑内边距；焦点、悬停、禁用和无效状态有不同反馈。
+- 配置编辑器精确文本控件保留空白、引号、反斜线和换行，不将输入格式化成另一种含义。
 
-### Navigation
-- 主应用清单每行独立呈现勾选、应用名、方案下拉与简要状态；勾选和打开详情是分开的操作。
-- 编辑器应用列表不加装饰图标；应用、当前方案和变量表形成可扫读的索引，新增/删除操作在各自标题行并列并靠近其管理对象。
-- 选中导航使用纸白或浅鼠尾草背景和绿色文字，不用重字或扩展树枝装饰。
+### Navigation and Lists
+- 应用行包含批量复选、详情入口、当前准备方案和简短匹配计数；它不重复堆叠激活徽标。
+- 变量行分别展示作用域与模式。相同变量名的 User 与 System 记录保持独立。
+- 编辑器左侧按应用、实际方案和变量导航；新增、删除与设默认动作靠近相应对象。
 
-### Signature Component: 应用清单行
-主页面的应用清单行把批量勾选与当前详情导航分开，并在行内显示方案和变量数量/状态；底部摘要说明本次批次将预览的应用和变量数。
+### Editor Workspace
+- 总览表按当前应用及方案筛选显示记录；每行代表一条具体变量定义。
+- 属性检查器只编辑当前选中记录的名称、作用域、模式、默认值、editable、choices 与 special 等真实字段。
+- 表单更新只改变草稿；只有明确查看差异并保存后才写入配置文件。切换、关闭和原文编辑沿用未保存保护。
 
-**The Draft Boundary Rule.** 表单先更新到编辑草稿，只有查看差异并明确保存后才写入 TOML；界面选择和应用不会改写配置定义。
+### Preview and Execution
+- Windows 实际值与检测依据默认折叠，按需展开查看。
+- 环境变量应用、撤销、冲突处理、排序确认和历史恢复均沿用现有服务层预览与确认流程；界面选择本身不写注册表、不应用环境、不改变 TOML。
+
+**The Draft Boundary Rule.** 更新表单、保存 TOML 和应用 Windows 环境是三个独立步骤，各自保留明确反馈与既有安全流程。
 
 ## Do's and Don'ts
 
 ### Do:
-- **Do** 以 Microsoft YaHei UI 为首选系统字体，并保留系统 DPI 缩放。
-- **Do** 用暖灰底、墨色文字和稀疏深绿强调组织页面。
-- **Do** 让批量清单、应用/方案关系和当前选择始终容易辨认。
-- **Do** 保持原始文本与空格，保留未提交草稿，并明确区分更新草稿和保存文件。
-- **Do** 在持久化变更前展示差异或执行预览，并把校验错误放到相关内容旁。
+- **Do** 使用 Microsoft YaHei UI 优先字体，并按 Qt DPI 逻辑尺寸适配窗口。
+- **Do** 用约 270px 应用清单、48px 清单/变量行、224px 编辑器 browser 和 72px 精确值编辑区维持紧凑节奏。
+- **Do** 明确区分导航、批量勾选、目标方案、系统激活状态和配置默认值。
+- **Do** 将所有方案总览视作筛选范围，并维持真实当前方案操作上下文。
+- **Do** 保留原始值、空字符串、choices 标签和值以及未提交草稿。
+- **Do** 在持久化或执行前展示正式差异/预览，并把校验错误放在相关字段旁。
 
 ### Don't:
-- **Don't** 同时展开应用、方案、变量三层树形导航。
-- **Don't** 使用厚重字重、巨型标题、重复图标、作用域拼接后缀或装饰性动画。
-- **Don't** 用空候选表、拉伸控件或属性卡片制造额外占位。
-- **Don't** 以卡片阴影替代平面分区、细线和留白。
-- **Don't** 将选择、更新草稿、保存配置和应用环境变量混成一个含义不明的动作。
+- **Don't** 把原生应用改成网页或 WebView，也不要照搬原型的模拟 Windows 操作和样例 TOML。
+- **Don't** 让点击应用行意外勾选批量项，或让勾选复选框切换详情。
+- **Don't** 将“全部方案”作为真实可执行或可设默认的方案。
+- **Don't** 合并同名 User/System 记录，或混淆当前选定值、默认值、上次应用值和系统实值。
+- **Don't** 让选择方案直接应用环境、写注册表或修改原始 TOML。
+- **Don't** 删除既有撤销、恢复、预览、冲突、排序确认或草稿保护能力。

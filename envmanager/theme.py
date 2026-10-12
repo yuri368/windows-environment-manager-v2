@@ -41,7 +41,7 @@ SPACING = {"base": 4, "field": 8, "group": 12, "section": 16, "workspace": 12}
 FONT_FAMILIES = ["Microsoft YaHei UI", "Microsoft YaHei", "Segoe UI", "Segoe UI Symbol"]
 TYPE = {
     "dialog_title": {"size": 18, "weight": 500},
-    "workspace_title": {"size": 16, "weight": 500},
+    "workspace_title": {"size": 18, "weight": 500},
     "section": {"size": 13, "weight": 500},
     "body": {"size": 13, "weight": 400},
     "meta": {"size": 12, "weight": 400},
@@ -72,6 +72,7 @@ QLabel#name, QLabel#manifestName { font-size: @section_size@px; font-weight: @se
 QLabel#muted, QLabel#subtitle, QLabel#meta, QLabel#manifestMeta, QLabel#contextPath {
     color: @secondary@; font-size: @meta_size@px;
 }
+QLabel#workspaceCrumb, QLabel#manifestHint, QLabel#footerScope { color: @secondary@; font-size: @meta_size@px; }
 QLabel#eyebrow { color: @muted@; font-size: 11px; }
 QLabel#selectionSummary, QLabel#editorState { color: @accent@; font-size: 12px; }
 QLabel#error { color: @danger@; }
@@ -98,6 +99,7 @@ QFrame#sidebar { border-right: 1px solid @rule@; }
 QFrame#detailPane, QFrame#editorWorkspace, QFrame#editorValuePane { background: @surface@; border: none; }
 QFrame#inspectorHeader { background: @surface@; border: none; border-bottom: 1px solid @rule@; }
 QFrame#editorInspector { background: transparent; border: none; }
+QFrame#variableTableHeader { background: @surface_muted@; border: none; border-bottom: 1px solid @rule@; }
 QFrame#card, QFrame#panel { background: @surface@; border: 1px solid @rule@; border-radius: 8px; }
 QFrame#compactVariable { background: @surface@; border: none; border-bottom: 1px solid @rule@; border-radius: 0; }
 QFrame#variableDetails { background: @surface_muted@; border: none; border-radius: 4px; }
@@ -155,6 +157,8 @@ QPushButton#danger:disabled { color: @disabled@; border-color: @rule@; }
 QPushButton#nav { text-align: left; background: transparent; border: 1px solid transparent; padding: 8px 12px; color: @secondary@; }
 QPushButton#nav:hover { background: @hover@; }
 QPushButton#nav[active="true"] { background: @surface@; color: @accent@; font-weight: 600; }
+QPushButton#workspaceTab { background: transparent; border: none; border-bottom: 2px solid @accent@; border-radius: 0; color: @accent@; padding: 5px 8px; }
+QPushButton#workspaceTab:focus { background: @selected@; }
 QPushButton#manifestName { text-align: left; background: transparent; border: none; padding: 0; font-size: 13px; font-weight: 500; }
 QPushButton#manifestName:focus { border: 1px solid @focus@; }
 QPushButton#manifestName:hover { color: @accent@; }
@@ -213,7 +217,7 @@ QTabBar::tab:selected { color: @accent@; border-bottom-color: @accent@; font-wei
 QSplitter::handle { background: @canvas@; width: 8px; }
 QSplitter::handle:hover { background: @rule@; }
 QMenu { background: @surface@; color: @text@; border: 1px solid @control_border@; padding: 4px; }
-QMenu::item { padding: 8px 24px; border-radius: 4px; }
+QMenu::item { padding: 6px 24px; border-radius: 4px; }
 QMenu::item:selected { background: @selected@; }
 QMenu::separator { height: 1px; background: @rule@; margin: 4px; }
 QToolTip { background: @ink@; color: @surface@; border: none; padding: 6px 8px; }

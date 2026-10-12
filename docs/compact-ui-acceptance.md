@@ -1,0 +1,50 @@
+# Compact Hybrid 原生界面验收
+
+验收日期：2026-10-12。对应主工作台、配置编辑器和共享 Qt 主题的源码实现；没有构建或发布新安装包。
+
+## 实施范围
+
+- 主工作台：270px 应用栏、约 48px 应用行与变量行；准备方案筛选与搜索；勾选批量和详情导航独立；准备、激活和默认方案清晰区分；来源、完整值和敏感值功能保留；Windows 对照默认折叠；固定底栏保留四种方案/应用/批量撤销范围和预览应用。
+- 配置编辑器：左导航、中间配置明细、右侧单记录属性同时可见。低于 1020px 时将总览和属性上下排列，表单独立滚动。全部方案为浏览筛选；新增、删除与设默认仍作用于明确的当前方案。单条定义保留双作用域、四种模式、特殊完整值、候选标签/值、精确原始文本及草稿保护。
+- 保存失败：正式服务完整回滚；核实已落盘则保留新状态；不确定时阻止操作并保留草稿。编辑器重新读取并核实正式配置后恢复服务与主窗口。详见 [保存事务验收](config-save-transaction-acceptance.md)。
+- `DESIGN.md` 与设计 token 侧车记录最终方向。业务算法与 TOML 数据语义沿用现有 AGENTS.md。
+
+## 可复现渲染
+
+`tools/capture_compact_ui.py` 只加载公共示例的临时副本、`MemoryStore` 和临时状态目录。它不会创建 `WindowsStore`。每批核对源文件哈希、临时配置、注册表写入数、通知数和持久化状态修订号。
+
+```powershell
+$env:QT_SCALE_FACTOR='1'
+.\.venv\Scripts\python.exe tools/capture_compact_ui.py --platform offscreen
+```
+
+离屏平台分别以 `QT_SCALE_FACTOR=1/1.5/2` 完成主窗口、编辑器各 1024×768、1366×768、1536×864 的矩阵：18 张渲染，DPR 为 1.0/1.5/2.0。检查窗口实际尺寸、主按钮可见及编辑表单无隐藏的横向裁切。
+
+Windows 平台也生成 18 张原生窗口渲染，并逐张通过 Qt 可见性和原生 `IsWindowVisible` 检查。本机系统缩放为 200%，因此 `QT_SCALE_FACTOR=0.5/0.75/1` 的实际 DPR 为 1.0/1.5/2.0；该环境变量与系统缩放相乘，不能直接把环境变量值称为最终 DPI。JSON 保留实际 DPR 与请求/实际逻辑尺寸。
+
+原生 200% 下可用显示区域限制了部分大窗口，实际窗口会被 Windows 限制，不能据此宣称物理显示器完整显示 1536×864 逻辑像素。完整逻辑矩阵由离屏渲染验证，原生检查覆盖显示器实际可用区域。
+
+所有批次结果：环境变量写入 0、系统通知 0、持久化状态 revision 0、配置文件不变。截图为实际 QWidget 渲染，内容为示例数据。
+
+完整矩阵 PNG 保存于 `docs/images/compact/`，六份对应报告保存于 `docs/compact-ui-evidence/`。报告中的 `file` 以截图目录为基准。文件名中的窗口尺寸为请求尺寸，`logical_size` 是系统实际窗口尺寸；在 Windows 限制大窗口的记录中必须以报告实际尺寸为准。
+
+## 验证记录
+
+- 新保存事务故障注入先在旧实现失败：4 failed、1 passed，直接复现保存失败后的 New → Old 方案跳变。
+- 修复后的事务专测：12 passed、6 subtests passed；关联核心测试：117 passed、35 subtests passed。
+- 编辑器完整阶段测试：48 passed、14 subtests passed；随后新增不确定保存恢复测试和真实服务保存测试通过。
+- 主工作台及状态定向检查：13 passed、4 subtests passed。源码编译、JSON 解析和 Git whitespace 检查通过。
+- 独立 UI finish review：ship。逐张检查了六张 100% 离屏尺寸图、1366×768 的离屏 150%/200%、Windows 100%/150% 以及 1024×768 Windows 200% 图，未发现阻断级布局问题；点击、焦点、保存与窄窗重排的行为证据来自相应自动测试。
+- 全量本机回归与 Windows/Ubuntu CI 的最终结果在 [PR #10 检查记录](https://github.com/yuri368/windows-environment-manager-v2/pull/10/checks) 及其描述中汇总。完整测试命令为 `python -m unittest discover -s tests -v`；保存修复版本本机 562 个测试全部通过，随后新增两个键盘回归用例，最终源码以 CI 对应提交为准。
+
+## 键盘与内容数量的实际交互
+
+`tools/verify_compact_interactions.py` 使用 QTest 向实际 Qt 控件发送按键，在 1024×768、1536×864 窗口中验证启用控件的 Tab 路径、应用名 Enter 导航、主按钮 Enter 打开正式预览、Esc 取消预览、编辑器 Enter 打开保存差异及 Esc 保留草稿。导航与候选表允许 Tab 离开，精确值表单用 Tab 前进；原始 TOML 标签保留文本缩进操作。空白 MemoryStore 下禁用的撤销和更新按钮按预期跳过。
+
+1、2、12 条变量的行高均为 47px；小窗口 12 条变量用 End 滚动至末行，末行操作与固定底栏主按钮均可达。下拉与菜单在模拟屏幕右下边缘展开、Esc 关闭且几何在可用区内。主题 20 组常规正文/辅助文字与背景 sRGB 对比度最低 4.571；焦点状态由实际 focus 记录和主题焦点样式核验。报告不把静态颜色计算称为截图像素测量。
+
+最终实际交互报告 [interaction-report.json](compact-ui-evidence/interaction-report.json) 的 failures 为空；环境变量写入、通知、状态修订均为 0，临时及真实配置字节/哈希不变。运行：`python tools/verify_compact_interactions.py`。
+
+## 验收边界
+
+本次验证的是当前源码界面、Windows 原生可见性、模拟注册表操作及 DPI 渲染。没有重新安装产品、触发安装版 UAC 重启或修改宿主 User/System 环境变量。现有安装版和旧 Release 不因源码修改自动更新。

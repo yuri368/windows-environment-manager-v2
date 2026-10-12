@@ -1,0 +1,2733 @@
+{
+  "platform": "offscreen",
+  "scale_factor": "1",
+  "method": "QApplication + actual QTest key events, isolated MemoryStore and temporary TOML/state",
+  "sizes": [
+    {
+      "requested_size": [
+        1024,
+        768
+      ],
+      "main_size": [
+        1024,
+        768
+      ],
+      "variable_counts": [
+        {
+          "application": "One",
+          "count": 1,
+          "row_heights": [
+            47
+          ],
+          "vertical_max": 0,
+          "vertical_after_End": 0,
+          "horizontal_max": 114,
+          "horizontal_after_End": 114,
+          "last_remove_visible_in_viewport": true,
+          "primary_in_window": true,
+          "natural_heights": true
+        },
+        {
+          "application": "Two",
+          "count": 2,
+          "row_heights": [
+            47,
+            47
+          ],
+          "vertical_max": 0,
+          "vertical_after_End": 0,
+          "horizontal_max": 114,
+          "horizontal_after_End": 114,
+          "last_remove_visible_in_viewport": true,
+          "primary_in_window": true,
+          "natural_heights": true
+        },
+        {
+          "application": "Many",
+          "count": 12,
+          "row_heights": [
+            47,
+            47,
+            47,
+            47,
+            47,
+            47,
+            47,
+            47,
+            47,
+            47,
+            47,
+            47
+          ],
+          "vertical_max": 103,
+          "vertical_after_End": 103,
+          "horizontal_max": 122,
+          "horizontal_after_End": 122,
+          "last_remove_visible_in_viewport": true,
+          "primary_in_window": true,
+          "natural_heights": true
+        }
+      ],
+      "main_focus": {
+        "keys_sent": 72,
+        "reached": [
+          "application_list",
+          "apply",
+          "filter",
+          "last_full_value",
+          "last_source",
+          "last_value",
+          "removal",
+          "scheme",
+          "search"
+        ],
+        "disabled_expected_skip": [
+          "last_remove"
+        ],
+        "missing": [],
+        "sequence": [
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QLineEdit",
+              "object": "",
+              "accessible_name": "搜索批量应用清单",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QComboBox",
+              "object": "manifestFilter",
+              "accessible_name": "按准备方案的检测状态筛选应用",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "quiet",
+              "accessible_name": "",
+              "text": "全选"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "quiet",
+              "accessible_name": "",
+              "text": "清空"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ApplicationList",
+              "object": "manifestList",
+              "accessible_name": "应用清单；空格勾选，名称查看详情，方案下拉切换",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "OptionComboBox",
+              "object": "detailOption",
+              "accessible_name": "准备使用的方案；不会改变当前激活方案",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QComboBox",
+              "object": "",
+              "accessible_name": "VALUE_00 值来源",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QLineEdit",
+              "object": "code",
+              "accessible_name": "VALUE_00 当前选定值",
+              "text": "value-0"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "查看 VALUE_00 完整值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QComboBox",
+              "object": "",
+              "accessible_name": "VALUE_01 值来源",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QLineEdit",
+              "object": "code",
+              "accessible_name": "VALUE_01 当前选定值",
+              "text": "value-1"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "查看 VALUE_01 完整值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QComboBox",
+              "object": "",
+              "accessible_name": "VALUE_02 值来源",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QLineEdit",
+              "object": "code",
+              "accessible_name": "VALUE_02 当前选定值",
+              "text": "value-2"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "查看 VALUE_02 完整值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QComboBox",
+              "object": "",
+              "accessible_name": "VALUE_03 值来源",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QLineEdit",
+              "object": "code",
+              "accessible_name": "VALUE_03 当前选定值",
+              "text": "value-3"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "查看 VALUE_03 完整值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QComboBox",
+              "object": "",
+              "accessible_name": "VALUE_04 值来源",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QLineEdit",
+              "object": "code",
+              "accessible_name": "VALUE_04 当前选定值",
+              "text": "value-4"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "查看 VALUE_04 完整值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QComboBox",
+              "object": "",
+              "accessible_name": "VALUE_05 值来源",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QLineEdit",
+              "object": "code",
+              "accessible_name": "VALUE_05 当前选定值",
+              "text": "value-5"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "查看 VALUE_05 完整值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QComboBox",
+              "object": "",
+              "accessible_name": "VALUE_06 值来源",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QLineEdit",
+              "object": "code",
+              "accessible_name": "VALUE_06 当前选定值",
+              "text": "value-6"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "查看 VALUE_06 完整值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QComboBox",
+              "object": "",
+              "accessible_name": "VALUE_07 值来源",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QLineEdit",
+              "object": "code",
+              "accessible_name": "VALUE_07 当前选定值",
+              "text": "value-7"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "查看 VALUE_07 完整值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QComboBox",
+              "object": "",
+              "accessible_name": "VALUE_08 值来源",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QLineEdit",
+              "object": "code",
+              "accessible_name": "VALUE_08 当前选定值",
+              "text": "value-8"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "查看 VALUE_08 完整值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QComboBox",
+              "object": "",
+              "accessible_name": "VALUE_09 值来源",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QLineEdit",
+              "object": "code",
+              "accessible_name": "VALUE_09 当前选定值",
+              "text": "value-9"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "查看 VALUE_09 完整值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QComboBox",
+              "object": "",
+              "accessible_name": "VALUE_10 值来源",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QLineEdit",
+              "object": "code",
+              "accessible_name": "VALUE_10 当前选定值",
+              "text": "value-10"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "查看 VALUE_10 完整值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QComboBox",
+              "object": "",
+              "accessible_name": "VALUE_11 值来源",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QLineEdit",
+              "object": "code",
+              "accessible_name": "VALUE_11 当前选定值",
+              "text": "value-11"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "查看 VALUE_11 完整值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "quiet",
+              "accessible_name": "",
+              "text": "撤销配置"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "primary",
+              "accessible_name": "",
+              "text": "预览并应用"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QCheckBox",
+              "object": "",
+              "accessible_name": "",
+              "text": "仅看未匹配"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "quiet",
+              "accessible_name": "",
+              "text": "展开 Windows 对照"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QScrollArea",
+              "object": "",
+              "accessible_name": "",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QCheckBox",
+              "object": "",
+              "accessible_name": "批量选择 One",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ApplicationNameButton",
+              "object": "manifestName",
+              "accessible_name": "查看 One 详情",
+              "text": "One"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "OptionComboBox",
+              "object": "manifestOption",
+              "accessible_name": "One 批量方案",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QCheckBox",
+              "object": "",
+              "accessible_name": "批量选择 Two",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ApplicationNameButton",
+              "object": "manifestName",
+              "accessible_name": "查看 Two 详情",
+              "text": "Two"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "OptionComboBox",
+              "object": "manifestOption",
+              "accessible_name": "Two 批量方案",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QCheckBox",
+              "object": "",
+              "accessible_name": "批量选择 Many",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ApplicationNameButton",
+              "object": "manifestName",
+              "accessible_name": "查看 Many 详情",
+              "text": "Many"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "OptionComboBox",
+              "object": "manifestOption",
+              "accessible_name": "Many 批量方案",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "展开 VALUE_00 参考值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "展开 VALUE_01 参考值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "展开 VALUE_02 参考值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "展开 VALUE_03 参考值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "展开 VALUE_04 参考值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "展开 VALUE_05 参考值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "展开 VALUE_06 参考值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "展开 VALUE_07 参考值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "展开 VALUE_08 参考值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "展开 VALUE_09 参考值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "展开 VALUE_10 参考值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "展开 VALUE_11 参考值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "quiet",
+              "accessible_name": "打开 Windows 环境变量设置",
+              "text": "环境变量"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "quiet",
+              "accessible_name": "",
+              "text": "历史"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "quiet",
+              "accessible_name": "",
+              "text": "刷新检测"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "quiet",
+              "accessible_name": "",
+              "text": "配置编辑器"
+            },
+            "key": "Tab",
+            "has_focus": true
+          }
+        ],
+        "multiline_boundaries": [],
+        "scope": "Real QTest forward Tab and reverse Shift+Tab from search; stops at native multiline text indentation controls. Ctrl+Tab in QTabWidget changes tabs and is not used for focus navigation. Focus border is separately checked in theme source, not screenshot-rated."
+      },
+      "main_name_enter": {
+        "expected": "Two",
+        "actual": "Two",
+        "checked_applications": []
+      },
+      "main_apply_enter_then_escape": [
+        {
+          "modal": "确认变更预览",
+          "class": "PreviewDialog",
+          "result": 0,
+          "closed": true
+        }
+      ],
+      "editor_size": [
+        1024,
+        768
+      ],
+      "editor_focus": {
+        "keys_sent": 30,
+        "reached": [
+          "application_list",
+          "default_value",
+          "mode",
+          "name",
+          "overview",
+          "record_list",
+          "save",
+          "scheme_selector",
+          "scope",
+          "search"
+        ],
+        "disabled_expected_skip": [
+          "update"
+        ],
+        "missing": [],
+        "sequence": [
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QLineEdit",
+              "object": "",
+              "accessible_name": "搜索应用、方案或变量",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "quiet",
+              "accessible_name": "查看应用 One 概览",
+              "text": "应用"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "quiet",
+              "accessible_name": "新增应用",
+              "text": "新增"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "danger",
+              "accessible_name": "删除应用 One",
+              "text": "删除"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QListWidget",
+              "object": "editorApps",
+              "accessible_name": "",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "quiet",
+              "accessible_name": "查看方案 One / Default 概览",
+              "text": "方案"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "quiet",
+              "accessible_name": "在应用 One 中新增方案",
+              "text": "新增"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "danger",
+              "accessible_name": "删除方案 One / Default",
+              "text": "删除"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QComboBox",
+              "object": "",
+              "accessible_name": "",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "quiet",
+              "accessible_name": "新增变量",
+              "text": "新增"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "danger",
+              "accessible_name": "删除变量 VALUE_00 (User)",
+              "text": "删除"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QTableWidget",
+              "object": "editorRecords",
+              "accessible_name": "",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "OptionComboBox",
+              "object": "",
+              "accessible_name": "选择概览方案",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QTreeWidget",
+              "object": "configOverview",
+              "accessible_name": "",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QScrollArea",
+              "object": "editorScroll",
+              "accessible_name": "",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QLineEdit",
+              "object": "",
+              "accessible_name": "",
+              "text": "VALUE_00"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QComboBox",
+              "object": "",
+              "accessible_name": "",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QComboBox",
+              "object": "",
+              "accessible_name": "",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QComboBox",
+              "object": "",
+              "accessible_name": "",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QComboBox",
+              "object": "",
+              "accessible_name": "",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QCheckBox",
+              "object": "",
+              "accessible_name": "",
+              "text": "允许自定义输入"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QCheckBox",
+              "object": "",
+              "accessible_name": "",
+              "text": "特殊完整值（仅 replace）"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QPlainTextEdit",
+              "object": "code",
+              "accessible_name": "",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QCheckBox",
+              "object": "",
+              "accessible_name": "",
+              "text": "转义输入"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "quiet",
+              "accessible_name": "",
+              "text": "添加"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "quiet",
+              "accessible_name": "",
+              "text": "校验草稿"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "quiet",
+              "accessible_name": "",
+              "text": "取消"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "primary",
+              "accessible_name": "",
+              "text": "查看差异并保存"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "撤销草稿修改",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QTabBar",
+              "object": "qt_tabwidget_tabbar",
+              "accessible_name": "",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          }
+        ],
+        "multiline_boundaries": [],
+        "scope": "Real QTest forward Tab and reverse Shift+Tab from search; stops at native multiline text indentation controls. Ctrl+Tab in QTabWidget changes tabs and is not used for focus navigation. Focus border is separately checked in theme source, not screenshot-rated."
+      },
+      "editor_primary_in_window": true,
+      "editor_overview_enter": {
+        "activated_records": [
+          "VALUE_00 / Default"
+        ],
+        "form_active": true
+      },
+      "editor_save_enter_then_escape": [
+        {
+          "modal": "确认保存差异",
+          "class": "QDialog",
+          "result": 0,
+          "closed": true
+        }
+      ],
+      "editor_draft_retained_after_cancel": true,
+      "editor_escape_discard_result": 0,
+      "editor_closed": true
+    },
+    {
+      "requested_size": [
+        1536,
+        864
+      ],
+      "main_size": [
+        1536,
+        864
+      ],
+      "variable_counts": [
+        {
+          "application": "One",
+          "count": 1,
+          "row_heights": [
+            47
+          ],
+          "vertical_max": 0,
+          "vertical_after_End": 0,
+          "horizontal_max": 0,
+          "horizontal_after_End": 0,
+          "last_remove_visible_in_viewport": true,
+          "primary_in_window": true,
+          "natural_heights": true
+        },
+        {
+          "application": "Two",
+          "count": 2,
+          "row_heights": [
+            47,
+            47
+          ],
+          "vertical_max": 0,
+          "vertical_after_End": 0,
+          "horizontal_max": 0,
+          "horizontal_after_End": 0,
+          "last_remove_visible_in_viewport": true,
+          "primary_in_window": true,
+          "natural_heights": true
+        },
+        {
+          "application": "Many",
+          "count": 12,
+          "row_heights": [
+            47,
+            47,
+            47,
+            47,
+            47,
+            47,
+            47,
+            47,
+            47,
+            47,
+            47,
+            47
+          ],
+          "vertical_max": 0,
+          "vertical_after_End": 0,
+          "horizontal_max": 0,
+          "horizontal_after_End": 0,
+          "last_remove_visible_in_viewport": true,
+          "primary_in_window": true,
+          "natural_heights": true
+        }
+      ],
+      "main_focus": {
+        "keys_sent": 72,
+        "reached": [
+          "application_list",
+          "apply",
+          "filter",
+          "last_full_value",
+          "last_source",
+          "last_value",
+          "removal",
+          "scheme",
+          "search"
+        ],
+        "disabled_expected_skip": [
+          "last_remove"
+        ],
+        "missing": [],
+        "sequence": [
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QLineEdit",
+              "object": "",
+              "accessible_name": "搜索批量应用清单",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QComboBox",
+              "object": "manifestFilter",
+              "accessible_name": "按准备方案的检测状态筛选应用",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "quiet",
+              "accessible_name": "",
+              "text": "全选"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "quiet",
+              "accessible_name": "",
+              "text": "清空"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ApplicationList",
+              "object": "manifestList",
+              "accessible_name": "应用清单；空格勾选，名称查看详情，方案下拉切换",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "OptionComboBox",
+              "object": "detailOption",
+              "accessible_name": "准备使用的方案；不会改变当前激活方案",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QComboBox",
+              "object": "",
+              "accessible_name": "VALUE_00 值来源",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QLineEdit",
+              "object": "code",
+              "accessible_name": "VALUE_00 当前选定值",
+              "text": "value-0"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "查看 VALUE_00 完整值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QComboBox",
+              "object": "",
+              "accessible_name": "VALUE_01 值来源",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QLineEdit",
+              "object": "code",
+              "accessible_name": "VALUE_01 当前选定值",
+              "text": "value-1"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "查看 VALUE_01 完整值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QComboBox",
+              "object": "",
+              "accessible_name": "VALUE_02 值来源",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QLineEdit",
+              "object": "code",
+              "accessible_name": "VALUE_02 当前选定值",
+              "text": "value-2"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "查看 VALUE_02 完整值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QComboBox",
+              "object": "",
+              "accessible_name": "VALUE_03 值来源",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QLineEdit",
+              "object": "code",
+              "accessible_name": "VALUE_03 当前选定值",
+              "text": "value-3"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "查看 VALUE_03 完整值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QComboBox",
+              "object": "",
+              "accessible_name": "VALUE_04 值来源",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QLineEdit",
+              "object": "code",
+              "accessible_name": "VALUE_04 当前选定值",
+              "text": "value-4"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "查看 VALUE_04 完整值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QComboBox",
+              "object": "",
+              "accessible_name": "VALUE_05 值来源",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QLineEdit",
+              "object": "code",
+              "accessible_name": "VALUE_05 当前选定值",
+              "text": "value-5"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "查看 VALUE_05 完整值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QComboBox",
+              "object": "",
+              "accessible_name": "VALUE_06 值来源",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QLineEdit",
+              "object": "code",
+              "accessible_name": "VALUE_06 当前选定值",
+              "text": "value-6"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "查看 VALUE_06 完整值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QComboBox",
+              "object": "",
+              "accessible_name": "VALUE_07 值来源",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QLineEdit",
+              "object": "code",
+              "accessible_name": "VALUE_07 当前选定值",
+              "text": "value-7"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "查看 VALUE_07 完整值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QComboBox",
+              "object": "",
+              "accessible_name": "VALUE_08 值来源",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QLineEdit",
+              "object": "code",
+              "accessible_name": "VALUE_08 当前选定值",
+              "text": "value-8"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "查看 VALUE_08 完整值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QComboBox",
+              "object": "",
+              "accessible_name": "VALUE_09 值来源",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QLineEdit",
+              "object": "code",
+              "accessible_name": "VALUE_09 当前选定值",
+              "text": "value-9"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "查看 VALUE_09 完整值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QComboBox",
+              "object": "",
+              "accessible_name": "VALUE_10 值来源",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QLineEdit",
+              "object": "code",
+              "accessible_name": "VALUE_10 当前选定值",
+              "text": "value-10"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "查看 VALUE_10 完整值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QComboBox",
+              "object": "",
+              "accessible_name": "VALUE_11 值来源",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QLineEdit",
+              "object": "code",
+              "accessible_name": "VALUE_11 当前选定值",
+              "text": "value-11"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "查看 VALUE_11 完整值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "quiet",
+              "accessible_name": "",
+              "text": "撤销配置"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "primary",
+              "accessible_name": "",
+              "text": "预览并应用"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QCheckBox",
+              "object": "",
+              "accessible_name": "",
+              "text": "仅看未匹配"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "quiet",
+              "accessible_name": "",
+              "text": "展开 Windows 对照"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QScrollArea",
+              "object": "",
+              "accessible_name": "",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QCheckBox",
+              "object": "",
+              "accessible_name": "批量选择 One",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ApplicationNameButton",
+              "object": "manifestName",
+              "accessible_name": "查看 One 详情",
+              "text": "One"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "OptionComboBox",
+              "object": "manifestOption",
+              "accessible_name": "One 批量方案",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QCheckBox",
+              "object": "",
+              "accessible_name": "批量选择 Two",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ApplicationNameButton",
+              "object": "manifestName",
+              "accessible_name": "查看 Two 详情",
+              "text": "Two"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "OptionComboBox",
+              "object": "manifestOption",
+              "accessible_name": "Two 批量方案",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QCheckBox",
+              "object": "",
+              "accessible_name": "批量选择 Many",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ApplicationNameButton",
+              "object": "manifestName",
+              "accessible_name": "查看 Many 详情",
+              "text": "Many"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "OptionComboBox",
+              "object": "manifestOption",
+              "accessible_name": "Many 批量方案",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "展开 VALUE_00 参考值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "展开 VALUE_01 参考值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "展开 VALUE_02 参考值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "展开 VALUE_03 参考值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "展开 VALUE_04 参考值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "展开 VALUE_05 参考值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "展开 VALUE_06 参考值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "展开 VALUE_07 参考值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "展开 VALUE_08 参考值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "展开 VALUE_09 参考值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "展开 VALUE_10 参考值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "展开 VALUE_11 参考值",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "quiet",
+              "accessible_name": "打开 Windows 环境变量设置",
+              "text": "环境变量"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "quiet",
+              "accessible_name": "",
+              "text": "历史"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "quiet",
+              "accessible_name": "",
+              "text": "刷新检测"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "quiet",
+              "accessible_name": "",
+              "text": "配置编辑器"
+            },
+            "key": "Tab",
+            "has_focus": true
+          }
+        ],
+        "multiline_boundaries": [],
+        "scope": "Real QTest forward Tab and reverse Shift+Tab from search; stops at native multiline text indentation controls. Ctrl+Tab in QTabWidget changes tabs and is not used for focus navigation. Focus border is separately checked in theme source, not screenshot-rated."
+      },
+      "main_name_enter": {
+        "expected": "Two",
+        "actual": "Two",
+        "checked_applications": []
+      },
+      "main_apply_enter_then_escape": [
+        {
+          "modal": "确认变更预览",
+          "class": "PreviewDialog",
+          "result": 0,
+          "closed": true
+        }
+      ],
+      "editor_size": [
+        1536,
+        864
+      ],
+      "editor_focus": {
+        "keys_sent": 30,
+        "reached": [
+          "application_list",
+          "default_value",
+          "mode",
+          "name",
+          "overview",
+          "record_list",
+          "save",
+          "scheme_selector",
+          "scope",
+          "search"
+        ],
+        "disabled_expected_skip": [
+          "update"
+        ],
+        "missing": [],
+        "sequence": [
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QLineEdit",
+              "object": "",
+              "accessible_name": "搜索应用、方案或变量",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "quiet",
+              "accessible_name": "查看应用 One 概览",
+              "text": "应用"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "quiet",
+              "accessible_name": "新增应用",
+              "text": "新增"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "danger",
+              "accessible_name": "删除应用 One",
+              "text": "删除"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QListWidget",
+              "object": "editorApps",
+              "accessible_name": "",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "quiet",
+              "accessible_name": "查看方案 One / Default 概览",
+              "text": "方案"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "quiet",
+              "accessible_name": "在应用 One 中新增方案",
+              "text": "新增"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "danger",
+              "accessible_name": "删除方案 One / Default",
+              "text": "删除"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QComboBox",
+              "object": "",
+              "accessible_name": "",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "quiet",
+              "accessible_name": "新增变量",
+              "text": "新增"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "danger",
+              "accessible_name": "删除变量 VALUE_00 (User)",
+              "text": "删除"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QTableWidget",
+              "object": "editorRecords",
+              "accessible_name": "",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "OptionComboBox",
+              "object": "",
+              "accessible_name": "选择概览方案",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QTreeWidget",
+              "object": "configOverview",
+              "accessible_name": "",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QScrollArea",
+              "object": "editorScroll",
+              "accessible_name": "",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QLineEdit",
+              "object": "",
+              "accessible_name": "",
+              "text": "VALUE_00"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QComboBox",
+              "object": "",
+              "accessible_name": "",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QComboBox",
+              "object": "",
+              "accessible_name": "",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QComboBox",
+              "object": "",
+              "accessible_name": "",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QComboBox",
+              "object": "",
+              "accessible_name": "",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QCheckBox",
+              "object": "",
+              "accessible_name": "",
+              "text": "允许自定义输入"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QCheckBox",
+              "object": "",
+              "accessible_name": "",
+              "text": "特殊完整值（仅 replace）"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QPlainTextEdit",
+              "object": "code",
+              "accessible_name": "",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QCheckBox",
+              "object": "",
+              "accessible_name": "",
+              "text": "转义输入"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "quiet",
+              "accessible_name": "",
+              "text": "添加"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "quiet",
+              "accessible_name": "",
+              "text": "校验草稿"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "quiet",
+              "accessible_name": "",
+              "text": "取消"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "primary",
+              "accessible_name": "",
+              "text": "查看差异并保存"
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "ActionButton",
+              "object": "iconOnly",
+              "accessible_name": "撤销草稿修改",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          },
+          {
+            "direction": "forward",
+            "focus": {
+              "class": "QTabBar",
+              "object": "qt_tabwidget_tabbar",
+              "accessible_name": "",
+              "text": ""
+            },
+            "key": "Tab",
+            "has_focus": true
+          }
+        ],
+        "multiline_boundaries": [],
+        "scope": "Real QTest forward Tab and reverse Shift+Tab from search; stops at native multiline text indentation controls. Ctrl+Tab in QTabWidget changes tabs and is not used for focus navigation. Focus border is separately checked in theme source, not screenshot-rated."
+      },
+      "editor_primary_in_window": true,
+      "editor_overview_enter": {
+        "activated_records": [
+          "VALUE_00 / Default"
+        ],
+        "form_active": true
+      },
+      "editor_save_enter_then_escape": [
+        {
+          "modal": "确认保存差异",
+          "class": "QDialog",
+          "result": 0,
+          "closed": true
+        }
+      ],
+      "editor_draft_retained_after_cancel": true,
+      "editor_escape_discard_result": 0,
+      "editor_closed": true
+    }
+  ],
+  "failures": [],
+  "escape_dialogs": [
+    {
+      "class": "FullValueDialog",
+      "result": 0,
+      "closed": true
+    },
+    {
+      "class": "ExactValueDialog",
+      "result": 0,
+      "closed": true
+    },
+    {
+      "class": "ConfigEditorDialog",
+      "result": 0,
+      "closed": true
+    }
+  ],
+  "combo_edge": {
+    "screen": [
+      0,
+      0,
+      800,
+      800
+    ],
+    "popup": [
+      138,
+      298,
+      662,
+      322
+    ],
+    "contained": true
+  },
+  "menu_edge": {
+    "screen": [
+      0,
+      0,
+      800,
+      800
+    ],
+    "menu": [
+      648,
+      660,
+      152,
+      140
+    ],
+    "contained": true,
+    "escape_closed": true
+  },
+  "text_contrast": {
+    "method": "WCAG relative sRGB luminance of current theme tokens; primary body = ink/text",
+    "pairs": [
+      {
+        "foreground": "ink",
+        "background": "canvas",
+        "ratio": 12.731,
+        "at_least_4_5": true
+      },
+      {
+        "foreground": "ink",
+        "background": "inventory",
+        "ratio": 12.341,
+        "at_least_4_5": true
+      },
+      {
+        "foreground": "ink",
+        "background": "surface",
+        "ratio": 13.735,
+        "at_least_4_5": true
+      },
+      {
+        "foreground": "ink",
+        "background": "surface_muted",
+        "ratio": 12.539,
+        "at_least_4_5": true
+      },
+      {
+        "foreground": "ink",
+        "background": "input",
+        "ratio": 14.109,
+        "at_least_4_5": true
+      },
+      {
+        "foreground": "text",
+        "background": "canvas",
+        "ratio": 9.172,
+        "at_least_4_5": true
+      },
+      {
+        "foreground": "text",
+        "background": "inventory",
+        "ratio": 8.891,
+        "at_least_4_5": true
+      },
+      {
+        "foreground": "text",
+        "background": "surface",
+        "ratio": 9.895,
+        "at_least_4_5": true
+      },
+      {
+        "foreground": "text",
+        "background": "surface_muted",
+        "ratio": 9.034,
+        "at_least_4_5": true
+      },
+      {
+        "foreground": "text",
+        "background": "input",
+        "ratio": 10.164,
+        "at_least_4_5": true
+      },
+      {
+        "foreground": "secondary",
+        "background": "canvas",
+        "ratio": 5.017,
+        "at_least_4_5": true
+      },
+      {
+        "foreground": "secondary",
+        "background": "inventory",
+        "ratio": 4.864,
+        "at_least_4_5": true
+      },
+      {
+        "foreground": "secondary",
+        "background": "surface",
+        "ratio": 5.413,
+        "at_least_4_5": true
+      },
+      {
+        "foreground": "secondary",
+        "background": "surface_muted",
+        "ratio": 4.942,
+        "at_least_4_5": true
+      },
+      {
+        "foreground": "secondary",
+        "background": "input",
+        "ratio": 5.56,
+        "at_least_4_5": true
+      },
+      {
+        "foreground": "muted",
+        "background": "canvas",
+        "ratio": 4.715,
+        "at_least_4_5": true
+      },
+      {
+        "foreground": "muted",
+        "background": "inventory",
+        "ratio": 4.571,
+        "at_least_4_5": true
+      },
+      {
+        "foreground": "muted",
+        "background": "surface",
+        "ratio": 5.087,
+        "at_least_4_5": true
+      },
+      {
+        "foreground": "muted",
+        "background": "surface_muted",
+        "ratio": 4.644,
+        "at_least_4_5": true
+      },
+      {
+        "foreground": "muted",
+        "background": "input",
+        "ratio": 5.225,
+        "at_least_4_5": true
+      }
+    ],
+    "scope": "Enabled primary/secondary/muted text on five regular surfaces only. Does not measure pixels, disabled text, focus indicators or all status badges."
+  },
+  "focus_style_source": {
+    "line_edits": true,
+    "combos": true,
+    "buttons": true,
+    "quiet": true,
+    "scope": "Static QSS presence plus actual focus states; no visual screenshot claim."
+  },
+  "boundaries": {
+    "environment_writes": 0,
+    "notifications": 0,
+    "state_revision": 0,
+    "state_unchanged": true,
+    "temporary_config_bytes_unchanged": true,
+    "project_config_hashes_unchanged": true
+  }
+}
