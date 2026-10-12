@@ -74,3 +74,20 @@ The [measured report](compact-ui-evidence/selector-refinement-report.json) retai
 The updated selector regression set has 11 cases. It covers both entry sizes, equal primary entry/popup widths and alignment, long Chinese/English labels, complete tooltip/accessibility semantics, mouse selection, Down/Enter, Escape, outside cancellation, scrolling to the last of 32 schemes and reopening on the selected row. It also checks that these interactions do not write environment values. The final local full suite passed **585 tests in 65.689s**, and the native Windows selector set passed **11 tests in 5.916s**. The final CI revision is recorded in the associated PR.
 
 The project’s designated ChatGPT architecture conversation reviewed the implementation screenshots. Following the owner's additional feedback about closed/open geometry, it approved equal 166px primary entry/popup widths while retaining the sidebar's compact variant. The selected check mark continues to mean the prepared scheme; default and system activation remain distinct real states. Owner review of the final actual appearance remains pending; the architecture review and these source captures do not claim owner visual approval, installer or Release acceptance.
+
+## Selector feedback weight follow-up
+
+The equal-width geometry remains in place. The primary entry now has a transparent normal surface and a 1px transparent border that reserves layout space. Hover uses a shallow `#F4F8F5` surface and the existing control border; keyboard focus and opening use the existing focus border on white. This separates the scheme entry from editable path fields without removing discoverability or focus feedback.
+
+Popup navigation no longer reuses the success badge's `#E7F2EA` large fill. The prepared row and cursor candidate use `#F3F7F4`, while hover uses the existing `#F7F9F7` muted surface. A cursor candidate different from the prepared scheme receives a fine control-border outline; the check remains on the prepared scheme until confirmation. Real matching counts and status badges retain their existing semantic colors. Activation remains the manager's most recent successful execution record, distinct from live Windows matching.
+
+The production change is limited to `scheme_selector.py` and selector-specific tokens/QSS in `theme.py`. The existing 11 native Windows selector interaction cases pass; no new selection model, business behavior or environment writes are introduced. Three new public-fixture DPI batches preserve the 166px primary entry/popup width, full rows, native visibility and unchanged state/configuration/history during browsing.
+
+Current public evidence is in `docs/images/selector-feedback/` and [the measured report](compact-ui-evidence/selector-feedback-report.json):
+
+- [Workbench normal state, 100%](images/selector-feedback/workbench-1366x768-windows-100pct.png)
+- [Primary open state, 200%](images/selector-feedback/target-scheme-desktop-200pct.png)
+- [Sidebar open state, 200%](images/selector-feedback/rail-scheme-desktop-200pct.png)
+- [Long name, 200%](images/selector-feedback/target-long-name-desktop-200pct.png)
+
+The primary field's visible focus border in open-state crops is intentional; its unfocused normal state is shown in the workbench image. Earlier equal-width screenshots above remain historical geometry evidence. Final-head CI and the designated architecture review are recorded in the associated PR; owner visual approval is not inferred from either.
