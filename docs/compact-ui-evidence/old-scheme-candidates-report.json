@@ -1,0 +1,132 @@
+{
+  "platform": "windows",
+  "fixture": "public TOML, MemoryStore, disposable state",
+  "cases": [
+    {
+      "case": "single-zero-match",
+      "dialog": "PreviewDialog",
+      "dpr": 1.0,
+      "size": [
+        760,
+        610
+      ],
+      "native_visible": true,
+      "screenshot": "single-zero-match-100pct.png",
+      "writes": 0,
+      "notifications": 0,
+      "state_history_config_unchanged": true
+    },
+    {
+      "case": "batch-zero-match",
+      "dialog": "PreviewDialog",
+      "dpr": 1.0,
+      "size": [
+        760,
+        610
+      ],
+      "native_visible": true,
+      "screenshot": "batch-zero-match-100pct.png",
+      "writes": 0,
+      "notifications": 0,
+      "state_history_config_unchanged": true
+    },
+    {
+      "case": "actual-partial-residue",
+      "dialog": "OldSchemeDialog",
+      "dpr": 1.0,
+      "size": [
+        560,
+        280
+      ],
+      "native_visible": true,
+      "screenshot": "actual-partial-residue-100pct.png",
+      "writes": 0,
+      "notifications": 0,
+      "state_history_config_unchanged": true
+    },
+    {
+      "case": "single-zero-match",
+      "dialog": "PreviewDialog",
+      "dpr": 1.5,
+      "size": [
+        760,
+        610
+      ],
+      "native_visible": true,
+      "screenshot": "single-zero-match-150pct.png",
+      "writes": 0,
+      "notifications": 0,
+      "state_history_config_unchanged": true
+    },
+    {
+      "case": "batch-zero-match",
+      "dialog": "PreviewDialog",
+      "dpr": 1.5,
+      "size": [
+        760,
+        610
+      ],
+      "native_visible": true,
+      "screenshot": "batch-zero-match-150pct.png",
+      "writes": 0,
+      "notifications": 0,
+      "state_history_config_unchanged": true
+    },
+    {
+      "case": "actual-partial-residue",
+      "dialog": "OldSchemeDialog",
+      "dpr": 1.5,
+      "size": [
+        560,
+        280
+      ],
+      "native_visible": true,
+      "screenshot": "actual-partial-residue-150pct.png",
+      "writes": 0,
+      "notifications": 0,
+      "state_history_config_unchanged": true
+    },
+    {
+      "case": "single-zero-match",
+      "dialog": "PreviewDialog",
+      "dpr": 2.0,
+      "size": [
+        760,
+        610
+      ],
+      "native_visible": true,
+      "screenshot": "single-zero-match-200pct.png",
+      "writes": 0,
+      "notifications": 0,
+      "state_history_config_unchanged": true
+    },
+    {
+      "case": "batch-zero-match",
+      "dialog": "PreviewDialog",
+      "dpr": 2.0,
+      "size": [
+        760,
+        610
+      ],
+      "native_visible": true,
+      "screenshot": "batch-zero-match-200pct.png",
+      "writes": 0,
+      "notifications": 0,
+      "state_history_config_unchanged": true
+    },
+    {
+      "case": "actual-partial-residue",
+      "dialog": "OldSchemeDialog",
+      "dpr": 2.0,
+      "size": [
+        560,
+        280
+      ],
+      "native_visible": true,
+      "screenshot": "actual-partial-residue-200pct.png",
+      "writes": 0,
+      "notifications": 0,
+      "state_history_config_unchanged": true
+    }
+  ]
+}

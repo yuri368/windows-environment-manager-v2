@@ -336,6 +336,9 @@ class Issue2UiTests(unittest.TestCase):
 
         def choose_old(dialog):
             self.assertFalse(dialog.required)
+            labels = "\n".join(label.text() for label in dialog.findChildren(QLabel))
+            self.assertIn("准备应用：App / New", labels)
+            self.assertIn("确认前不会写入环境变量", labels)
             item = dialog.list.item(0)
             self.assertEqual(item.data(Qt.ItemDataRole.UserRole), "Old")
             self.assertIn("部分匹配", item.text())
@@ -359,6 +362,28 @@ class Issue2UiTests(unittest.TestCase):
         self.assertIn("Windows 列表中没有该元素", labels)
         self.assertNotIn("value_mismatch", labels)
         self.assertEqual(store.writes, [])
+
+    def test_zero_match_old_path_goes_directly_to_preview_in_single_and_batch_apply(self):
+        configuration = config(
+            ("Git", "PortableGit", [("Path", "NEW_CMD", "+append", "User")]),
+            ("Git", "GitPortable", [("Path", "OLD_CMD", "+append", "User")]),
+            ("Editor", "Default", [("Path", "EDITOR", "+append", "User")]),
+        )
+        window, service, store = self.make_window(configuration, [raw("Path", "NEW_CMD;EDITOR;BASE")])
+        window.option_combo.setCurrentText("PortableGit")
+        initial_state = service.state.snapshot()
+        for batch in (False, True):
+            with self.subTest(batch=batch):
+                if batch:
+                    self.check(window, "Git")
+                    self.check(window, "Editor")
+                with patch.object(OldSchemeDialog, "exec") as old_dialog, \
+                     patch.object(PreviewDialog, "exec", return_value=QDialog.DialogCode.Rejected) as preview:
+                    window._apply()
+                old_dialog.assert_not_called()
+                preview.assert_called_once()
+                self.assertEqual(store.writes, [])
+                self.assertEqual(service.state.snapshot(), initial_state)
 
     def test_execute_result_reports_metrics_and_distinguishes_recovery_outcomes(self):
         configuration = config(("App", "Default", [("HOME", "ok", "replace", "User")]))

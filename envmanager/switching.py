@@ -138,10 +138,23 @@ def identify_old_options(
             raise ValidationError("检测快照缺少应用方案")
         if scheme.status is SchemeStatus.COMPLETE:
             complete.append(option)
-        elif scheme.status is SchemeStatus.PARTIAL:
+        elif scheme.status is SchemeStatus.PARTIAL and _has_removable_content(config, scheme):
             partial.append(option)
         errors.extend(scheme.errors)
     return OldSchemeCandidates(tuple(complete), tuple(partial), tuple(errors))
+
+
+def _has_removable_content(config, scheme) -> bool:
+    """Detection PARTIAL also includes existing keys with zero input matches.
+
+    Only actual removal atoms qualify an incomplete scheme for the explicit
+    old-scheme choice. Use the same removal rules as switch preparation, without
+    changing the public detection status or filtering new/shared common elements.
+    """
+    states = {(variable.target.scope, variable.target.normalized_name): variable.windows_state
+              for variable in scheme.variables}
+    values = {variable.spec_key: variable.selected_value for variable in scheme.variables}
+    return bool(build_removal_atoms(config.variables(scheme.app, scheme.option), states, values).atoms)
 
 
 def _validate_destination(config: Configuration, app: str, option: str) -> None:
@@ -173,7 +186,7 @@ def _candidates_from_states(config, app, new_option, states, selected_values):
             for spec in config.variables(app, option)))
         if matched.status is SchemeStatus.COMPLETE:
             complete.append(option)
-        elif matched.status is SchemeStatus.PARTIAL:
+        elif matched.status is SchemeStatus.PARTIAL and _has_removable_content(config, matched):
             partial.append(option)
     return OldSchemeCandidates(tuple(complete), tuple(partial))
 
