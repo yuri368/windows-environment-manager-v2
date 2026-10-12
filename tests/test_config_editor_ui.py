@@ -9,6 +9,7 @@ from pathlib import Path
 from unittest.mock import patch
 from PySide6.QtCore import QPoint, QSize, QTimer, Qt
 from PySide6.QtGui import QFont, QFontDatabase
+from PySide6.QtTest import QTest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -434,6 +435,38 @@ class ConfigEditorUiTests(unittest.TestCase):
         panel = dialog.record_scroll
         self.assertEqual(panel.horizontalScrollBar().maximum(), 0)
         self.assertLessEqual(panel.widget().width(), panel.viewport().width())
+        dialog.hide()
+
+    def test_tab_exits_navigation_and_candidate_tables_and_reaches_save(self):
+        dialog = self.dialog()
+        dialog.show()
+        self.app.processEvents()
+        for table in (dialog.record_list, dialog.search_results, dialog.choices):
+            self.assertFalse(table.tabKeyNavigation())
+        dialog.record_list.setCurrentCell(0, 0)
+        dialog.record_list.setFocus()
+        self.app.processEvents()
+        QTest.keyClick(dialog.record_list, Qt.Key.Key_Tab)
+        self.app.processEvents()
+        self.assertIsNot(dialog.focusWidget(), dialog.record_list)
+        dialog.choices.setRowCount(2)
+        dialog._resize_choices()
+        dialog.choices.setFocus()
+        self.app.processEvents()
+        QTest.keyClick(dialog.choices, Qt.Key.Key_Tab)
+        self.app.processEvents()
+        self.assertIsNot(dialog.focusWidget(), dialog.choices)
+        original_value = dialog.default_editor.exact_text()
+        dialog.default_editor.editor.setFocus()
+        self.app.processEvents()
+        QTest.keyClick(dialog.default_editor.editor, Qt.Key.Key_Tab)
+        self.app.processEvents()
+        self.assertIsNot(dialog.focusWidget(), dialog.default_editor.editor)
+        self.assertEqual(dialog.default_editor.exact_text(), original_value)
+        dialog.default_editor.set_exact_text("A\tB")
+        self.assertEqual(dialog.default_editor.exact_text(), "A\tB")
+        self.assertFalse(dialog.source.tabChangesFocus())
+        self.assertEqual(self.store.writes, [])
         dialog.hide()
 
     def test_center_overview_remains_visible_and_keyboard_navigation_preserves_guard(self):

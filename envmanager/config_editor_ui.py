@@ -19,6 +19,7 @@ from .highlighting import DiffHighlighter, TomlHighlighter
 from .icons import icon
 from .models import Choice, ConflictError, VariableSpec
 from .theme import COLORS, apply_theme
+from .ui_controls import ActionButton
 
 
 _MODES = (
@@ -37,7 +38,7 @@ def _caption(text: str, name: str = "") -> QLabel:
 
 
 def _button(text: str, callback, name: str = "") -> QPushButton:
-    button = QPushButton(text)
+    button = ActionButton(text)
     if name:
         button.setObjectName(name)
     button.clicked.connect(callback)
@@ -79,6 +80,7 @@ class ExactTextEditor(QWidget):
         self.editor.setObjectName("code")
         self.editor.setFixedHeight(height)
         self.editor.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
+        self.editor.setTabChangesFocus(True)
         outer.addWidget(self.editor)
         self.escape = QCheckBox("转义输入")
         self.escape.setToolTip("用 \\r、\\n 等转义文本精确保留换行；切换只改变显示方式。")
@@ -393,6 +395,7 @@ class ConfigEditorDialog(QDialog):
     @staticmethod
     def _navigation_table(name: str, headers: tuple[str, str]) -> QTableWidget:
         table = QTableWidget(0, 2)
+        table.setTabKeyNavigation(False)
         table.setObjectName(name)
         table.setHorizontalHeaderLabels(headers)
         table.verticalHeader().hide()
@@ -533,6 +536,7 @@ class ConfigEditorDialog(QDialog):
         self.choices_empty = _caption("暂无候选", "muted")
         layout.addWidget(self.choices_empty)
         self.choices = QTableWidget(0, 2)
+        self.choices.setTabKeyNavigation(False)
         self.choices.setObjectName("choicesTable")
         self.choices.setHorizontalHeaderLabels(("显示名称", "实际值"))
         self.choices.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Interactive)

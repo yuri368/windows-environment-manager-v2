@@ -64,4 +64,4 @@
 
 结果：退出码 0，`117 passed, 35 subtests passed in 7.00s`。
 
-此记录为本地故障注入和关联回归证据。Ubuntu / Windows CI 的状态由实际 CI 运行记录确认；本次未触发远程 CI。
+此记录为本地故障注入和关联回归证据。完整回归命令为 `python -m unittest discover -s tests -v`；本机保存修复版本已通过全部 562 个用例，后续键盘修复另增加两个回归用例。最终源码的 Ubuntu / Windows CI 结果在 [PR #10 检查记录](https://github.com/yuri368/windows-environment-manager-v2/pull/10/checks) 中确认，交付结果在 PR 描述中汇总。

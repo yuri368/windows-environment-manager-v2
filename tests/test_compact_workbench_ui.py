@@ -76,6 +76,22 @@ class CompactWorkbenchTests(unittest.TestCase):
         self.assertEqual(self.service.state.snapshot()["active"], {})
         self.assertEqual(self.store.writes, [])
 
+    def test_focused_enter_navigates_and_opens_preview_once_without_writes(self):
+        row = self.window.app_list.itemWidget(self.window.app_list.item(1))
+        row.name_button.setFocus()
+        self.app.processEvents()
+        QTest.keyClick(row.name_button, Qt.Key.Key_Return)
+        self.assertEqual(self.window.app_name, "Beta")
+        self.window._navigate_app("Alpha")
+        self.window.apply_button.setFocus()
+        self.app.processEvents()
+        with patch.object(self.window, "_choose_old_schemes", return_value=()), \
+                patch.object(self.window, "_execute_plan") as preview:
+            QTest.keyClick(self.window.apply_button, Qt.Key.Key_Return)
+        preview.assert_called_once()
+        self.assertEqual(self.store.writes, [])
+        self.assertEqual(self.store.notifications, 0)
+
     def test_read_error_and_unread_are_never_complete(self):
         self.window._detection = None
         self.window._detection_error = "无法读取用户环境"

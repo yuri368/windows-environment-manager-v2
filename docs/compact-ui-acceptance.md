@@ -35,7 +35,15 @@ Windows 平台也生成 18 张原生窗口渲染，并逐张通过 Qt 可见性�
 - 编辑器完整阶段测试：48 passed、14 subtests passed；随后新增不确定保存恢复测试和真实服务保存测试通过。
 - 主工作台及状态定向检查：13 passed、4 subtests passed。源码编译、JSON 解析和 Git whitespace 检查通过。
 - 独立 UI finish review：ship。逐张检查了六张 100% 离屏尺寸图、1366×768 的离屏 150%/200%、Windows 100%/150% 以及 1024×768 Windows 200% 图，未发现阻断级布局问题；点击、焦点、保存与窄窗重排的行为证据来自相应自动测试。
-- 全量本机回归与 Windows/Ubuntu CI 的最终结果将在完成后记录。
+- 全量本机回归与 Windows/Ubuntu CI 的最终结果在 [PR #10 检查记录](https://github.com/yuri368/windows-environment-manager-v2/pull/10/checks) 及其描述中汇总。完整测试命令为 `python -m unittest discover -s tests -v`；保存修复版本本机 562 个测试全部通过，随后新增两个键盘回归用例，最终源码以 CI 对应提交为准。
+
+## 键盘与内容数量的实际交互
+
+`tools/verify_compact_interactions.py` 使用 QTest 向实际 Qt 控件发送按键，在 1024×768、1536×864 窗口中验证启用控件的 Tab 路径、应用名 Enter 导航、主按钮 Enter 打开正式预览、Esc 取消预览、编辑器 Enter 打开保存差异及 Esc 保留草稿。导航与候选表允许 Tab 离开，精确值表单用 Tab 前进；原始 TOML 标签保留文本缩进操作。空白 MemoryStore 下禁用的撤销和更新按钮按预期跳过。
+
+1、2、12 条变量的行高均为 47px；小窗口 12 条变量用 End 滚动至末行，末行操作与固定底栏主按钮均可达。下拉与菜单在模拟屏幕右下边缘展开、Esc 关闭且几何在可用区内。主题 20 组常规正文/辅助文字与背景 sRGB 对比度最低 4.571；焦点状态由实际 focus 记录和主题焦点样式核验。报告不把静态颜色计算称为截图像素测量。
+
+最终实际交互报告 [interaction-report.json](compact-ui-evidence/interaction-report.json) 的 failures 为空；环境变量写入、通知、状态修订均为 0，临时及真实配置字节/哈希不变。运行：`python tools/verify_compact_interactions.py`。
 
 ## 验收边界
 

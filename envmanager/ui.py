@@ -27,6 +27,7 @@ from .theme import apply_theme, COLORS
 from .config_editor_ui import ConfigEditorDialog
 from .icons import icon, app_icon
 from .windows_shell import open_environment_settings
+from .ui_controls import ActionButton
 
 
 def _label(text: str, name: str = "") -> QLabel:
@@ -89,7 +90,7 @@ class ElidingLabel(QLabel):
             super().setText(shown)
 
 
-class ApplicationNameButton(QPushButton):
+class ApplicationNameButton(ActionButton):
     """Navigation text elides using the actual row width, with a full tooltip."""
 
     def __init__(self, app: str, callback):
@@ -304,7 +305,7 @@ def _activation_badge(label: QLabel, active: str | None) -> None:
 
 
 def _button(text: str, callback, name: str = "") -> QPushButton:
-    widget = QPushButton(text)
+    widget = ActionButton(text)
     if name:
         widget.setObjectName(name)
     widget.clicked.connect(callback)
@@ -1782,7 +1783,7 @@ class MainWindow(QMainWindow):
         self.refresh_button = _button("刷新检测", self._reload, "quiet")
         self.refresh_button.setIcon(icon("refresh"))
         bar.addWidget(self.refresh_button)
-        self.config_button = QPushButton("配置编辑器")
+        self.config_button = ActionButton("配置编辑器")
         self.config_button.setObjectName("quiet")
         self.config_button.setIcon(icon("code"))
         menu = QMenu(self.config_button)
@@ -2008,7 +2009,7 @@ class MainWindow(QMainWindow):
         progress_row.addWidget(self.scan_progress)
         feedback.addLayout(progress_row)
         actions.addWidget(self.feedback_panel, 1)
-        self.deactivate_button = QPushButton("撤销配置")
+        self.deactivate_button = ActionButton("撤销配置")
         self.deactivate_button.setObjectName("quiet")
         self.deactivate_button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.deactivate_button.setToolTip("预览撤销当前应用正在浏览的方案；不依赖管理器应用历史")
@@ -2020,7 +2021,7 @@ class MainWindow(QMainWindow):
         self.batch_all_action = removal_menu.addAction("撤销已勾选应用的所有方案", self._remove_batch_all)
         self.deactivate_button.setMenu(removal_menu)
         actions.addWidget(self.deactivate_button)
-        self.remove_more_button = QPushButton("应用撤销")
+        self.remove_more_button = ActionButton("应用撤销")
         self.remove_more_button.setObjectName("quiet")
         self.remove_more_button.setToolTip("撤销当前应用所有方案中 Windows 实际匹配的内容")
         application_menu = QMenu(self.remove_more_button)
@@ -2028,7 +2029,7 @@ class MainWindow(QMainWindow):
         self.remove_more_button.setMenu(application_menu)
         self.remove_more_button.setParent(footer)
         self.remove_more_button.hide()
-        self.batch_remove_button = QPushButton("批量撤销")
+        self.batch_remove_button = ActionButton("批量撤销")
         self.batch_remove_button.setObjectName("quiet")
         self.batch_remove_button.setToolTip("请先勾选应用，再选择当前方案或所有方案范围")
         batch_menu = QMenu(self.batch_remove_button)
