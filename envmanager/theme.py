@@ -27,6 +27,8 @@ COLORS = {
     "accent_hover": "#225E46",
     "accent_pressed": "#1D583F",
     "selected": "#E7F2EA",
+    "selector_current": "#F3F7F4",
+    "selector_hover": "#F4F8F5",
     "hover": "#EDF4EE",
     "focus": "#4D8765",
     "danger": "#A4473E",
@@ -215,7 +217,10 @@ QComboBox#manifestOption::drop-down { width: 18px; }
 QComboBox#manifestOption::down-arrow { width: 10px; height: 10px; }
 QComboBox#manifestOption:hover { background: @surface@; border-color: @control_hover@; }
 QComboBox#manifestOption:focus { border-color: @focus@; }
-QComboBox#detailOption { font-size: 12px; padding: 0px 24px 0px 31px; }
+QComboBox#detailOption { background: transparent; border: 1px solid transparent; font-size: 12px; padding: 0px 24px 0px 31px; }
+QComboBox#detailOption:hover { background: @selector_hover@; border-color: @control_border@; }
+QComboBox#detailOption:focus, QComboBox#detailOption:on { background: @surface@; border-color: @focus@; }
+QComboBox#detailOption:disabled { background: transparent; border-color: transparent; color: @disabled@; }
 QComboBox#detailOption::drop-down { width: 24px; }
 QComboBox#detailOption::down-arrow { width: 10px; height: 10px; }
 QTreeWidget { padding: 4px 0; background: transparent; border: none; }

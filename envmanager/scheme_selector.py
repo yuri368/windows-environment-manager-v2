@@ -1,6 +1,6 @@
 """Native scheme selector with one owned popup row rendering path."""
-from PySide6.QtCore import Qt, QSize, QPoint, QCoreApplication, QEvent
-from PySide6.QtGui import QColor, QFont, QFontMetrics, QPainter
+from PySide6.QtCore import Qt, QSize, QPoint, QRectF, QCoreApplication, QEvent
+from PySide6.QtGui import QColor, QFont, QFontMetrics, QPainter, QPen
 from PySide6.QtWidgets import QApplication, QComboBox, QFrame, QListView, QStyledItemDelegate, QStyleOptionComboBox, QStyle, QStylePainter
 from .theme import COLORS
 
@@ -39,24 +39,29 @@ class OptionStatusDelegate(QStyledItemDelegate):
         # an icon/check column and draws focus around only the text fragment.
         status = index.data(OPTION_STATUS_ROLE) or {}
         selected = bool(option.state & QStyle.StateFlag.State_Selected)
-        painter.save()
-        painter.setPen(Qt.PenStyle.NoPen)
-        painter.setBrush(QColor(COLORS["surface"]))
-        painter.drawRect(option.rect)
-        if selected:
-            painter.setBrush(QColor(COLORS["selected"]))
-            painter.drawRoundedRect(option.rect, 4, 4)
-        elif option.state & QStyle.StateFlag.State_MouseOver:
-            painter.setBrush(QColor(COLORS["hover"]))
-            painter.drawRoundedRect(option.rect, 4, 4)
-        name_font, count_font = _row_fonts(option.font)
-        name_metrics = QFontMetrics(name_font)
-        count_metrics = QFontMetrics(count_font)
         view = self.parent()
         combo = view.parent() if view else None
         while combo is not None and not isinstance(combo, QComboBox):
             combo = combo.parent()
         current = combo is not None and combo.currentIndex() == index.row()
+        painter.save()
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QColor(COLORS["surface"]))
+        painter.drawRect(option.rect)
+        if selected or current:
+            # Navigation feedback is quieter than a successful match badge.
+            # The check still identifies the prepared scheme; a fine outline
+            # identifies the cursor row before keyboard/mouse confirmation.
+            painter.setBrush(QColor(COLORS["selector_current"]))
+            if selected and not current:
+                painter.setPen(QPen(QColor(COLORS["control_border"]), 1))
+            painter.drawRoundedRect(QRectF(option.rect).adjusted(.5, .5, -.5, -.5), 4, 4)
+        elif option.state & QStyle.StateFlag.State_MouseOver:
+            painter.setBrush(QColor(COLORS["surface_muted"]))
+            painter.drawRoundedRect(option.rect, 4, 4)
+        name_font, count_font = _row_fonts(option.font)
+        name_metrics = QFontMetrics(name_font)
+        count_metrics = QFontMetrics(count_font)
         if current:
             painter.setFont(count_font)
             painter.setPen(QColor(COLORS["accent"]))
