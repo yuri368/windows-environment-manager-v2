@@ -46,7 +46,7 @@ def _render(svg: str, size: int) -> QIcon:
     return result
 
 
-def icon(name: str, color: str = "#73736B", size: int = 20) -> QIcon:
+def icon(name: str, color: str = "#5D6F63", size: int = 20) -> QIcon:
     shape = _SHAPES[name]
     svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" '
            f'fill="none" stroke="{escape(color, quote=True)}" stroke-width="1.6" '
@@ -60,9 +60,19 @@ def window_icon() -> QIcon:
 
 def app_icon(name: str, size: int = 28) -> QIcon:
     letter = next((character for character in name if character.isalnum()), "·").upper()[0]
+    palettes = {
+        "java": ("#F4EBDD", "#846228"),
+        "python": ("#E6EEF7", "#476887"),
+        "maven": ("#F4E7E1", "#925F48"),
+        "hadoop": ("#F1EED8", "#7B7227"),
+        "scala": ("#F4E4E5", "#92515A"),
+        "git": ("#F5E7DF", "#965E3D"),
+        "vscode": ("#E1EDF7", "#426C91"),
+    }
+    background, foreground = palettes.get(name.casefold(), ("#E4EEE7", "#496956"))
     svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">'
-           f'<rect x="1" y="1" width="30" height="30" rx="7" fill="#E5E4DC"/>'
-           f'<text x="16" y="21" text-anchor="middle" fill="#5D665F" '
+           f'<rect x="1" y="1" width="30" height="30" rx="7" fill="{background}"/>'
+           f'<text x="16" y="21" text-anchor="middle" fill="{foreground}" '
            f'font-family="Segoe UI, Microsoft YaHei" font-size="15" font-weight="600">'
            f'{escape(letter)}</text></svg>')
     return _render(svg, size)

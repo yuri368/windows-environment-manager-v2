@@ -171,6 +171,10 @@ class EnvironmentService:
     def history(self):
         return self.state.history()
 
+    def list_environment(self, scope):
+        """Return raw values for one scope without touching managed state."""
+        return self.store.list_values(scope)
+
     def pending(self):
         return self.state.pending()
 

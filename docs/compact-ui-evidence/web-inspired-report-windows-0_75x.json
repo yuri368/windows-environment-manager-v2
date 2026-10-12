@@ -1,0 +1,197 @@
+{
+  "platform": "windows",
+  "scale_factor": "0.75",
+  "data": "public synthetic fixture; actual service, MemoryStore, disposable state",
+  "captures": [
+    {
+      "file": "workbench-1366x768-windows-150pct.png",
+      "logical_size": [
+        1366,
+        768
+      ],
+      "pixels": [
+        2049,
+        1152
+      ],
+      "dpr": 1.5,
+      "qt_visible": true,
+      "native_visible": true
+    },
+    {
+      "file": "target-scheme-274x88-windows-150pct.png",
+      "logical_size": [
+        274,
+        88
+      ],
+      "pixels": [
+        411,
+        132
+      ],
+      "dpr": 1.5,
+      "qt_visible": true,
+      "native_visible": true
+    },
+    {
+      "file": "rail-scheme-274x84-windows-150pct.png",
+      "logical_size": [
+        274,
+        84
+      ],
+      "pixels": [
+        411,
+        126
+      ],
+      "dpr": 1.5,
+      "qt_visible": true,
+      "native_visible": true
+    },
+    {
+      "file": "workbench-1024x768-windows-150pct.png",
+      "logical_size": [
+        1024,
+        768
+      ],
+      "pixels": [
+        1536,
+        1152
+      ],
+      "dpr": 1.5,
+      "qt_visible": true,
+      "native_visible": true
+    },
+    {
+      "file": "windows-environment-1366x768-windows-150pct.png",
+      "logical_size": [
+        1366,
+        768
+      ],
+      "pixels": [
+        2049,
+        1152
+      ],
+      "dpr": 1.5,
+      "qt_visible": true,
+      "native_visible": true
+    },
+    {
+      "file": "history-1366x768-windows-150pct.png",
+      "logical_size": [
+        1366,
+        768
+      ],
+      "pixels": [
+        2049,
+        1152
+      ],
+      "dpr": 1.5,
+      "qt_visible": true,
+      "native_visible": true
+    },
+    {
+      "file": "editor-schemes-1366x768-windows-150pct.png",
+      "logical_size": [
+        1366,
+        768
+      ],
+      "pixels": [
+        2049,
+        1152
+      ],
+      "dpr": 1.5,
+      "qt_visible": true,
+      "native_visible": true
+    },
+    {
+      "file": "editor-schemes-1024x768-windows-150pct.png",
+      "logical_size": [
+        1024,
+        768
+      ],
+      "pixels": [
+        1536,
+        1152
+      ],
+      "dpr": 1.5,
+      "qt_visible": true,
+      "native_visible": true
+    }
+  ],
+  "fixture_setup": {
+    "memory_writes": 8,
+    "notifications": 5,
+    "history_records": 5
+  },
+  "rail_geometry": [
+    {
+      "application": "Java",
+      "row_width": 220,
+      "viewport_width": 240,
+      "match_count": "2/2",
+      "match_count_and_scheme_visible": true
+    },
+    {
+      "application": "Python",
+      "row_width": 220,
+      "viewport_width": 240,
+      "match_count": "2/2",
+      "match_count_and_scheme_visible": true
+    },
+    {
+      "application": "Maven",
+      "row_width": 220,
+      "viewport_width": 240,
+      "match_count": "2/2",
+      "match_count_and_scheme_visible": true
+    },
+    {
+      "application": "Hadoop",
+      "row_width": 220,
+      "viewport_width": 240,
+      "match_count": "0/2",
+      "match_count_and_scheme_visible": true
+    },
+    {
+      "application": "Scala",
+      "row_width": 220,
+      "viewport_width": 240,
+      "match_count": "0/2",
+      "match_count_and_scheme_visible": true
+    },
+    {
+      "application": "Git",
+      "row_width": 220,
+      "viewport_width": 240,
+      "match_count": "1/1",
+      "match_count_and_scheme_visible": true
+    },
+    {
+      "application": "VSCode",
+      "row_width": 220,
+      "viewport_width": 240,
+      "match_count": "1/1",
+      "match_count_and_scheme_visible": true
+    }
+  ],
+  "scheme_groups": [
+    {
+      "title": "3.9.11 · 默认方案 · 2 项变量",
+      "records": [
+        "[\"Maven\", \"3.9.11\", \"MAVEN_HOME\", \"User\"]",
+        "[\"Maven\", \"3.9.11\", \"PATH\", \"User\"]"
+      ]
+    },
+    {
+      "title": "3.3.3 · 2 项变量",
+      "records": [
+        "[\"Maven\", \"3.3.3\", \"MAVEN_HOME\", \"User\"]",
+        "[\"Maven\", \"3.3.3\", \"PATH\", \"User\"]"
+      ]
+    }
+  ],
+  "browsing": {
+    "additional_writes": 0,
+    "additional_notifications": 0,
+    "state_and_history_unchanged": true,
+    "project_configuration_unchanged": true
+  }
+}

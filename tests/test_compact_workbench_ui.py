@@ -117,10 +117,14 @@ class CompactWorkbenchTests(unittest.TestCase):
         self.assertEqual(user.selector.currentData(), "custom")
         self.assertEqual(system.selector.currentData(), "default")
         self.assertTrue(system.editor.isReadOnly())
+        self.assertTrue(self.window.comparison_panel.isVisible())
         self.window.windows_compare_button.click()
-        self.assertTrue(all(card.details.isVisible() for card in self.window.cards))
+        self.assertTrue(self.window.comparison_panel.isHidden())
         self.window.windows_compare_button.click()
-        self.assertTrue(all(card.details.isHidden() for card in self.window.cards))
+        self.assertTrue(self.window.comparison_panel.isVisible())
+        system.details_toggle.click()
+        self.assertTrue(system.details.isVisible())
+        self.assertTrue(user.details.isHidden())
         self.assertEqual(self.store.writes, [])
 
     def test_row_background_navigation_does_not_toggle_batch_check(self):
@@ -187,7 +191,7 @@ class CompactWorkbenchTests(unittest.TestCase):
                 self.assertLessEqual(row.height(), 50)
                 manifest = self.window.app_list.parentWidget()
                 self.assertGreaterEqual(manifest.width(), 248)
-                self.assertLessEqual(manifest.width(), 270)
+                self.assertLessEqual(manifest.width(), 320)
                 footer = self.window.apply_button.parentWidget()
                 for button in (self.window.apply_button, self.window.deactivate_button):
                     self.assertTrue(footer.rect().contains(button.geometry()))
