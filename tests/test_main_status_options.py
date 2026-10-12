@@ -9,7 +9,7 @@ from pathlib import Path
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtCore import Qt, QPoint
+from PySide6.QtCore import Qt, QPoint, QRect
 from PySide6.QtGui import QPalette
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QStyle, QStyleOptionComboBox, QWidget
@@ -77,6 +77,29 @@ class MainStatusOptionTests(unittest.TestCase):
         self.assertTrue(combo.view().isVisible())
         return combo.view()
 
+    def reload_options(self, app, names):
+        config = parse_config("\n".join(
+            f'["{app}"."{name}"]\nHOME = {{ default_value = "{index}", scope = "User", mode = "replace", editable = true }}'
+            for index, name in enumerate(names)
+        ))
+        self.service.reload(config)
+        self.window._render_apps()
+        self.window._select_app(app)
+        self.app.processEvents()
+
+    def assert_bounded_popup(self, combo, view):
+        popup = view.window()
+        screen = combo.screen().availableGeometry().adjusted(4, 4, -4, -4)
+        self.assertTrue(screen.contains(popup.geometry()), (screen, popup.geometry()))
+        if screen.width() >= 248:
+            self.assertGreaterEqual(popup.width(), 210)
+            self.assertLessEqual(popup.width(), 248)
+            if view.verticalScrollBar().maximum() == 0:
+                self.assertEqual(popup.width(), 236)
+        else:
+            self.assertLessEqual(popup.width(), screen.width())
+        self.assertEqual(view.horizontalScrollBar().maximum(), 0)
+
     def test_two_manifest_options_are_both_fully_visible_after_popup_show(self):
         combo = self.row("Java").option_combo
         view = self.popup(combo)
@@ -98,7 +121,44 @@ class MainStatusOptionTests(unittest.TestCase):
                 self.assertEqual(view.viewport().height(),
                                  sum(view.sizeHintForRow(i) for i in range(combo.count())))
                 self.assertEqual(popup.y(), combo.mapToGlobal(QPoint(0, combo.height() + 4)).y())
+                self.assert_bounded_popup(combo, view)
                 combo.hidePopup()
+
+    def test_selector_entries_keep_compact_sizes_and_popup_alignment(self):
+        self.window.resize(1100, 560)
+        self.window.workspace_splitter.setSizes([300, 800])
+        self.app.processEvents()
+        manifest = self.row("Java").option_combo
+        detail = self.window.option_combo
+        self.assertEqual(manifest.height(), 24)
+        self.assertEqual(detail.size().width(), 166)
+        self.assertEqual(detail.height(), 31)
+        for combo in (manifest, detail):
+            with self.subTest(combo=combo.objectName()):
+                if combo is detail:
+                    # offscreen commonly exposes an 800px screen while this
+                    # application's minimum width is 850px. Put the anchor
+                    # inside the work area before testing its right alignment;
+                    # screen-edge clamping has its own independent regression.
+                    screen = combo.screen().availableGeometry()
+                    self.window.move(screen.right() - self.window.width() - 8,
+                                     self.window.y())
+                    self.app.processEvents()
+                self.assertEqual(combo.font().pixelSize(), 12)
+                view = self.popup(combo)
+                self.assert_bounded_popup(combo, view)
+                self.assertEqual(view.sizeHintForRow(0), 30)
+                if combo is detail:
+                    self.assertEqual(view.window().geometry().right(),
+                                     combo.mapToGlobal(QPoint(combo.width() - 1, 0)).x())
+                else:
+                    sidebar = QRect(self.window.app_list.mapToGlobal(QPoint(0, 0)),
+                                    self.window.app_list.size())
+                    self.assertGreaterEqual(sidebar.width(), view.window().width())
+                    self.assertTrue(sidebar.contains(view.window().geometry()),
+                                    (sidebar, view.window().geometry()))
+                combo.hidePopup()
+        self.assertEqual(self.store.writes, [])
 
     def test_popup_keyboard_selection_and_escape_preserve_real_scheme_state(self):
         for combo in (self.row("Java").option_combo, self.window.option_combo):
@@ -160,55 +220,125 @@ class MainStatusOptionTests(unittest.TestCase):
         self.assertTrue(combo.parentWidget().rect().contains(combo.geometry()))
         self.assertTrue(self.window.apply_button.isVisible())
 
-    def test_long_chinese_name_elides_in_manifest_and_is_complete_in_popup(self):
-        name = "长期支持生产环境默认方案"
-        config = parse_config(f'["中文应用"."{name}"]\nHOME = {{ default_value = "A", scope = "User", mode = "replace", editable = true }}\n')
-        self.service.reload(config)
-        self.window._render_apps()
-        self.window._select_app("中文应用")
-        self.app.processEvents()
+    def test_long_names_elide_without_expanding_popup_and_keep_full_semantics(self):
+        names = ["长期支持生产环境默认方案" * 3,
+                 "Production_Long_Term_Support_Default_Environment_Profile" * 2]
+        self.reload_options("中文应用", names)
         row = self.row("中文应用")
-        self.assertIn("…", row.option_combo.displayedText())
-        self.assertEqual(row.option_combo.currentText(), name)
-        self.assertEqual(row.option_combo.toolTip(), name)
         detail = self.window.option_combo
-        self.assertIn("…", detail.displayedText())
-        self.assertEqual(detail.currentText(), name)
-        self.assertIn(name, detail.toolTip())
+        for combo in (row.option_combo, detail):
+            for index, name in enumerate(names):
+                with self.subTest(combo=combo.objectName(), name=name):
+                    combo.setCurrentIndex(index)
+                    self.app.processEvents()
+                    self.assertIn("…", combo.displayedText())
+                    self.assertEqual(combo.currentText(), name)
+                    self.assertIn(name, combo.toolTip())
+                    view = self.popup(combo)
+                    self.assertIsInstance(view.itemDelegate(), OptionStatusDelegate)
+                    self.assert_bounded_popup(combo, view)
+                    self.assertIn(name, combo.itemData(index, Qt.ItemDataRole.ToolTipRole))
+                    self.assertIn(name, combo.itemData(index, Qt.ItemDataRole.AccessibleTextRole))
+                    rect = view.visualRect(combo.model().index(index, 0))
+                    self.assertTrue(view.viewport().rect().contains(rect))
+                    self.assertLess(rect.width(), view.fontMetrics().horizontalAdvance(name))
+                    combo.hidePopup()
         self.assertEqual(self.window.width(), 850)
-        view = self.popup(row.option_combo)
-        self.assertIsInstance(view.itemDelegate(), OptionStatusDelegate)
-        self.assertIn(name, row.option_combo.itemData(0, Qt.ItemDataRole.ToolTipRole))
-        rect = view.visualRect(row.option_combo.model().index(0, 0))
-        self.assertTrue(view.viewport().rect().contains(rect))
-        self.assertGreaterEqual(rect.width(), view.fontMetrics().horizontalAdvance(name) + 16)
         self.assertEqual(self.store.writes, [])
 
     def test_many_options_have_complete_rows_and_scroll_to_last(self):
         options = [f"方案{index:02d}" for index in range(32)]
-        config = parse_config("\n".join(
-            f'["应用"."{name}"]\nHOME = {{ default_value = "{index}", scope = "User", mode = "replace", editable = true }}'
-            for index, name in enumerate(options)
-        ))
-        self.service.reload(config)
-        self.window._render_apps()
-        self.window._select_app("应用")
-        self.app.processEvents()
-        combo = self.row("应用").option_combo
-        view = self.popup(combo)
-        self.assertGreater(view.verticalScrollBar().maximum(), 0)
-        self.assertLess(view.viewport().height(), sum(view.sizeHintForRow(i) for i in range(combo.count())))
-        last = combo.model().index(combo.count() - 1, 0)
-        view.scrollTo(last)
-        self.app.processEvents()
-        self.assertTrue(view.viewport().rect().contains(view.visualRect(last)))
-        self.assertTrue(combo.screen().availableGeometry().contains(view.window().geometry()))
+        self.reload_options("应用", options)
+        for combo in (self.row("应用").option_combo, self.window.option_combo):
+            with self.subTest(combo=combo.objectName()):
+                combo.setCurrentIndex(0)
+                view = self.popup(combo)
+                self.assert_bounded_popup(combo, view)
+                self.assertGreater(view.verticalScrollBar().maximum(), 0)
+                self.assertEqual(view.viewport().height(), sum(view.sizeHintForRow(i) for i in range(3)))
+                last = combo.model().index(combo.count() - 1, 0)
+                view.scrollTo(last)
+                self.app.processEvents()
+                self.assertTrue(view.viewport().rect().contains(view.visualRect(last)))
+                QTest.mouseClick(view.viewport(), Qt.MouseButton.LeftButton,
+                                 pos=view.visualRect(last).center())
+                self.app.processEvents()
+                self.assertFalse(view.isVisible())
+                self.assertEqual(combo.currentIndex(), 31)
+                self.assertEqual(self.service.selected_option("应用"), options[-1])
+                # Reopening preserves the selected row and scrolls it into view.
+                view = self.popup(combo)
+                self.assertTrue(view.viewport().rect().contains(view.visualRect(last)))
+                QTest.keyClick(view, Qt.Key.Key_Up)
+                QTest.keyClick(view, Qt.Key.Key_Return)
+                self.app.processEvents()
+                self.assertEqual(self.service.selected_option("应用"), options[-2])
+                combo.hidePopup()
+        self.assertEqual(self.store.writes, [])
+
+    def test_mouse_selection_and_outside_cancel_preserve_scheme_state(self):
+        for combo in (self.row("Java").option_combo, self.window.option_combo):
+            with self.subTest(combo=combo.objectName()):
+                self.window.option_combo.setCurrentText("JDK17")
+                view = self.popup(combo)
+                second = combo.model().index(1, 0)
+                QTest.mouseClick(view.viewport(), Qt.MouseButton.LeftButton,
+                                 pos=view.visualRect(second).center())
+                self.app.processEvents()
+                self.assertFalse(view.isVisible())
+                self.assertEqual(self.service.selected_option("Java"), "JDK21")
+                view = self.popup(combo)
+                QTest.keyClick(view, Qt.Key.Key_Up)
+                # A popup owns the mouse grab: an outside press is delivered
+                # to its container with a position outside the surface.
+                popup = view.window()
+                outside = popup.mapFromGlobal(self.window.mapToGlobal(QPoint(2, 2)))
+                self.assertFalse(popup.rect().contains(outside))
+                QTest.mouseClick(popup, Qt.MouseButton.LeftButton, pos=outside)
+                self.app.processEvents()
+                self.assertFalse(view.isVisible())
+                self.assertEqual(self.service.selected_option("Java"), "JDK21")
+                self.assertEqual(combo.currentText(), "JDK21")
+        self.assertEqual(self.store.writes, [])
+
+    def test_popup_status_keeps_complete_tooltip_and_accessible_semantics(self):
+        combo = self.window.option_combo
+        presentations = [
+            ("完全匹配", "complete", "2/2", "所有变量均匹配"),
+            ("部分匹配", "partial", "1/2", "第二个变量未匹配"),
+            ("未配置", "unconfigured", "", "请先配置变量"),
+            ("检测失败", "error", "", "Windows 检测失败"),
+            ("扫描中", "scanning", "", "正在检测 Windows 状态"),
+        ]
+        for text, tone, progress, detail in presentations:
+            with self.subTest(tone=tone):
+                combo.setOptionStatus(0, None, default=True, active=True,
+                                      presentation=(text, tone, progress, detail))
+                index = combo.model().index(0, 0)
+                status = index.data(OPTION_STATUS_ROLE)
+                self.assertEqual(status["text"], text)
+                self.assertEqual(status["progress"], progress)
+                for role in (Qt.ItemDataRole.ToolTipRole, Qt.ItemDataRole.AccessibleTextRole):
+                    explanation = index.data(role)
+                    for expected in (combo.itemText(0), "默认方案", "当前激活方案", text, progress):
+                        self.assertIn(expected, explanation)
+                self.assertIn(detail, index.data(Qt.ItemDataRole.ToolTipRole))
+                view = self.popup(combo)
+                self.assert_bounded_popup(combo, view)
+                self.assertTrue(view.viewport().rect().contains(view.visualRect(index)))
+                combo.hidePopup()
+        self.assertEqual(self.store.writes, [])
 
     def test_status_reflects_actual_active_option_and_keeps_invalid_feedback(self):
         result = self.service.execute(self.service.plan("Python", "Python313"))
         self.assertTrue(result.success)
         self.window._select_app("Python")
         self.window.option_combo.setCurrentText("Python312")
+        self.app.processEvents()
+        row = self.row("Python")
+        self.assertEqual(row.option_combo.toolTip(),
+                         row.option_combo.currentData(Qt.ItemDataRole.ToolTipRole))
+        self.assertIn("Python312", row.option_combo.toolTip())
         card = self.window.cards[0]
         # Ordinary edge whitespace is valid input in vNext; NUL remains
         # invalid and exercises the same persistent validation feedback.
@@ -216,6 +346,10 @@ class MainStatusOptionTests(unittest.TestCase):
         card.editor.textEdited.emit("313\x00invalid")
         self.app.processEvents()
         row = self.row("Python")
+        for combo in (row.option_combo, self.window.option_combo):
+            self.assertEqual(combo.toolTip(), combo.currentData(Qt.ItemDataRole.ToolTipRole))
+            self.assertIn("Python312", combo.toolTip())
+            self.assertIn(combo.currentData(OPTION_STATUS_ROLE)["display"], combo.toolTip())
         self.assertEqual(row.option_combo.currentText(), "Python312")
         for badge in (row.activation_badge, self.window.activation_badge):
             self.assertEqual(badge.text(), "已激活")

@@ -1,6 +1,6 @@
 """Native scheme selector with one owned popup row rendering path."""
 from PySide6.QtCore import Qt, QSize, QPoint, QCoreApplication, QEvent
-from PySide6.QtGui import QColor, QPainter
+from PySide6.QtGui import QColor, QFont, QFontMetrics, QPainter
 from PySide6.QtWidgets import QApplication, QComboBox, QFrame, QListView, QStyledItemDelegate, QStyleOptionComboBox, QStyle, QStylePainter
 from .theme import COLORS
 
@@ -11,21 +11,28 @@ def _popup_status(status):
     tone, progress = status.get("tone"), status.get("progress", "")
     if not status:
         return ""
-    text = {"complete": "匹配", "partial": "未匹配" if progress.startswith("0/") else "部分匹配",
-            "unconfigured": "未配置", "error": "检测错误", "scanning": "检测中"}.get(tone, "")
-    return f"{text} {progress}".strip()
+    if tone in ("complete", "partial"):
+        return progress
+    return {"unconfigured": "未配置", "error": "检测错误",
+            "scanning": "检测中"}.get(tone, "")
+
+
+def _row_fonts(font):
+    fonts = []
+    for pixels in (12, 10, 11):
+        item = QFont(font)
+        item.setPixelSize(pixels)
+        fonts.append(item)
+    return fonts
 
 
 class OptionStatusDelegate(QStyledItemDelegate):
     def sizeHint(self, option, index):
-        status = index.data(OPTION_STATUS_ROLE) or {}
-        suffix = _popup_status(status)
-        markers = " · 默认" if status.get("default") else ""
-        if status.get("active"):
-            markers += " · 已激活"
-        width = option.fontMetrics.horizontalAdvance((index.data() or "") + markers)
-        width += option.fontMetrics.horizontalAdvance(suffix) + 72
-        return QSize(width, max(34, option.fontMetrics.height() + 14))
+        fonts = _row_fonts(option.font)
+        metrics = [QFontMetrics(font) for font in fonts]
+        # The popup has a deliberate width budget. Full labels remain in the
+        # model and accessible descriptions, rather than enlarging the window.
+        return QSize(228, max(30, max(metric.height() for metric in metrics) + 10))
 
     def paint(self, painter: QPainter, option, index):
         # Never delegate the text to the native combo/menu painter: it reserves
@@ -39,43 +46,69 @@ class OptionStatusDelegate(QStyledItemDelegate):
         if selected:
             painter.setBrush(QColor(COLORS["selected"]))
             painter.drawRoundedRect(option.rect, 4, 4)
-        painter.setFont(option.font)
+        elif option.state & QStyle.StateFlag.State_MouseOver:
+            painter.setBrush(QColor(COLORS["hover"]))
+            painter.drawRoundedRect(option.rect, 4, 4)
+        name_font, marker_font, count_font = _row_fonts(option.font)
+        name_metrics = QFontMetrics(name_font)
+        marker_metrics = QFontMetrics(marker_font)
+        count_metrics = QFontMetrics(count_font)
         view = self.parent()
         combo = view.parent() if view else None
         while combo is not None and not isinstance(combo, QComboBox):
             combo = combo.parent()
         current = combo is not None and combo.currentIndex() == index.row()
         if current:
-            painter.setPen(Qt.PenStyle.NoPen)
-            painter.setBrush(QColor(COLORS["accent"]))
-            painter.drawEllipse(option.rect.left() + 12, option.rect.center().y() - 3, 6, 6)
+            painter.setFont(count_font)
+            painter.setPen(QColor(COLORS["accent"]))
+            painter.drawText(option.rect.adjusted(10, 0, 0, 0),
+                             Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft, "✓")
         suffix = _popup_status(status)
-        suffix_width = option.fontMetrics.horizontalAdvance(suffix)
-        right = option.rect.adjusted(32, 0, -12, 0)
-        label_rect = right.adjusted(0, 0, -(suffix_width + 22 if suffix else 0), 0)
+        suffix_width = count_metrics.horizontalAdvance(suffix)
+        right = option.rect.adjusted(28, 0, -10, 0)
+        label_rect = right.adjusted(0, 0, -(suffix_width + 12 if suffix else 0), 0)
         marker = " · 默认" if status.get("default") else ""
         if status.get("active"):
             marker += " · 已激活"
-        text = option.fontMetrics.elidedText((index.data() or "") + marker,
-                                             Qt.TextElideMode.ElideRight, label_rect.width())
+        name = index.data() or ""
+        name_width = name_metrics.horizontalAdvance(name)
+        marker_width = marker_metrics.horizontalAdvance(marker)
+        # Only retain auxiliary labels if the complete name also fits. Long
+        # names use all remaining space; the trailing result never gets clipped.
+        if name_width + marker_width > label_rect.width():
+            marker = ""
+        text = name_metrics.elidedText(name, Qt.TextElideMode.ElideRight,
+                                      max(0, label_rect.width()))
+        painter.setFont(name_font)
         painter.setPen(QColor(COLORS["ink"]))
         painter.drawText(label_rect, Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft, text)
+        if marker:
+            painter.setFont(marker_font)
+            painter.setPen(QColor(COLORS["secondary"]))
+            painter.drawText(label_rect.adjusted(name_width, 0, 0, 0),
+                             Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft, marker)
         tone = status.get("tone", "scanning")
         color = {"complete": "accent", "partial": "warning", "error": "danger"}.get(tone, "secondary")
         painter.setPen(QColor(COLORS[color]))
+        painter.setFont(count_font)
         painter.drawText(right, Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignRight, suffix)
         painter.restore()
 
 
 class OptionComboBox(QComboBox):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, *, compact=False):
         super().__init__(parent)
+        self.compact = compact
+        font = QFont(self.font())
+        font.setPixelSize(12)
+        self.setFont(font)
         # Set the list-popup hint BEFORE setView creates Qt's popup container.
         # Menu-style containers otherwise retain native top/bottom spacers.
         self.setStyleSheet("QComboBox { combobox-popup: 0; }")
         self.ensurePolished()
         view = QListView(self)
         view.setObjectName("optionPopup")
+        view.setMouseTracking(True)
         view.setItemDelegate(OptionStatusDelegate(view))
         view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
@@ -116,7 +149,12 @@ class OptionComboBox(QComboBox):
         self._current_tooltip()
 
     def minimumSizeHint(self):
-        return QSize(80, max(30, super().minimumSizeHint().height()))
+        return QSize(80 if self.compact else 150,
+                     max(24 if self.compact else 31,
+                         self.fontMetrics().height() + (6 if self.compact else 10)))
+
+    def sizeHint(self):
+        return QSize(80 if self.compact else 166, self.minimumSizeHint().height())
 
     def displayedText(self):
         option = QStyleOptionComboBox()
@@ -143,7 +181,7 @@ class OptionComboBox(QComboBox):
         chrome_width = margins.left() + margins.right()
         if self.count() > self.maxVisibleItems():
             chrome_width += view.verticalScrollBar().sizeHint().width()
-        width = min(max(self.width(), view.sizeHintForColumn(0) + chrome_width), screen.width())
+        width = min(max(236, min(248, view.sizeHintForColumn(0) + chrome_width)), screen.width())
         view.setMinimumWidth(width)
         view.setMaximumWidth(width)
         # Windows' scroll effect temporarily hides the actual popup and shows
@@ -164,6 +202,18 @@ class OptionComboBox(QComboBox):
         below = self.mapToGlobal(QPoint(0, self.height() + 4))
         above = self.mapToGlobal(QPoint(0, -popup.height() - 4))
         y = below.y() if below.y() + popup.height() <= screen.bottom() + 1 else above.y()
-        popup.move(max(screen.left(), min(below.x(), screen.right() - popup.width() + 1)),
+        x = below.x()
+        if self.compact:
+            # Keep the menu inside the inventory where there is enough room,
+            # rather than covering the first column of the detail pane.
+            inventory = self.parentWidget()
+            while inventory is not None and inventory.objectName() != "manifestList":
+                inventory = inventory.parentWidget()
+            if inventory is not None and inventory.width() >= popup.width():
+                edge = inventory.mapToGlobal(QPoint(inventory.width(), 0)).x()
+                x = min(x, edge - popup.width())
+        else:
+            x += self.width() - popup.width()
+        popup.move(max(screen.left(), min(x, screen.right() - popup.width() + 1)),
                    max(screen.top(), min(y, screen.bottom() - popup.height() + 1)))
         view.scrollTo(view.currentIndex())

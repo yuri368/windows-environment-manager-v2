@@ -137,8 +137,8 @@ QComboBox QAbstractItemView {
     border: 1px solid @control_border@; background: @input@;
     selection-background-color: @selected@; selection-color: @ink@; padding: 4px;
 }
-QListView#optionPopup::item { padding: 4px 8px; }
-QListView#optionPopup { outline: none; border: 1px solid @control_border@; border-radius: 6px; padding: 4px; }
+QListView#optionPopup::item { padding: 0; }
+QListView#optionPopup { outline: none; border: 1px solid @control_border@; border-radius: 6px; padding: 3px; }
 QPushButton, QToolButton {
     background: @input@; border: 1px solid @control_border@; border-radius: 5px;
     padding: 5px 10px; font-weight: 400;
@@ -210,10 +210,14 @@ QTableWidget#editorRecords, QTableWidget#editorSearchResults {
 }
 QTableWidget#editorRecords::item, QTableWidget#editorSearchResults::item { padding: 4px 6px; border: none; }
 QTableWidget#editorRecords::item:hover, QTableWidget#editorSearchResults::item:hover { background: @hover@; }
-QComboBox#manifestOption { background: transparent; border-color: transparent; padding: 3px 18px 3px 6px; font-size: 12px; }
+QComboBox#manifestOption { background: transparent; border-color: transparent; border-radius: 4px; padding: 0px 18px 0px 6px; font-size: 12px; }
 QComboBox#manifestOption::drop-down { width: 18px; }
+QComboBox#manifestOption::down-arrow { width: 10px; height: 10px; }
 QComboBox#manifestOption:hover { background: @surface@; border-color: @control_hover@; }
 QComboBox#manifestOption:focus { border-color: @focus@; }
+QComboBox#detailOption { font-size: 12px; padding: 0px 24px 0px 8px; }
+QComboBox#detailOption::drop-down { width: 24px; }
+QComboBox#detailOption::down-arrow { width: 10px; height: 10px; }
 QTreeWidget { padding: 4px 0; background: transparent; border: none; }
 QTreeWidget#configOverview { background: @surface@; border: 1px solid @rule@; border-radius: 5px; padding: 0; }
 QTreeWidget#configOverview::item { min-height: 28px; padding: 3px 8px; border-bottom: 1px solid @rule@; border-radius: 0; }
