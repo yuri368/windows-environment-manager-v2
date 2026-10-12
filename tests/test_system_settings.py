@@ -24,7 +24,10 @@ class SystemSettingsTests(unittest.TestCase):
             directory = Path(temp)
             for name in ("rundll32.exe", "sysdm.cpl"):
                 (directory / name).touch()
+            # Linux subprocess lacks this Windows constant. Model the native
+            # flag explicitly while keeping the dispatch contract test active.
             with patch.object(windows_shell, "system_directory", return_value=directory), \
+                    patch.object(windows_shell.subprocess, "CREATE_NO_WINDOW", 0x08000000, create=True), \
                     patch.object(windows_shell.subprocess, "Popen") as launch:
                 windows_shell.open_environment_settings()
             launch.assert_called_once()
@@ -32,6 +35,9 @@ class SystemSettingsTests(unittest.TestCase):
             self.assertEqual(args[0], [str(directory / "rundll32.exe"), "sysdm.cpl,EditEnvironmentVariables"])
             self.assertEqual(options["cwd"], str(directory))
             self.assertFalse(options["shell"])
+            self.assertEqual(options["creationflags"], 0x08000000)
+            for stream in ("stdin", "stdout", "stderr"):
+                self.assertEqual(options[stream], windows_shell.subprocess.DEVNULL)
 
     def test_missing_components_do_not_launch(self):
         with tempfile.TemporaryDirectory() as temp, \

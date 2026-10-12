@@ -514,8 +514,10 @@ class ConfigEditorDialog(QDialog):
         self.choices.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Interactive)
         self.choices.setColumnWidth(0, 140)
         self.choices.horizontalHeader().setStretchLastSection(True)
+        self.choices.horizontalHeader().setStyleSheet("QHeaderView::section { padding: 2px 8px; }")
         self.choices.verticalHeader().hide()
         self.choices.verticalHeader().setDefaultSectionSize(30)
+        self.choices.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.choices.setAlternatingRowColors(True)
         self.choices.setShowGrid(False)
         self.choices.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
@@ -649,9 +651,20 @@ class ConfigEditorDialog(QDialog):
             self._update_navigation_actions()
 
     def _resize_choices(self, *_args) -> None:
-        header = max(26, self.choices.horizontalHeader().sizeHint().height())
+        self.choices.ensurePolished()
+        header = self.choices.horizontalHeader()
+        header.ensurePolished()
+        # Platform style hints include different CJK font padding. Size the
+        # actual text with our compact padding; keep the viewport budget separate
+        # so larger fonts remain readable through scrolling instead of clipping.
+        header_height = max(26, header.fontMetrics().height() + 5)
+        header.setFixedHeight(header_height)
+        row_height = max(30, self.choices.fontMetrics().height() + 8)
+        self.choices.verticalHeader().setDefaultSectionSize(row_height)
         rows = self.choices.rowCount()
-        self.choices.setFixedHeight(header + min(6, rows) * 30 + 4)
+        visible_rows = min(6, rows)
+        natural_height = header_height + visible_rows * row_height + self.choices.frameWidth() * 2
+        self.choices.setFixedHeight(min(natural_height, 32 + visible_rows * 30 + 4))
         self.choices.setVisible(rows > 0)
         self.choices_empty.setVisible(rows == 0)
         if hasattr(self, "choice_actions"):

@@ -7,7 +7,8 @@ import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
-from PySide6.QtCore import QPoint, QTimer, Qt
+from PySide6.QtCore import QPoint, QSize, QTimer, Qt
+from PySide6.QtGui import QFont, QFontDatabase
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -560,6 +561,49 @@ class ConfigEditorUiTests(unittest.TestCase):
         self.assertLess(dialog.save_button.width(), 240)
         self.assertLess(dialog.update_button.width(), 180)
         self.assertGreater(dialog.save_button.geometry().left(), dialog.width() // 2)
+        dialog.hide()
+
+    def test_candidate_table_platform_header_hint_does_not_expand_compact_form(self):
+        dialog = self.dialog()
+        header = dialog.choices.horizontalHeader()
+        # Noto CJK on Ubuntu gives a 34px style hint; this is not a layout budget.
+        with patch.object(header, "sizeHint", return_value=QSize(140, 34)):
+            dialog._append_choice("候选一", "value one")
+            dialog._append_choice("候选二", "value two")
+            dialog.show()
+            self.app.processEvents()
+            self.assertLessEqual(dialog.choices.height(), 96)
+            self.assertLess(dialog.value_pane.geometry().top(), 12)
+            self.assertLess(dialog.inspector.geometry().top(), 12)
+        dialog.hide()
+
+    def test_candidate_table_font_metrics_preserve_readability_and_scrolling(self):
+        dialog = self.dialog()
+        dialog._append_choice("候选一", "value one")
+        dialog._append_choice("候选二", "value two")
+        available = set(QFontDatabase.families())
+        families = [self.app.font().family()] + [name for name in (
+            "Microsoft YaHei UI", "Segoe UI", "Noto Sans CJK SC", "Noto Sans") if name in available]
+        for family in dict.fromkeys(families):
+            for size in (13, 24):
+                with self.subTest(family=family, pixel_size=size):
+                    font = QFont(family)
+                    font.setPixelSize(size)
+                    dialog.choices.setFont(font)
+                    dialog._resize_choices()
+                    dialog.show()
+                    self.app.processEvents()
+                    self.assertLessEqual(dialog.choices.height(), 96)
+                    self.assertGreaterEqual(dialog.choices.rowHeight(0),
+                                            dialog.choices.fontMetrics().height() + 8)
+                    header = dialog.choices.horizontalHeader()
+                    self.assertGreaterEqual(header.height(), header.fontMetrics().height() + 5)
+                    if sum(dialog.choices.rowHeight(row) for row in range(2)) > dialog.choices.viewport().height():
+                        self.assertGreater(dialog.choices.verticalScrollBar().maximum(), 0)
+                        dialog.choices.scrollToItem(dialog.choices.item(1, 0))
+                        self.app.processEvents()
+                        self.assertTrue(dialog.choices.viewport().rect().contains(
+                            dialog.choices.visualItemRect(dialog.choices.item(1, 0))))
         dialog.hide()
 
     def test_record_form_updates_draft_without_disk_or_registry_write(self):
