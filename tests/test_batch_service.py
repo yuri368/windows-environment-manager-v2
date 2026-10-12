@@ -175,14 +175,16 @@ B = {default_value="b",scope="User",mode="replace",editable=true}
             service.execute(plan)
         self.assertEqual(store.writes, [])
 
-    def test_batch_shared_deactivation_blocks_and_joint_switch_restores_baseline(self):
+    def test_batch_deactivation_is_element_level_and_joint_switch_preserves_baseline(self):
         text = config(("One", "Old", {"Path": record("X", "+append")}),
                       ("One", "New", {"Path": record("M", "+append")}),
                       ("Two", "Old", {"Path": record("Y", "-append")}),
                       ("Two", "New", {"Path": record("N", "-append")}))
         service, store = self.make(text, [existing("Path", "A")])
         self.assertTrue(service.execute(service.plan_batch({"One": "Old", "Two": "Old"})).success)
-        self.assertFalse(service.plan_deactivate("One").can_execute)
+        deactivation = service.plan_deactivate("One")
+        self.assertTrue(deactivation.can_execute)
+        self.assertEqual(deactivation.changes[0].after.value, "A;Y")
         switched = service.plan_batch({"One": "New", "Two": "New"})
         self.assertTrue(switched.can_execute, switched.conflicts)
         self.assertEqual(switched.changes[0].after.value, "M;A;N")

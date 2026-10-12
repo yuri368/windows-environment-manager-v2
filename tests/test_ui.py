@@ -20,10 +20,12 @@ from envmanager.models import Calculation, PlanChange, RegistryState, VariableSp
 from envmanager.persistence import StateRepository
 from envmanager.selection import SelectionSession
 from envmanager.service import EnvironmentService
+from envmanager.removal import RemovalRequest, RemovalScope
+from envmanager.sharing import ConflictDecision
 from envmanager.store import MemoryStore
 from envmanager.config_editor_ui import ConfigEditorDialog
 from envmanager.ui import (
-    FullValueDialog, MainWindow, OrderDialog, PreviewDialog, VariableCard,
+    FullValueDialog, MainWindow, OrderDialog, PreviewDialog, SharedConflictDialog, VariableCard,
     _local_time, _status_text,
 )
 
@@ -305,9 +307,51 @@ class UiTests(unittest.TestCase):
             self.assertTrue(store.read("User", "Path").value.endswith(r"%PYTHON_HOME%;%PYTHON_HOME%\Scripts"))
             window._deactivate()
         self.assertNotIn("Python", service.state.snapshot()["active"])
-        self.assertEqual(service.history()[0]["action"], "deactivate")
+        self.assertEqual(service.history()[0]["action"], "remove")
         window.close()
         window.deleteLater()
+
+    def test_legacy_deactivate_alias_reviews_unactivated_shared_consumer(self):
+        config_path = self.temp / "shared.toml"
+        config_path.write_text("""[Java.Default]
+Path={default_value='A',scope='User',mode='+append',editable=false}
+[Scala.Default]
+PATH={default_value='A;B',scope='User',mode='replace',editable=false}
+""", encoding="utf-8")
+        store = MemoryStore((RegistryState("Path", "User", True, "BASE", 2),))
+        service = EnvironmentService(load_config(config_path), store,
+                                     StateRepository(self.temp / "state"))
+        self.assertTrue(service.execute(service.plan("Java", "Default")).success)
+        window = MainWindow(service, config_path, demo=True)
+        self.addCleanup(window.deleteLater)
+        self.addCleanup(window.close)
+        window._select_app("Java")
+        self.assertNotIn("Scala", service.state.snapshot()["active"])
+        with patch.object(SharedConflictDialog, "exec", return_value=QDialog.DialogCode.Accepted) as shared, \
+             patch.object(PreviewDialog, "exec", return_value=QDialog.DialogCode.Accepted) as preview, \
+             patch("envmanager.ui.QMessageBox.information", return_value=None):
+            window._deactivate()
+        shared.assert_called_once()
+        preview.assert_called_once()
+        self.assertEqual(store.read("User", "Path").value, "A;BASE")
+        self.assertEqual(service.history()[0]["action"], "remove")
+        self.assertEqual(service.history()[0]["metadata"]["metrics"]["kept_shared_count"], 1)
+
+        draft = service.prepare_remove(RemovalRequest(
+            RemovalScope.SCHEME, frozenset(("Java",)), {"Java": "Default"}))
+        decisions = {draft.shared_conflicts[0].atom.atom_id: ConflictDecision.REMOVE}
+        with patch.object(SharedConflictDialog, "exec", return_value=QDialog.DialogCode.Accepted), \
+             patch.object(SharedConflictDialog, "decisions", return_value=decisions), \
+             patch.object(PreviewDialog, "exec", return_value=QDialog.DialogCode.Rejected):
+            window._deactivate()
+        self.assertEqual(store.read("User", "Path").value, "A;BASE")
+        with patch.object(SharedConflictDialog, "exec", return_value=QDialog.DialogCode.Accepted), \
+             patch.object(SharedConflictDialog, "decisions", return_value=decisions), \
+             patch.object(PreviewDialog, "exec", return_value=QDialog.DialogCode.Accepted), \
+             patch("envmanager.ui.QMessageBox.information", return_value=None):
+            window._deactivate()
+        self.assertEqual(store.read("User", "Path").value, "BASE")
+        self.assertNotIn("Java", service.state.snapshot()["active"])
 
     def test_hidden_invalid_batch_input_has_visible_reason_and_navigation_then_clears(self):
         service, store, config_path = self.real_service()

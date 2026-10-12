@@ -200,15 +200,17 @@ Path = [
         self.assertFalse(plan.can_execute, "另一活动方案的同一目标值不得仅提示后直接覆盖")
         self.assertEqual(store.read("User", "Path").value, "FIRST")
 
-    def test_shared_target_prevents_undo(self):
+    def test_deactivation_preserves_other_apps_elements_on_same_target(self):
         source = config(("First", "Default", {"Path": record("X", "+append")}),
                         ("Second", "Default", {"Path": record("Y", "+append")}))
         service, store = self.service(source, [existing("Path", "A")])
         service.execute(service.plan("First", "Default"))
         service.execute(service.plan("Second", "Default"))
         plan = service.plan_deactivate("First")
-        self.assertFalse(plan.can_execute)
-        self.assertEqual(store.read("User", "Path").value, "Y;X;A")
+        self.assertTrue(plan.can_execute)
+        self.assertEqual(plan.changes[0].after.value, "Y;A")
+        self.assertTrue(service.execute(plan).success)
+        self.assertEqual(store.read("User", "Path").value, "Y;A")
 
     def test_shared_ordinary_replace_elements_allow_safe_append(self):
         source = config(("First", "Default", {"Path": record("X", "replace")}),
