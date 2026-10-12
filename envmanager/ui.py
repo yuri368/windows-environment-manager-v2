@@ -620,12 +620,12 @@ class FullValueDialog(QDialog):
         self.editable = editable
         self.sensitive = sensitive
         self.visible_value = not sensitive
-        self.escaped = "\r" in value
+        self.escaped = any(char in value for char in ("\r", "\u2028", "\u2029"))
         outer = QVBoxLayout(self)
         outer.setContentsMargins(24, 22, 24, 22)
         outer.setSpacing(13)
         outer.addWidget(_label("完整变量值", "title"))
-        instruction = ("原值含回车符，使用 JSON 转义文本显示和编辑（\\r、\\n、\\\\），以保留原始字符。"
+        instruction = ("原值含特殊换行符，使用 JSON 转义文本显示和编辑（\\r、\\n、\\u2028、\\u2029、\\\\），以保留原始字符。"
                        if self.escaped else "此窗口保留换行、空格和分号。编辑后需先预览并确认应用。")
         outer.addWidget(_label(instruction, "muted"))
         if sensitive:
@@ -648,7 +648,10 @@ class FullValueDialog(QDialog):
         outer.addWidget(buttons)
 
     def _display(self, value: str) -> str:
-        return json.dumps(value, ensure_ascii=False)[1:-1] if self.escaped else value
+        if not self.escaped:
+            return value
+        return (json.dumps(value, ensure_ascii=False)[1:-1]
+                .replace("\u2028", "\\u2028").replace("\u2029", "\\u2029"))
 
     def _accept(self) -> None:
         try:
@@ -1310,14 +1313,14 @@ class PreviewDialog(QDialog):
             divider.setObjectName("divider")
             values.addWidget(divider, 2, 0, 1, 3)
             layout.addLayout(values)
-            if self.plan.action in {"remove", "switch"} and change.before.exists:
-                if not change.after.exists:
-                    layout.addWidget(_label("将删除整个环境变量键", "error"))
-                    if change.before.scope == "System":
-                        layout.addWidget(_label("系统作用域删除需要管理员权限，并可能影响其他用户和系统程序。", "error"))
-                    if match_key(change.before.name) in {"PATH", "SYSTEMROOT", "WINDIR", "COMSPEC", "PATHEXT", "TEMP", "TMP"}:
-                        layout.addWidget(_label("将删除关键环境变量；请检查依赖此变量的程序和系统功能。", "error"))
-                elif self.plan.action == "switch" and change.mode == "replace":
+            if change.before.exists and not change.after.exists:
+                layout.addWidget(_label("将删除整个环境变量键", "error"))
+                if change.before.scope == "System":
+                    layout.addWidget(_label("系统作用域删除需要管理员权限，并可能影响其他用户和系统程序。", "error"))
+                if match_key(change.before.name) in {"PATH", "SYSTEMROOT", "WINDIR", "COMSPEC", "PATHEXT", "TEMP", "TMP"}:
+                    layout.addWidget(_label("将删除关键环境变量；请检查依赖此变量的程序和系统功能。", "error"))
+            elif self.plan.action in {"remove", "switch"} and change.before.exists:
+                if self.plan.action == "switch" and change.mode == "replace":
                     if change.changed:
                         layout.addWidget(_label("将替换完整变量值", "muted"))
                 else:

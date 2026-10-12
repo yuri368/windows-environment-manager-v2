@@ -606,12 +606,17 @@ class EnvironmentService:
                     dependencies=draft.dependencies, metadata=metadata))
 
     def _issue(self, plan):
-        deletion_risks = tuple(
-            f"{change.before.scope} / {change.before.name}：删除系统关键环境变量可能影响命令查找或应用启动"
-            for change in plan.changes if change.before.exists and not change.after.exists
-            and match_key(change.before.name) in {"PATH", "SYSTEMROOT", "WINDIR", "COMSPEC", "PATHEXT"})
+        deletion_risks = []
+        for change in plan.changes:
+            if not change.before.exists or change.after.exists:
+                continue
+            target = f"{change.before.scope} / {change.before.name}"
+            if change.before.scope == "System":
+                deletion_risks.append(f"{target}：将删除系统级环境变量，需要管理员权限")
+            if match_key(change.before.name) in {"PATH", "SYSTEMROOT", "WINDIR", "COMSPEC", "PATHEXT"}:
+                deletion_risks.append(f"{target}：删除系统关键环境变量可能影响命令查找或应用启动")
         if deletion_risks:
-            plan = replace(plan, warnings=tuple(dict.fromkeys(plan.warnings + deletion_risks)))
+            plan = replace(plan, warnings=tuple(dict.fromkeys(plan.warnings + tuple(deletion_risks))))
         if plan.action in {"apply", "switch", "remove"}:
             plan = replace(plan, metadata={**plan.metadata,
                            "cleanup_settings": asdict(self.cleanup_settings)})

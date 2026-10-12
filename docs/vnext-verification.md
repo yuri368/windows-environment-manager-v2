@@ -4,13 +4,14 @@
 
 ## 2026-10-12 实际执行结果
 
-在本机 Windows 与仓库 `.venv` 中运行最终源码，`python -m unittest discover -s tests -v` 的实际结果为 **483 项通过，1105.631 秒，0 失败、0 错误、0 跳过**。完整日志为 `artifacts/vnext-full-test-final.log`，该目录为本地忽略的验收产物。
+在本机 Windows 与仓库 `.venv` 中运行最终源码，`python -m unittest discover -s tests -v` 的实际结果为 **492 项通过，555.126 秒，0 失败、0 错误、0 跳过**。完整日志为 `artifacts/vnext-full-test-audited.log`，该目录为本地忽略的验收产物。
 
 全量结果包含：
 
-- `test_vnext_acceptance.py` 的 37 项用例：T01–T31 及五种范围、冻结快照、有效空输入、额外元素重复统计。
+- `test_vnext_acceptance.py` 的 39 项用例：T01–T31 及五种范围实际执行、冻结快照、有效空输入、额外元素重复统计。五范围参数化回归包含 15 个场景，分别验证最终状态、共享默认保留、无关目标不整理、每目标一次写，以及 prepare/finalize 后的外部快照变化拒绝。
 - `test_vnext_switch_details.py` 的 6 项用例：旧方案独有目标整理预览、全部 8 种设置组合、特殊值保留、同服务和跨服务设置冻结、精确历史恢复。
-- `test_vnext_ui.py` 的 8 项 Qt 用例：独立共享决策、特殊整键提示、部分匹配和空值撤销预览、关键变量删除提示、设置折叠和持久化。
+- `test_vnext_ui.py` 的 12 项 Qt 用例：独立共享决策、特殊整键提示、部分匹配和空值撤销预览、各动作的 System/关键变量删除提示、完整值编辑器的 CR/U+2028/U+2029 原文保留、设置折叠和持久化。
+- `test_matching.py` 验证所有普通模式的空选定值仍记录实际额外元素及重复次数；`test_service.py` 验证真实服务恢复/崩溃恢复计划在删除普通 System 目标前给出删除和管理员权限警告。
 - 全部既有配置、选择、四种模式、批量、切换、事务、历史和界面回归；3 项隔离 WindowsStore 测试和 1 项原生 HWND 可见性测试。
 
 配置示例校验通过，结果为 9 个应用、10 个方案、16 条变量记录。`compileall` 通过；按 Windows CRLF 约定执行 Git 差异空白检查通过。
@@ -68,7 +69,26 @@
 
 `tests/test_launch_visibility.py` 在独立进程中使用 Windows Qt 平台和测试窗口的 HWND，验证原生 `IsWindowVisible` 能区分显示与隐藏；该测试不触发 UAC，也不代表安装版启动已经验收。
 
-本轮没有改写实际 User/System 环境变量。真实 HKLM 写入与权限、实际环境变更通知和新进程读取、UAC 提权后的主窗口、安装目录运行与新版安装包仍需人工验收。这些步骤会触及宿主环境或发布产物，因此本轮使用隔离数据完成自动化验证，未把隔离验证结果当作生产环境验证结果。此次工作更新源码，没有构建或安装新版发布包。
+本轮还通过 Windows Qt 原生平台实际启动主窗口，并由程序内 `IsWindowVisible` 检查后保存 `artifacts/vnext-ui/native-main.png`；特殊值冲突窗口的原生可见性、单目标组、独立决策和默认 KEEP 已检查并保存 `native-special-conflict.png`。截图经视觉检查，内容可读，特殊完整值决策行完整可见。原生窗口仍使用模拟环境数据。
+
+实际权限检查为当前进程无管理员权限，`WindowsStore.check_permission("User")` 成功，`check_permission("System")` 返回没有写入权限且需管理员启动；检查仅请求打开权限，不修改注册表。结果保存在 `artifacts/vnext-permission-check.log`。
+
+本轮没有改写实际 User/System 环境变量。当前非管理员令牌无法执行真实 HKLM 写入；UAC 需要人工同意，未作为无人值守验收执行。实际环境变更通知和新进程读取、提权后的主窗口、安装目录运行与新版安装包仍需人工验收。此次交付为源码升级，没有构建或安装新版发布包；这些发布步骤不属于本次核心语义升级的开发交付。
+
+## 规范条款完成审计
+
+模块依赖保持为：配置/模型定义记录，elements/engine 纯计算，matching/detection 只读计算，removal/sharing/switching 合成目标，service 协调冻结和事务，store/persistence 执行并持久化，UI/配置编辑器展示结果和收集决策。
+
+| 规范范围 | 当前代码证据 | 自动化与运行证据 |
+| --- | --- | --- |
+| §1–3：结构兼容、名称/作用域、special 类型/模式/全配置一致性、字符串合法性 | `VariableSpec` 可选字段；`config._variable()`、`parse_config()` 全记录 target 校验；`engine.validate_value()`；`selection` 使用原始值 | T01/T15–T17，domain strict bool/双作用域/结构/长度测试，special 默认/候选/成功值原文测试 |
+| §4/§9/§11：统一元素解析、三项设置、顺序优先、空值、关闭整理原始切片 | `elements` ASCII-only 归一化及独立开关；`engine.calculate_batch()`；`removal.compose_removal()`；`switching._compose()` | T08–T13/T24/T26–T28，8 种设置组合、前置/后置/手动排序、重复应用、旧方案独有目标和无关目标不整理测试 |
+| §5/§6：四模式检测、普通 replace 集合/部分、特殊原文、M/N、错误与重复计数 | `matching.match_variable()` / `match_scheme()`；`detection.scan_all()` / `refresh_targets()` | T02–T07/T14，空输入额外重复计数，原始引用/大小写/错误/每目标一次读取，特殊 Unicode 完整值入口不改原文/来源/revision 测试 |
+| §7：五范围、来源合并、其他应用全部方案保护、普通部分匹配/空状态/特殊整值共享 | `removal.expand_sources()` / `build_removal_atoms()`；`sharing.protected_specs()` / `classify_conflicts()`；`switching._net_conflicts()` | T18–T20/T29/T30，五范围实际执行及快照变化的 15 个场景，默认保留和独立强制撤销测试 |
+| §7.4/§9：按目标分组、逐项决定、默认保留、bulk 仅共享、正常项最终预览、advanced 折叠 | `SharedConflictDialog`、`PreviewDialog`、`CleanupSettingsDialog`、`VariableCard` | T20/T25，普通/特殊/空值真实按钮和预览回归，设置持久化零注册表写入，原生及模拟截图视觉验收 |
+| §8：切换净状态、批量歧义、每目标一次写、冻结/重新比较、成功值独立性 | `switching._compose()`；`engine.calculate_batch()`；`service._validate_frozen_inputs()` / `execute()`；`selection` | T21/T31，切换单次写、批量排序、配置/选择/来源/设置/Windows 快照变化拒绝、成功偏好仅成功后提交测试 |
+| §4.3/§8：历史恢复/失败回滚原始存在性、文本、类型，不整理；所有动作删除风险和权限 | `plan_restore()` / `plan_recover()` / `_rollback()` 直接恢复快照；`_issue()` 通用风险；`PreviewDialog` 通用删键分支 | T22/T23/T25，写后异常/崩溃/提交失败/外部变化保护、System 恢复/崩溃恢复删键警告，隔离真实注册表和实际权限拒绝检查 |
+| §12：编辑后全配置校验、文档/示例统一、31 场景、旧功能回归、平台边界如实报告 | `ConfigurationDocument._commit()` 原子验证；配置编辑器特殊属性；当前 AGENTS/README/示例/统一规范；Issue #2 | 创建/复制/修改 special 一致性和失败草稿不变、精确 TOML 往返、全量 492 项通过；上文矩阵、文件清单及平台限制 |
 
 ## 本轮修改文件
 

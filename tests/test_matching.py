@@ -90,7 +90,8 @@ class VariableMatchingTests(unittest.TestCase):
                     self.assertIs(result.status, expected)
                     self.assertEqual(result.matched_elements, ())
                     self.assertEqual(result.missing_elements, ())
-                    self.assertEqual(dict(result.occurrence_counts), {})
+                    self.assertEqual(dict(result.occurrence_counts),
+                                     {"A": 1, "B": 1} if current == "A;B" else {})
             self.assertIs(match_variable(spec(mode), "", state(exists=False)).status,
                           VariableMatchStatus.KEY_MISSING)
 
@@ -102,6 +103,21 @@ class VariableMatchingTests(unittest.TestCase):
                 self.assertIs(variable.status, VariableMatchStatus.VALUE_MISMATCH)
                 self.assertIs(scheme.status, SchemeStatus.PARTIAL)
                 self.assertEqual((scheme.matched_count, scheme.total_count), (0, 1))
+
+    def test_empty_ordinary_selections_report_actual_extra_duplicate_counts(self):
+        for mode in ("replace", "+append", "-append", "append"):
+            for selected in ("", " ;\t "):
+                with self.subTest(mode=mode, selected=selected):
+                    original = state("A; A ;a;;\t")
+                    result = match_variable(spec(mode), selected, original)
+                    self.assertIs(result.status, VariableMatchStatus.VALUE_MISMATCH)
+                    self.assertEqual(result.matched_elements, ())
+                    self.assertEqual(result.missing_elements, ())
+                    self.assertEqual(result.extra_elements, ("A", "a"))
+                    self.assertEqual(dict(result.occurrence_counts), {"A": 2, "a": 1})
+                    self.assertEqual(dict(result.duplicate_counts), {"A": 2})
+                    self.assertIs(result.windows_state, original)
+                    self.assertEqual(original.value, "A; A ;a;;\t")
 
     def test_append_preserves_raw_path_and_reference_semantics(self):
         pairs = ((r"%JAVA_HOME%\bin", r"D:\Java\jdk8\bin"),

@@ -67,7 +67,7 @@ class VariableMatch:
 
     @property
     def duplicate_counts(self) -> Mapping[str, int]:
-        """Total Windows occurrences for requested elements occurring more than once."""
+        """Total Windows occurrences for effective elements occurring more than once."""
         return MappingProxyType({item: count for item, count in self.occurrence_counts.items()
                                  if count > 1})
 
@@ -113,17 +113,6 @@ def match_variable(
     if windows_state.scope != spec.scope or match_key(windows_state.name) != match_key(spec.name):
         raise ValidationError("现有变量与配置的名称或作用域不一致")
     target = TargetKey.from_spec(spec)
-    # An explicitly empty selection requires an existing, explicitly empty value.
-    # Without this branch, the empty required-element set is vacuously satisfied
-    # by every nonempty Windows value.
-    if not spec.special and not effective_elements(selected_value):
-        status = (VariableMatchStatus.KEY_MISSING if not windows_state.exists else
-                  VariableMatchStatus.MATCH if windows_state.value == "" else
-                  VariableMatchStatus.VALUE_MISMATCH)
-        return VariableMatch(spec.key, target, spec.mode, status, selected_value,
-                             windows_state=windows_state,
-                             extra_elements=effective_elements(windows_state.value or ""))
-
     if spec.special:
         status = (VariableMatchStatus.KEY_MISSING if not windows_state.exists else
                   VariableMatchStatus.MATCH if windows_state.value == selected_value else
@@ -140,6 +129,15 @@ def match_variable(
     actual = effective_elements(windows_state.value or "") if windows_state.exists else ()
     counts = (Counter(item for raw in (windows_state.value or "").split(";")
                       if (item := normalize_element(raw))) if windows_state.exists else Counter())
+    # An empty ordinary selection requires the exact existing empty state,
+    # while still reporting any actual extra elements and their occurrences.
+    if not required:
+        status = (VariableMatchStatus.KEY_MISSING if not windows_state.exists else
+                  VariableMatchStatus.MATCH if windows_state.value == "" else
+                  VariableMatchStatus.VALUE_MISMATCH)
+        return VariableMatch(spec.key, target, spec.mode, status, selected_value,
+                             windows_state=windows_state, occurrence_counts=counts,
+                             extra_elements=actual)
     matched = tuple(item for item in required if counts[item])
     missing = tuple(item for item in required if not counts[item])
     extra = tuple(item for item in actual if item not in set(required))

@@ -356,6 +356,78 @@ class VNextAcceptanceTests(unittest.TestCase):
                 self.assertEqual(len(shared.shared_conflicts), len(expected))
                 self.assertEqual(shared.ordinary_atoms, ())
 
+    @staticmethod
+    def five_scope_execution_cases():
+        one = spec(option="One", value="A")
+        two = spec(option="Two", value="B")
+        peer = spec(app="Peer", option="One", value="C")
+        protected = spec(app="Protected", option="Hidden", value="A")
+        configuration = config_for(one, two, peer, protected)
+        cases = (
+            (RemovalRequest(RemovalScope.VARIABLE, {"Java"}, {"Java": "One"}, (one.key,)),
+             "BASE;A;B;C"),
+            (RemovalRequest(RemovalScope.SCHEME, {"Java"}, {"Java": "One"}), "BASE;A;B;C"),
+            (RemovalRequest(RemovalScope.APPLICATION_ALL, {"Java"}), "BASE;A;C"),
+            (RemovalRequest(RemovalScope.BATCH_CURRENT, {"Java", "Peer"},
+                            {"Java": "One", "Peer": "One"}), "BASE;A;B"),
+            (RemovalRequest(RemovalScope.BATCH_ALL, {"Java", "Peer"}), "BASE;A"),
+        )
+        return configuration, cases
+
+    def test_all_five_removal_scopes_execute_exact_final_state_and_default_shared_keep(self):
+        configuration, cases = self.five_scope_execution_cases()
+        for request, expected in cases:
+            with self.subTest(scope=request.scope), tempfile.TemporaryDirectory() as directory:
+                repository = StateRepository(Path(directory))
+                original = self.raw("BASE;A;B;C")
+                unrelated = self.raw(" U ;U;;\t", name="UNRELATED")
+                store = MemoryStore((original, unrelated))
+                service = EnvironmentService(configuration, store, repository)
+                draft = service.prepare_remove(request)
+                self.assertEqual([conflict.atom.element_key for conflict in draft.shared_conflicts], ["A"])
+                self.assertEqual([consumer.app for consumer in draft.shared_conflicts[0].consumers], ["Protected"])
+                self.assertEqual(draft.shared_conflicts[0].default_decision, ConflictDecision.KEEP)
+                self.assertEqual(store.writes, [])
+                self.assertEqual(repository.history(), [])
+                plan = service.finalize_remove(draft.id)
+                self.assertEqual(store.writes, [])
+                self.assertEqual(repository.history(), [])
+                result = service.execute(plan)
+                self.assertTrue(result.success)
+                self.assertEqual(result.kept_shared_count, 1)
+                self.assertTrue(store.read("User", "Path").same_content(self.raw(expected)))
+                self.assertTrue(store.read("User", "UNRELATED").same_content(unrelated))
+                self.assertEqual([state.name for state in store.writes],
+                                 [] if expected == original.value else ["Path"])
+                self.assertEqual(result.changed_count, int(expected != original.value))
+                operation = repository.operation(result.operation_id)
+                self.assertEqual(operation["metadata"]["request"]["scope"], request.scope.value)
+                self.assertEqual(operation["metadata"]["shared_conflicts"][0]["decision"], "keep")
+
+    def test_all_five_removal_scopes_reject_snapshot_changes_without_writes_or_history(self):
+        configuration, cases = self.five_scope_execution_cases()
+        for request, _ in cases:
+            for stage in ("after_prepare", "after_finalize"):
+                with self.subTest(scope=request.scope, stage=stage), tempfile.TemporaryDirectory() as directory:
+                    repository = StateRepository(Path(directory))
+                    store = MemoryStore((self.raw("BASE;A;B;C"),))
+                    service = EnvironmentService(configuration, store, repository)
+                    draft = service.prepare_remove(request)
+                    if stage == "after_finalize":
+                        plan = service.finalize_remove(draft.id)
+                    external = self.raw("BASE;A;B;C;EXTERNAL")
+                    store.values[("User", "PATH")] = external
+                    # A change after capture must be rejected before any journal
+                    # or write, whether discovered at finalize or execute.
+                    with self.assertRaises(ConflictError):
+                        if stage == "after_prepare":
+                            plan = service.finalize_remove(draft.id)
+                        service.execute(plan)
+                    self.assertEqual(store.writes, [])
+                    self.assertEqual(store.notifications, 0)
+                    self.assertEqual(repository.history(), [])
+                    self.assertTrue(store.read("User", "Path").same_content(external))
+
     def test_switch_composes_once_and_frozen_snapshot_rejects_external_change(self):
         old = spec(option="Old", value="COMMON;OLD")
         new = spec(option="New", value="COMMON;NEW")

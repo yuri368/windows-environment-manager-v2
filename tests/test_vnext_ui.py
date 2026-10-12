@@ -6,6 +6,7 @@ import os
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from pathlib import Path
+from dataclasses import replace
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -20,7 +21,7 @@ from envmanager.removal import RemovalRequest, RemovalScope
 from envmanager.service import EnvironmentService
 from envmanager.sharing import ConflictDecision
 from envmanager.store import MemoryStore
-from envmanager.ui import MainWindow, PreviewDialog, SharedConflictDialog
+from envmanager.ui import FullValueDialog, MainWindow, PreviewDialog, SharedConflictDialog
 from tests.test_detection_service import raw
 
 
@@ -129,6 +130,65 @@ class VNextUiTests(unittest.TestCase):
         self.addCleanup(preview.deleteLater)
         labels = "\n".join(label.text() for label in preview.findChildren(QLabel))
         self.assertIn("将删除关键环境变量", labels)
+
+    def test_restore_and_recover_system_deletions_show_explicit_risk_and_permission(self):
+        service = self.service(record("App", "CUSTOM_SYSTEM", "A", scope="System"))
+        applied = service.plan("App", "Default")
+        self.assertTrue(service.execute(applied).success)
+        restored = service.plan_restore(applied.id)
+        for action in ("restore", "recover"):
+            with self.subTest(action=action):
+                preview = PreviewDialog(replace(restored, action=action))
+                self.addCleanup(preview.deleteLater)
+                labels = "\n".join(label.text() for label in preview.findChildren(QLabel))
+                self.assertIn("将删除整个环境变量键", labels)
+                self.assertIn("系统作用域删除需要管理员权限", labels)
+        self.assertEqual(len(service.store.writes), 1)
+
+    def test_critical_deletion_risk_is_visible_for_restore_and_recover_actions(self):
+        service = self.service(record("App", "Path", "A"))
+        applied = service.plan("App", "Default")
+        self.assertTrue(service.execute(applied).success)
+        restored = service.plan_restore(applied.id)
+        for action in ("restore", "recover"):
+            with self.subTest(action=action):
+                preview = PreviewDialog(replace(restored, action=action))
+                self.addCleanup(preview.deleteLater)
+                labels = "\n".join(label.text() for label in preview.findChildren(QLabel))
+                self.assertIn("将删除关键环境变量", labels)
+
+    def test_full_value_dialog_preserves_unicode_separators_and_normal_lf(self):
+        values = ("A\u2028B", "A\u2029B", "A\r\nB\u2028C\u2029D", " A\nB;C\t ")
+        for value in values:
+            with self.subTest(value=repr(value)):
+                dialog = FullValueDialog(value, True, False)
+                self.addCleanup(dialog.deleteLater)
+                self.assertEqual(dialog.value(), value)
+                if "\u2028" in value:
+                    self.assertIn("\\u2028", dialog.editor.toPlainText())
+                if "\u2029" in value:
+                    self.assertIn("\\u2029", dialog.editor.toPlainText())
+                if value == " A\nB;C\t ":
+                    self.assertFalse(dialog.escaped)
+                dialog._accept()
+                self.assertEqual(dialog.result(), QDialog.DialogCode.Accepted)
+                self.assertEqual(dialog.value(), value)
+
+    def test_main_full_value_entry_keeps_special_selected_raw_string(self):
+        value = "  A;A\u2028B\r\nC\u2029D\t "
+        service = self.service(record("App", "RAW", value, special=True))
+        window = self.window(service)
+        card = window.cards[0]
+        before_source = service.selections.get(card.spec).source
+        before_revision = service.selections.revision
+        with patch.object(FullValueDialog, "exec", return_value=QDialog.DialogCode.Accepted):
+            card.full_value_button.click()
+        after = service.selections.get(card.spec)
+        self.assertEqual(after.value, value)
+        self.assertEqual(after.source, before_source)
+        self.assertEqual(service.selections.revision, before_revision)
+        self.assertEqual(self.path.read_text(encoding="utf-8"), record("App", "RAW", value, special=True))
+        self.assertEqual(service.store.writes, [])
 
     def test_special_editor_roundtrip_and_incompatible_mode_retains_draft(self):
         service = self.service(record("App", "RAW", "  A;A;B\t ", special=True))

@@ -405,6 +405,42 @@ Path = [
             service.execute(restore)
         self.assertEqual(store.read("User", "A").value, "external")
 
+    def test_restore_of_created_system_variable_warns_before_delete(self):
+        source = config(("App", "Default", {"CUSTOM_SYSTEM": record("A", scope="System")}))
+        service, store = self.service(source)
+        applied = service.execute(service.plan("App", "Default"))
+        self.assertTrue(applied.success)
+        restore = service.plan_restore(applied.operation_id)
+        self.assertEqual(restore.action, "restore")
+        self.assertTrue(restore.changes[0].before.exists)
+        self.assertFalse(restore.changes[0].after.exists)
+        self.assertTrue(any("System / CUSTOM_SYSTEM" in warning and
+                            "删除" in warning and "管理员权限" in warning
+                            for warning in restore.warnings))
+        self.assertEqual(len(store.writes), 1)
+        self.assertTrue(service.execute(restore).success)
+        self.assertFalse(store.read("System", "CUSTOM_SYSTEM").exists)
+
+    def test_crash_recovery_of_created_system_variable_warns_before_delete(self):
+        source = config(("App", "Default", {"CUSTOM_SYSTEM": record("A", scope="System")}))
+        store = MutateThenFailStore(fail_name="CUSTOM_SYSTEM", exception_type=KeyboardInterrupt)
+        service = EnvironmentService(parse_config(source), store, self.repo)
+        applied = service.plan("App", "Default")
+        with self.assertRaises(KeyboardInterrupt):
+            service.execute(applied)
+        recovery = service.plan_recover(applied.id)
+        self.assertEqual(recovery.action, "recover")
+        self.assertTrue(recovery.can_execute)
+        self.assertTrue(recovery.changes[0].before.exists)
+        self.assertFalse(recovery.changes[0].after.exists)
+        self.assertTrue(any("System / CUSTOM_SYSTEM" in warning and
+                            "删除" in warning and "管理员权限" in warning
+                            for warning in recovery.warnings))
+        self.assertEqual(len(store.writes), 1)
+        self.assertTrue(service.execute(recovery).success)
+        self.assertFalse(store.read("System", "CUSTOM_SYSTEM").exists)
+        self.assertEqual(service.pending(), [])
+
     def test_reload_changed_definition_discards_old_custom_draft(self):
         source = config(("App", "Default", {"A": record("old")}))
         service, _ = self.service(source)
