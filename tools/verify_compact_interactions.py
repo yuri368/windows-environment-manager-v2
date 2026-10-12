@@ -156,10 +156,12 @@ def main():
                 if not case["natural_heights"] or not case["primary_in_window"] or not case["last_remove_visible_in_viewport"]:
                     report["failures"].append({"check": "row_scroll_footer", "size": [width, height], "details": case})
                 record["variable_counts"].append(case)
-            targets = {"search": window.search, "filter": window.app_filter, "application_list": window.app_list,
+            targets = {"search": window.search, "application_list": window.app_list,
                        "scheme": window.option_combo, "apply": window.apply_button, "removal": window.deactivate_button,
                        "last_source": window.cards[-1].selector, "last_value": window.cards[-1].editor,
                        "last_full_value": window.cards[-1].full_value_button, "last_remove": window.cards[-1].remove_button}
+            targets.update({f"filter_{index}": button for index, button in enumerate(window.filter_buttons)})
+            targets.update({f"workspace_{index}": button for index, button in enumerate(window.nav_buttons)})
             record["main_focus"] = traverse(app, window, window.search, targets)
             if record["main_focus"]["missing"]:
                 report["failures"].append({"check": "main_tab_reach", "size": [width, height], "missing": record["main_focus"]["missing"]})

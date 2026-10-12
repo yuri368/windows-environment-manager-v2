@@ -18,7 +18,7 @@ from envmanager.persistence import StateRepository
 from envmanager.service import EnvironmentService
 from envmanager.store import MemoryStore
 from envmanager.theme import COLORS
-from envmanager.ui import MainWindow
+from envmanager.ui import MainWindow, OPTION_STATUS_ROLE, OptionStatusDelegate
 
 
 CONFIG = '''
@@ -75,18 +75,21 @@ class MainStatusOptionTests(unittest.TestCase):
         self.assertEqual(view.verticalScrollBar().maximum(), 0)
         self.assertEqual(self.store.writes, [])
 
-    def test_detail_uses_text_icon_and_styled_field_width_at_narrow_size(self):
+    def test_detail_uses_plain_text_and_styled_field_width_at_narrow_size(self):
         self.window._select_app("Python")
         self.app.processEvents()
         combo = self.window.option_combo
-        self.assertFalse(combo.itemIcon(combo.currentIndex()).isNull())
+        self.assertIsInstance(combo.view().itemDelegate(), OptionStatusDelegate)
+        self.assertEqual(combo.currentData(Qt.ItemDataRole.UserRole), "Python313")
+        self.assertIn("默认方案", combo.toolTip())
+        self.assertIsNotNone(combo.currentData(OPTION_STATUS_ROLE))
         option = QStyleOptionComboBox()
         combo.initStyleOption(option)
         field = combo.style().subControlRect(
             QStyle.ComplexControl.CC_ComboBox, option,
             QStyle.SubControl.SC_ComboBoxEditField, combo,
         )
-        needed = combo.fontMetrics().horizontalAdvance("Python313") + combo.iconSize().width() + 8
+        needed = combo.fontMetrics().horizontalAdvance("Python313") + 8
         self.assertGreaterEqual(field.width(), needed)
         self.assertEqual(combo.displayedText(), "Python313")
         self.assertEqual(self.window.width(), 850)
@@ -104,10 +107,14 @@ class MainStatusOptionTests(unittest.TestCase):
         self.assertIn("…", row.option_combo.displayedText())
         self.assertEqual(row.option_combo.currentText(), name)
         self.assertEqual(row.option_combo.toolTip(), name)
-        self.assertEqual(self.window.option_combo.displayedText(), name)
+        detail = self.window.option_combo
+        self.assertIn("…", detail.displayedText())
+        self.assertEqual(detail.currentText(), name)
+        self.assertIn(name, detail.toolTip())
         self.assertEqual(self.window.width(), 850)
         view = self.popup(row.option_combo)
-        self.assertEqual(view.textElideMode(), Qt.TextElideMode.ElideNone)
+        self.assertIsInstance(view.itemDelegate(), OptionStatusDelegate)
+        self.assertIn(name, row.option_combo.itemData(0, Qt.ItemDataRole.ToolTipRole))
         rect = view.visualRect(row.option_combo.model().index(0, 0))
         self.assertTrue(view.viewport().rect().contains(rect))
         self.assertGreaterEqual(rect.width(), view.fontMetrics().horizontalAdvance(name) + 16)

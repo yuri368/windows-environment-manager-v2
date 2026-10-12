@@ -10,31 +10,31 @@ from PySide6.QtWidgets import QApplication
 
 
 COLORS = {
-    "canvas": "#F5F3EF",
-    "inventory": "#F0F0EB",
-    "surface": "#FCFCFA",
-    "surface_muted": "#F1F2ED",
+    "canvas": "#EDF0ED",
+    "inventory": "#F6F8F6",
+    "surface": "#FFFFFF",
+    "surface_muted": "#F7F9F7",
     "input": "#FFFFFF",
-    "ink": "#262D28",
-    "text": "#39443C",
-    "secondary": "#606B62",
-    "muted": "#666F63",
-    "disabled": "#90968D",
-    "rule": "#DDE1D7",
-    "control_border": "#BFC7BB",
-    "control_hover": "#98A692",
-    "accent": "#38644D",
-    "accent_hover": "#2C513C",
-    "accent_pressed": "#254631",
-    "selected": "#E5ECE2",
-    "hover": "#EBEFE7",
-    "focus": "#527A56",
-    "danger": "#A44336",
-    "danger_surface": "#FAEEE8",
-    "warning": "#85612B",
-    "warning_surface": "#F8EEDB",
-    "warning_rule": "#E3D1AF",
-    "scroll": "#BBC4B4",
+    "ink": "#22342A",
+    "text": "#405247",
+    "secondary": "#5D6F63",
+    "muted": "#5C6D61",
+    "disabled": "#99A89E",
+    "rule": "#E3E9E3",
+    "control_border": "#D1DDD3",
+    "control_hover": "#9CB4A3",
+    "accent": "#286C51",
+    "accent_hover": "#225E46",
+    "accent_pressed": "#1D583F",
+    "selected": "#E7F2EA",
+    "hover": "#EDF4EE",
+    "focus": "#4D8765",
+    "danger": "#A4473E",
+    "danger_surface": "#F9EDEA",
+    "warning": "#93611F",
+    "warning_surface": "#FBF2E5",
+    "warning_rule": "#EAD7B9",
+    "scroll": "#C5D2C8",
 }
 
 SPACING = {"base": 4, "field": 8, "group": 12, "section": 16, "workspace": 12}
@@ -63,7 +63,8 @@ QWidget {
     color: @ink@; font-family: "Microsoft YaHei UI", "Microsoft YaHei", "Segoe UI", "Segoe UI Symbol";
     font-size: @body_size@px; selection-background-color: @selected@; selection-color: @ink@;
 }
-QMainWindow, QDialog { background: @canvas@; }
+QMainWindow { background: @surface@; }
+QDialog { background: @canvas@; }
 QLabel { background: transparent; border: none; }
 QLabel#title { font-size: @dialog_title_size@px; font-weight: @dialog_title_weight@; }
 QLabel#appTitle, QLabel#compactHeading { font-size: @workspace_title_size@px; font-weight: @workspace_title_weight@; }
@@ -75,6 +76,7 @@ QLabel#muted, QLabel#subtitle, QLabel#meta, QLabel#manifestMeta, QLabel#contextP
 QLabel#workspaceCrumb, QLabel#manifestHint, QLabel#footerScope { color: @secondary@; font-size: @meta_size@px; }
 QLabel#eyebrow { color: @muted@; font-size: 11px; }
 QLabel#selectionSummary, QLabel#editorState { color: @accent@; font-size: 12px; }
+QLabel#editorSectionHeading { color: @ink@; font-size: 13px; font-weight: 600; }
 QLabel#error { color: @danger@; }
 QLabel#good { color: @accent@; }
 QLabel#badge { background: @surface_muted@; color: @secondary@; border-radius: 4px; padding: 3px 7px; font-size: 11px; }
@@ -95,10 +97,16 @@ QLabel#code, QLineEdit#code, QPlainTextEdit#code {
 }
 QFrame#workspaceHeader, QFrame#editorHeader { background: @surface@; border: none; border-bottom: 1px solid @rule@; }
 QFrame#sidebar, QFrame#manifest, QFrame#editorBrowser { background: @inventory@; border: none; }
-QFrame#sidebar { border-right: 1px solid @rule@; }
-QFrame#detailPane, QFrame#editorWorkspace, QFrame#editorValuePane { background: @surface@; border: none; }
+QFrame#sidebar, QFrame#manifest { border-right: 1px solid @rule@; }
+QFrame#detailPane, QFrame#editorWorkspace, QFrame#editorValuePane, QFrame#editorPropertyWorkspace { background: @surface@; border: none; }
 QFrame#inspectorHeader { background: @surface@; border: none; border-bottom: 1px solid @rule@; }
 QFrame#editorInspector { background: transparent; border: none; }
+QFrame#editorBrowser { border-right: 1px solid @rule@; }
+QFrame#editorWorkspace { border-right: 1px solid @rule@; }
+QFrame#editorMoveGroup, QFrame#editorRuleGroup { background: transparent; border: none; border-top: 1px solid @rule@; }
+QFrame#variableTable { background: @surface@; border: 1px solid @rule@; border-radius: 6px; }
+QFrame#comparisonPanel { background: @surface@; border: 1px solid @rule@; border-radius: 6px; }
+QFrame#comparisonHeader { background: @surface_muted@; border: none; border-bottom: 1px solid @rule@; }
 QFrame#variableTableHeader { background: @surface_muted@; border: none; border-bottom: 1px solid @rule@; }
 QFrame#card, QFrame#panel { background: @surface@; border: 1px solid @rule@; border-radius: 8px; }
 QFrame#compactVariable { background: @surface@; border: none; border-bottom: 1px solid @rule@; border-radius: 0; }
@@ -119,7 +127,7 @@ QLineEdit:focus, QPlainTextEdit:focus, QTextEdit:focus, QComboBox:focus { border
 QLineEdit:disabled, QPlainTextEdit:disabled, QComboBox:disabled {
     background: @surface_muted@; color: @disabled@; border-color: @rule@;
 }
-QLineEdit:read-only { background: @surface_muted@; }
+QLineEdit:read-only { background: @input@; }
 QLineEdit[invalid="true"], QPlainTextEdit[invalid="true"] { border-color: @danger@; }
 QComboBox { padding-right: 26px; }
 QComboBox::drop-down { subcontrol-origin: padding; subcontrol-position: top right; width: 26px; border: none; }
@@ -130,6 +138,7 @@ QComboBox QAbstractItemView {
     selection-background-color: @selected@; selection-color: @ink@; padding: 4px;
 }
 QListView#optionPopup::item { padding: 4px 8px; }
+QListView#optionPopup { outline: none; border: 1px solid @control_border@; border-radius: 6px; padding: 4px; }
 QPushButton, QToolButton {
     background: @input@; border: 1px solid @control_border@; border-radius: 5px;
     padding: 5px 10px; font-weight: 400;
@@ -157,9 +166,15 @@ QPushButton#danger:disabled { color: @disabled@; border-color: @rule@; }
 QPushButton#nav { text-align: left; background: transparent; border: 1px solid transparent; padding: 8px 12px; color: @secondary@; }
 QPushButton#nav:hover { background: @hover@; }
 QPushButton#nav[active="true"] { background: @surface@; color: @accent@; font-weight: 600; }
-QPushButton#workspaceTab { background: transparent; border: none; border-bottom: 2px solid @accent@; border-radius: 0; color: @accent@; padding: 5px 8px; }
-QPushButton#workspaceTab:focus { background: @selected@; }
-QPushButton#manifestName { text-align: left; background: transparent; border: none; padding: 0; font-size: 13px; font-weight: 500; }
+QPushButton#workspaceTab, QPushButton#navTab { background: transparent; border: 1px solid transparent; border-bottom: 2px solid transparent; border-radius: 0; color: @secondary@; padding: 7px 10px; }
+QPushButton#workspaceTab[active="true"], QPushButton#navTab[active="true"] { color: @accent@; border-bottom-color: @accent@; font-weight: 600; }
+QPushButton#workspaceTab:hover, QPushButton#navTab:hover { background: @hover@; }
+QPushButton#workspaceTab:focus, QPushButton#navTab:focus { background: @selected@; }
+QPushButton#filterButton { background: transparent; border: 1px solid transparent; border-radius: 4px; color: @secondary@; padding: 4px 6px; font-size: 12px; }
+QPushButton#filterButton:checked { background: @selected@; color: @accent@; font-weight: 500; }
+QPushButton#filterButton:hover { background: @hover@; }
+QPushButton#filterButton:focus { border-color: @focus@; }
+QPushButton#manifestName { text-align: left; background: transparent; border: none; padding: 0; font-size: 13px; font-weight: 600; }
 QPushButton#manifestName:focus { border: 1px solid @focus@; }
 QPushButton#manifestName:hover { color: @accent@; }
 QScrollArea { border: none; background: transparent; }
@@ -200,6 +215,8 @@ QComboBox#manifestOption::drop-down { width: 18px; }
 QComboBox#manifestOption:hover { background: @surface@; border-color: @control_hover@; }
 QComboBox#manifestOption:focus { border-color: @focus@; }
 QTreeWidget { padding: 4px 0; background: transparent; border: none; }
+QTreeWidget#configOverview { background: @surface@; border: 1px solid @rule@; border-radius: 5px; padding: 0; }
+QTreeWidget#configOverview::item { min-height: 28px; padding: 3px 8px; border-bottom: 1px solid @rule@; border-radius: 0; }
 QTreeWidget::item { height: 26px; padding: 2px 4px; border: none; border-radius: 3px; }
 QTreeWidget::item:hover { background: @hover@; }
 QTreeWidget::item:selected { background: @selected@; color: @accent@; }
@@ -207,6 +224,8 @@ QTreeWidget::branch { background: transparent; border: none; }
 QTreeWidget::branch:has-children:closed { image: url("ASSETS/chevron-right.svg"); }
 QTreeWidget::branch:has-children:open { image: url("ASSETS/chevron-down.svg"); }
 QTableWidget { gridline-color: @rule@; selection-background-color: @selected@; selection-color: @ink@; }
+QTableWidget#nativeTable { background: @surface@; border: 1px solid @rule@; border-radius: 6px; }
+QFrame#pageHeader { background: @surface@; border: none; }
 QTableWidget::item { padding: 4px 8px; }
 QHeaderView::section { background: @surface@; border: none; border-bottom: 1px solid @rule@; color: @secondary@; padding: 5px 8px; font-size: 12px; }
 QTableCornerButton::section { background: @surface_muted@; border: none; }
@@ -214,7 +233,7 @@ QTabWidget::pane { border: none; background: transparent; }
 QTabBar::tab { background: transparent; color: @secondary@; border: none; border-bottom: 2px solid transparent; padding: 7px 12px; margin-right: 4px; }
 QTabBar::tab:hover { color: @ink@; background: @hover@; }
 QTabBar::tab:selected { color: @accent@; border-bottom-color: @accent@; font-weight: 500; }
-QSplitter::handle { background: @canvas@; width: 8px; }
+QSplitter::handle { background: @rule@; width: 1px; }
 QSplitter::handle:hover { background: @rule@; }
 QMenu { background: @surface@; color: @text@; border: 1px solid @control_border@; padding: 4px; }
 QMenu::item { padding: 6px 24px; border-radius: 4px; }
@@ -228,6 +247,11 @@ _fonts_loaded = False
 
 def apply_theme(app: QApplication) -> None:
     global _fonts_loaded
+    # Newly created Qt widgets inherit the application theme. Replacing Fusion
+    # and the identical global stylesheet for each dialog repolishes every live
+    # widget and makes successive workspace/editor openings progressively slow.
+    if app.styleSheet() == STYLE:
+        return
     if not _fonts_loaded:
         font_directory = Path(os.environ.get("WINDIR", "C:/Windows")) / "Fonts"
         for filename in ("segoeui.ttf", "seguisym.ttf", "msyh.ttc", "msyhbd.ttc", "consola.ttf"):

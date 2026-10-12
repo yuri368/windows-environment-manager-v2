@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-10T14:41:17Z",
+  "generatedAt": "2026-10-12T08:42:56Z",
   "title": "Design System: Windows 环境变量方案管理器 V2",
   "extensions": {
     "shadows": [],
@@ -32,41 +32,42 @@
     },
     "rasterProvenance": {
       "shippingRasterAssets": [],
-      "qaCaptures": "tools/capture_compact_ui.py captures native QWidget.grab with example MemoryStore data; these are layout examples, not installed-app acceptance evidence.",
-      "reviewArtifacts": "artifacts/compact-ui-review/",
-      "acceptanceReport": "The root agent owns the final acceptance report.",
+      "qaCaptures": "tools/capture_web_inspired_ui.py captures native QWidget.grab using public synthetic fixture data, disposable TOML/state and MemoryStore; fixture setup writes are reported separately from zero-write UI browsing.",
+      "reviewArtifacts": "docs/images/web-inspired/",
+      "acceptanceReport": "docs/web-inspired-ui-acceptance.md",
       "qaHarnesses": [
-        "tools/capture_compact_ui.py"
+        "tools/capture_compact_ui.py",
+        "tools/capture_web_inspired_ui.py"
       ]
     },
     "designTokens": {
       "source": "DESIGN.md frontmatter and envmanager/theme.py; values are a machine-readable mirror for review tooling",
       "colors": {
-        "canvas": "#F5F3EF",
-        "inventory": "#F0F0EB",
-        "surface": "#FCFCFA",
-        "surface-muted": "#F1F2ED",
+        "canvas": "#EDF0ED",
+        "inventory": "#F6F8F6",
+        "surface": "#FFFFFF",
+        "surface-muted": "#F7F9F7",
         "input": "#FFFFFF",
-        "ink": "#262D28",
-        "text": "#39443C",
-        "secondary": "#606B62",
-        "muted": "#666F63",
-        "disabled": "#90968D",
-        "rule": "#DDE1D7",
-        "control-border": "#BFC7BB",
-        "control-hover": "#98A692",
-        "accent": "#38644D",
-        "accent-hover": "#2C513C",
-        "accent-pressed": "#254631",
-        "selected": "#E5ECE2",
-        "hover": "#EBEFE7",
-        "focus": "#527A56",
-        "danger": "#A44336",
-        "danger-surface": "#FAEEE8",
-        "warning": "#85612B",
-        "warning-surface": "#F8EEDB",
-        "warning-rule": "#E3D1AF",
-        "scroll": "#BBC4B4"
+        "ink": "#22342A",
+        "text": "#405247",
+        "secondary": "#5D6F63",
+        "muted": "#5C6D61",
+        "disabled": "#99A89E",
+        "rule": "#E3E9E3",
+        "control-border": "#D1DDD3",
+        "control-hover": "#9CB4A3",
+        "accent": "#286C51",
+        "accent-hover": "#225E46",
+        "accent-pressed": "#1D583F",
+        "selected": "#E7F2EA",
+        "hover": "#EDF4EE",
+        "focus": "#4D8765",
+        "danger": "#A4473E",
+        "danger-surface": "#F9EDEA",
+        "warning": "#93611F",
+        "warning-surface": "#FBF2E5",
+        "warning-rule": "#EAD7B9",
+        "scroll": "#C5D2C8"
       },
       "typography": {
         "title": {
@@ -110,16 +111,21 @@
         "workspace": "12px"
       },
       "layout": {
-        "mainSidebarWidth": "270px",
+        "mainSidebarWidth": "260px",
         "applicationRowHeight": "48px",
         "variableRowHeight": "48px",
-        "editorBrowserWidth": "224px",
+        "editorBrowserWidth": "220px",
         "editorBrowserMinWidth": "216px",
-        "editorBrowserMaxWidth": "256px",
+        "editorBrowserMaxWidth": "224px",
         "editorOverviewMinimumWidth": "240px",
         "editorInspectorBreakpoint": "1020px",
         "editorExactTextEditorHeight": "72px",
-        "compactPropertyArrangement": "overview and record properties stack vertically; each region scrolls independently"
+        "compactPropertyArrangement": "overview and record properties stack vertically; each region scrolls independently",
+        "mainSidebarMinWidth": "248px",
+        "mainSidebarMaxWidth": "320px",
+        "editorInspectorMinWidth": "320px",
+        "editorInspectorMaxWidth": "340px",
+        "splitterWidth": "1px"
       }
     }
   },
@@ -130,7 +136,7 @@
       "refersTo": "button-primary",
       "description": "预览或明确保存等主要操作，尺寸紧凑并由文案决定宽度。",
       "html": "<button class=\"ds-button ds-primary\">预览并应用</button>",
-      "css": ".ds-button{font:500 13px \"Microsoft YaHei UI\",\"Segoe UI\",sans-serif;border:1px solid #38644D;border-radius:5px;padding:5px 10px}.ds-primary{background:#38644D;color:#FFF}.ds-primary:hover{background:#2C513C;border-color:#2C513C}.ds-primary:active{background:#254631}.ds-button:focus-visible{outline:1px solid #527A56;outline-offset:2px}.ds-button:disabled{color:#90968D;background:#F1F2ED;border-color:#DDE1D7}"
+      "css": ".ds-button{font:500 13px \"Microsoft YaHei UI\",\"Segoe UI\",sans-serif;border:1px solid #286C51;border-radius:5px;padding:5px 10px}.ds-primary{background:#286C51;color:#FFF}.ds-primary:hover{background:#225E46;border-color:#225E46}.ds-primary:active{background:#1D583F}.ds-button:focus-visible{outline:1px solid #4D8765;outline-offset:2px}.ds-button:disabled{color:#99A89E;background:#F7F9F7;border-color:#E3E9E3}"
     },
     {
       "name": "文本输入",
@@ -138,7 +144,7 @@
       "refersTo": "input",
       "description": "白色原生输入面和可见焦点边线，辅助文字保持清晰对比。",
       "html": "<input class=\"ds-input\" placeholder=\"搜索应用或配置\" aria-label=\"搜索应用或配置\">",
-      "css": ".ds-input{box-sizing:border-box;width:100%;font:400 13px \"Microsoft YaHei UI\",\"Segoe UI\",sans-serif;background:#FFF;color:#39443C;border:1px solid #BFC7BB;border-radius:5px;padding:5px 8px}.ds-input::placeholder{color:#606B62;opacity:1}.ds-input:hover{border-color:#98A692}.ds-input:focus-visible{outline:1px solid #527A56;outline-offset:0}"
+      "css": ".ds-input{box-sizing:border-box;width:100%;font:400 13px \"Microsoft YaHei UI\",\"Segoe UI\",sans-serif;background:#FFF;color:#405247;border:1px solid #D1DDD3;border-radius:5px;padding:5px 8px}.ds-input::placeholder{color:#5D6F63;opacity:1}.ds-input:hover{border-color:#9CB4A3}.ds-input:focus-visible{outline:1px solid #4D8765;outline-offset:0}"
     },
     {
       "name": "应用清单行",
@@ -146,7 +152,7 @@
       "refersTo": "manifest-row",
       "description": "48px 行独立呈现批量勾选、详情导航、准备方案和简短匹配计数。",
       "html": "<div class=\"ds-manifest\"><input type=\"checkbox\" aria-label=\"批量选择 Java\"><button class=\"ds-app\">Java</button><span class=\"ds-option\">JDK 21</span><small class=\"ds-match\">2/2</small></div>",
-      "css": ".ds-manifest{box-sizing:border-box;display:grid;grid-template-columns:18px minmax(48px,1fr) minmax(60px,auto) auto;align-items:center;gap:8px;width:270px;height:48px;padding:4px 8px;background:#F0F0EB;color:#262D28;font:400 13px \"Microsoft YaHei UI\",\"Segoe UI\",sans-serif}.ds-manifest input{accent-color:#38644D}.ds-app{min-width:0;padding:0;border:0;background:transparent;color:#262D28;font-size:13px;font-weight:500;text-align:left}.ds-app:hover{color:#38644D}.ds-option{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#39443C;font-size:12px}.ds-match{color:#606B62;font-size:12px;white-space:nowrap}.ds-app:focus-visible{outline:1px solid #527A56;outline-offset:2px}"
+      "css": ".ds-manifest{box-sizing:border-box;display:grid;grid-template-columns:18px minmax(48px,1fr) minmax(60px,auto) auto;align-items:center;gap:8px;width:270px;height:48px;padding:4px 8px;background:#F6F8F6;color:#22342A;font:400 13px \"Microsoft YaHei UI\",\"Segoe UI\",sans-serif}.ds-manifest input{accent-color:#286C51}.ds-app{min-width:0;padding:0;border:0;background:transparent;color:#22342A;font-size:13px;font-weight:500;text-align:left}.ds-app:hover{color:#286C51}.ds-option{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#405247;font-size:12px}.ds-match{color:#5D6F63;font-size:12px;white-space:nowrap}.ds-app:focus-visible{outline:1px solid #4D8765;outline-offset:2px}"
     },
     {
       "name": "环境变量行",
@@ -154,15 +160,15 @@
       "refersTo": "variable-row",
       "description": "行式字段把作用域、模式、来源、当前值、检测状态和操作放在同一阅读线上。",
       "html": "<div class=\"ds-variable\"><strong>MAVEN_HOME</strong><span>User · replace</span><span>默认值</span><code>C:\\Tools\\Maven</code><small>匹配</small><button aria-label=\"更多操作\">⋯</button></div>",
-      "css": ".ds-variable{box-sizing:border-box;display:grid;grid-template-columns:minmax(120px,1.1fr) minmax(90px,.8fr) minmax(90px,.8fr) minmax(140px,1.5fr) auto auto;align-items:center;gap:8px;min-height:48px;padding:4px 8px;background:#FCFCFA;border-bottom:1px solid #DDE1D7;color:#262D28;font:400 13px \"Microsoft YaHei UI\",\"Segoe UI\",sans-serif}.ds-variable strong{font-weight:500}.ds-variable span,.ds-variable small{color:#606B62;font-size:12px}.ds-variable code{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#39443C;font:13px \"Cascadia Mono\",Consolas,monospace}.ds-variable button{border:0;background:transparent;color:#39443C}.ds-variable button:focus-visible{outline:1px solid #527A56}"
+      "css": ".ds-variable{box-sizing:border-box;display:grid;grid-template-columns:minmax(120px,1.1fr) minmax(90px,.8fr) minmax(90px,.8fr) minmax(140px,1.5fr) auto auto;align-items:center;gap:8px;min-height:48px;padding:4px 8px;background:#FFFFFF;border-bottom:1px solid #E3E9E3;color:#22342A;font:400 13px \"Microsoft YaHei UI\",\"Segoe UI\",sans-serif}.ds-variable strong{font-weight:500}.ds-variable span,.ds-variable small{color:#5D6F63;font-size:12px}.ds-variable code{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#405247;font:13px \"Cascadia Mono\",Consolas,monospace}.ds-variable button{border:0;background:transparent;color:#405247}.ds-variable button:focus-visible{outline:1px solid #4D8765}"
     },
     {
       "name": "编辑器三栏工作区",
       "kind": "custom",
       "refersTo": "editor-browser",
-      "description": "216–256px 导航之后，中间方案总览与单条记录属性并排；窄于1020px时后两者上下堆叠。",
-      "html": "<div class=\"ds-editor\"><nav>应用 · 方案 · 变量</nav><main><h3>方案总览</h3><p>全部方案 · 仅用于筛选</p><div class=\"ds-record\">Path / JDK 21 · User</div></main><aside><h3>单条记录属性</h3><label>默认值<textarea>C:\\Tools\\Java</textarea></label><button>更新到草稿</button></aside></div>",
-      "css": ".ds-editor{display:grid;grid-template-columns:224px minmax(240px,1fr) minmax(300px,340px);gap:8px;min-height:360px;background:#FCFCFA;color:#262D28;font:400 13px \"Microsoft YaHei UI\",\"Segoe UI\",sans-serif}.ds-editor nav{min-width:216px;max-width:256px;background:#F0F0EB;padding:8px}.ds-editor main,.ds-editor aside{min-width:0;overflow:auto;padding:8px}.ds-editor h3{margin:0 0 8px;font-size:13px;font-weight:500}.ds-editor p,.ds-editor label{color:#606B62;font-size:12px}.ds-record{padding:6px;border-bottom:1px solid #DDE1D7}.ds-editor textarea{display:block;box-sizing:border-box;width:100%;height:72px;margin-top:4px;padding:5px 8px;border:1px solid #BFC7BB;border-radius:5px;background:#FFF;color:#39443C;font:13px \"Cascadia Mono\",Consolas,monospace}.ds-editor button{margin-top:8px;padding:5px 10px;border:1px solid #DDE1D7;border-radius:5px;background:#EBEFE7;color:#38644D}@media(max-width:1019px){.ds-editor{grid-template-columns:216px minmax(0,1fr)}.ds-editor nav{grid-row:1 / span 2}.ds-editor main,.ds-editor aside{max-height:50vh}}"
+      "description": "216–224px 导航之后，中间方案总览与 320–340px 单条记录属性并排；1px splitter 连续分隔，窄于1020px时后两者上下堆叠。",
+      "html": "<div class=\"ds-editor\"><nav>应用 · 方案组 · 变量</nav><main><h3>方案总览</h3><p>全部方案只筛选记录</p><div class=\"ds-record\">Path / JDK 21 · User</div></main><aside><h3>单条记录属性</h3><label>默认值<textarea>C:\\Tools\\Java</textarea></label><button>更新到草稿</button></aside></div>",
+      "css": ".ds-editor{display:grid;grid-template-columns:220px minmax(240px,1fr) minmax(320px,340px);column-gap:1px;min-height:360px;background:#FFFFFF;color:#22342A;font:400 13px \"Microsoft YaHei UI\",\"Segoe UI\",sans-serif}.ds-editor nav{min-width:216px;max-width:224px;background:#F6F8F6;padding:8px;border-right:1px solid #E3E9E3}.ds-editor main,.ds-editor aside{min-width:0;overflow:auto;padding:8px}.ds-editor h3{margin:0 0 8px;font-size:13px;font-weight:500}.ds-editor p,.ds-editor label{color:#5D6F63;font-size:12px}.ds-record{padding:6px;border-bottom:1px solid #E3E9E3}.ds-editor textarea{display:block;box-sizing:border-box;width:100%;height:72px;margin-top:4px;padding:5px 8px;border:1px solid #D1DDD3;border-radius:5px;background:#FFF;color:#405247;font:13px \"Cascadia Mono\",Consolas,monospace}.ds-editor button{margin-top:8px;padding:5px 10px;border:1px solid #E3E9E3;border-radius:5px;background:#EDF4EE;color:#286C51}@media(max-width:1019px){.ds-editor{grid-template-columns:216px minmax(0,1fr)}.ds-editor nav{grid-row:1 / span 2}.ds-editor main,.ds-editor aside{max-height:50vh}}"
     },
     {
       "name": "草稿更新按钮",
@@ -170,7 +176,7 @@
       "refersTo": "button-secondary",
       "description": "只把表单值更新到草稿，文件仍需经过差异查看和明确保存。",
       "html": "<button class=\"ds-secondary\">更新到草稿</button>",
-      "css": ".ds-secondary{font:400 13px \"Microsoft YaHei UI\",\"Segoe UI\",sans-serif;padding:5px 10px;border:1px solid #DDE1D7;border-radius:5px;background:#EBEFE7;color:#38644D}.ds-secondary:hover{background:#E5ECE2}.ds-secondary:focus-visible{outline:1px solid #527A56;outline-offset:2px}"
+      "css": ".ds-secondary{font:400 13px \"Microsoft YaHei UI\",\"Segoe UI\",sans-serif;padding:5px 10px;border:1px solid #E3E9E3;border-radius:5px;background:#EDF4EE;color:#286C51}.ds-secondary:hover{background:#E7F2EA}.ds-secondary:focus-visible{outline:1px solid #4D8765;outline-offset:2px}"
     },
     {
       "name": "执行预览容器",
@@ -178,7 +184,7 @@
       "refersTo": "card",
       "description": "预览按正式变更内容展示差异，明确执行前检查边界。",
       "html": "<section class=\"ds-preview\"><strong>Path · User</strong><p>核对当前值和方案目标后再确认。</p></section>",
-      "css": ".ds-preview{padding:12px;background:#FCFCFA;color:#262D28;border:1px solid #DDE1D7;border-radius:8px;font:400 13px \"Microsoft YaHei UI\",\"Segoe UI\",sans-serif}.ds-preview strong{font-weight:500}.ds-preview p{color:#606B62;font-size:12px}"
+      "css": ".ds-preview{padding:12px;background:#FFFFFF;color:#22342A;border:1px solid #E3E9E3;border-radius:8px;font:400 13px \"Microsoft YaHei UI\",\"Segoe UI\",sans-serif}.ds-preview strong{font-weight:500}.ds-preview p{color:#5D6F63;font-size:12px}"
     }
   ],
   "narrative": {

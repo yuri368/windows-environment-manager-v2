@@ -55,6 +55,23 @@ class WindowsStore:
         validate_state(state)
         return state
 
+    def list_values(self, scope: str) -> tuple[RegistryState, ...]:
+        """Enumerate raw values from exactly one registry scope, read-only."""
+        root, path = self._location(scope)
+        try:
+            key = self.registry.OpenKey(root, path, 0, self.registry.KEY_READ)
+        except FileNotFoundError:
+            return ()
+        with key:
+            value_count = self.registry.QueryInfoKey(key)[1]
+            states = []
+            for index in range(value_count):
+                name, value, kind = self.registry.EnumValue(key, index)
+                state = RegistryState(name, scope, True, value, kind)
+                validate_state(state)
+                states.append(state)
+        return tuple(states)
+
     def check_permission(self, scope: str) -> None:
         root, path = self._location(scope)
         try:
@@ -114,10 +131,20 @@ class MemoryStore:
         self.denied_scopes = set()
 
     def read(self, scope, name):
+        if scope not in {"User", "System"}:
+            raise ValidationError("作用域必须为 User 或 System")
         state = self.values.get((scope, match_key(name)))
         if state is None:
             return RegistryState(name, scope, False)
         return RegistryState(name, scope, state.exists, state.value, state.registry_type)
+
+    def list_values(self, scope):
+        """List only explicitly seeded demo/test data; never consult the host."""
+        if scope not in {"User", "System"}:
+            raise ValidationError("作用域必须为 User 或 System")
+        states = (deepcopy(state) for (saved_scope, _), state in self.values.items()
+                  if saved_scope == scope and state.exists)
+        return tuple(sorted(states, key=lambda state: (match_key(state.name), state.name)))
 
     def check_permission(self, scope):
         if scope not in {"User", "System"}:

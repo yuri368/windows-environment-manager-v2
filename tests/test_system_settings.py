@@ -61,7 +61,10 @@ class SystemSettingsTests(unittest.TestCase):
         window.resize(850, 560)
         window.show()
         self.app.processEvents()
-        button = window.system_settings_button
+        window.windows_button.click()
+        self.app.processEvents()
+        self.assertEqual(window.workspace_stack.currentIndex(), 1)
+        button = window.windows_page.system_settings_button
         self.assertTrue(button.isVisible())
         self.assertTrue(button.parentWidget().rect().contains(button.geometry()))
         self.assertGreaterEqual(button.width(), button.sizeHint().width())

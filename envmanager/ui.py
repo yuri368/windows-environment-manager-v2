@@ -7,7 +7,7 @@ import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from PySide6.QtCore import QObject, QRunnable, QThreadPool, QTimer, Qt, Signal, QSize
+from PySide6.QtCore import QObject, QRunnable, QThreadPool, QTimer, Qt, Signal, QSize, QEvent
 from PySide6.QtCore import QUrl
 from PySide6.QtGui import QColor, QDesktopServices, QIcon, QPainter
 from PySide6.QtWidgets import (
@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QLabel, QLineEdit, QListView, QListWidget, QListWidgetItem, QMainWindow, QMenu, QSizePolicy,
     QMessageBox, QPlainTextEdit, QProgressBar, QPushButton, QScrollArea,
     QVBoxLayout, QWidget, QStyledItemDelegate, QStyleOptionViewItem, QStyleOptionComboBox, QStyle, QStylePainter,
+    QStackedWidget, QSplitter,
 )
 
 from .matching import SchemeStatus, VariableMatchStatus
@@ -28,6 +29,7 @@ from .config_editor_ui import ConfigEditorDialog
 from .icons import icon, app_icon
 from .windows_shell import open_environment_settings
 from .ui_controls import ActionButton
+from .native_workspace_pages import WindowsEnvironmentPage, HistoryPage
 
 
 def _label(text: str, name: str = "") -> QLabel:
@@ -109,7 +111,7 @@ class ApplicationNameButton(ActionButton):
             self._full_name, Qt.TextElideMode.ElideRight, max(0, self.width() - 4)))
 
 
-OPTION_STATUS_ROLE = int(Qt.ItemDataRole.UserRole) + 1
+from .scheme_selector import OPTION_STATUS_ROLE, OptionStatusDelegate, OptionComboBox
 
 
 def _scheme_presentation(scheme) -> tuple[str, str, str, str]:
@@ -159,141 +161,6 @@ def _set_match_label(label: QLabel, text: str, tone: str, tooltip: str) -> None:
     label.setAccessibleDescription(tooltip)
     label.style().unpolish(label)
     label.style().polish(label)
-
-
-class OptionStatusDelegate(QStyledItemDelegate):
-    """Paint detection state beside an untouched scheme id."""
-
-    def sizeHint(self, option, index) -> QSize:
-        hint = super().sizeHint(option, index)
-        status = index.data(OPTION_STATUS_ROLE) or {}
-        suffix = status.get("display", "")
-        width = (option.fontMetrics.horizontalAdvance(index.data(Qt.ItemDataRole.DisplayRole) or "")
-                 + option.fontMetrics.horizontalAdvance(suffix) + 52)
-        return QSize(max(hint.width(), width), max(hint.height(), 30))
-
-    def paint(self, painter: QPainter, option, index) -> None:
-        status = index.data(OPTION_STATUS_ROLE) or {}
-        suffix = status.get("display", "")
-        if not suffix:
-            super().paint(painter, option, index)
-            return
-        suffix_width = option.fontMetrics.horizontalAdvance(suffix) + 14
-        label_option = QStyleOptionViewItem(option)
-        label_option.rect = option.rect.adjusted(0, 0, -suffix_width, 0)
-        super().paint(painter, label_option, index)
-        palette = {
-            "complete": COLORS["accent"], "partial": COLORS["warning"],
-            "unconfigured": COLORS["secondary"], "error": COLORS["danger"],
-            "scanning": COLORS["secondary"],
-        }
-        painter.save()
-        painter.setPen(QColor(palette.get(status.get("tone"), COLORS["secondary"])))
-        painter.drawText(option.rect.adjusted(6, 0, -8, 0),
-                         Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter, suffix)
-        painter.restore()
-
-
-class OptionComboBox(QComboBox):
-    """Measure styled label space and keep the independent option popup readable."""
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        view = QListView(self)
-        view.setObjectName("optionPopup")
-        # The native combo menu delegate has a different row-height calculation
-        # from the styled list view. Use one delegate for layout and rendering.
-        view.setItemDelegate(OptionStatusDelegate(view))
-        view.setTextElideMode(Qt.TextElideMode.ElideNone)
-        view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        self.setView(view)
-        self.setMaxVisibleItems(10)
-        self.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
-        self.currentTextChanged.connect(self.setToolTip)
-
-    def setOptionStatus(self, index: int, scheme, *, default: bool = False) -> None:
-        """Attach popup-only state while preserving the raw currentText value."""
-        if index < 0 or index >= self.count():
-            return
-        option_id = self.itemText(index)
-        text, tone, progress, detail = _scheme_presentation(scheme)
-        display = f"{text}  {progress}".strip()
-        self.setItemData(index, option_id, Qt.ItemDataRole.UserRole)
-        self.setItemData(index, {"text": text, "tone": tone, "progress": progress,
-                                 "display": display}, OPTION_STATUS_ROLE)
-        default_text = "（默认方案）" if default else ""
-        tooltip = f"{option_id}{default_text}\n{display}\n{detail}"
-        self.setItemData(index, tooltip, Qt.ItemDataRole.ToolTipRole)
-        self.setItemData(index, f"{option_id}，{display}{'，默认方案' if default else ''}",
-                         Qt.ItemDataRole.AccessibleTextRole)
-
-    def _label_width(self, index: int) -> int:
-        width = self.fontMetrics().horizontalAdvance(self.itemText(index))
-        if not self.itemIcon(index).isNull():
-            width += self.iconSize().width() + 4
-        return width + 4
-
-    def sizeHint(self) -> QSize:
-        hint = super().sizeHint()
-        option = QStyleOptionComboBox()
-        self.initStyleOption(option)
-        option.rect.setSize(hint)
-        field = self.style().subControlRect(
-            QStyle.ComplexControl.CC_ComboBox, option,
-            QStyle.SubControl.SC_ComboBoxEditField, self,
-        )
-        label = max((self._label_width(index) for index in range(self.count())), default=0)
-        return QSize(hint.width() + max(0, label - field.width()), hint.height())
-
-    def minimumSizeHint(self) -> QSize:
-        return QSize(80, self.sizeHint().height())
-
-    def displayedText(self) -> str:
-        """Expose the actual closed label for accessibility/geometry verification."""
-        option = QStyleOptionComboBox()
-        self.initStyleOption(option)
-        field = self.style().subControlRect(
-            QStyle.ComplexControl.CC_ComboBox, option,
-            QStyle.SubControl.SC_ComboBoxEditField, self,
-        )
-        available = field.width() - 4
-        if not option.currentIcon.isNull():
-            available -= option.iconSize.width() + 4
-        return self.fontMetrics().elidedText(
-            self.currentText(), Qt.TextElideMode.ElideRight, max(0, available)
-        )
-
-    def paintEvent(self, event) -> None:
-        painter = QStylePainter(self)
-        option = QStyleOptionComboBox()
-        self.initStyleOption(option)
-        painter.drawComplexControl(QStyle.ComplexControl.CC_ComboBox, option)
-        option.currentText = self.displayedText()
-        painter.drawControl(QStyle.ControlElement.CE_ComboBoxLabel, option)
-
-    def showPopup(self) -> None:
-        view = self.view()
-        view.ensurePolished()
-        # Font/DPI and icons must be measured after the view receives its style.
-        rows = min(self.count(), self.maxVisibleItems())
-        row_heights = [view.sizeHintForRow(index) for index in range(self.count())]
-        height = sum(sorted(row_heights, reverse=True)[:rows])
-        width = max((view.sizeHintForColumn(0), self.width()), default=self.width())
-        screen = self.screen().availableGeometry()
-        view.setMinimumWidth(min(width + 2 * view.frameWidth() + 8, screen.width()))
-        super().showPopup()
-        if not view.isVisible():
-            return
-        popup = view.window()
-        chrome = popup.height() - view.viewport().height()
-        popup.resize(min(popup.width(), screen.width()), min(height + chrome, screen.height()))
-        # Expanding the list can put a popup anchored near a screen edge outside
-        # the available area. Keep the complete popup reachable.
-        popup.move(
-            max(screen.left(), min(popup.x(), screen.right() - popup.width() + 1)),
-            max(screen.top(), min(popup.y(), screen.bottom() - popup.height() + 1)),
-        )
 
 
 def _activation_badge(label: QLabel, active: str | None) -> None:
@@ -1447,6 +1314,10 @@ class ManifestDelegate(QStyledItemDelegate):
 
 
 class ApplicationList(QListWidget):
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        self.doItemsLayout()
+
     def keyPressEvent(self, event) -> None:
         if event.key() == Qt.Key.Key_Space and self.currentItem() is not None:
             item = self.currentItem()
@@ -1590,13 +1461,26 @@ class MainWindow(QMainWindow):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
         root.addWidget(self._build_toolbar())
-        workspace = QHBoxLayout()
+        self.workspace_stack = QStackedWidget()
+        self.workbench_page = QWidget()
+        workspace = QHBoxLayout(self.workbench_page)
         workspace.setContentsMargins(0, 0, 0, 0)
         workspace.setSpacing(0)
-        workspace.addWidget(self._build_manifest())
-        workspace.addWidget(self._build_inspector(), 1)
-        root.addLayout(workspace, 1)
-        root.addWidget(self._build_footer())
+        self.workspace_splitter = QSplitter(Qt.Orientation.Horizontal)
+        self.workspace_splitter.setChildrenCollapsible(False)
+        self.manifest_panel = self._build_manifest()
+        self.workspace_splitter.addWidget(self.manifest_panel)
+        self.workspace_splitter.addWidget(self._build_inspector())
+        self.workspace_splitter.setSizes([260, 1100])
+        workspace.addWidget(self.workspace_splitter)
+        self.workspace_stack.addWidget(self.workbench_page)
+        self.windows_page = WindowsEnvironmentPage(self._open_system_settings, self._show_windows_value)
+        self.workspace_stack.addWidget(self.windows_page)
+        self.history_page = HistoryPage(service, self._preview, _local_time, _applications_text, _status_text)
+        self.workspace_stack.addWidget(self.history_page)
+        root.addWidget(self.workspace_stack, 1)
+        self.footer_panel = self._build_footer()
+        root.addWidget(self.footer_panel)
         self._scan_detection(force=True)
         self._render_apps()
         apps = service.config.apps()
@@ -1724,6 +1608,8 @@ class MainWindow(QMainWindow):
         self._update_apply_availability()
         self._filter_variable_rows()
         self._refresh_active_app_filter()
+        self._refresh_filter_buttons()
+        self._refresh_comparison()
 
     def _scheme_match(self, app: str, option: str):
         if self._detection is None:
@@ -1746,14 +1632,10 @@ class MainWindow(QMainWindow):
                    if hasattr(self.service.config, "default_option") else None)
         for index in range(combo.count()):
             option = combo.itemText(index)
-            combo.setOptionStatus(index, self._scheme_match(app, option), default=option == default)
-            if self._detection_error:
-                text, tone, progress, detail = self._scheme_ui(app, option)
-                combo.setItemData(index, {"text": text, "tone": tone, "progress": progress,
-                                          "display": text}, OPTION_STATUS_ROLE)
-                combo.setItemData(index, f"{option}\n{text}\n{detail}", Qt.ItemDataRole.ToolTipRole)
-            combo.setItemIcon(index, icon("check", COLORS["accent"], 16)
-                              if option == default else QIcon())
+            activation = self.service.state.snapshot().get("active", {}).get(app)
+            active = activation.get("option") if isinstance(activation, dict) else activation
+            combo.setOptionStatus(index, self._scheme_match(app, option), default=option == default,
+                                  active=option == active, presentation=self._scheme_ui(app, option))
         combo.view().update()
         combo.updateGeometry()
 
@@ -1767,19 +1649,24 @@ class MainWindow(QMainWindow):
         brand.setWordWrap(False)
         bar.addWidget(brand)
         self.breadcrumb = ElidingLabel("工作台", "workspaceTab")
-        self.breadcrumb.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
-        bar.addWidget(self.breadcrumb, 1)
+        self.breadcrumb.setParent(toolbar)
+        self.breadcrumb.hide()
+        self.nav_buttons = []
+        for index, title in enumerate(("工作台", "Windows 环境", "历史")):
+            button = _button(title, lambda checked=False, page=index: self._show_workspace(page), "navTab")
+            button.setCheckable(True)
+            button.setChecked(index == 0)
+            button.setProperty("active", index == 0)
+            bar.addWidget(button)
+            self.nav_buttons.append(button)
+        self.workbench_button, self.windows_button, self.history_button = self.nav_buttons
+        bar.addStretch(1)
         self.mode_label = _label("演示模式" if self.demo else "Windows 环境", "muted")
-        self.mode_label.setWordWrap(False)
-        bar.addWidget(self.mode_label)
+        self.mode_label.setParent(toolbar)
+        self.mode_label.hide()
         self.system_settings_button = _button("环境变量", self._open_system_settings, "quiet")
-        self.system_settings_button.setIcon(icon("sliders"))
-        self.system_settings_button.setToolTip("打开 Windows 系统的环境变量设置")
-        self.system_settings_button.setAccessibleName("打开 Windows 环境变量设置")
-        bar.addWidget(self.system_settings_button)
-        self.history_button = _button("历史", self._history, "quiet")
-        self.history_button.setIcon(icon("history"))
-        bar.addWidget(self.history_button)
+        self.system_settings_button.setParent(toolbar)
+        self.system_settings_button.hide()
         self.refresh_button = _button("刷新检测", self._reload, "quiet")
         self.refresh_button.setIcon(icon("refresh"))
         bar.addWidget(self.refresh_button)
@@ -1808,10 +1695,120 @@ class MainWindow(QMainWindow):
             return
         self.feedback.setText("高级设置已保存；新的预览将按当前整理选项计算。")
 
+    def _show_workspace(self, index: int) -> None:
+        self.workspace_stack.setCurrentIndex(index)
+        for number, button in enumerate(self.nav_buttons):
+            button.setChecked(number == index)
+            button.setProperty("active", number == index)
+            button.style().unpolish(button)
+            button.style().polish(button)
+        self.footer_panel.setVisible(index == 0)
+        if index == 1:
+            self._refresh_windows_page()
+        elif index == 2:
+            self.history_page.refresh()
+
+    def _refresh_windows_page(self) -> None:
+        if hasattr(self.service, "list_environment"):
+            records, errors = [], []
+            for scope in ("User", "System"):
+                try:
+                    records.extend(self.service.list_environment(scope))
+                except Exception as exc:
+                    errors.append(("用户" if scope == "User" else "系统") + "环境读取失败：" + str(exc))
+            self.windows_page.refresh(None, "；".join(errors), records=records,
+                description=("演示存储中的全部变量 · 只读" if self.demo else "Windows 用户与系统环境的全部变量 · 只读") +
+                            (" · " + "；".join(errors) if errors else ""))
+        else:
+            self.windows_page.refresh(self._detection, self._detection_error)
+
+    def _show_windows_value(self, value: str, sensitive: bool) -> None:
+        FullValueDialog(value, False, sensitive, self).exec()
+
+    def _refresh_filter_buttons(self, *_args) -> None:
+        if not hasattr(self, "filter_buttons"):
+            return
+        complete = sum(bool((scheme := self._scheme_match(app, self._selected_option(app)))
+                            and scheme.available and scheme.status is SchemeStatus.COMPLETE
+                            and not self._detection_error) for app in self.service.config.apps())
+        total = len(self.service.config.apps())
+        for index, (button, title, count) in enumerate(zip(self.filter_buttons,
+                ("全部", "已匹配", "需配置"), (total, complete, total - complete))):
+            button.setText(f"{title} {count}")
+            button.setChecked(index == self.app_filter.currentIndex())
+
+    def _build_comparison(self) -> QFrame:
+        panel = QFrame()
+        panel.setObjectName("comparisonPanel")
+        outer = QVBoxLayout(panel)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.setSpacing(0)
+        header = QFrame()
+        header.setObjectName("comparisonHeader")
+        row = QHBoxLayout(header)
+        row.setContentsMargins(12, 8, 12, 8)
+        self.comparison_title = _label("Windows 值对照", "section")
+        row.addWidget(self.comparison_title, 1)
+        row.addWidget(_label("只读检测快照", "muted"))
+        outer.addWidget(header)
+        contents = QGridLayout()
+        contents.setContentsMargins(12, 10, 12, 10)
+        contents.setHorizontalSpacing(20)
+        contents.setVerticalSpacing(6)
+        contents.setColumnStretch(0, 1)
+        contents.setColumnStretch(1, 1)
+        contents.addWidget(_label("当前选定值", "muted"), 0, 0)
+        contents.addWidget(_label("Windows 当前值", "muted"), 0, 1)
+        self.comparison_selected = ElidingLabel("", "comparisonValue")
+        self.comparison_actual = ElidingLabel("", "comparisonValue")
+        self.comparison_meta = ElidingLabel("", "meta")
+        self.comparison_result = ElidingLabel("", "meta")
+        for widget in (self.comparison_selected, self.comparison_actual, self.comparison_meta, self.comparison_result):
+            widget.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+        contents.addWidget(self.comparison_selected, 1, 0)
+        contents.addWidget(self.comparison_actual, 1, 1)
+        contents.addWidget(self.comparison_meta, 2, 0)
+        contents.addWidget(self.comparison_result, 2, 1)
+        outer.addLayout(contents)
+        panel.hide()
+        self._comparison_card = None
+        return panel
+
+    def _refresh_comparison(self) -> None:
+        card = getattr(self, "_comparison_card", None)
+        if card is None or card not in self.cards:
+            self.comparison_panel.hide()
+            return
+        spec = card.spec
+        self.comparison_title.setText(f"Windows 值对照 · {spec.name}")
+        self.comparison_selected.setText(_value(self.service.selections.get(spec).value, hidden=card.hidden))
+        result = card.match_result
+        state = result.windows_state if result is not None else None
+        self.comparison_actual.setText(_value(state.value, state.exists, card.hidden) if state is not None
+                                       else self._detection_error or "尚未取得 Windows 当前值")
+        source = card.selector.currentText()
+        self.comparison_meta.setText(("用户" if spec.scope == "User" else "系统") + " · " +
+            {"replace": "替换", "+append": "前置", "-append": "后置", "append": "自定义排序"}[spec.mode] + " · " + source)
+        self.comparison_result.setText(card.match_label.text() + " · " + (_registry_type(state) if state else "—"))
+        for record in self.cards:
+            record.setProperty("inspected", record is card)
+            record.style().unpolish(record)
+            record.style().polish(record)
+
+    def eventFilter(self, watched, event) -> bool:
+        if event.type() in (QEvent.Type.FocusIn, QEvent.Type.MouseButtonPress):
+            for card in self.cards:
+                if watched in (card, card.editor, card.selector):
+                    self._comparison_card = card
+                    self._refresh_comparison()
+                    break
+        return super().eventFilter(watched, event)
+
     def _build_manifest(self) -> QFrame:
         manifest = QFrame()
         manifest.setObjectName("manifest")
-        manifest.setFixedWidth(270)
+        manifest.setMinimumWidth(248)
+        manifest.setMaximumWidth(320)
         side = QVBoxLayout(manifest)
         side.setContentsMargins(12, 12, 8, 8)
         side.setSpacing(6)
@@ -1839,17 +1836,30 @@ class MainWindow(QMainWindow):
         self.app_filter.setToolTip("按每个应用准备使用的方案筛选；检测失败与未读取不会列为完全匹配")
         self.app_filter.setAccessibleName("按准备方案的检测状态筛选应用")
         self.app_filter.currentIndexChanged.connect(self._render_apps)
-        side.addWidget(self.app_filter)
+        self.app_filter.setParent(manifest)
+        self.app_filter.hide()
+        filters = QHBoxLayout()
+        filters.setSpacing(2)
+        self.filter_buttons = []
+        for index, text in enumerate(("全部", "已匹配", "需配置")):
+            button = _button(text, lambda checked=False, item=index: self.app_filter.setCurrentIndex(item), "filterButton")
+            button.setCheckable(True)
+            filters.addWidget(button, 1)
+            self.filter_buttons.append(button)
+        self.app_filter.currentIndexChanged.connect(self._refresh_filter_buttons)
+        self._refresh_filter_buttons()
+        side.addLayout(filters)
         selection = QHBoxLayout()
         selection.addWidget(_label("批量选择", "muted"), 1)
         selection.addWidget(self.select_all_button)
         selection.addWidget(self.clear_selection_button)
         side.addLayout(selection)
         self.app_list = ApplicationList()
+        self.app_list.setResizeMode(ApplicationList.ResizeMode.Adjust)
         self.app_list.setObjectName("manifestList")
         self.app_list.setItemDelegate(ManifestDelegate(self.app_list))
         self.app_list.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.app_list.setAccessibleName("应用清单；空格勾选，名称查看详情，方案下拉切换")
+        self.app_list.setAccessibleName("应用清单；空格勾选，名称查看详情，第二行方案摘要可切换")
         self.app_list.currentItemChanged.connect(lambda item, previous: self._select_app(item.data(Qt.ItemDataRole.UserRole)) if item else None)
         self.app_list.itemChanged.connect(self._check_app)
         side.addWidget(self.app_list, 1)
@@ -1868,7 +1878,7 @@ class MainWindow(QMainWindow):
         header = QFrame()
         header.setObjectName("inspectorHeader")
         context = QVBoxLayout(header)
-        context.setContentsMargins(20, 14, 20, 12)
+        context.setContentsMargins(20, 12, 20, 12)
         context.setSpacing(4)
         self.workspace_crumb = ElidingLabel("应用", "contextPath")
         self.workspace_crumb.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
@@ -1933,6 +1943,8 @@ class MainWindow(QMainWindow):
         variables_heading.addWidget(self.mismatch_only)
         self.windows_compare_button = _button("展开 Windows 对照", self._toggle_windows_comparison, "quiet")
         self.windows_compare_button.setCheckable(True)
+        self.windows_compare_button.setChecked(True)
+        self.windows_compare_button.setText("收起 Windows 对照")
         variables_heading.addWidget(self.windows_compare_button)
         layout.addLayout(variables_heading)
         self.scroll = QScrollArea()
@@ -1943,6 +1955,17 @@ class MainWindow(QMainWindow):
         self.card_layout.setContentsMargins(20, 0, 20, 12)
         self.card_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.card_layout.setSpacing(0)
+        self.table_frame = QFrame()
+        self.table_frame.setObjectName("variableTable")
+        self.table_frame.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
+        self.table_layout = QVBoxLayout(self.table_frame)
+        self.table_layout.setContentsMargins(0, 0, 0, 0)
+        self.table_layout.setSpacing(0)
+        self.card_layout.addWidget(self.table_frame)
+        self.comparison_panel = self._build_comparison()
+        self.comparison_panel.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
+        self.card_layout.addWidget(self.comparison_panel)
+        self.card_layout.addStretch(1)
         self.scroll.setWidget(self.card_panel)
         layout.addWidget(self.scroll, 1)
         return detail
@@ -1950,9 +1973,8 @@ class MainWindow(QMainWindow):
     def _toggle_windows_comparison(self) -> None:
         expanded = self.windows_compare_button.isChecked()
         self.windows_compare_button.setText("收起 Windows 对照" if expanded else "展开 Windows 对照")
-        for card in self.cards:
-            card.details_toggle.setChecked(expanded)
-            card._toggle_details()
+        self.comparison_panel.setVisible(expanded)
+        self._refresh_comparison()
 
     def _filter_variable_rows(self) -> None:
         visible = 0
@@ -1962,6 +1984,11 @@ class MainWindow(QMainWindow):
                     or not result.available or result.status is not VariableMatchStatus.MATCH)
             card.setVisible(show)
             visible += int(show)
+        inspected = getattr(self, "_comparison_card", None)
+        if inspected is not None and inspected.isHidden():
+            self._comparison_card = next((card for card in self.cards if not card.isHidden()), None)
+            self._refresh_comparison()
+        self.comparison_panel.setVisible(bool(self._comparison_card) and self.windows_compare_button.isChecked())
         if getattr(self, "variable_empty", None) is not None:
             self.variable_empty.setVisible(visible == 0)
             self.variable_empty.setText("当前方案没有未匹配的变量。" if self.cards else "当前方案没有变量。")
@@ -2068,7 +2095,7 @@ class MainWindow(QMainWindow):
             item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
             item.setCheckState(Qt.CheckState.Checked if app in self.checked_apps else Qt.CheckState.Unchecked)
             item.setToolTip(app + "\n勾选以批量应用；点击名称查看和修改方案")
-            item.setSizeHint(QSize(246, 48))
+            item.setSizeHint(QSize(0, 48))
             self.app_list.addItem(item)
             self.app_list.setItemWidget(item, ApplicationRow(self, item, app))
             if app == self.app_name:
@@ -2178,7 +2205,7 @@ class MainWindow(QMainWindow):
         self._render_variables()
 
     def _render_variables(self, *_args) -> None:
-        _clear(self.card_layout)
+        _clear(self.table_layout)
         self.cards = []
         self.variable_empty = None
         if not self.app_name or not self.option_combo.currentText():
@@ -2200,7 +2227,7 @@ class MainWindow(QMainWindow):
             label = _label(text, "muted")
             label.setWordWrap(False)
             columns.addWidget(label, 0, index)
-        self.card_layout.addWidget(table_header)
+        self.table_layout.addWidget(table_header)
         self._update_option_combo(self.option_combo, self.app_name)
         current_index = self.option_combo.currentIndex()
         self.option_combo.setToolTip(self.option_combo.itemData(
@@ -2228,11 +2255,17 @@ class MainWindow(QMainWindow):
                                 detection_error=self._detection_error)
             card.changed.connect(self._variable_changed)
             self.cards.append(card)
-            self.card_layout.addWidget(card)
-            card.details_toggle.setChecked(self.windows_compare_button.isChecked())
-            card._toggle_details()
+            self.table_layout.addWidget(card)
+            card.installEventFilter(self)
+            card.editor.installEventFilter(self)
+            card.selector.installEventFilter(self)
+
         self.variable_empty = _label("", "muted")
-        self.card_layout.addWidget(self.variable_empty)
+        self.table_layout.addWidget(self.variable_empty)
+        self._comparison_card = self.cards[0] if self.cards else None
+        self.comparison_panel.setVisible(bool(self.cards) and self.windows_compare_button.isChecked())
+        self._refresh_comparison()
+        self._refresh_filter_buttons()
         previous = self.option_combo
         for card in self.cards:
             QWidget.setTabOrder(previous, card.selector)
@@ -2313,6 +2346,8 @@ class MainWindow(QMainWindow):
         self._update_apply_availability()
         self._filter_variable_rows()
         self._refresh_active_app_filter()
+        self._refresh_filter_buttons()
+        self._refresh_comparison()
 
     def _locate_invalid_input(self) -> None:
         if not self._invalid_specs:
@@ -2605,9 +2640,7 @@ class MainWindow(QMainWindow):
         QMessageBox.warning(self, "无法执行", str(exc) + "\n请刷新并重新预览。")
 
     def _history(self) -> None:
-        HistoryDialog(self.service, self._preview, self).exec()
-        self._scan_detection(force=False)
-        self._render_variables()
+        self._show_workspace(2)
 
     def _edit_config(self) -> None:
         self._show_config_editor("source")
@@ -2653,5 +2686,9 @@ class MainWindow(QMainWindow):
             self._select_app(self.app_name if self.app_name in apps else (apps[0] if apps else ""))
             self._refresh_pending()
             self.feedback.setText("配置已重载，正在检测…" if self._scanning else "配置与当前状态已刷新")
+            if self.workspace_stack.currentIndex() == 1:
+                self._refresh_windows_page()
+            elif self.workspace_stack.currentIndex() == 2:
+                self.history_page.refresh()
         except Exception as exc:
             QMessageBox.warning(self, "刷新失败", str(exc))

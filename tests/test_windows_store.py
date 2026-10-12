@@ -65,6 +65,20 @@ class WindowsStoreTests(unittest.TestCase):
             self.store.write(RegistryState("Path", "User", True, "bad", 4))
         self.assertTrue(self.store.read("User", "Path").same_content(user))
 
+    def test_list_values_enumerates_only_each_isolated_scope(self):
+        user = RegistryState("LIST_USER", "User", True, "", 1)
+        system = RegistryState("LIST_SYSTEM", "System", True, "%RAW%\\bin", 2)
+        self.store.write(user)
+        self.store.write(system)
+        try:
+            self.assertIn(user, self.store.list_values("User"))
+            self.assertNotIn(system, self.store.list_values("User"))
+            self.assertIn(system, self.store.list_values("System"))
+            self.assertNotIn(user, self.store.list_values("System"))
+        finally:
+            self.store.delete("User", user.name)
+            self.store.delete("System", system.name)
+
     def test_notification_uses_bounded_broadcast_with_environment_pointer(self):
         import ctypes
         from types import SimpleNamespace
