@@ -40,4 +40,37 @@ The updated capture harness keeps the disposable public-fixture window in front 
 
 The selector tests cover both popup bounds and content height, actual Down/Enter selection and Escape cancellation, a bottom-right popup opening above within the screen, long names, and 32-option scrolling. All eight selector tests passed on native Windows as well as offscreen. Windows' scroll animation temporarily hides the real popup; this selector disables that effect for its own synchronous opening and then restores the application preference, so sizing and position apply immediately.
 
-The final local suite passed all **582 tests in 41.703s**. Its four Windows registry tests use disposable `HKCU/Software/EnvironmentManagerV2Tests/<UUID>` keys. An initial restricted run denied those temporary-key writes, so the final complete run used the normal process permissions. No host environment keys were written. The current PR records the matching Windows/Linux CI result separately.
+The PR #12 local suite passed all **582 tests in 41.703s**. Its four Windows registry tests use disposable `HKCU/Software/EnvironmentManagerV2Tests/<UUID>` keys. An initial restricted run denied those temporary-key writes, so the final complete run used the normal process permissions. No host environment keys were written. [Merged PR #12](https://github.com/yuri368/windows-environment-manager-v2/pull/12) records the matching Windows/Linux CI result separately.
+
+## Compact selector refinement
+
+The frame follow-up fixed native chrome but left scheme names, auxiliary labels and match descriptions competing at the same size. The subsequent refinement keeps the same `OptionComboBox` selection behavior and changes its two entry variants and shared popup rendering.
+
+| Element | Measured logical dimensions and typography |
+| --- | --- |
+| Sidebar entry | 24px high; 12px text; width follows the inventory row |
+| Target entry | 166 × 31px; 12px text |
+| Target two-option popup | 166 × 68px at DPR 1, 1.5 and 2; same width as its closed entry |
+| Sidebar two-option popup | Follows entry width with a 166px minimum; 207 × 68px in the DPR 1/1.5 fixture and 166 × 68px in the narrower DPR 2 fixture |
+| Popup row | 30px high; name 12px, count 11px; metadata in complete tooltips |
+| Popup surface | 3px content padding plus 1px border; 6px radius; no shadow |
+
+The selected scheme uses a small check mark. Normal match results show only their count; unconfigured, scanning and detection errors retain explicit words. Complete scheme names, default/active markers and status explanations remain in tooltips and accessible model text; default and activation are still displayed separately in the application header. Long names elide instead of enlarging the menu. Three visible rows and scrolling are retained for large option sets, with the scrollbar consuming the existing menu width. The primary closed entry and popup share the same name position and outer width.
+
+The target popup aligns with the entry's right edge when screen bounds permit. The sidebar popup stays within the inventory when it is wide enough; screen constraints remain authoritative for narrower inventories. Bottom-edge placement still opens above the entry. Sidebar refresh now preserves the complete tooltip and immediately refreshes it after a blocked-signal index change, preventing stale scheme explanations.
+
+Seven new public screenshots are in `docs/images/selector-refinement/`:
+
+- [Workbench, 100%](images/selector-refinement/workbench-1366x768-windows-100pct.png)
+- [Sidebar menu, 100%](images/selector-refinement/rail-scheme-desktop-100pct.png)
+- [Sidebar menu, 150%](images/selector-refinement/rail-scheme-desktop-150pct.png)
+- [Target menu, 150%](images/selector-refinement/target-scheme-desktop-150pct.png)
+- [Sidebar menu, 200%](images/selector-refinement/rail-scheme-desktop-200pct.png)
+- [Target menu, 200%](images/selector-refinement/target-scheme-desktop-200pct.png)
+- [Long name, closed and open, 200%](images/selector-refinement/target-long-name-desktop-200pct.png)
+
+The [measured report](compact-ui-evidence/selector-refinement-report.json) retains the three native batches, control/popup/row dimensions, native visibility and unchanged browsing-state assertions. Fixture setup uses eight MemoryStore writes and five notifications; browsing adds zero writes or notifications and does not change state, history or configuration. Capture tooling only adds measurements to the existing public fixture runner.
+
+The updated selector regression set has 11 cases. It covers both entry sizes, equal primary entry/popup widths and alignment, long Chinese/English labels, complete tooltip/accessibility semantics, mouse selection, Down/Enter, Escape, outside cancellation, scrolling to the last of 32 schemes and reopening on the selected row. It also checks that these interactions do not write environment values. The final local full suite passed **585 tests in 65.689s**, and the native Windows selector set passed **11 tests in 5.916s**. The final CI revision is recorded in the associated PR.
+
+The project’s designated ChatGPT architecture conversation reviewed the implementation screenshots. Following the owner's additional feedback about closed/open geometry, it approved equal 166px primary entry/popup widths while retaining the sidebar's compact variant. The selected check mark continues to mean the prepared scheme; default and system activation remain distinct real states. Owner review of the final actual appearance remains pending; the architecture review and these source captures do not claim owner visual approval, installer or Release acceptance.

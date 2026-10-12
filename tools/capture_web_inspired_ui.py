@@ -165,6 +165,16 @@ def main():
                 assert popup.frameGeometry() == popup.geometry()
                 assert view.geometry() == popup.rect()
                 assert view.viewport().height() == sum(view.sizeHintForRow(i) for i in range(combo.count()))
+                report.setdefault("selector_geometry", []).append({
+                    "entry": label, "control_size": [combo.width(), combo.height()],
+                    "font_pixels": combo.font().pixelSize(),
+                    "popup_size": [popup.width(), popup.height()],
+                    "row_heights": [view.sizeHintForRow(i) for i in range(combo.count())],
+                    "content_margins": [view.contentsMargins().left(), view.contentsMargins().top(),
+                                        view.contentsMargins().right(), view.contentsMargins().bottom()],
+                    "popup_right": popup.geometry().right(),
+                    "control_right": combo.mapToGlobal(QPoint(combo.width() - 1, 0)).x(),
+                })
                 capture(popup, label, None)
                 if args.platform == "windows":
                     # A real desktop crop includes native chrome, which a
