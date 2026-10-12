@@ -91,6 +91,23 @@ components:
     typography: "{typography.body}"
     height: "48px"
     padding: "4px 8px"
+  scheme-selector-compact:
+    height: "24px"
+    fontSize: "12px"
+    rounded: "{rounded.xs}"
+    backgroundColor: "transparent"
+  scheme-selector-primary:
+    width: "166px"
+    height: "31px"
+    fontSize: "12px"
+    rounded: "{rounded.sm}"
+  scheme-popup:
+    width: "236px"
+    maximumWidth: "248px"
+    rowHeight: "30px"
+    padding: "3px"
+    borderWidth: "1px"
+    rounded: "{rounded.md}"
   variable-row:
     backgroundColor: "{colors.surface}"
     textColor: "{colors.ink}"
@@ -199,6 +216,10 @@ components:
 - 配置编辑器精确文本控件保留空白、引号、反斜线和换行，不将输入格式化成另一种含义。
 
 ### Navigation and Lists
+- 两个方案入口共用 Qt 选择行为与菜单绘制。侧栏入口高 24px、12px 字体，透明底且仅交互态显示细边；右侧入口优先 166×31px、12px 字体、5px 圆角，保留 150–190px 宽度边界。
+- 方案菜单优先宽 236px，滚动条等布局需求下不超过 248px，屏幕空间不足时以工作区为限。每行基准 30px（按字体高度适配），最多三行可见；列表四周 3px 内边距加 1px 边框，选项无额外 QSS 留白。两方案通常为 236×68px。
+- 菜单方案名 12px、默认/激活辅助文字 10px、匹配计数 11px，同行显示且主次明确。小勾号只表示当前准备方案，不代替系统激活状态；正常检测只显示短计数，异常保留明确文案。长名称省略，辅助标记按空间让位，完整名称、默认/激活与检测语义保留在提示和无障碍文本中。
+- 右侧方案菜单优先右缘对齐；侧栏有足够宽度时菜单留在应用清单内。所有定位仍受屏幕可用区域约束。
 - 方案菜单由单一圆角细边列表承载；外层窗口无系统边框和阴影，不保留菜单上下空白。优先在选择框下方留 4px 展开，靠右时向左调整，底部空间不足时在上方展开，整个弹窗保持在屏幕工作区内。
 - 应用行包含批量复选、详情入口、当前准备方案和简短匹配计数；它不重复堆叠激活徽标。
 - 变量行分别展示作用域与模式。相同变量名的 User 与 System 记录保持独立。
