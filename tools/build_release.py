@@ -16,6 +16,7 @@ ROOT_FILES = (
     "env.example.toml", "launcher.ps1", "启动.cmd", "演示.cmd",
 )
 SOURCE_PATTERNS = {
+    ".github/workflows": ("*.yml", "*.yaml"),
     "envmanager": ("*.py", "*.svg"),
     "tests": ("*.py",),
     "tools": ("*.py",),

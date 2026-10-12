@@ -7,7 +7,7 @@ import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from PySide6.QtCore import QObject, QRunnable, QThreadPool, Qt, Signal, QSize
+from PySide6.QtCore import QObject, QRunnable, QThreadPool, QTimer, Qt, Signal, QSize
 from PySide6.QtCore import QUrl
 from PySide6.QtGui import QColor, QDesktopServices, QIcon, QPainter
 from PySide6.QtWidgets import (
@@ -1522,6 +1522,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("环境变量方案管理器" + (" · 演示模式" if demo else ""))
         self.resize(1190, 790)
         self.setMinimumSize(850, 560)
+        self._startup_geometry_fitted = False
         apply_theme(QApplication.instance())
 
         central = QWidget()
@@ -1543,6 +1544,33 @@ class MainWindow(QMainWindow):
         if apps:
             self._select_app(apps[0])
         self._refresh_pending()
+
+    def showEvent(self, event) -> None:
+        super().showEvent(event)
+        if (not self._startup_geometry_fitted
+                and QApplication.instance().platformName() not in {"offscreen", "minimal"}):
+            self._startup_geometry_fitted = True
+            # The native frame margins are available after the first show.
+            QTimer.singleShot(0, self._fit_startup_geometry)
+
+    def _fit_startup_geometry(self, available=None) -> None:
+        if available is None:
+            screen = self.screen()
+            if screen is None:
+                return
+            available = screen.availableGeometry()
+        area = available.adjusted(8, 8, -8, -8)
+        frame = self.frameGeometry()
+        extra_width = max(0, frame.width() - self.width())
+        extra_height = max(0, frame.height() - self.height())
+        width_limit = max(1, area.width() - extra_width)
+        height_limit = max(1, area.height() - extra_height)
+        self.setMinimumSize(min(self.minimumWidth(), width_limit),
+                            min(self.minimumHeight(), height_limit))
+        self.resize(min(self.width(), width_limit), min(self.height(), height_limit))
+        frame = self.frameGeometry()
+        self.move(area.left() + (area.width() - frame.width()) // 2,
+                  area.top() + (area.height() - frame.height()) // 2)
 
     def _scan_detection(self, *, force: bool) -> None:
         if not hasattr(self.service, "detection_snapshot"):
@@ -2350,8 +2378,8 @@ class MainWindow(QMainWindow):
         raise ConflictError("最终顺序仍未确认，请重新预览")
 
     def _deactivate(self) -> None:
-        """Legacy history-based deactivation kept for API compatibility."""
-        self._preview(lambda: self.service.plan_deactivate(self.app_name))
+        """Compatibility alias for the visible scheme-removal workflow."""
+        self._remove_scheme()
 
     def _preview(self, plan_factory) -> None:
         try:

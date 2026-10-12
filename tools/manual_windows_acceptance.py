@@ -118,9 +118,11 @@ class Evidence:
 
 class ScopedAcceptanceStore:
     """Small allowlist and last-confirmed state guard around the real adapter."""
-    def __init__(self, backend, names, evidence):
+    def __init__(self, backend, names, evidence, *, scopes=("User", "System")):
         self.backend = backend
-        self.allowed = frozenset((scope, name) for scope in ("User", "System") for name in names.values())
+        if not scopes or set(scopes) - {"User", "System"}:
+            raise ValueError("invalid acceptance scopes")
+        self.allowed = frozenset((scope, name) for scope in scopes for name in names.values())
         self.evidence = evidence
         self.expected = {}
         self.fail_once = None
@@ -342,6 +344,9 @@ class NativeWindows:
             (self.u.GetWindow, [wintypes.HWND, wintypes.UINT], wintypes.HWND),
             (self.u.GetWindowTextW, [wintypes.HWND, wintypes.LPWSTR, ctypes.c_int], ctypes.c_int),
             (self.u.GetWindowRect, [wintypes.HWND, ctypes.POINTER(wintypes.RECT)], wintypes.BOOL),
+            (self.u.GetDpiForWindow, [wintypes.HWND], wintypes.UINT),
+            (self.u.MonitorFromWindow, [wintypes.HWND, wintypes.DWORD], wintypes.HANDLE),
+            (self.u.GetMonitorInfoW, [wintypes.HANDLE, ctypes.c_void_p], wintypes.BOOL),
             (self.u.PostMessageW, [wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM], wintypes.BOOL),
             (self.u.GetWindowDC, [wintypes.HWND], wintypes.HDC),
             (self.u.ReleaseDC, [wintypes.HWND, wintypes.HDC], ctypes.c_int),
@@ -399,12 +404,13 @@ class NativeWindows:
                 self.k.CloseHandle(token)
             self.k.CloseHandle(process)
 
-    def windows(self, exe, launch_after):
+    def windows(self, exe, launch_after, *, include_owned=False):
         found = []
         @self.callback
         def collect(hwnd, _):
             try:
-                if self.u.GetWindow(hwnd, 4):  # GW_OWNER: only independent top-level windows.
+                owner = self.u.GetWindow(hwnd, 4)
+                if owner and not include_owned:  # GW_OWNER: default remains independent windows.
                     return True
                 pid = wintypes.DWORD()
                 self.u.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
@@ -417,6 +423,7 @@ class NativeWindows:
                 if not self.u.GetWindowRect(hwnd, ctypes.byref(rect)):
                     return True
                 found.append({**data, "hwnd": int(hwnd), "title": title.value,
+                              "owner_hwnd": int(owner) if owner else None,
                               "nativeIsWindowVisible": bool(self.u.IsWindowVisible(hwnd)),
                               "minimized": bool(self.u.IsIconic(hwnd)),
                               "coordinate_units": "physical_pixels",
@@ -428,6 +435,24 @@ class NativeWindows:
             if not self.u.EnumWindows(collect, 0):
                 raise ctypes.WinError(ctypes.get_last_error())
         return found
+
+    def display_metrics(self, hwnd):
+        class MonitorInfo(ctypes.Structure):
+            _fields_ = [("cbSize", wintypes.DWORD), ("monitor", wintypes.RECT),
+                        ("work", wintypes.RECT), ("flags", wintypes.DWORD)]
+        with self.physical_coordinates():
+            dpi = int(self.u.GetDpiForWindow(hwnd))
+            require(dpi > 0, "GetDpiForWindow failed")
+            monitor = self.u.MonitorFromWindow(hwnd, 2)
+            info = MonitorInfo()
+            info.cbSize = ctypes.sizeof(info)
+            require(bool(monitor and self.u.GetMonitorInfoW(monitor, ctypes.byref(info))),
+                    "GetMonitorInfo failed")
+            return {"dpi": dpi, "screen_scale_percent": dpi / 96 * 100,
+                    "monitor_rect_physical": [info.monitor.left, info.monitor.top,
+                                              info.monitor.right, info.monitor.bottom],
+                    "monitor_work_rect_physical": [info.work.left, info.work.top,
+                                                   info.work.right, info.work.bottom]}
 
     def screenshot(self, window, path):
         with self.physical_coordinates():

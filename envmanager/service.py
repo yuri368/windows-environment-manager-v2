@@ -623,38 +623,6 @@ class EnvironmentService:
         self._issued_plans[plan.id] = deepcopy(plan)
         return plan
 
-    def _shared_apps(self, active, app, state):
-        target = _target(state)
-        return [name for name, activation in active.items() if name != app
-                and any(_target(RegistryState.from_dict(e["after"])) == target
-                        for e in activation["effects"])]
-
-    def _undo(self, app, snapshot, joint_switches=()):
-        activation = snapshot["active"].get(app)
-        changes, conflicts = [], []
-        if not activation:
-            return changes, conflicts
-        for effect in activation["effects"]:
-            before = RegistryState.from_dict(effect["before"])
-            expected = RegistryState.from_dict(effect["after"])
-            current = self.store.read(expected.scope, expected.name)
-            if before.same_content(expected):
-                # A scheme that merely claimed an existing value has nothing to remove.
-                continue
-            if not effect.get("safe", False):
-                conflicts.append(f"{expected.scope} / {expected.name}：应用期间曾发生外部变更，不能确定撤销范围")
-                continue
-            if not current.same_content(expected):
-                conflicts.append(f"{expected.scope} / {expected.name}：与最近应用结果不同，保留当前值")
-                continue
-            shared = [name for name in self._shared_apps(snapshot["active"], app, expected)
-                      if name not in joint_switches]
-            if shared:
-                conflicts.append(f"{expected.scope} / {expected.name}：还由 {', '.join(shared)} 管理，不能安全合并撤销")
-                continue
-            changes.append(PlanChange(current, before, "undo", effect["selected_value"], effect["record_key"]))
-        return changes, conflicts
-
     def plan(self, app, option, orders=None):
         return self.plan_batch({app: option}, orders)
 
@@ -692,20 +660,30 @@ class EnvironmentService:
                 self.config.digest, snapshot["revision"], conflicts=problems,
                 active_after=deepcopy(snapshot["active"]), applications=applications))
 
-    def plan_deactivate(self, app):
+    def plan_deactivate(self, app, decisions=None):
+        """Compatibility removal of the recorded active scheme's live matches.
+
+        The activation chooses only the scheme; its historical before/after
+        values never determine registry changes. Current selected values and
+        every unselected application's schemes use the common frozen removal
+        flow. Shared objects default to KEEP; callers may pass the same atom-id
+        decisions as finalize_remove. Exact historical restoration is separate
+        and remains available through plan_restore.
+        """
         snapshot = self.state.snapshot()
-        changes, conflicts = self._undo(app, snapshot)
-        if self.pending():
-            conflicts.append("存在未完成执行，请先恢复")
-        active = deepcopy(snapshot["active"])
-        activation = active.pop(app, None)
+        activation = snapshot["active"].get(app)
         if not activation:
-            conflicts.append("该应用没有管理器记录的激活方案")
-        for change in changes:
-            self.store.check_permission(change.before.scope)
-        return self._issue(ExecutionPlan(uuid.uuid4().hex, app, activation["option"] if activation else "",
-             "deactivate", tuple(changes), self.config.digest, snapshot["revision"],
-             conflicts=tuple(conflicts), active_after=active))
+            return self._issue(ExecutionPlan(uuid.uuid4().hex, app, "", "deactivate", (),
+                self.config.digest, snapshot["revision"],
+                conflicts=("该应用没有管理器记录的激活方案",),
+                active_after=deepcopy(snapshot["active"])))
+        request = RemovalRequest(RemovalScope.SCHEME, frozenset((app,)),
+                                 {app: activation["option"]})
+        draft = self.prepare_remove(request)
+        plan = self.finalize_remove(draft.id, decisions)
+        # Keep the compatibility action label while issuing the same validated
+        # plan, dependencies, sharing decisions and transaction as removal.
+        return self._issue(replace(plan, action="deactivate"))
 
     def plan_restore(self, history_id):
         op = self.state.operation(history_id)

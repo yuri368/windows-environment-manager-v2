@@ -14,6 +14,7 @@ class ReleaseTests(unittest.TestCase):
         self.assertIn("env.example.toml", names)
         self.assertIn("LICENSE", names)
         self.assertIn("envmanager/windows_shell.py", names)
+        self.assertIn(".github/workflows/tests.yml", names)
         for name in names:
             self.assertNotEqual(name, "env.toml")
             self.assertFalse(name.startswith(("artifacts/", ".impeccable/", ".venv/", "dist/")))
