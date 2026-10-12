@@ -385,6 +385,24 @@ class Issue2UiTests(unittest.TestCase):
                 self.assertEqual(store.writes, [])
                 self.assertEqual(service.state.snapshot(), initial_state)
 
+    def test_old_scheme_dialog_wraps_long_names_and_scrolls_many_candidates(self):
+        dialog = OldSchemeDialog("应用名称中文测试-" * 6,
+                                [(f"旧方案-{i}-" + "很长名称" * 5, "partial") for i in range(20)],
+                                required=False, new_option="long-portable-scheme-name-" * 5)
+        self.addCleanup(dialog.deleteLater)
+        self.addCleanup(dialog.close)
+        dialog.show()
+        self.application.processEvents()
+        self.assertEqual(dialog.list.count(), 20)
+        self.assertGreater(dialog.list.verticalScrollBar().maximum(), 0)
+        for label in dialog.findChildren(QLabel):
+            if label.text():
+                self.assertGreaterEqual(label.height(), label.heightForWidth(label.width()))
+        dialog.list.scrollToItem(dialog.list.item(19))
+        self.application.processEvents()
+        last = dialog.list.visualItemRect(dialog.list.item(19))
+        self.assertFalse(last.intersected(dialog.list.viewport().rect()).isEmpty())
+
     def test_execute_result_reports_metrics_and_distinguishes_recovery_outcomes(self):
         configuration = config(("App", "Default", [("HOME", "ok", "replace", "User")]))
         window, service, store = self.make_window(configuration, [raw("HOME", "ok")])

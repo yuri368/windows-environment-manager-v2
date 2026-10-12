@@ -10,8 +10,8 @@
 
 ## 验证
 
-- 本机全套：`python -m unittest discover -s tests -q`，590 项，49.376 秒，OK。
-- 回归覆盖：零命中旧 Path 在单应用和批量应用中直接进入预览；显式选择零命中方案被拒绝；真实部分残留仍需明确选择；各普通模式、special、精确空值、不同于默认值的当前选定值、共同元素、多完整候选及陈旧快照保持既有行为。
+- 本机全套：`python -m unittest discover -s tests -q`，591 项，48.581 秒，OK。
+- 回归覆盖：零命中旧 Path 在单应用和批量应用中直接进入预览；显式选择零命中方案被拒绝；真实部分残留仍需明确选择；各普通模式、special、精确空值、不同于默认值的当前选定值、共同元素、多完整候选及陈旧快照保持既有行为。长中文应用名、新方案名与 20 项候选验证换行文字不被挤压、末项可滚动访问。
 - Windows 原生应用流程：公开合成 TOML、MemoryStore 和一次性状态目录，100%/150%/200% 三档均验证原生窗口可见。零命中单/批应用到达 PreviewDialog；真实残留到达 OldSchemeDialog。取消后每个场景均为零写入、零通知，state、history、TOML 校验和不变。
 - 原生测量记录：[old-scheme-candidates-report.json](compact-ui-evidence/old-scheme-candidates-report.json)。复现脚本：`tools/capture_old_scheme_candidates.py`。
 - 本机个人配置和环境仅作只读命中核查，没有执行真实环境变更；安装版 EXE/UAC/发布包未在此次更新验收。

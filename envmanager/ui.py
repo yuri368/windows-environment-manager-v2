@@ -933,6 +933,13 @@ class OldSchemeDialog(QDialog):
         self.buttons.accepted.connect(self.accept)
         self.buttons.rejected.connect(self.reject)
         outer.addWidget(self.buttons)
+        # Keep the compact dialog from squeezing wrapped application/option
+        # names when there are many candidates. The list scrolls instead.
+        self.setMinimumWidth(560)
+        self.ensurePolished()
+        for label in self.findChildren(QLabel):
+            if label.text():
+                label.setMinimumHeight(label.heightForWidth(self.width() - 40))
         self._update_accept()
 
     def selected_options(self) -> tuple[str, ...]:
