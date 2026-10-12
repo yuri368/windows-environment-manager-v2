@@ -1,7 +1,7 @@
 """Native scheme selector with one owned popup row rendering path."""
-from PySide6.QtCore import Qt, QSize
+from PySide6.QtCore import Qt, QSize, QPoint, QCoreApplication, QEvent
 from PySide6.QtGui import QColor, QPainter
-from PySide6.QtWidgets import QComboBox, QListView, QStyledItemDelegate, QStyleOptionComboBox, QStyle, QStylePainter
+from PySide6.QtWidgets import QApplication, QComboBox, QFrame, QListView, QStyledItemDelegate, QStyleOptionComboBox, QStyle, QStylePainter
 from .theme import COLORS
 
 OPTION_STATUS_ROLE = int(Qt.ItemDataRole.UserRole) + 1
@@ -33,7 +33,12 @@ class OptionStatusDelegate(QStyledItemDelegate):
         status = index.data(OPTION_STATUS_ROLE) or {}
         selected = bool(option.state & QStyle.StateFlag.State_Selected)
         painter.save()
-        painter.fillRect(option.rect, QColor(COLORS["selected"] if selected else COLORS["surface"]))
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QColor(COLORS["surface"]))
+        painter.drawRect(option.rect)
+        if selected:
+            painter.setBrush(QColor(COLORS["selected"]))
+            painter.drawRoundedRect(option.rect, 4, 4)
         painter.setFont(option.font)
         view = self.parent()
         combo = view.parent() if view else None
@@ -65,12 +70,26 @@ class OptionStatusDelegate(QStyledItemDelegate):
 class OptionComboBox(QComboBox):
     def __init__(self, parent=None):
         super().__init__(parent)
+        # Set the list-popup hint BEFORE setView creates Qt's popup container.
+        # Menu-style containers otherwise retain native top/bottom spacers.
+        self.setStyleSheet("QComboBox { combobox-popup: 0; }")
+        self.ensurePolished()
         view = QListView(self)
         view.setObjectName("optionPopup")
         view.setItemDelegate(OptionStatusDelegate(view))
         view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.setView(view)
+        popup = view.window()
+        # An already-polished application can construct the container during
+        # the stylesheet change. Refresh its cached menu spacers with the final
+        # list-popup hint before applying our frame, without touching Qt internals.
+        QCoreApplication.sendEvent(popup, QEvent(QEvent.Type.StyleChange))
+        popup.setWindowFlags(Qt.WindowType.Popup | Qt.WindowType.FramelessWindowHint
+                             | Qt.WindowType.NoDropShadowWindowHint)
+        popup.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        popup.setFrameShape(QFrame.Shape.NoFrame)
+        popup.setContentsMargins(0, 0, 0, 0)
         self.setMaxVisibleItems(3)
         self.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
         self.setMinimumContentsLength(8)
@@ -118,19 +137,33 @@ class OptionComboBox(QComboBox):
     def showPopup(self):
         view = self.view()
         view.ensurePolished()
-        # Popup native borders and platform position correction need a small
-        # inset; a client width equal to the work area can still overflow.
+        # Keep the entire frameless popup inside the current work area.
         screen = self.screen().availableGeometry().adjusted(4, 4, -4, -4)
-        width = min(max(self.width(), view.sizeHintForColumn(0) + 28), screen.width())
+        margins = view.contentsMargins()
+        chrome_width = margins.left() + margins.right()
+        if self.count() > self.maxVisibleItems():
+            chrome_width += view.verticalScrollBar().sizeHint().width()
+        width = min(max(self.width(), view.sizeHintForColumn(0) + chrome_width), screen.width())
         view.setMinimumWidth(width)
         view.setMaximumWidth(width)
-        super().showPopup()
+        # Windows' scroll effect temporarily hides the actual popup and shows
+        # an animation window instead. Position the real surface immediately;
+        # restore the application preference so other selectors keep theirs.
+        animate = QApplication.isEffectEnabled(Qt.UIEffect.UI_AnimateCombo)
+        QApplication.setEffectEnabled(Qt.UIEffect.UI_AnimateCombo, False)
+        try:
+            super().showPopup()
+        finally:
+            QApplication.setEffectEnabled(Qt.UIEffect.UI_AnimateCombo, animate)
         if not view.isVisible():
             return
         popup = view.window()
-        chrome = popup.height() - view.viewport().height()
-        height = sum(view.sizeHintForRow(row) for row in range(min(self.count(), 3)))
-        popup.resize(width, min(height + chrome, screen.height()))
-        popup.move(max(screen.left(), min(popup.x(), screen.right() - popup.width() + 1)),
-                   max(screen.top(), min(popup.y(), screen.bottom() - popup.height() + 1)))
+        height = sum(view.sizeHintForRow(row) for row in range(min(self.count(), self.maxVisibleItems())))
+        popup.resize(width, min(height + margins.top() + margins.bottom(), screen.height()))
+        popup.layout().activate()
+        below = self.mapToGlobal(QPoint(0, self.height() + 4))
+        above = self.mapToGlobal(QPoint(0, -popup.height() - 4))
+        y = below.y() if below.y() + popup.height() <= screen.bottom() + 1 else above.y()
+        popup.move(max(screen.left(), min(below.x(), screen.right() - popup.width() + 1)),
+                   max(screen.top(), min(y, screen.bottom() - popup.height() + 1)))
         view.scrollTo(view.currentIndex())

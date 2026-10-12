@@ -17,7 +17,7 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from PySide6.QtCore import QEventLoop, QPoint, QTimer, Qt
+from PySide6.QtCore import QEventLoop, QPoint, QRect, QTimer, Qt
 from PySide6.QtWidgets import QApplication
 from envmanager.config import load_config
 from envmanager.config_editor_ui import ConfigEditorDialog
@@ -110,6 +110,10 @@ def main():
         baseline = (len(store.writes), store.notifications, state.snapshot(), service.history())
         window = MainWindow(service, path, demo=True)
         editor = ConfigEditorDialog(path, service)
+        if args.platform == "windows":
+            # Keep this disposable fixture in front for desktop crops; native
+            # visibility alone also permits an occluded background window.
+            window.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)
 
         def capture(widget, name, size=(1366, 768)):
             if size is not None:
@@ -146,13 +150,43 @@ def main():
                 report["rail_geometry"].append({"application": item.data(Qt.ItemDataRole.UserRole), "row_width": row.width(),
                     "viewport_width": window.app_list.viewport().width(),
                     "match_count": row.match_label.text(), "match_count_and_scheme_visible": True})
+            if args.platform == "windows":
+                window.showMaximized()
+                window.raise_()
+                window.activateWindow()
+                settle(app)
             for combo, label in ((window.option_combo, "target-scheme"),
                                  (window.app_list.itemWidget(window.app_list.currentItem()).option_combo, "rail-scheme")):
                 combo.showPopup()
                 settle(app)
-                assert combo.screen().availableGeometry().contains(combo.view().window().frameGeometry())
-                capture(combo.view().window(), label, None)
+                view = combo.view()
+                popup = view.window()
+                assert combo.screen().availableGeometry().contains(popup.frameGeometry())
+                assert popup.frameGeometry() == popup.geometry()
+                assert view.geometry() == popup.rect()
+                assert view.viewport().height() == sum(view.sizeHintForRow(i) for i in range(combo.count()))
+                capture(popup, label, None)
+                if args.platform == "windows":
+                    # A real desktop crop includes native chrome, which a
+                    # QWidget.grab alone cannot prove absent. Crop only the
+                    # public-fixture window and the popup/selector area.
+                    selector = QRect(combo.mapToGlobal(QPoint(0, 0)), combo.size())
+                    area = selector.united(popup.frameGeometry()).adjusted(-12, -24, 12, 12)
+                    area = area.intersected(window.geometry()).intersected(combo.screen().geometry())
+                    assert area.contains(popup.frameGeometry())
+                    pixmap = combo.screen().grabWindow(0, area.x(), area.y(), area.width(), area.height())
+                    assert not pixmap.isNull()
+                    dpi = round(100 * pixmap.devicePixelRatio())
+                    filename = f"{label}-desktop-{dpi}pct.png"
+                    assert pixmap.save(str(args.output / filename))
+                    report["captures"].append({"file": filename, "source": "native desktop crop",
+                        "logical_size": [area.width(), area.height()],
+                        "pixels": [pixmap.width(), pixmap.height()], "dpr": pixmap.devicePixelRatio(),
+                        "qt_visible": popup.isVisible(), "native_visible": window_is_visible(popup),
+                        "frame_and_list_share_bounds": True, "all_rows_visible": True})
                 combo.hidePopup()
+            if args.platform == "windows":
+                window.showNormal()
             capture(window, "workbench", (1024, 768))
             window._show_workspace(1)
             capture(window, "windows-environment")

@@ -1,0 +1,159 @@
+{
+  "purpose": "Native Windows scheme popup frame follow-up",
+  "data": "Public synthetic fixture, MemoryStore and disposable TOML/state",
+  "batches": [
+    {
+      "platform": "windows",
+      "dpr": 1.0,
+      "captures": [
+        {
+          "file": "target-scheme-desktop-100pct.png",
+          "source": "native desktop crop",
+          "logical_size": [
+            275,
+            148
+          ],
+          "pixels": [
+            275,
+            148
+          ],
+          "dpr": 1.0,
+          "qt_visible": true,
+          "native_visible": true,
+          "frame_and_list_share_bounds": true,
+          "all_rows_visible": true
+        },
+        {
+          "file": "rail-scheme-desktop-100pct.png",
+          "source": "native desktop crop",
+          "logical_size": [
+            283,
+            140
+          ],
+          "pixels": [
+            283,
+            140
+          ],
+          "dpr": 1.0,
+          "qt_visible": true,
+          "native_visible": true,
+          "frame_and_list_share_bounds": true,
+          "all_rows_visible": true
+        }
+      ],
+      "fixture_setup": {
+        "memory_writes": 8,
+        "notifications": 5,
+        "history_records": 5
+      },
+      "browsing": {
+        "additional_writes": 0,
+        "additional_notifications": 0,
+        "state_and_history_unchanged": true,
+        "project_configuration_unchanged": true
+      }
+    },
+    {
+      "platform": "windows",
+      "dpr": 1.5,
+      "captures": [
+        {
+          "file": "target-scheme-desktop-150pct.png",
+          "source": "native desktop crop",
+          "logical_size": [
+            272,
+            149
+          ],
+          "pixels": [
+            408,
+            224
+          ],
+          "dpr": 1.5,
+          "qt_visible": true,
+          "native_visible": true,
+          "frame_and_list_share_bounds": true,
+          "all_rows_visible": true
+        },
+        {
+          "file": "rail-scheme-desktop-150pct.png",
+          "source": "native desktop crop",
+          "logical_size": [
+            280,
+            140
+          ],
+          "pixels": [
+            420,
+            210
+          ],
+          "dpr": 1.5,
+          "qt_visible": true,
+          "native_visible": true,
+          "frame_and_list_share_bounds": true,
+          "all_rows_visible": true
+        }
+      ],
+      "fixture_setup": {
+        "memory_writes": 8,
+        "notifications": 5,
+        "history_records": 5
+      },
+      "browsing": {
+        "additional_writes": 0,
+        "additional_notifications": 0,
+        "state_and_history_unchanged": true,
+        "project_configuration_unchanged": true
+      }
+    },
+    {
+      "platform": "windows",
+      "dpr": 2.0,
+      "captures": [
+        {
+          "file": "target-scheme-desktop-200pct.png",
+          "source": "native desktop crop",
+          "logical_size": [
+            272,
+            149
+          ],
+          "pixels": [
+            544,
+            298
+          ],
+          "dpr": 2.0,
+          "qt_visible": true,
+          "native_visible": true,
+          "frame_and_list_share_bounds": true,
+          "all_rows_visible": true
+        },
+        {
+          "file": "rail-scheme-desktop-200pct.png",
+          "source": "native desktop crop",
+          "logical_size": [
+            280,
+            140
+          ],
+          "pixels": [
+            560,
+            280
+          ],
+          "dpr": 2.0,
+          "qt_visible": true,
+          "native_visible": true,
+          "frame_and_list_share_bounds": true,
+          "all_rows_visible": true
+        }
+      ],
+      "fixture_setup": {
+        "memory_writes": 8,
+        "notifications": 5,
+        "history_records": 5
+      },
+      "browsing": {
+        "additional_writes": 0,
+        "additional_notifications": 0,
+        "state_and_history_unchanged": true,
+        "project_configuration_unchanged": true
+      }
+    }
+  ]
+}
