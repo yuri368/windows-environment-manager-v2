@@ -597,7 +597,7 @@ class ConfigEditorUiTests(unittest.TestCase):
                     self.assertGreaterEqual(dialog.choices.rowHeight(0),
                                             dialog.choices.fontMetrics().height() + 8)
                     header = dialog.choices.horizontalHeader()
-                    self.assertGreaterEqual(header.height(), header.fontMetrics().height() + 5)
+                    self.assertGreaterEqual(header.height(), header.fontMetrics().height() + 11)
                     if sum(dialog.choices.rowHeight(row) for row in range(2)) > dialog.choices.viewport().height():
                         self.assertGreater(dialog.choices.verticalScrollBar().maximum(), 0)
                         dialog.choices.scrollToItem(dialog.choices.item(1, 0))

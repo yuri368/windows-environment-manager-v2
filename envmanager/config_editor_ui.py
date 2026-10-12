@@ -514,7 +514,6 @@ class ConfigEditorDialog(QDialog):
         self.choices.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Interactive)
         self.choices.setColumnWidth(0, 140)
         self.choices.horizontalHeader().setStretchLastSection(True)
-        self.choices.horizontalHeader().setStyleSheet("QHeaderView::section { padding: 2px 8px; }")
         self.choices.verticalHeader().hide()
         self.choices.verticalHeader().setDefaultSectionSize(30)
         self.choices.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
@@ -655,9 +654,9 @@ class ConfigEditorDialog(QDialog):
         header = self.choices.horizontalHeader()
         header.ensurePolished()
         # Platform style hints include different CJK font padding. Size the
-        # actual text with our compact padding; keep the viewport budget separate
+        # actual text with the theme padding; keep the viewport budget separate
         # so larger fonts remain readable through scrolling instead of clipping.
-        header_height = max(26, header.fontMetrics().height() + 5)
+        header_height = max(26, header.fontMetrics().height() + 11)
         header.setFixedHeight(header_height)
         row_height = max(30, self.choices.fontMetrics().height() + 8)
         self.choices.verticalHeader().setDefaultSectionSize(row_height)
