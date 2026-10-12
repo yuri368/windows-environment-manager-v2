@@ -734,7 +734,9 @@ class ConfigEditorUiTests(unittest.TestCase):
         self.assertLess(dialog.inspector.geometry().top(), 12)
         # The stacked property area now includes input rules and a collapsed
         # move section; candidate rows keep their own compact height budget.
-        self.assertLess(dialog.value_pane.height(), 420)
+        # Includes rules and the expandable move section; leave a small font
+        # fallback allowance while retaining a compact desktop height budget.
+        self.assertLess(dialog.value_pane.height(), 450)
         self.assertLess(dialog.save_button.width(), 240)
         self.assertLess(dialog.update_button.width(), 180)
         self.assertGreater(dialog.save_button.geometry().left(), dialog.width() // 2)

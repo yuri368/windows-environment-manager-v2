@@ -247,6 +247,11 @@ _fonts_loaded = False
 
 def apply_theme(app: QApplication) -> None:
     global _fonts_loaded
+    # Newly created Qt widgets inherit the application theme. Replacing Fusion
+    # and the identical global stylesheet for each dialog repolishes every live
+    # widget and makes successive workspace/editor openings progressively slow.
+    if app.styleSheet() == STYLE:
+        return
     if not _fonts_loaded:
         font_directory = Path(os.environ.get("WINDIR", "C:/Windows")) / "Fonts"
         for filename in ("segoeui.ttf", "seguisym.ttf", "msyh.ttc", "msyhbd.ttc", "consola.ttf"):
