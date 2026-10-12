@@ -128,7 +128,9 @@ class ConfigEditorUiTests(unittest.TestCase):
         self.assertFalse(dialog._form_active)
         dialog._open_overview_record(dialog.overview.topLevelItem(0))
         self.assertTrue(dialog._form_active)
-        self.assertFalse(combo.isVisible())
+        self.assertTrue(combo.isVisible())
+        self.assertIsNone(combo.currentData())
+        self.assertEqual(dialog.overview.topLevelItemCount(), 3)
         self.assertEqual(self.path.read_text(encoding="utf-8"), BASE)
         self.assertFalse(dialog.session.dirty)
         self.assertEqual(self.store.writes, [])
@@ -196,8 +198,8 @@ class ConfigEditorUiTests(unittest.TestCase):
         self.assertIn("…", combo.displayedText())
         self.assertLessEqual(combo.width(), 220)
         self.assertGreaterEqual(combo.width(), 100)
-        origin = combo.mapTo(dialog.record_scroll.viewport(), QPoint(0, 0))
-        viewport = dialog.record_scroll.viewport()
+        origin = combo.mapTo(dialog.overview_panel, QPoint(0, 0))
+        viewport = dialog.overview_panel
         self.assertGreaterEqual(origin.x(), 0)
         self.assertLessEqual(origin.x() + combo.width(), viewport.width())
         self.assertGreaterEqual(origin.y(), 0)
@@ -416,7 +418,9 @@ class ConfigEditorUiTests(unittest.TestCase):
         dialog.show()
         self.app.processEvents()
         self.assertFalse(dialog._compact_form)
-        self.assertGreater(dialog.inspector.geometry().left(), dialog.value_pane.geometry().left())
+        self.assertEqual(dialog.detail_splitter.orientation(), Qt.Orientation.Horizontal)
+        self.assertTrue(dialog.overview.isVisible())
+        self.assertGreater(dialog.record_scroll.geometry().left(), dialog.overview_panel.geometry().left())
         self.assertTrue(dialog.default_editor.isVisible())
         self.assertTrue(dialog.choices_empty.isVisible())
         self.assertFalse(dialog.choices.isVisible())
@@ -424,11 +428,55 @@ class ConfigEditorUiTests(unittest.TestCase):
         dialog.resize(820, 680)
         self.app.processEvents()
         self.assertTrue(dialog._compact_form)
-        self.assertGreater(dialog.inspector.geometry().top(), dialog.value_pane.geometry().top())
-        panel = dialog.workspace_splitter.widget(1)
+        self.assertEqual(dialog.detail_splitter.orientation(), Qt.Orientation.Vertical)
+        self.assertTrue(dialog.overview.isVisible())
+        self.assertGreater(dialog.record_scroll.geometry().top(), dialog.overview_panel.geometry().top())
+        panel = dialog.record_scroll
         self.assertEqual(panel.horizontalScrollBar().maximum(), 0)
         self.assertLessEqual(panel.widget().width(), panel.viewport().width())
         dialog.hide()
+
+    def test_center_overview_remains_visible_and_keyboard_navigation_preserves_guard(self):
+        dialog = self.dialog()
+        dialog.show()
+        dialog.select_application("App")
+        dialog.overview.setCurrentItem(dialog.overview.topLevelItem(0))
+        self.app.processEvents()
+        self.assertTrue(dialog._form_active)
+        self.assertTrue(dialog.overview.isVisible())
+        self.assertEqual(dialog.overview.topLevelItemCount(), 3)
+        self.assertIsNone(dialog.overview_option_combo.currentData())
+        first = dialog.selected_token()[1]
+        dialog.name_edit.setText("pending name")
+        with patch.object(dialog, "_ask_form_action", return_value="cancel"):
+            dialog.overview.setCurrentItem(dialog.overview.topLevelItem(2))
+        self.assertEqual(dialog.selected_token()[1].key, first.key)
+        self.assertEqual(dialog.name_edit.text(), "pending name")
+        self.assertEqual(dialog.overview.currentItem().data(0, Qt.ItemDataRole.UserRole)[1].key, first.key)
+        with patch.object(dialog, "_ask_form_action", return_value="discard"):
+            dialog.overview.setCurrentItem(dialog.overview.topLevelItem(2))
+        self.assertEqual(dialog.option_combo.currentText(), "Two")
+        self.assertEqual(dialog.default_editor.exact_text(), r"C:\Tools\Two")
+        self.assertIsNone(dialog.overview_option_combo.currentData())
+        self.assertFalse(dialog.session.dirty)
+        self.assertEqual(self.store.writes, [])
+        dialog.hide()
+
+    def test_uncertain_save_can_recover_runtime_from_confirmed_disk_in_editor(self):
+        dialog = self.dialog()
+        self.service.select_option("App", "Two")
+        self.service.block_configuration_operations("保存结果无法核实")
+        confirmed = BASE.split("\n[App.Two]")[0]
+        self.path.write_text(confirmed, encoding="utf-8", newline="")
+        with patch.object(QMessageBox, "exec", return_value=0), patch.object(
+                QMessageBox, "clickedButton", lambda box: next(
+                    button for button in box.buttons() if button.text() == "重新加载磁盘")):
+            dialog._conflict("保存结果无法核实")
+        self.assertIsNone(self.service.configuration_save_error)
+        self.assertEqual(self.service.selected_option("App"), "One")
+        self.assertEqual(self.service.config, dialog.session.validate())
+        self.assertFalse(dialog.session.dirty)
+        self.assertEqual(self.store.writes, [])
 
     def test_pending_and_updated_draft_have_distinct_state_text(self):
         dialog = self.dialog()
@@ -555,7 +603,7 @@ class ConfigEditorUiTests(unittest.TestCase):
         self.assertTrue(dialog.choices.isVisible())
         self.assertFalse(dialog.choices_empty.isVisible())
         self.assertLessEqual(dialog.choices.height(), 96)
-        self.assertLess(dialog.value_pane.geometry().top(), 12)
+        self.assertGreater(dialog.value_pane.geometry().top(), dialog.inspector.geometry().bottom())
         self.assertLess(dialog.inspector.geometry().top(), 12)
         self.assertLess(dialog.value_pane.height(), 320)
         self.assertLess(dialog.save_button.width(), 240)
@@ -573,7 +621,7 @@ class ConfigEditorUiTests(unittest.TestCase):
             dialog.show()
             self.app.processEvents()
             self.assertLessEqual(dialog.choices.height(), 96)
-            self.assertLess(dialog.value_pane.geometry().top(), 12)
+            self.assertGreater(dialog.value_pane.geometry().top(), dialog.inspector.geometry().bottom())
             self.assertLess(dialog.inspector.geometry().top(), 12)
         dialog.hide()
 

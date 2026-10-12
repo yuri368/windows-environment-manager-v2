@@ -1,0 +1,124 @@
+{
+  "scale_factor": "0.5",
+  "platform": "windows",
+  "captures": [
+    {
+      "file": "main-1024x768-windows-100pct.png",
+      "requested_size": [
+        1024,
+        768
+      ],
+      "logical_size": [
+        1024,
+        768
+      ],
+      "pixels": [
+        1024,
+        768
+      ],
+      "dpr": 1.0,
+      "qt_visible": true,
+      "native_visible": true,
+      "primary_action_visible": true
+    },
+    {
+      "file": "main-1366x768-windows-100pct.png",
+      "requested_size": [
+        1366,
+        768
+      ],
+      "logical_size": [
+        1366,
+        768
+      ],
+      "pixels": [
+        1366,
+        768
+      ],
+      "dpr": 1.0,
+      "qt_visible": true,
+      "native_visible": true,
+      "primary_action_visible": true
+    },
+    {
+      "file": "main-1536x864-windows-100pct.png",
+      "requested_size": [
+        1536,
+        864
+      ],
+      "logical_size": [
+        1536,
+        864
+      ],
+      "pixels": [
+        1536,
+        864
+      ],
+      "dpr": 1.0,
+      "qt_visible": true,
+      "native_visible": true,
+      "primary_action_visible": true
+    },
+    {
+      "file": "editor-1024x768-windows-100pct.png",
+      "requested_size": [
+        1024,
+        768
+      ],
+      "logical_size": [
+        1024,
+        768
+      ],
+      "pixels": [
+        1024,
+        768
+      ],
+      "dpr": 1.0,
+      "qt_visible": true,
+      "native_visible": true,
+      "primary_action_visible": true
+    },
+    {
+      "file": "editor-1366x768-windows-100pct.png",
+      "requested_size": [
+        1366,
+        768
+      ],
+      "logical_size": [
+        1366,
+        768
+      ],
+      "pixels": [
+        1366,
+        768
+      ],
+      "dpr": 1.0,
+      "qt_visible": true,
+      "native_visible": true,
+      "primary_action_visible": true
+    },
+    {
+      "file": "editor-1536x864-windows-100pct.png",
+      "requested_size": [
+        1536,
+        864
+      ],
+      "logical_size": [
+        1536,
+        864
+      ],
+      "pixels": [
+        1536,
+        864
+      ],
+      "dpr": 1.0,
+      "qt_visible": true,
+      "native_visible": true,
+      "primary_action_visible": true
+    }
+  ],
+  "environment_writes": 0,
+  "notifications": 0,
+  "state_revision": 0,
+  "configuration_unchanged": true
+}

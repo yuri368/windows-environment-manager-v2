@@ -75,6 +75,9 @@ class UiTests(unittest.TestCase):
         service = EnvironmentService(load_config(config_path), store, StateRepository(self.temp / "state"))
         return service, store, config_path
 
+    def config_service(self, path):
+        return EnvironmentService(load_config(path), MemoryStore(), StateRepository(self.temp / "editor-state"))
+
     def test_edit_switches_source_only_after_text_change_and_preserves_draft(self):
         service = FakeService()
         spec = VariableSpec("App", "Default", "HOME", "User", "replace", True, "A")
@@ -150,13 +153,15 @@ class UiTests(unittest.TestCase):
         path = self.temp / "env.toml"
         original = '[App.Default]\nHOME = { default_value = "A", scope = "User", mode = "replace", editable = true }\n'
         path.write_text(original, encoding="utf-8")
-        service = FakeService()
+        service = self.config_service(path)
+        original_config = service.config
         dialog = ConfigEditorDialog(path, service, initial_tab="source")
         dialog.source.setPlainText("invalid = [")
         dialog._save()
         self.assertNotEqual(dialog.result(), QDialog.DialogCode.Accepted)
         self.assertEqual(path.read_text(encoding="utf-8"), original)
-        self.assertIsNone(service.reloaded)
+        self.assertIs(service.config, original_config)
+        self.assertEqual(service.store.writes, [])
         dialog.deleteLater()
 
     def test_config_editor_saves_only_on_explicit_action(self):
@@ -164,14 +169,15 @@ class UiTests(unittest.TestCase):
         original = '[App.Default]\nHOME = { default_value = "A", scope = "User", mode = "replace", editable = true }\n'
         updated = original.replace('default_value = "A"', 'default_value = "B"')
         path.write_text(original, encoding="utf-8")
-        service = FakeService()
+        service = self.config_service(path)
         dialog = ConfigEditorDialog(path, service, initial_tab="source")
         dialog.source.setPlainText(updated)
         self.assertEqual(path.read_text(encoding="utf-8"), original)
         with patch.object(dialog, "_confirm_diff", return_value=True):
             dialog._save()
         self.assertTrue(dialog.saved)
-        self.assertIsNotNone(service.reloaded)
+        self.assertEqual(service.config.variables("App", "Default")[0].default_value, "B")
+        self.assertEqual(service.store.writes, [])
         self.assertEqual(path.read_text(encoding="utf-8"), updated)
         dialog.deleteLater()
 
@@ -179,7 +185,7 @@ class UiTests(unittest.TestCase):
         path = self.temp / "env.toml"
         original = '[App.Default]\nHOME = { default_value = "A", scope = "User", mode = "replace", editable = true }\n'
         path.write_text(original, encoding="utf-8")
-        service = FakeService()
+        service = self.config_service(path)
         original_config = service.config
         original_selections = service.selections
         dialog = ConfigEditorDialog(path, service, initial_tab="source")

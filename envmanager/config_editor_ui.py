@@ -187,12 +187,13 @@ class ConfigEditorDialog(QDialog):
         self._selection_token = None
         self.navigation_app = ""
         self.navigation_option = ""
+        self._overview_scope = None
         self._original: VariableSpec | None = None
         self._new_form = False
         self._form_active = False
         self._form_base: tuple | None = None
         self.setWindowTitle("配置编辑器 · " + self.path.name)
-        self.resize(1180, 800)
+        self.resize(1180, 760)
         apply_theme(QApplication.instance())
 
         self.setMinimumSize(760, 600)
@@ -292,12 +293,12 @@ class ConfigEditorDialog(QDialog):
         row.setContentsMargins(12, 8, 12, 12)
         row.setSpacing(0)
         self.workspace_splitter = QSplitter()
-        self.workspace_splitter.setHandleWidth(12)
+        self.workspace_splitter.setHandleWidth(8)
         self.workspace_splitter.setChildrenCollapsible(False)
         row.addWidget(self.workspace_splitter)
         self.workspace_splitter.addWidget(self._build_browser())
         self.workspace_splitter.addWidget(self._build_workspace())
-        self.workspace_splitter.setSizes([240, 900])
+        self.workspace_splitter.setSizes([224, 948])
         self.workspace_splitter.setStretchFactor(0, 0)
         self.workspace_splitter.setStretchFactor(1, 1)
         return visual
@@ -306,7 +307,7 @@ class ConfigEditorDialog(QDialog):
         browser = QFrame()
         browser.setObjectName("editorBrowser")
         browser.setMinimumWidth(216)
-        browser.setMaximumWidth(272)
+        browser.setMaximumWidth(256)
         layout = QVBoxLayout(browser)
         layout.setContentsMargins(8, 8, 8, 8)
         layout.setSpacing(8)
@@ -406,7 +407,21 @@ class ConfigEditorDialog(QDialog):
         table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         return table
 
-    def _build_workspace(self) -> QScrollArea:
+    def _build_workspace(self) -> QSplitter:
+        self.detail_splitter = QSplitter()
+        self.detail_splitter.setHandleWidth(8)
+        self.detail_splitter.setChildrenCollapsible(False)
+        self.overview_panel = QFrame()
+        self.overview_panel.setObjectName("editorWorkspace")
+        self.overview_panel.setMinimumWidth(240)
+        overview_layout = QVBoxLayout(self.overview_panel)
+        overview_layout.setContentsMargins(12, 8, 12, 8)
+        overview_layout.setSpacing(8)
+        self.overview_heading = _caption("配置明细", "compactHeading")
+        overview_layout.addWidget(self.overview_heading)
+        self.empty_state = self._build_overview()
+        overview_layout.addWidget(self.empty_state, 1)
+        self.detail_splitter.addWidget(self.overview_panel)
         panel = QScrollArea()
         self.record_scroll = panel
         panel.setObjectName("editorScroll")
@@ -422,8 +437,8 @@ class ConfigEditorDialog(QDialog):
         self.form_context = _caption("", "contextPath")
         layout.addWidget(self.form_heading)
         layout.addWidget(self.form_context)
-        self.empty_state = self._build_overview()
-        layout.addWidget(self.empty_state, 1)
+        self.inspector_empty = _caption("选择中间表格中的变量，查看与编辑属性。", "muted")
+        layout.addWidget(self.inspector_empty)
         self.form = QWidget()
         self.form_layout = QGridLayout(self.form)
         self.form_layout.setContentsMargins(0, 0, 0, 0)
@@ -448,7 +463,11 @@ class ConfigEditorDialog(QDialog):
         layout.insertLayout(2, record_actions)
         layout.addStretch(1)
         panel.setWidget(content)
-        return panel
+        self.detail_splitter.addWidget(panel)
+        self.detail_splitter.setSizes([560, 340])
+        self.detail_splitter.setStretchFactor(0, 1)
+        self.detail_splitter.setStretchFactor(1, 0)
+        return self.detail_splitter
 
     def _build_overview(self) -> QWidget:
         page = QWidget()
@@ -475,14 +494,19 @@ class ConfigEditorDialog(QDialog):
         layout.addLayout(summary_row)
         self.overview = QTreeWidget()
         self.overview.setObjectName("configOverview")
-        self.overview.setHeaderLabels(("变量 / 方案", "作用域", "默认值"))
+        self.overview.setHeaderLabels(("变量 / 方案", "作用域", "默认值摘要", "模式"))
         self.overview.setRootIsDecorated(False)
         self.overview.setUniformRowHeights(True)
-        self.overview.setColumnWidth(0, 200)
-        self.overview.setColumnWidth(1, 90)
-        self.overview.header().setStretchLastSection(True)
+        self.overview.setColumnWidth(0, 164)
+        self.overview.setColumnWidth(1, 58)
+        self.overview.setColumnWidth(2, 220)
+        self.overview.setColumnWidth(3, 76)
+        self.overview.header().setStretchLastSection(False)
+        self.overview.header().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
+        self.overview.setMinimumHeight(160)
         self.overview.itemActivated.connect(self._open_overview_record)
-        self.overview.itemClicked.connect(self._open_overview_record)
+        self.overview.currentItemChanged.connect(
+            lambda item, _old: self._open_overview_record(item) if item and not self._syncing else None)
         layout.addWidget(self.overview, 1)
         return page
 
@@ -545,7 +569,7 @@ class ConfigEditorDialog(QDialog):
         layout = QVBoxLayout(inspector)
         layout.setContentsMargins(8, 0, 0, 0)
         layout.setSpacing(8)
-        layout.addWidget(_caption("属性", "meta"))
+        layout.addWidget(_caption("变量属性", "section"))
         self.app_combo = QComboBox()
         self.option_combo = QComboBox()
         for combo in (self.app_combo, self.option_combo):
@@ -567,15 +591,21 @@ class ConfigEditorDialog(QDialog):
             self.mode_combo.addItem(label, mode)
         self.mode_combo.currentIndexChanged.connect(self._form_changed)
         self._inspector_fields = {}
-        for text, widget in (("应用", self.app_combo), ("方案", self.option_combo),
-                             ("变量名", self.name_edit), ("作用域", self.scope_combo),
-                             ("操作模式", self.mode_combo)):
+        fields = QGridLayout()
+        fields.setHorizontalSpacing(8)
+        fields.setVerticalSpacing(8)
+        for text, widget, row, column, span in (("变量名", self.name_edit, 0, 0, 2),
+                             ("作用域", self.scope_combo, 1, 0, 1),
+                             ("操作模式", self.mode_combo, 1, 1, 1),
+                             ("应用", self.app_combo, 2, 0, 1),
+                             ("方案", self.option_combo, 2, 1, 1)):
             field = QVBoxLayout()
             field.setSpacing(4)
             field.addWidget(_field_label(text))
             field.addWidget(widget)
             self._inspector_fields[widget] = field
-            layout.addLayout(field)
+            fields.addLayout(field, row, column, 1, span)
+        layout.addLayout(fields)
         self.editable_check = QCheckBox("允许自定义输入")
         self.editable_check.toggled.connect(self._form_changed)
         layout.addWidget(self.editable_check)
@@ -589,7 +619,6 @@ class ConfigEditorDialog(QDialog):
         layout.addLayout(special_field)
         self.app_combo.setToolTip("可输入新应用名称，将当前变量移动到该应用。")
         self.option_combo.setToolTip("可输入新方案名称，将当前变量移动到该方案。")
-        layout.addStretch()
         return inspector
 
     def _reflow_form(self) -> None:
@@ -599,12 +628,19 @@ class ConfigEditorDialog(QDialog):
         self._compact_form = compact
         self.form_layout.removeWidget(self.value_pane)
         self.form_layout.removeWidget(self.inspector)
-        self.form_layout.addWidget(self.value_pane, 0, 0)
-        self.form_layout.addWidget(self.inspector, 1 if compact else 0, 0 if compact else 1)
+        self.form_layout.addWidget(self.inspector, 0, 0)
+        self.form_layout.addWidget(self.value_pane, 1, 0)
         self.form_layout.setColumnStretch(0, 1)
         self.form_layout.setColumnStretch(1, 0)
-        self.inspector.setMaximumWidth(16777215 if compact else 244)
-        self.inspector.setMinimumWidth(0 if compact else 220)
+        self.inspector.setMaximumWidth(16777215)
+        self.inspector.setMinimumWidth(0)
+        if hasattr(self, "detail_splitter"):
+            self.detail_splitter.setOrientation(Qt.Orientation.Vertical if compact else Qt.Orientation.Horizontal)
+            content_width = self.record_scroll.widget().minimumSizeHint().width() if self.record_scroll.widget() else 340
+            scroll_width = self.record_scroll.verticalScrollBar().sizeHint().width()
+            self.record_scroll.setMinimumWidth(0 if compact else max(352, content_width + scroll_width))
+            self.record_scroll.setMaximumWidth(16777215 if compact else 420)
+            self.detail_splitter.setSizes([200, 400] if compact else [560, 340])
         self.form_layout.setRowStretch(0, 0)
         self.form_layout.setRowStretch(1, 0)
         self.form_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -675,35 +711,42 @@ class ConfigEditorDialog(QDialog):
         self.overview.clear()
         if doc is None:
             return
-        if token and token[0] == "option":
-            app, option = token[1], token[2]
-            groups = [(app, option)]
-            self.form_heading.setText(option)
-            self.form_context.setText(app + " / " + option)
-        elif token and token[0] == "app":
-            app = token[1]
-            groups = [(a, o) for a, o in doc.groups() if a == app]
-            self.form_heading.setText(app)
-            self.form_context.setText(f"默认方案：{doc.default_option(app)}")
+        if self.navigation_app:
+            app = self.navigation_app
+            groups = [(a, o) for a, o in doc.groups() if a == app and
+                      (self._overview_scope is None or o == self._overview_scope)]
+            self.overview_heading.setText(app)
+            if not token or token[0] != "record":
+                self.form_heading.setText(self._overview_scope or app)
+                self.form_context.setText(f"当前方案：{self.navigation_option} · 默认：{doc.default_option(app)}")
         else:
             groups = list(doc.groups())
-            self.form_heading.setText("配置概览")
-            self.form_context.setText(self.path.name)
+            self.overview_heading.setText("配置明细")
+            if not token:
+                self.form_heading.setText("变量属性")
+                self.form_context.setText(self.path.name)
         count = 0
         for app, option in groups:
             for spec in doc.records(app, option):
-                item = QTreeWidgetItem([f"{spec.name} / {option}", spec.scope, _choice_summary(spec.default_value)])
+                item = QTreeWidgetItem([f"{spec.name} / {option}", spec.scope,
+                                       _choice_summary(spec.default_value), spec.mode])
                 item.setData(0, Qt.ItemDataRole.UserRole, ("record", spec))
                 item.setToolTip(2, _choice_summary(spec.default_value))
+                item.setToolTip(0, f"{app} / {option} / {spec.name} / {spec.scope}")
                 self.overview.addTopLevelItem(item)
+                if token and token[0] == "record" and token[1].key == spec.key:
+                    self.overview.setCurrentItem(item)
                 count += 1
-        self.overview_summary.setText(f"{len(groups)} 个方案 · {count} 条变量。选择变量进入编辑。" if count else
+        self.overview_summary.setText(f"{len(groups)} 个方案 · {count} 条变量 · 当前操作方案：{self.navigation_option}" if count else
                                       "尚无变量。新增变量时可同时创建应用和方案。")
 
     def _open_overview_record(self, item: QTreeWidgetItem, _column: int = 0) -> None:
         token = item.data(0, Qt.ItemDataRole.UserRole)
         if token and token[0] == "record":
-            self.select_record(token[1])
+            if not self.select_record(token[1]):
+                self._syncing = True
+                self._show_overview()
+                self._syncing = False
 
     def _sync_overview_options(self) -> None:
         doc = self.session.document
@@ -716,7 +759,7 @@ class ConfigEditorDialog(QDialog):
             combo.addItem(label, option)
             combo.setItemData(combo.count() - 1, label, Qt.ItemDataRole.ToolTipRole)
         token = self.selected_token()
-        selected = self.navigation_option if token and token[0] in ("option", "record") else None
+        selected = self._overview_scope
         combo.setCurrentIndex(max(0, combo.findData(selected)))
         combo.setEnabled(bool(options))
 
@@ -786,25 +829,34 @@ class ConfigEditorDialog(QDialog):
         return True
 
     def _set_selection(self, token) -> None:
+        previous_app = self.navigation_app
         self._selection_token = token
         doc = self.session.document
         if token and token[0] == "record":
             self.navigation_app, self.navigation_option = token[1].app, token[1].option
+            if previous_app != self.navigation_app or self._overview_scope is not None:
+                self._overview_scope = token[1].option
         elif token and token[0] == "option":
             self.navigation_app, self.navigation_option = token[1], token[2]
+            self._overview_scope = token[2]
         elif token and token[0] == "app":
             previous_app = self.navigation_app
             self.navigation_app = token[1]
+            self._overview_scope = None
             options = [o for a, o in doc.groups() if a == self.navigation_app] if doc else []
             if previous_app != self.navigation_app or self.navigation_option not in options:
                 self.navigation_option = doc.default_option(self.navigation_app) if options else ""
         else:
             self.navigation_app = self.navigation_option = ""
+            self._overview_scope = None
         self._render_navigation()
         if token and token[0] == "record":
             self._load_spec(token[1])
         else:
             self._clear_form()
+        self._syncing = True
+        self._show_overview()
+        self._syncing = False
         self._update_status()
 
     def _render_navigation(self) -> None:
@@ -898,6 +950,7 @@ class ConfigEditorDialog(QDialog):
         self.form.setEnabled(False)
         self.form.setVisible(False)
         self.empty_state.setVisible(True)
+        self.inspector_empty.setVisible(True)
         self._show_overview()
         self.form_error.setVisible(False)
         self._syncing = False
@@ -909,7 +962,8 @@ class ConfigEditorDialog(QDialog):
         self._form_active = True
         self.form.setEnabled(True)
         self.form.setVisible(True)
-        self.empty_state.setVisible(False)
+        self.empty_state.setVisible(True)
+        self.inspector_empty.setVisible(False)
         self.form_heading.setText(spec.name)
         self.form_context.setText(f"{spec.app} / {spec.option}")
         self._fill_form(spec.app, spec.option, spec.name, spec.scope, spec.mode,
@@ -1088,7 +1142,8 @@ class ConfigEditorDialog(QDialog):
         self._form_active = True
         self.form.setEnabled(True)
         self.form.setVisible(True)
-        self.empty_state.setVisible(False)
+        self.empty_state.setVisible(True)
+        self.inspector_empty.setVisible(False)
         self.form_heading.setText("新增变量")
         self.form_context.setText(f"{app} / {option}" if app else "新应用 / 新方案")
         self._fill_form(app, option, "", "User", "replace", False, "", ())
@@ -1373,7 +1428,8 @@ class ConfigEditorDialog(QDialog):
 
     def _conflict(self, message: str) -> None:
         box = QMessageBox(self)
-        box.setWindowTitle("配置文件已在外部改变")
+        unresolved = bool(self.service.configuration_save_error)
+        box.setWindowTitle("保存结果待核实" if unresolved else "配置文件已在外部改变")
         box.setText(message)
         box.setInformativeText("当前草稿尚未覆盖磁盘。可以重新加载磁盘版本，或保留草稿继续检查。")
         reload_button = box.addButton("重新加载磁盘", QMessageBox.ButtonRole.AcceptRole)
@@ -1381,6 +1437,9 @@ class ConfigEditorDialog(QDialog):
         box.exec()
         if box.clickedButton() is reload_button:
             try:
+                if unresolved:
+                    from .config import load_config
+                    self.service.reload(load_config(self.path))
                 self.session.reload_from_disk()
                 self._refresh_all()
             except Exception as exc:

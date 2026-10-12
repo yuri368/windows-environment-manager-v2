@@ -89,6 +89,25 @@ class ElidingLabel(QLabel):
             super().setText(shown)
 
 
+class ApplicationNameButton(QPushButton):
+    """Navigation text elides using the actual row width, with a full tooltip."""
+
+    def __init__(self, app: str, callback):
+        super().__init__(app)
+        self._full_name = app
+        self.setObjectName("manifestName")
+        self.setToolTip(f"查看 {app} 的变量")
+        self.setAccessibleName(f"查看 {app} 详情")
+        self.clicked.connect(callback)
+        self.setMinimumWidth(0)
+        self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Fixed)
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        self.setText(self.fontMetrics().elidedText(
+            self._full_name, Qt.TextElideMode.ElideRight, max(0, self.width() - 4)))
+
+
 OPTION_STATUS_ROLE = int(Qt.ItemDataRole.UserRole) + 1
 
 
@@ -103,6 +122,8 @@ def _scheme_presentation(scheme) -> tuple[str, str, str, str]:
     if scheme.status is SchemeStatus.COMPLETE:
         return "✓ 完全匹配", "complete", progress, "方案的全部变量均与 Windows 当前值匹配"
     if scheme.status is SchemeStatus.PARTIAL:
+        if scheme.matched_count == 0:
+            return "○ 未匹配", "partial", progress, "方案变量与 Windows 当前值均未完整匹配，需要配置"
         return "! 部分匹配", "partial", progress, "方案只有部分变量或列表元素匹配"
     return "○ 尚未配置", "unconfigured", progress, "方案目标变量在 Windows 中均不存在"
 
@@ -354,6 +375,17 @@ def _applications_text(applications, app: str = "", option: str = "") -> str:
     return "；".join(labels) if labels else f"{app} / {option}"
 
 
+VARIABLE_COLUMNS = (124, 112, 112, 180, 112, 132)
+
+
+def _variable_columns(layout: QGridLayout) -> None:
+    """Use one geometry for the header and every independent variable record."""
+    layout.setHorizontalSpacing(8)
+    for index, width in enumerate(VARIABLE_COLUMNS):
+        layout.setColumnMinimumWidth(index, width)
+        layout.setColumnStretch(index, 1 if index == 3 else 0)
+
+
 class VariableCard(QFrame):
     changed = Signal()
 
@@ -371,56 +403,58 @@ class VariableCard(QFrame):
         self.hidden = _sensitive(spec.name)
         self._updating = False
         outer = QVBoxLayout(self)
-        outer.setContentsMargins(8, 8, 8, 8)
+        outer.setContentsMargins(8, 0, 8, 0)
         outer.setSpacing(4)
 
-        top = QHBoxLayout()
-        top.setSpacing(8)
+        top = QGridLayout()
+        _variable_columns(top)
+        top.setContentsMargins(0, 8, 0, 8)
         name = ElidingLabel(spec.name, "name")
         name.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
         name.setToolTip(spec.name)
-        top.addWidget(name, 1)
+        top.addWidget(name, 0, 0)
         scope = "用户" if spec.scope == "User" else "系统"
         mode = {"replace": "替换", "+append": "前置", "-append": "后置", "append": "自定义排序"}[spec.mode]
-        metadata = _label(f"{scope} · {mode}" + (" · 特殊完整值" if spec.special else ""), "meta")
+        metadata = ElidingLabel(f"{scope} · {mode}" + (" · 特殊完整值" if spec.special else ""), "meta")
+        metadata.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
         metadata.setWordWrap(False)
-        top.addWidget(metadata)
+        top.addWidget(metadata, 0, 1)
         self.match_label = _label("", "matchStatus")
         self.match_label.setWordWrap(False)
-        top.addWidget(self.match_label)
-        self.remove_button = _button("撤销此项", self._remove, "quiet")
+        top.addWidget(self.match_label, 0, 4)
+        self.remove_button = _button("撤销", self._remove, "quiet")
         self.remove_button.setAccessibleName(f"撤销 {spec.name} 的实际匹配内容")
         self.remove_button.setToolTip("预览撤销实际匹配的" + ("特殊完整值（删除整键）" if spec.special else "普通元素或唯一空值"))
-        top.addWidget(self.remove_button)
         outer.addLayout(top)
 
-        selector_row = QHBoxLayout()
-        selector_row.setSpacing(8)
         self.selector = QComboBox()
-        self.selector.setFixedWidth(116)
+        self.selector.setFixedWidth(VARIABLE_COLUMNS[2])
         self.selector.setToolTip("选择默认值、上次应用值、候选值或自定义值")
         self.selector.setAccessibleName(f"{spec.name} 值来源")
         self.selector.currentIndexChanged.connect(self._choose)
-        selector_row.addWidget(self.selector)
+        top.addWidget(self.selector, 0, 2)
         self.editor = QLineEdit()
+        self.editor.setObjectName("code")
         self.editor.setMinimumWidth(40)
         self.editor.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.editor.setPlaceholderText("输入自定义值" if spec.editable else "选择值来源")
         self.editor.setReadOnly(not spec.editable)
         self.editor.setAccessibleName(f"{spec.name} 当前选定值")
         self.editor.textEdited.connect(self._edit)
-        selector_row.addWidget(self.editor, 1)
+        top.addWidget(self.editor, 0, 3)
+        operations = QHBoxLayout()
+        operations.setSpacing(0)
         self.full_value_button = _button("", self._full_value, "iconOnly")
         self.full_value_button.setIcon(icon("expand"))
         self.full_value_button.setToolTip("查看完整原始字符串" + ("并编辑" if spec.editable else ""))
         self.full_value_button.setAccessibleName(f"查看 {spec.name} 完整值")
-        selector_row.addWidget(self.full_value_button)
+        operations.addWidget(self.full_value_button)
+        operations.addWidget(self.remove_button)
         self.reveal = _button("显示" if self.hidden else "", self._toggle_reveal)
         self.reveal.setProperty("quiet", True)
         self.reveal.setVisible(self.hidden)
         self.reveal.setAccessibleName(f"显示 {spec.name} 敏感值")
-        selector_row.addWidget(self.reveal)
-        outer.addLayout(selector_row)
+        operations.addWidget(self.reveal)
         self.error = _label("", "error")
         self.error.setVisible(False)
         outer.addWidget(self.error)
@@ -430,7 +464,8 @@ class VariableCard(QFrame):
         self.details_toggle.setToolTip("收起或展开默认、上次应用与 Windows 参考值")
         self.details_toggle.setCheckable(True)
         self.details_toggle.setAccessibleName(f"展开 {spec.name} 参考值")
-        top.addWidget(self.details_toggle)
+        operations.addWidget(self.details_toggle)
+        top.addLayout(operations, 0, 5)
         self.details = QFrame()
         self.details.setObjectName("variableDetails")
         details_layout = QVBoxLayout(self.details)
@@ -463,6 +498,8 @@ class VariableCard(QFrame):
             details_layout.addLayout(row)
         outer.addWidget(self.details)
         self.details.hide()
+        self.setMinimumWidth(sum(VARIABLE_COLUMNS) + 5 * 8 + 16)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
         self.refresh()
 
     def set_match_result(self, result) -> None:
@@ -1427,51 +1464,69 @@ class ApplicationRow(QFrame):
         self.setObjectName("manifestRow")
         self.item = item
         self.app_name = app
+        self.window = window
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(8, 4, 8, 4)
-        layout.setSpacing(8)
+        layout.setContentsMargins(6, 2, 6, 2)
+        layout.setSpacing(6)
         self.check = QCheckBox()
         self.check.setAccessibleName(f"批量选择 {app}")
         self.check.setChecked(item.checkState() == Qt.CheckState.Checked)
         self.check.toggled.connect(lambda checked: item.setCheckState(
             Qt.CheckState.Checked if checked else Qt.CheckState.Unchecked))
         layout.addWidget(self.check)
+        mark = QLabel()
+        mark.setPixmap(app_icon(app, 22).pixmap(22, 22))
+        mark.setFixedSize(22, 22)
+        mark.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        layout.addWidget(mark)
         body = QVBoxLayout()
         body.setSpacing(0)
         top = QHBoxLayout()
-        top.setSpacing(8)
-        self.name_button = _button(app, lambda: window._navigate_app(app), "manifestName")
+        top.setSpacing(4)
+        self.name_button = ApplicationNameButton(app, lambda: window._navigate_app(app))
         self.name_button.setProperty("quiet", True)
         self.name_button.setToolTip(f"查看 {app} 的变量")
         self.name_button.setAccessibleName(f"查看 {app} 详情")
         self.name_button.setMinimumWidth(0)
         self.name_button.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Fixed)
         top.addWidget(self.name_button, 1)
+        self.match_label = _label("", "matchStatus")
+        self.match_label.setWordWrap(False)
+        self.match_label.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        top.addWidget(self.match_label)
+        body.addLayout(top)
+        status = QHBoxLayout()
+        status.setSpacing(4)
         self.option_combo = OptionComboBox()
         self.option_combo.setObjectName("manifestOption")
         self.option_combo.setAccessibleName(f"{app} 批量方案")
-        self.option_combo.setFixedWidth(116)
+        self.option_combo.setMinimumWidth(80)
+        self.option_combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.option_combo.setFixedHeight(22)
         self.option_combo.addItems(window.service.config.options(app))
         window._update_option_combo(self.option_combo, app)
         self.option_combo.setCurrentText(window._selected_option(app))
         self.option_combo.setToolTip(self.option_combo.currentText())
         self.option_combo.currentTextChanged.connect(lambda option: window._manifest_option_changed(app, option))
-        top.addWidget(self.option_combo)
-        body.addLayout(top)
-        status = QHBoxLayout()
-        status.setSpacing(6)
-        self.match_label = _label("", "matchStatus")
-        self.match_label.setWordWrap(False)
-        status.addWidget(self.match_label)
+        status.addWidget(self.option_combo)
         self.activation_badge = _label("", "activationBadge")
         self.activation_badge.setWordWrap(False)
-        status.addWidget(self.activation_badge)
+        self.activation_badge.setParent(self)
+        self.activation_badge.hide()
         self.meta = ElidingLabel("", "manifestMeta")
         self.meta.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
-        status.addWidget(self.meta, 1)
+        self.meta.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        status.addWidget(self.meta)
         body.addLayout(status)
         layout.addLayout(body, 1)
         self.refresh(window)
+
+    def mousePressEvent(self, event) -> None:
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.window._navigate_app(self.app_name)
+            event.accept()
+            return
+        super().mousePressEvent(event)
 
     def refresh(self, window) -> None:
         self.check.blockSignals(True)
@@ -1489,11 +1544,14 @@ class ApplicationRow(QFrame):
         count = len(specs)
         invalid = sum(bool(window.service.selections.get(spec).error) for spec in specs)
         match_text, match_tone, progress, match_tip = window._scheme_ui(self.app_name, selected)
-        _set_match_label(self.match_label, f"{match_text} {progress}".strip(), match_tone, match_tip)
+        _set_match_label(self.match_label, "错误" if match_tone == "error" else progress or "…", match_tone,
+                         f"{match_text} {progress}\n{match_tip}".strip())
         _activation_badge(self.activation_badge, active)
         status = f"{invalid} 处输入无效 · " if invalid else ""
-        status += f"{active} · " if active else ""
-        self.meta.setText(status + f"{count} 项变量")
+        status += f"当前激活 {active} · " if active else "尚未激活 · "
+        self.meta.setText("输入无效" if invalid else {"complete": "已匹配", "partial": "需配置", "unconfigured": "需配置", "error": "检测错误", "scanning": "未读取"}.get(match_tone, "未读取"))
+        self.meta.setToolTip(status + f"{count} 项变量；准备方案：{selected}")
+        self.meta.setVisible(bool(invalid))
         self.meta.setObjectName("error" if invalid else "manifestMeta")
         self.meta.style().unpolish(self.meta)
         self.meta.style().polish(self.meta)
@@ -1520,7 +1578,7 @@ class MainWindow(QMainWindow):
         self._scan_workers = {}
         self._thread_pool = QThreadPool(self)
         self.setWindowTitle("环境变量方案管理器" + (" · 演示模式" if demo else ""))
-        self.resize(1190, 790)
+        self.resize(1366, 768)
         self.setMinimumSize(850, 560)
         self._startup_geometry_fitted = False
         apply_theme(QApplication.instance())
@@ -1532,8 +1590,8 @@ class MainWindow(QMainWindow):
         root.setSpacing(0)
         root.addWidget(self._build_toolbar())
         workspace = QHBoxLayout()
-        workspace.setContentsMargins(12, 12, 12, 12)
-        workspace.setSpacing(12)
+        workspace.setContentsMargins(0, 0, 0, 0)
+        workspace.setSpacing(0)
         workspace.addWidget(self._build_manifest())
         workspace.addWidget(self._build_inspector(), 1)
         root.addLayout(workspace, 1)
@@ -1663,6 +1721,8 @@ class MainWindow(QMainWindow):
             text, tone, progress, tip = self._scheme_ui(self.app_name, option)
             _set_match_label(self.match_status, f"{text} {progress}".strip(), tone, tip)
         self._update_apply_availability()
+        self._filter_variable_rows()
+        self._refresh_active_app_filter()
 
     def _scheme_match(self, app: str, option: str):
         if self._detection is None:
@@ -1705,7 +1765,7 @@ class MainWindow(QMainWindow):
         brand = _label("环境方案", "appTitle")
         brand.setWordWrap(False)
         bar.addWidget(brand)
-        self.breadcrumb = ElidingLabel("批量工作台", "muted")
+        self.breadcrumb = ElidingLabel("工作台", "workspaceTab")
         self.breadcrumb.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
         bar.addWidget(self.breadcrumb, 1)
         self.mode_label = _label("演示模式" if self.demo else "Windows 环境", "muted")
@@ -1719,10 +1779,10 @@ class MainWindow(QMainWindow):
         self.history_button = _button("历史", self._history, "quiet")
         self.history_button.setIcon(icon("history"))
         bar.addWidget(self.history_button)
-        self.refresh_button = _button("刷新", self._reload, "quiet")
+        self.refresh_button = _button("刷新检测", self._reload, "quiet")
         self.refresh_button.setIcon(icon("refresh"))
         bar.addWidget(self.refresh_button)
-        self.config_button = QPushButton("配置")
+        self.config_button = QPushButton("配置编辑器")
         self.config_button.setObjectName("quiet")
         self.config_button.setIcon(icon("code"))
         menu = QMenu(self.config_button)
@@ -1750,10 +1810,10 @@ class MainWindow(QMainWindow):
     def _build_manifest(self) -> QFrame:
         manifest = QFrame()
         manifest.setObjectName("manifest")
-        manifest.setFixedWidth(300)
+        manifest.setFixedWidth(270)
         side = QVBoxLayout(manifest)
-        side.setContentsMargins(0, 0, 0, 0)
-        side.setSpacing(8)
+        side.setContentsMargins(12, 12, 8, 8)
+        side.setSpacing(6)
         heading = QHBoxLayout()
         heading.addWidget(_label("应用", "section"), 1)
         self.manifest_count = _label("", "selectionSummary")
@@ -1762,16 +1822,28 @@ class MainWindow(QMainWindow):
         self.clear_selection_button = _button("清空", lambda: self._check_all(False), "quiet")
         self.select_all_button.setToolTip("勾选所有应用，包含搜索中隐藏的应用")
         self.clear_selection_button.setToolTip("取消所有应用的勾选")
-        heading.addWidget(self.select_all_button)
-        heading.addWidget(self.clear_selection_button)
         side.addLayout(heading)
         self.search = QLineEdit()
-        self.search.setPlaceholderText("搜索应用")
+        self.search.setPlaceholderText("搜索应用或方案…")
         self.search.setClearButtonEnabled(True)
         self.search.addAction(icon("search", COLORS["muted"], 18), QLineEdit.ActionPosition.LeadingPosition)
         self.search.setAccessibleName("搜索批量应用清单")
         self.search.textChanged.connect(self._render_apps)
         side.addWidget(self.search)
+        self.app_filter = QComboBox()
+        self.app_filter.setObjectName("manifestFilter")
+        self.app_filter.addItem("全部应用", "all")
+        self.app_filter.addItem("完全匹配", "complete")
+        self.app_filter.addItem("需配置", "needs")
+        self.app_filter.setToolTip("按每个应用准备使用的方案筛选；检测失败与未读取不会列为完全匹配")
+        self.app_filter.setAccessibleName("按准备方案的检测状态筛选应用")
+        self.app_filter.currentIndexChanged.connect(self._render_apps)
+        side.addWidget(self.app_filter)
+        selection = QHBoxLayout()
+        selection.addWidget(_label("批量选择", "muted"), 1)
+        selection.addWidget(self.select_all_button)
+        selection.addWidget(self.clear_selection_button)
+        side.addLayout(selection)
         self.app_list = ApplicationList()
         self.app_list.setObjectName("manifestList")
         self.app_list.setItemDelegate(ManifestDelegate(self.app_list))
@@ -1783,6 +1855,7 @@ class MainWindow(QMainWindow):
         self.search_empty = _label("没有匹配的应用，试试其他名称。", "muted")
         self.search_empty.setVisible(False)
         side.addWidget(self.search_empty)
+        side.addWidget(_label("勾选用于批量操作；点击应用查看详情。\n准备方案与输入只保留在运行草稿中。", "manifestHint"))
         return manifest
 
     def _build_inspector(self) -> QFrame:
@@ -1790,31 +1863,35 @@ class MainWindow(QMainWindow):
         detail.setObjectName("detailPane")
         layout = QVBoxLayout(detail)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(8)
+        layout.setSpacing(0)
         header = QFrame()
         header.setObjectName("inspectorHeader")
         context = QVBoxLayout(header)
-        context.setContentsMargins(8, 8, 8, 8)
+        context.setContentsMargins(20, 14, 20, 12)
         context.setSpacing(4)
+        self.workspace_crumb = ElidingLabel("应用", "contextPath")
+        self.workspace_crumb.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+        context.addWidget(self.workspace_crumb)
         heading = QHBoxLayout()
         heading.setSpacing(8)
         self.app_mark = QLabel()
         self.app_mark.setFixedSize(20, 20)
         heading.addWidget(self.app_mark)
-        self.title = ElidingLabel("选择应用", "section")
+        self.title = ElidingLabel("选择应用", "compactHeading")
         self.title.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
         heading.addWidget(self.title, 1)
-        self.variable_count = _label("", "muted")
-        self.variable_count.setWordWrap(False)
-        heading.addWidget(self.variable_count)
         self.option_row = heading
+        preparation = QVBoxLayout()
+        preparation.setSpacing(3)
+        preparation.addWidget(_label("准备使用的方案", "muted"))
         self.option_combo = OptionComboBox()
         self.option_combo.setObjectName("detailOption")
-        self.option_combo.setMinimumWidth(80)
+        self.option_combo.setMinimumWidth(190)
         self.option_combo.setMaximumWidth(280)
-        self.option_combo.setAccessibleName("当前详情应用方案")
+        self.option_combo.setAccessibleName("准备使用的方案；不会改变当前激活方案")
         self.option_combo.currentIndexChanged.connect(self._option_changed)
-        heading.addWidget(self.option_combo)
+        preparation.addWidget(self.option_combo)
+        heading.addLayout(preparation)
         context.addLayout(heading)
         status = QHBoxLayout()
         status.setSpacing(6)
@@ -1841,17 +1918,53 @@ class MainWindow(QMainWindow):
         self.pending_button = _button("检查恢复", self._pending, "quiet")
         pending.addWidget(self.pending_button)
         layout.addWidget(self.pending_banner)
+        variables_heading = QHBoxLayout()
+        variables_heading.setContentsMargins(20, 12, 20, 8)
+        variables_heading.setSpacing(8)
+        variables_heading.addWidget(_label("环境变量", "section"))
+        self.variable_count = _label("", "muted")
+        self.variable_count.setWordWrap(False)
+        variables_heading.addWidget(self.variable_count)
+        variables_heading.addStretch(1)
+        self.mismatch_only = QCheckBox("仅看未匹配")
+        self.mismatch_only.setToolTip("显示准备方案中未完全匹配、检测失败或尚未读取的变量")
+        self.mismatch_only.toggled.connect(self._filter_variable_rows)
+        variables_heading.addWidget(self.mismatch_only)
+        self.windows_compare_button = _button("展开 Windows 对照", self._toggle_windows_comparison, "quiet")
+        self.windows_compare_button.setCheckable(True)
+        variables_heading.addWidget(self.windows_compare_button)
+        layout.addLayout(variables_heading)
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
-        self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.card_panel = QWidget()
         self.card_layout = QVBoxLayout(self.card_panel)
-        self.card_layout.setContentsMargins(0, 0, 0, 0)
+        self.card_layout.setContentsMargins(20, 0, 20, 12)
         self.card_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        self.card_layout.setSpacing(4)
+        self.card_layout.setSpacing(0)
         self.scroll.setWidget(self.card_panel)
         layout.addWidget(self.scroll, 1)
         return detail
+
+    def _toggle_windows_comparison(self) -> None:
+        expanded = self.windows_compare_button.isChecked()
+        self.windows_compare_button.setText("收起 Windows 对照" if expanded else "展开 Windows 对照")
+        for card in self.cards:
+            card.details_toggle.setChecked(expanded)
+            card._toggle_details()
+
+    def _filter_variable_rows(self) -> None:
+        visible = 0
+        for card in self.cards:
+            result = card.match_result
+            show = (not self.mismatch_only.isChecked() or result is None
+                    or not result.available or result.status is not VariableMatchStatus.MATCH)
+            card.setVisible(show)
+            visible += int(show)
+        if getattr(self, "variable_empty", None) is not None:
+            self.variable_empty.setVisible(visible == 0)
+            self.variable_empty.setText("当前方案没有未匹配的变量。" if self.cards else "当前方案没有变量。")
+        self.variable_count.setText(f"{len(self.cards)} 项" + (f" · 显示 {visible} 项" if self.mismatch_only.isChecked() else ""))
 
     def _build_footer(self) -> QFrame:
         footer = QFrame()
@@ -1866,7 +1979,7 @@ class MainWindow(QMainWindow):
         feedback = QVBoxLayout(self.feedback_panel)
         feedback.setContentsMargins(0, 0, 0, 0)
         feedback.setSpacing(4)
-        self.batch_summary = ElidingLabel("", "selectionSummary")
+        self.batch_summary = ElidingLabel("", "footerScope")
         self.batch_summary.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
         feedback.addWidget(self.batch_summary)
         blocking = QHBoxLayout()
@@ -1880,7 +1993,7 @@ class MainWindow(QMainWindow):
         self.locate_error_button.setToolTip("查看第一个无效输入并定位到变量")
         blocking.addWidget(self.locate_error_button)
         feedback.addLayout(blocking)
-        self.feedback = _label("", "muted")
+        self.feedback = _label("演示模式 · 所有操作均先预览" if self.demo else "确认预览后执行 Windows 变更", "muted")
         self.feedback.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
         progress_row = QHBoxLayout()
         progress_row.setSpacing(8)
@@ -1895,9 +2008,17 @@ class MainWindow(QMainWindow):
         progress_row.addWidget(self.scan_progress)
         feedback.addLayout(progress_row)
         actions.addWidget(self.feedback_panel, 1)
-        self.deactivate_button = _button("撤销方案", self._remove_scheme, "quiet")
+        self.deactivate_button = QPushButton("撤销配置")
+        self.deactivate_button.setObjectName("quiet")
         self.deactivate_button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.deactivate_button.setToolTip("预览撤销当前应用正在浏览的方案；不依赖管理器应用历史")
+        removal_menu = QMenu(self.deactivate_button)
+        self.current_remove_action = removal_menu.addAction("撤销当前准备方案", self._remove_scheme)
+        self.application_remove_action = removal_menu.addAction("撤销当前应用的所有方案", self._remove_application_all)
+        removal_menu.addSeparator()
+        self.batch_current_action = removal_menu.addAction("撤销已勾选应用的准备方案", self._remove_batch_current)
+        self.batch_all_action = removal_menu.addAction("撤销已勾选应用的所有方案", self._remove_batch_all)
+        self.deactivate_button.setMenu(removal_menu)
         actions.addWidget(self.deactivate_button)
         self.remove_more_button = QPushButton("应用撤销")
         self.remove_more_button.setObjectName("quiet")
@@ -1905,20 +2026,22 @@ class MainWindow(QMainWindow):
         application_menu = QMenu(self.remove_more_button)
         application_menu.addAction("撤销此应用所有方案", self._remove_application_all)
         self.remove_more_button.setMenu(application_menu)
-        actions.addWidget(self.remove_more_button)
+        self.remove_more_button.setParent(footer)
+        self.remove_more_button.hide()
         self.batch_remove_button = QPushButton("批量撤销")
         self.batch_remove_button.setObjectName("quiet")
         self.batch_remove_button.setToolTip("请先勾选应用，再选择当前方案或所有方案范围")
         batch_menu = QMenu(self.batch_remove_button)
-        self.batch_current_action = batch_menu.addAction(
+        batch_menu.addAction(
             "A  撤销已勾选应用的当前方案", self._remove_batch_current)
-        self.batch_all_action = batch_menu.addAction(
+        batch_menu.addAction(
             "B  撤销已勾选应用的所有方案", self._remove_batch_all)
         self.batch_remove_button.setMenu(batch_menu)
-        actions.addWidget(self.batch_remove_button)
+        self.batch_remove_button.setParent(footer)
+        self.batch_remove_button.hide()
         self.apply_button = _button("预览并应用", self._apply, "primary")
         self.apply_button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-        self.apply_button.setMinimumWidth(150)
+        self.apply_button.setMinimumWidth(130)
         self.apply_button.setIcon(icon("arrow_right", COLORS["surface"], 18))
         actions.addWidget(self.apply_button)
         return footer
@@ -1928,15 +2051,23 @@ class MainWindow(QMainWindow):
         self.app_list.blockSignals(True)
         self.app_list.clear()
         needle = self.search.text().casefold()
+        filter_mode = self.app_filter.currentData()
         for app in self.service.config.apps():
-            if needle not in app.casefold():
+            if needle not in app.casefold() and not any(needle in option.casefold() for option in self.service.config.options(app)):
+                continue
+            scheme = self._scheme_match(app, self._selected_option(app))
+            complete = (not self._detection_error and scheme is not None and scheme.available
+                        and scheme.status is SchemeStatus.COMPLETE)
+            if filter_mode == "complete" and not complete:
+                continue
+            if filter_mode == "needs" and complete:
                 continue
             item = QListWidgetItem(app)
             item.setData(Qt.ItemDataRole.UserRole, app)
             item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
             item.setCheckState(Qt.CheckState.Checked if app in self.checked_apps else Qt.CheckState.Unchecked)
             item.setToolTip(app + "\n勾选以批量应用；点击名称查看和修改方案")
-            item.setSizeHint(QSize(280, 56))
+            item.setSizeHint(QSize(246, 48))
             self.app_list.addItem(item)
             self.app_list.setItemWidget(item, ApplicationRow(self, item, app))
             if app == self.app_name:
@@ -1944,6 +2075,10 @@ class MainWindow(QMainWindow):
         self.app_list.blockSignals(False)
         self.search_empty.setVisible(self.app_list.count() == 0)
         self._update_apply_availability()
+
+    def _refresh_active_app_filter(self) -> None:
+        if self.app_filter.currentData() != "all":
+            self._render_apps()
 
     def _refresh_manifest_rows(self) -> None:
         for index in range(self.app_list.count()):
@@ -1970,6 +2105,7 @@ class MainWindow(QMainWindow):
             self._render_variables()
         self._refresh_manifest_rows()
         self._update_apply_availability()
+        self._refresh_active_app_filter()
 
     def _check_app(self, item: QListWidgetItem) -> None:
         app = item.data(Qt.ItemDataRole.UserRole)
@@ -2010,12 +2146,14 @@ class MainWindow(QMainWindow):
         self._scan_detection(force=False)
         self._render_variables()
         self._refresh_manifest_rows()
+        self._refresh_active_app_filter()
 
     def _select_app(self, app: str) -> None:
         self.app_name = app
         self.title.setText(app)
         self.title.setToolTip(app)
-        self.breadcrumb.setText("批量工作台")
+        self.breadcrumb.setText("工作台")
+        self.workspace_crumb.setText(f"应用 / {app}" if app else "应用")
         self.app_mark.setPixmap(app_icon(app, 18).pixmap(18, 18))
         self.option_combo.blockSignals(True)
         self.option_combo.clear()
@@ -2041,6 +2179,7 @@ class MainWindow(QMainWindow):
     def _render_variables(self, *_args) -> None:
         _clear(self.card_layout)
         self.cards = []
+        self.variable_empty = None
         if not self.app_name or not self.option_combo.currentText():
             self.variable_count.setText("")
             _set_match_label(self.match_status, "", "unconfigured", "")
@@ -2051,6 +2190,16 @@ class MainWindow(QMainWindow):
             self._update_apply_availability()
             return
         option = self.option_combo.currentText()
+        table_header = QFrame()
+        table_header.setObjectName("variableTableHeader")
+        columns = QGridLayout(table_header)
+        columns.setContentsMargins(8, 6, 8, 6)
+        _variable_columns(columns)
+        for index, text in enumerate(("变量名称", "作用域 / 模式", "值来源", "当前选定值", "检测", "操作")):
+            label = _label(text, "muted")
+            label.setWordWrap(False)
+            columns.addWidget(label, 0, index)
+        self.card_layout.addWidget(table_header)
         self._update_option_combo(self.option_combo, self.app_name)
         current_index = self.option_combo.currentIndex()
         self.option_combo.setToolTip(self.option_combo.itemData(
@@ -2060,9 +2209,9 @@ class MainWindow(QMainWindow):
         activation = self.service.state.snapshot().get("active", {}).get(self.app_name)
         active = activation.get("option") if isinstance(activation, dict) else activation
         _activation_badge(self.activation_badge, active)
-        self.active_label.setText("当前激活方案 " + active if active else "")
+        self.active_label.setText("当前激活方案 " + active if active else "当前激活方案：无")
         if hasattr(self.service.config, "default_option"):
-            separator = " · " if active else ""
+            separator = " · "
             self.active_label.setText(self.active_label.text() + separator + "默认方案 " + self.service.config.default_option(self.app_name))
         if hasattr(self.service, "initialization_warning"):
             warning = self.service.initialization_warning(self.app_name)
@@ -2079,6 +2228,10 @@ class MainWindow(QMainWindow):
             card.changed.connect(self._variable_changed)
             self.cards.append(card)
             self.card_layout.addWidget(card)
+            card.details_toggle.setChecked(self.windows_compare_button.isChecked())
+            card._toggle_details()
+        self.variable_empty = _label("", "muted")
+        self.card_layout.addWidget(self.variable_empty)
         previous = self.option_combo
         for card in self.cards:
             QWidget.setTabOrder(previous, card.selector)
@@ -2092,7 +2245,7 @@ class MainWindow(QMainWindow):
                 previous = card.reveal
         QWidget.setTabOrder(previous, self.deactivate_button)
         QWidget.setTabOrder(self.deactivate_button, self.apply_button)
-        self.variable_count.setText(str(len(self.cards)) + " 项")
+        self._filter_variable_rows()
         self._refresh_manifest_rows()
         self._update_apply_availability()
 
@@ -2106,9 +2259,10 @@ class MainWindow(QMainWindow):
         else:
             specs = [card.spec for card in self.cards]
             self.apply_button.setText("预览并应用")
-            self.batch_summary.setText("未勾选应用 · 应用当前方案")
+            self.batch_summary.setText("单应用 · " + _applications_text([(self.app_name, self.option_combo.currentText())]) if self.app_name else "请选择应用")
         self.manifest_count.setText(f"已选 {len(selected)} / {len(self.service.config.apps())}")
-        can_remove_batch = bool(selected) and not self._scanning
+        save_error = getattr(self.service, "configuration_save_error", "")
+        can_remove_batch = bool(selected) and not self._scanning and not save_error
         self.batch_remove_button.setEnabled(can_remove_batch)
         self.batch_current_action.setEnabled(can_remove_batch)
         self.batch_all_action.setEnabled(can_remove_batch)
@@ -2127,13 +2281,21 @@ class MainWindow(QMainWindow):
         else:
             self.blocking_reason.clear()
             self.blocking_reason.setToolTip("")
-        self.blocking_reason.setVisible(bool(self._invalid_specs))
+        if save_error:
+            self.blocking_reason.setText("配置文件与运行状态未同步；请重新加载配置。")
+            self.blocking_reason.setToolTip(str(save_error))
+        self.blocking_reason.setVisible(bool(self._invalid_specs) or bool(save_error))
         self.locate_error_button.setVisible(bool(self._invalid_specs))
         self.apply_button.setEnabled(
-            bool(specs) and not self._invalid_specs and not self._scanning)
-        can_remove_current = bool(self.app_name and self.option_combo.currentText()) and not self._scanning
-        self.deactivate_button.setEnabled(can_remove_current)
+            bool(specs) and not self._invalid_specs and not self._scanning and not save_error)
+        can_remove_current = bool(self.app_name and self.option_combo.currentText()) and not self._scanning and not save_error
+        self.deactivate_button.setEnabled(can_remove_current or can_remove_batch)
         self.remove_more_button.setEnabled(can_remove_current)
+        self.current_remove_action.setEnabled(can_remove_current)
+        self.application_remove_action.setEnabled(can_remove_current)
+        for card in self.cards:
+            card.remove_button.setEnabled(not save_error and not self._scanning
+                                          and card.remove_callback is not None and card._match_details()[2])
         self._refresh_manifest_rows()
 
     def _variable_changed(self) -> None:
@@ -2148,6 +2310,8 @@ class MainWindow(QMainWindow):
             text, tone, progress, tip = self._scheme_ui(self.app_name, option)
             _set_match_label(self.match_status, f"{text} {progress}".strip(), tone, tip)
         self._update_apply_availability()
+        self._filter_variable_rows()
+        self._refresh_active_app_filter()
 
     def _locate_invalid_input(self) -> None:
         if not self._invalid_specs:
@@ -2156,6 +2320,7 @@ class MainWindow(QMainWindow):
         visible_apps = {self.app_list.item(index).data(Qt.ItemDataRole.UserRole)
                         for index in range(self.app_list.count())}
         if spec.app not in visible_apps:
+            self.app_filter.setCurrentIndex(0)
             self.search.clear()
         self._navigate_app(spec.app)
         for card in self.cards:
@@ -2450,15 +2615,18 @@ class MainWindow(QMainWindow):
         self._show_config_editor("visual")
 
     def _show_config_editor(self, initial_tab: str) -> None:
+        before_digest = self.service.config.digest
         try:
             dialog = ConfigEditorDialog(self.config_path, self.service, self, initial_tab=initial_tab)
-            if dialog.exec() == QDialog.DialogCode.Accepted and dialog.saved:
+            accepted = dialog.exec() == QDialog.DialogCode.Accepted
+            if (accepted and dialog.saved) or self.service.config.digest != before_digest:
                 self._scan_detection(force=True)
                 self._render_apps()
                 apps = self.service.config.apps()
                 self._select_app(self.app_name if self.app_name in apps else (apps[0] if apps else ""))
                 self._refresh_pending()
-                self.feedback.setText("配置已校验并保存，正在检测…" if self._scanning else "配置已校验并保存")
+                self.feedback.setText(("配置已校验并保存" if dialog.saved else "已重新加载配置") + ("，正在检测…" if self._scanning else ""))
+            self._update_apply_availability()
         except Exception as exc:
             QMessageBox.warning(self, "配置编辑器无法打开", str(exc))
 

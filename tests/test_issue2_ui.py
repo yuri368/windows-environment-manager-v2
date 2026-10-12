@@ -86,7 +86,8 @@ class Issue2UiTests(unittest.TestCase):
         window, _, store = self.make_window(
             configuration, [raw("HOME", "ok"), raw("Path", "BASE;A")])
         app_row = self.row(window, "App")
-        self.assertIn("完全匹配 2/2", app_row.match_label.text())
+        self.assertEqual("2/2", app_row.match_label.text())
+        self.assertIn("完全匹配 2/2", app_row.match_label.toolTip())
         self.assertEqual(window.option_combo.currentText(), "Full")
         self.assertEqual(window.option_combo.currentData(Qt.ItemDataRole.UserRole), "Full")
         statuses = {}
@@ -112,7 +113,7 @@ class Issue2UiTests(unittest.TestCase):
         service.state.commit(snapshot["revision"], snapshot, operation)
         window._render_variables()
         self.assertIn("已激活", window.activation_badge.text())
-        self.assertIn("部分匹配", window.match_status.text())
+        self.assertIn("未匹配 0/1", window.match_status.text())
         window.option_combo.setCurrentText("Two")
         self.assertIn("完全匹配", window.match_status.text())
         self.assertIn("One", window.active_label.text())
@@ -268,7 +269,7 @@ class Issue2UiTests(unittest.TestCase):
             window._remove_scheme()
         self.assertEqual(store.read("User", "Path").value, "BASE")
         self.assertEqual(len(store.writes), 1)
-        self.assertIn("部分匹配", window.match_status.text())
+        self.assertIn("未匹配 0/1", window.match_status.text())
         self.assertEqual(service.state.history()[0]["action"], "remove")
 
     def test_all_keep_shared_still_executes_ordinary_removal(self):
