@@ -9,16 +9,17 @@ from pathlib import Path
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QPoint
 from PySide6.QtGui import QPalette
-from PySide6.QtWidgets import QApplication, QStyle, QStyleOptionComboBox
+from PySide6.QtTest import QTest
+from PySide6.QtWidgets import QApplication, QStyle, QStyleOptionComboBox, QWidget
 
 from envmanager.config import parse_config
 from envmanager.persistence import StateRepository
 from envmanager.service import EnvironmentService
 from envmanager.store import MemoryStore
 from envmanager.theme import COLORS
-from envmanager.ui import MainWindow, OPTION_STATUS_ROLE, OptionStatusDelegate
+from envmanager.ui import MainWindow, OPTION_STATUS_ROLE, OptionStatusDelegate, OptionComboBox
 
 
 CONFIG = '''
@@ -48,7 +49,18 @@ class MainStatusOptionTests(unittest.TestCase):
         self.addCleanup(self.window.deleteLater)
         self.addCleanup(self.window.close)
         self.window.resize(850, 560)
-        self.window.show()
+        self.show_window(self.window)
+
+    def show_window(self, window):
+        if self.app.platformName() == "windows":
+            # Native popup tests need the disposable fixture in front; a
+            # visible but occluded window can lose focus and dismiss a popup.
+            window.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)
+        window.show()
+        if self.app.platformName() == "windows":
+            window.raise_()
+            window.activateWindow()
+            QTest.qWait(100)
         self.app.processEvents()
 
     def row(self, app):
@@ -74,6 +86,58 @@ class MainStatusOptionTests(unittest.TestCase):
             self.assertTrue(view.viewport().rect().contains(rect), (index, rect, view.viewport().rect()))
         self.assertEqual(view.verticalScrollBar().maximum(), 0)
         self.assertEqual(self.store.writes, [])
+
+    def test_both_popup_containers_have_one_surface_and_no_extra_row_space(self):
+        for combo in (self.row("Java").option_combo, self.window.option_combo):
+            with self.subTest(combo=combo.objectName()):
+                view = self.popup(combo)
+                popup = view.window()
+                # These are the visible bounds, including the real window frame.
+                self.assertEqual(popup.frameGeometry(), popup.geometry())
+                self.assertEqual(view.geometry(), popup.rect())
+                self.assertEqual(view.viewport().height(),
+                                 sum(view.sizeHintForRow(i) for i in range(combo.count())))
+                self.assertEqual(popup.y(), combo.mapToGlobal(QPoint(0, combo.height() + 4)).y())
+                combo.hidePopup()
+
+    def test_popup_keyboard_selection_and_escape_preserve_real_scheme_state(self):
+        for combo in (self.row("Java").option_combo, self.window.option_combo):
+            self.window.option_combo.setCurrentText("JDK17")
+            view = self.popup(combo)
+            QTest.keyClick(view, Qt.Key.Key_Down)
+            QTest.keyClick(view, Qt.Key.Key_Return)
+            self.app.processEvents()
+            self.assertFalse(view.isVisible())
+            self.assertEqual(self.service.selected_option("Java"), "JDK21")
+            view = self.popup(combo)
+            QTest.keyClick(view, Qt.Key.Key_Up)
+            QTest.keyClick(view, Qt.Key.Key_Escape)
+            self.app.processEvents()
+            self.assertFalse(view.isVisible())
+            self.assertEqual(self.service.selected_option("Java"), "JDK21")
+        self.assertEqual(self.store.writes, [])
+
+    def test_popup_near_bottom_right_opens_above_without_clipping(self):
+        host = QWidget()
+        self.addCleanup(host.deleteLater)
+        self.addCleanup(host.close)
+        host.resize(210, 60)
+        combo = OptionComboBox(host)
+        combo.setGeometry(10, 20, 190, 30)
+        combo.addItems(["3.9.11", "3.3.3"])
+        combo.setOptionStatus(0, None, default=True, active=True,
+                              presentation=("完全匹配", "complete", "2/2", ""))
+        screen = host.screen().availableGeometry()
+        host.move(screen.right() - host.width() - 8, screen.bottom() - host.height() - 8)
+        self.show_window(host)
+        view = self.popup(combo)
+        popup = view.window()
+        self.assertTrue(screen.contains(popup.frameGeometry()))
+        self.assertLess(popup.geometry().right(), screen.right())
+        self.assertEqual(popup.y() + popup.height() + 4, combo.mapToGlobal(QPoint(0, 0)).y())
+        for i in range(combo.count()):
+            self.assertTrue(view.viewport().rect().contains(view.visualRect(combo.model().index(i, 0))),
+                            (view.geometry(), view.viewport().rect(), view.visualRect(combo.model().index(i, 0))))
 
     def test_detail_uses_plain_text_and_styled_field_width_at_narrow_size(self):
         self.window._select_app("Python")
