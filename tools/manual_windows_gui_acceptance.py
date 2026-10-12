@@ -40,6 +40,8 @@ MAIN_TITLE = "环境变量方案管理器"
 CONFLICT_TITLE = "共享环境变量冲突"
 SPECIAL_VALUE = "  A;B\t  "
 UIA_ACTIONS = frozenset({"snapshot", "expand", "collapse", "remove_preview", "cancel", "scroll_down", "scroll_up"})
+SCROLLBAR_ID = "QApplication.SharedConflictDialog.QScrollArea.qt_scrollarea_vcontainer.QScrollBar"
+VIEWPORT_ID = "QApplication.SharedConflictDialog.QScrollArea.qt_scrollarea_viewport"
 
 
 class NativeWindows(BaseNativeWindows):
@@ -48,10 +50,18 @@ class NativeWindows(BaseNativeWindows):
         super().__init__()
         self.u.IsChild.argtypes, self.u.IsChild.restype = [wintypes.HWND, wintypes.HWND], wintypes.BOOL
         self.u.GetAncestor.argtypes, self.u.GetAncestor.restype = [wintypes.HWND, wintypes.UINT], wintypes.HWND
+        self.u.GetClientRect.argtypes, self.u.GetClientRect.restype = [wintypes.HWND, ctypes.POINTER(wintypes.RECT)], wintypes.BOOL
+        self.u.ClientToScreen.argtypes, self.u.ClientToScreen.restype = [wintypes.HWND, ctypes.POINTER(wintypes.POINT)], wintypes.BOOL
 
     def popup_window(self, window, exe, launch_after):
         root = {"pid": window["pid"], "hwnd": window["popup_root_hwnd"]}
         checked_window(self, root, exe, launch_after)
+        # Qt popups can have no Win32 owner/child relation. Confirm their actual
+        # membership in a freshly read, verified main-window UIA logical tree.
+        fresh = dropdown_popup(root, self.scope_snapshot(root))
+        require(fresh["hwnd"] == window["hwnd"] and
+                fresh["popup_automation_id"] == window["popup_automation_id"],
+                "popup is no longer in the verified main UIA tree")
         hwnd = window["hwnd"]
         pid = wintypes.DWORD()
         self.u.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
@@ -60,17 +70,32 @@ class NativeWindows(BaseNativeWindows):
         require(process and same_executable(process["exe"], exe) and
                 process["process_started"] >= launch_after and process["token_elevated"],
                 "popup process identity/token changed")
-        require(self.u.IsChild(root["hwnd"], hwnd) or self.u.GetAncestor(hwnd, 3) == root["hwnd"],
-                "popup is not a native child or owned popup of the verified main window")
         require(self.u.IsWindowVisible(hwnd) and not self.u.IsIconic(hwnd), "popup is not visible")
         with self.physical_coordinates():
             rect = wintypes.RECT()
             require(bool(self.u.GetWindowRect(hwnd, ctypes.byref(rect))), "popup GetWindowRect failed")
+            client = wintypes.RECT()
+            require(bool(self.u.GetClientRect(hwnd, ctypes.byref(client))), "popup GetClientRect failed")
+            first, last = wintypes.POINT(client.left, client.top), wintypes.POINT(client.right, client.bottom)
+            require(bool(self.u.ClientToScreen(hwnd, ctypes.byref(first))) and
+                    bool(self.u.ClientToScreen(hwnd, ctypes.byref(last))), "popup ClientToScreen failed")
         native_rect = [rect.left, rect.top, rect.right, rect.bottom]
-        require(popup_rect_matches(native_rect, window["popup_uia_rect"]),
-                "popup native frame differs from its verified UIA bounds")
-        return {**process, **window, "rect": native_rect, "title": "",
-                "nativeIsWindowVisible": True, "minimized": False, "coordinate_units": "physical_pixels"}
+        client_rect = [first.x, first.y, last.x, last.y]
+        geometry = validate_popup_container(fresh, self.scope_snapshot({"pid": pid.value, "hwnd": hwnd}),
+                                            native_rect, client_rect)
+        return {**process, **window, **fresh, "rect": native_rect, "title": "",
+                "nativeIsWindowVisible": True, "minimized": False, "coordinate_units": "physical_pixels",
+                "popup_geometry": geometry}
+
+    def scope_snapshot(self, root):
+        completed = subprocess.run(
+            ["powershell.exe", "-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
+             "-Command", "& {" + UIA_SCRIPT + "} -RootHwnd " + str(root["hwnd"]) +
+             " -ExpectedPid " + str(root["pid"]) + " -Action snapshot"],
+            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=35,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        require(completed.returncode == 0, "fresh main UIA snapshot failed")
+        return json.loads(completed.stdout.lstrip("\ufeff").strip())
 
 
 def popup_rect_matches(native_rect, uia_rect):
@@ -85,22 +110,79 @@ def popup_rect_matches(native_rect, uia_rect):
             all(abs(native - uia) <= 4 for native, uia in zip(native_rect, edges)))
 
 
+def validate_popup_container(popup, payload, native_rect, client_rect):
+    require(payload.get("pid") == popup["pid"] and payload.get("root_hwnd") == popup["hwnd"],
+            "direct popup UIA target mismatch")
+    nodes = payload.get("nodes", [])
+    roots = [node for node in nodes if node.get("type") == "ControlType.Window"]
+    require(len(roots) == 1, "direct popup UIA container is not unique")
+    container = roots[0]
+    require(container.get("class_name") == "QComboBoxPrivateContainer" and
+            container.get("automation_id") == "QApplication.QComboBoxPrivateContainer" and
+            container.get("hwnd") == popup["hwnd"] and container.get("pid") == popup["pid"] and
+            container.get("enabled", False) and not container.get("offscreen", True),
+            "direct popup UIA root is not the expected visible Qt container")
+    require(popup_rect_matches(client_rect, container.get("rect", [])),
+            "popup UIA container differs from native client bounds")
+    def inside(rect, bounds):
+        if len(rect) != 4 or len(bounds) != 4:
+            return False
+        x, y, width, height = rect
+        left, top, right, bottom = bounds
+        return width > 0 and height > 0 and left <= x <= x + width <= right and top <= y <= y + height <= bottom
+    require(inside([client_rect[0], client_rect[1], client_rect[2] - client_rect[0],
+                    client_rect[3] - client_rect[1]], native_rect), "popup native frame does not contain client")
+    lists = [node for node in nodes if node.get("type") == "ControlType.List"]
+    require(len(lists) == 1, "direct popup UIA list is not unique")
+    listing = lists[0]
+    require(listing.get("hwnd") == popup["hwnd"] and listing.get("pid") == popup["pid"] and
+            listing.get("automation_id") == popup["popup_automation_id"] and
+            listing.get("rect") == popup["popup_uia_rect"] and listing.get("enabled", False) and
+            not listing.get("offscreen", True) and inside(listing.get("rect", []), client_rect),
+            "direct popup list differs from fresh main UIA tree or lies outside native client")
+    x, y, width, height = listing["rect"]
+    list_bounds = [x, y, x + width, y + height]
+    items = [node for node in nodes if node.get("type") == "ControlType.ListItem"]
+    require(len(items) == 2 and all(node.get("pid") == popup["pid"] and
+            node.get("automation_id") == popup["popup_automation_id"] and
+            node.get("enabled", False) and not node.get("offscreen", True) and
+            inside(node.get("rect", []), list_bounds) and inside(node.get("rect", []), client_rect)
+            for node in items), "popup options are not both visible inside the verified list/client")
+    require(sum(node.get("name", "").startswith("Default，") for node in items) == 1 and
+            sum(node.get("name", "").startswith("Alternate_Long_Public_Option_Label，") for node in items) == 1,
+            "popup does not expose both complete QA option labels")
+    return {"native_frame": native_rect, "client_screen": client_rect,
+            "container_uia_rect": container["rect"], "list_uia_rect": listing["rect"],
+            "container_identity_verified": True, "option_bounds_verified": True}
+
+
 def dropdown_popup(main, payload):
     require(payload.get("pid") == main["pid"] and payload.get("root_hwnd") == main["hwnd"],
             "dropdown snapshot target mismatch")
+    boxes = [node for node in payload.get("nodes", [])
+             if node.get("name") == "当前详情应用方案" and node.get("type") == "ControlType.ComboBox"]
+    require(len(boxes) == 1 and boxes[0].get("pid") == main["pid"] and
+            boxes[0].get("expanded") == "Expanded" and not boxes[0].get("offscreen", True) and
+            boxes[0].get("enabled", False), "fresh UIA scheme ComboBox is not uniquely expanded")
+    box_id = boxes[0].get("automation_id", "")
+    require(box_id.startswith("QApplication.MainWindow.") and box_id.endswith(".detailOption"),
+            "scheme ComboBox has unexpected UIA identity")
     nodes = [node for node in payload.get("nodes", [])
-             if node.get("pid") == main["pid"] and node.get("type") == "ControlType.List"
+             if node.get("type") == "ControlType.List"
              and node.get("automation_id", "").endswith(".detailOption.optionPopup")
-             and not node.get("offscreen", True) and node.get("enabled", False)]
+             ]
     require(len(nodes) == 1, "UIA did not expose one visible scheme popup")
     node = nodes[0]
+    require(node.get("pid") == main["pid"] and node.get("automation_id") == box_id + ".optionPopup"
+            and not node.get("offscreen", True) and node.get("enabled", False),
+            "UIA scheme popup is not the expanded main ComboBox's visible list")
     require(type(node.get("hwnd")) is int and node["hwnd"] > 0 and node["hwnd"] != main["hwnd"],
             "UIA scheme popup has no independent native HWND")
     rect = node.get("rect", [])
     require(len(rect) == 4 and all(type(value) in (int, float) for value in rect) and
             rect[2] > 0 and rect[3] > 0, "UIA scheme popup has invalid bounds")
     return {"pid": main["pid"], "hwnd": node["hwnd"], "popup_root_hwnd": main["hwnd"],
-            "popup_uia_rect": rect}
+            "popup_uia_rect": rect, "popup_automation_id": node["automation_id"]}
 
 
 def names_for(test_id):
@@ -156,7 +238,8 @@ $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName UIAutomationClient
 Add-Type -AssemblyName UIAutomationTypes
 $root = [System.Windows.Automation.AutomationElement]::FromHandle([IntPtr]::new($RootHwnd))
-if ($null -eq $root -or $root.Current.ProcessId -ne $ExpectedPid) { throw 'UIA root PID mismatch' }
+if ($null -eq $root -or $root.Current.ProcessId -ne $ExpectedPid -or
+    $root.Current.NativeWindowHandle -ne $RootHwnd) { throw 'UIA root PID/HWND mismatch' }
 function Elements {
     $result = @($root)
     $children = $root.FindAll([System.Windows.Automation.TreeScope]::Descendants,
@@ -178,6 +261,18 @@ function Pattern($Element, $Id) {
     if (-not $Element.TryGetCurrentPattern($Id, [ref]$pattern)) { throw 'Required UIA pattern not supported' }
     return $pattern
 }
+function Scroll-Conflict([bool]$Down) {
+    if ($root.Current.AutomationId -ne 'QApplication.SharedConflictDialog') { throw 'Not the scoped conflict dialog' }
+    $bars = @(Elements | Where-Object {
+        $_.Current.ControlType -eq [System.Windows.Automation.ControlType]::ScrollBar -and
+        $_.Current.AutomationId -eq 'QApplication.SharedConflictDialog.QScrollArea.qt_scrollarea_vcontainer.QScrollBar'
+    })
+    if ($bars.Count -ne 1) { throw 'UIA expected one scoped vertical conflict scrollbar' }
+    if ($bars[0].Current.IsOffscreen -or -not $bars[0].Current.IsEnabled) { throw 'Conflict scrollbar unavailable' }
+    $range = Pattern $bars[0] ([System.Windows.Automation.RangeValuePattern]::Pattern)
+    if ($range.Current.IsReadOnly -or $range.Current.Maximum -le $range.Current.Minimum) { throw 'Conflict scrollbar has no writable range' }
+    if ($Down) { $range.SetValue($range.Current.Maximum) } else { $range.SetValue($range.Current.Minimum) }
+}
 switch ($Action) {
     'snapshot' { }
     'expand' {
@@ -196,26 +291,8 @@ switch ($Action) {
         $button = Find-One '取消整个操作' ([System.Windows.Automation.ControlType]::Button)
         (Pattern $button ([System.Windows.Automation.InvokePattern]::Pattern)).Invoke()
     }
-    'scroll_down' {
-        $scrollers = @(Elements | Where-Object {
-            $pattern = $null
-            $_.TryGetCurrentPattern([System.Windows.Automation.ScrollPattern]::Pattern, [ref]$pattern) -and
-            $pattern.Current.VerticallyScrollable
-        })
-        if ($scrollers.Count -ne 1) { throw 'UIA expected one vertically scrollable conflict area' }
-        (Pattern $scrollers[0] ([System.Windows.Automation.ScrollPattern]::Pattern)).Scroll(
-            [System.Windows.Automation.ScrollAmount]::NoAmount, [System.Windows.Automation.ScrollAmount]::LargeIncrement)
-    }
-    'scroll_up' {
-        $scrollers = @(Elements | Where-Object {
-            $pattern = $null
-            $_.TryGetCurrentPattern([System.Windows.Automation.ScrollPattern]::Pattern, [ref]$pattern) -and
-            $pattern.Current.VerticallyScrollable
-        })
-        if ($scrollers.Count -ne 1) { throw 'UIA expected one vertically scrollable conflict area' }
-        (Pattern $scrollers[0] ([System.Windows.Automation.ScrollPattern]::Pattern)).SetScrollPercent(
-            [System.Windows.Automation.ScrollPattern]::NoScroll, 0)
-    }
+    'scroll_down' { Scroll-Conflict $true }
+    'scroll_up' { Scroll-Conflict $false }
     default { throw 'Unsupported UIA acceptance action' }
 }
 Start-Sleep -Milliseconds 250
@@ -234,6 +311,7 @@ foreach ($element in (Elements)) {
         name=$current.Name; type=$current.ControlType.ProgrammaticName;
         automation_id=$current.AutomationId; class_name=$current.ClassName;
         pid=$current.ProcessId; hwnd=$current.NativeWindowHandle;
+        runtime_id=@($element.GetRuntimeId());
         offscreen=$current.IsOffscreen; enabled=$current.IsEnabled;
         help=$current.HelpText; rect=@($box.X,$box.Y,$box.Width,$box.Height);
         patterns=@($element.GetSupportedPatterns() | ForEach-Object { $_.ProgrammaticName })
@@ -255,6 +333,13 @@ foreach ($element in (Elements)) {
         $node.vertical_scrollable = $pattern.Current.VerticallyScrollable
         $node.vertical_percent = $pattern.Current.VerticalScrollPercent
         $node.vertical_view_percent = $pattern.Current.VerticalViewSize
+    }
+    $pattern = $null
+    if ($element.TryGetCurrentPattern([System.Windows.Automation.RangeValuePattern]::Pattern,[ref]$pattern)) {
+        $node.range_min = $pattern.Current.Minimum
+        $node.range_max = $pattern.Current.Maximum
+        $node.range_value = $pattern.Current.Value
+        $node.range_read_only = $pattern.Current.IsReadOnly
     }
     $nodes += [PSCustomObject]$node
 }
@@ -321,13 +406,20 @@ def validate_conflict_snapshot(payload, names, frame_rect=None):
                node.get("value") in ("保留", "保留完整值") or \
                "当前决定：保留" in node.get("help", "")
     keep = len(decisions) == 3 and all(is_keep(node) for node in decisions)
-    def node_inside(node):
+    viewports = [node for node in nodes if node.get("automation_id") == VIEWPORT_ID]
+    require(len(viewports) <= 1, "UIA conflict viewport is not unique")
+    viewport_rect = None
+    if viewports:
+        x, y, width, height = viewports[0]["rect"]
+        require(width > 0 and height > 0, "UIA conflict viewport has invalid bounds")
+        viewport_rect = [x, y, x + width, y + height]
+    def node_inside(node, bounds=frame_rect):
         if node.get("offscreen", True):
             return False
-        if frame_rect is None:
+        if bounds is None:
             return True
         x, y, width, height = node.get("rect", [0, 0, 0, 0])
-        left, top, right, bottom = frame_rect
+        left, top, right, bottom = bounds
         return width > 0 and height > 0 and left <= x <= x + width <= right and top <= y <= y + height <= bottom
     def visible_inside(name):
         found = [node for node in nodes if node.get("name") == name and node.get("type") == "ControlType.Button"]
@@ -337,18 +429,57 @@ def validate_conflict_snapshot(payload, names, frame_rect=None):
                any(name in (node.get("name", "") + node.get("help", "")) and
                    ("普通变量" in (node.get("name", "") + node.get("help", "")) or
                     "特殊完整值" in (node.get("name", "") + node.get("help", ""))) for name in names.values())]
-    fully_visible = len(content) >= 5 and all(node_inside(node) for node in content)
-    scrollable = any(node.get("vertical_scrollable", False) for node in nodes)
+    content_bounds = viewport_rect or frame_rect
+    fully_visible = len(content) >= 5 and all(node_inside(node, content_bounds) for node in content)
+    bars = [node for node in nodes if node.get("type") == "ControlType.ScrollBar" and
+            node.get("automation_id") == SCROLLBAR_ID]
+    require(len(bars) <= 1, "UIA conflict vertical scrollbar is not unique")
+    bar = bars[0] if bars else {}
+    numbers = [bar.get(key) for key in ("range_min", "range_max", "range_value")]
+    range_valid = (all(type(value) in (int, float) for value in numbers) and
+                   numbers[0] <= numbers[2] <= numbers[1])
+    scrollable = (range_valid and numbers[1] > numbers[0] and bar.get("range_read_only") is False
+                  and bar.get("enabled", False) and node_inside(bar))
+    content_ids = [json.dumps(node.get("runtime_id")) for node in content]
+    identities_verified = bool(content_ids) and all(node.get("runtime_id") for node in content) and \
+                          len(set(content_ids)) == len(content_ids)
+    visible_ids = [identity for identity, node in zip(content_ids, content) if node_inside(node, content_bounds)]
     return {"group_headers": groups, "grouping_verified": all(groups.values()),
             "decision_count": len(decisions), "default_keep_verified": keep,
-            "scroll_provider_exposed": any("vertical_scrollable" in node for node in nodes),
+            "scroll_provider_exposed": range_valid,
             "vertical_scrollable": scrollable,
             "content_fully_visible": fully_visible,
             "scroll_not_needed": not scrollable and fully_visible,
-            "scroll_range": 0 if not scrollable and fully_visible else None,
+            "scroll_range": numbers[1] - numbers[0] if range_valid else (0 if fully_visible else None),
+            "scroll_min": bar.get("range_min"), "scroll_max": bar.get("range_max"),
+            "scroll_value": bar.get("range_value"), "viewport_rect": viewport_rect,
+            "content_ids": content_ids, "visible_content_ids": visible_ids,
+            "content_identities_verified": identities_verified,
             "summary_keep_three": "共享项目：保留 3 · 选择撤销 0" in combined,
             "cancel_visible_inside_frame": visible_inside("取消整个操作"),
             "preview_visible_inside_frame": visible_inside("继续预览")}
+
+
+def validate_scroll_sequence(before, down, up):
+    require(all(item["vertical_scrollable"] and item["content_identities_verified"]
+                for item in (before, down, up)), "conflict scroll/identity evidence incomplete")
+    require(all(item["scroll_min"] == before["scroll_min"] and item["scroll_max"] == before["scroll_max"]
+                for item in (down, up)), "conflict scroll range changed")
+    require(down["scroll_value"] == before["scroll_max"] and up["scroll_value"] == before["scroll_min"]
+            and down["scroll_value"] > before["scroll_value"] and up["scroll_value"] < down["scroll_value"],
+            "conflict scrollbar did not move to maximum and back to minimum")
+    required = set(before["content_ids"])
+    require(all(set(item["content_ids"]) == required for item in (down, up)),
+            "conflict content identity changed during scrolling")
+    visible = set().union(*(item["visible_content_ids"] for item in (before, down, up)))
+    require(required <= visible, "conflict content was not all visible across scroll positions")
+    require(set(down["visible_content_ids"]) != set(before["visible_content_ids"]),
+            "conflict content visibility did not change with scrolling")
+    require(all(item["cancel_visible_inside_frame"] and item["preview_visible_inside_frame"] and
+                item["grouping_verified"] and item["default_keep_verified"] for item in (down, up)),
+            "conflict controls/default decisions changed during scrolling")
+    return {"scroll_movement_verified": True, "content_coverage_verified": True,
+            "content_count": len(required)}
 
 
 def capture(native, window, exe, launch_after, evidence, filename):
@@ -456,9 +587,14 @@ def installed_gui(args, names, config, evidence):
         require(validation["vertical_scrollable"] or validation["content_fully_visible"],
                 "conflict content is clipped and UIA exposes no usable scroll pattern")
         if validation["vertical_scrollable"]:
-            uia(native, dialog, args.exe, launch_after, evidence, "scroll_down", "conflict-scroll-down")
-            capture(native, dialog, args.exe, launch_after, evidence, "installed-shared-conflict-scrolled.png")
-            uia(native, dialog, args.exe, launch_after, evidence, "scroll_up", "conflict-scroll-up")
+            down = uia(native, dialog, args.exe, launch_after, evidence, "scroll_down", "conflict-scroll-down")
+            down_frame = capture(native, dialog, args.exe, launch_after, evidence, "installed-shared-conflict-scrolled.png")
+            up = uia(native, dialog, args.exe, launch_after, evidence, "scroll_up", "conflict-scroll-up")
+            up_frame = capture(native, dialog, args.exe, launch_after, evidence, "installed-shared-conflict-scroll-restored.png")
+            down_validation = validate_conflict_snapshot(down, names, down_frame["rect"])
+            up_validation = validate_conflict_snapshot(up, names, up_frame["rect"])
+            details["conflict_scroll_validation"] = validate_scroll_sequence(validation, down_validation, up_validation)
+            details["conflict_scroll_positions"] = {"down": down_validation, "up": up_validation}
         evidence.phase("installed conflict grouping, default KEEP and content visibility verified", validation=validation)
         uia(native, dialog, args.exe, launch_after, evidence, "cancel", "conflict-cancel")
         dialog = None
