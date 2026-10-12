@@ -53,8 +53,10 @@ function Start-Process {
                   if line.startswith("START_PROCESS=")]
         self.assertEqual(len(starts), 1, result.stdout + result.stderr)
         launch = json.loads(starts[0])
-        self.assertEqual(Path(launch["file"]), project / ".venv" / "Scripts" / "pythonw.exe")
-        self.assertEqual(Path(launch["cwd"]), project)
+        # PowerShell may expand a TEMP 8.3 alias to its long directory name.
+        self.assertTrue(Path(launch["file"]).samefile(project / ".venv" / "Scripts" / "pythonw.exe"),
+                        launch["file"])
+        self.assertTrue(Path(launch["cwd"]).samefile(project), launch["cwd"])
         self.assertEqual(launch["style"], "Hidden")
         return launch["args"]
 
@@ -156,8 +158,18 @@ function Start-Process {
                                    + " " + " ".join(arguments), cwd=caller,
                                    capture_output=True, text=True, check=True, timeout=20)
             decoded = json.loads(probe.stdout)
-            self.assertEqual(decoded[:3], ["--demo", "--config", str(config)])
-            self.assertEqual(decoded[3:], ["--state-dir", str(state) + "\\"])
+            self.assertEqual(len(decoded), 5)
+            self.assertEqual(decoded[:2], ["--demo", "--config"])
+            self.assertEqual(decoded[3], "--state-dir")
+            # Compare the existing caller directory by identity, while keeping
+            # the decoded Chinese/space/quote names and trailing slash exact.
+            for actual, expected in ((decoded[2], config), (decoded[4], state)):
+                actual_path = Path(actual)
+                self.assertTrue(actual_path.is_absolute(), actual)
+                self.assertTrue(actual_path.parent.samefile(caller), actual)
+                self.assertEqual(actual_path.name, expected.name)
+            self.assertTrue(decoded[2].endswith(config.name), decoded[2])
+            self.assertTrue(decoded[4].endswith(state.name + "\\"), decoded[4])
 
     def test_check_preserves_relative_configuration_and_cli_exit_code(self):
         with tempfile.TemporaryDirectory(prefix="只读校验 中文 (空格)' ") as directory:
