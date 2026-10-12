@@ -20,6 +20,8 @@
 
 新增 GUI 人工验收纯边界测试只使用 MemoryStore、mock 和内置 UIA 程序集检查，不执行 UAC、宿主环境变量写入或真实窗口操作。
 
+本机完整发现测试实际执行 531 项，667.304 秒，`OK`，没有跳过；该次运行后新增的四项下拉工具边界测试与既有两套验收工具测试联跑，共 21 项通过。启动器 7 项测试在正常路径及真实 8.3 别名下分别通过，候选配置编辑器完整模块 47 项通过。
+
 完整测试命令为：
 
 ```text
@@ -31,6 +33,15 @@ python -m unittest discover -s tests -v
 新增 `.github/workflows/tests.yml`，在 Ubuntu/Windows Python 3.13 上创建项目 `.venv`，按固定 requirements 安装依赖，执行完整发现命令。Qt GUI 使用 offscreen；原生窗口可见性测试单独使用 Windows 平台进程。工作流上传完整日志、退出码和环境信息，在 Job summary 中逐条列出平台跳过原因。静态 actionlint 校验通过，远端是否通过以对应提交的实际 Actions 结果为准。
 
 注册表自动化测试仅使用 `HKCU/Software/EnvironmentManagerV2Tests/<UUID>`，两个逻辑作用域均映射该隔离子树。真实 Environment/HKLM、UAC、安装与物理高 DPI 测试仍属于独立人工验收。详见 [CI 文档](ci.md)。
+
+最终代码提交 `07a08b0a9bb36ac1882f40bb39c93e8da0223a78` 的 [PR 双平台 Actions 运行](https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38198841119) 实际成功，同提交的 push 运行也成功：
+
+| 平台 / Python | 测试总数 | 通过 | 跳过 | 失败或错误 | unittest 耗时 |
+|---|---:|---:|---:|---:|---:|
+| [Windows / 3.13](https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38198841119/job/114647467112) | 535 | 535 | 0 | 0 | 801.010 秒 |
+| [Ubuntu / 3.13](https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38198841119/job/114647467315) | 535 | 518 | 17 | 0 | 145.797 秒 |
+
+Ubuntu 的 17 项跳过分别为：原生启动窗口标志 1 项、Windows PowerShell 启动器 7 项、内置 UIA 程序集只读检查 1 项、Windows ctypes 权限边界 5 项、隔离注册表适配 3 项。这些项目在 Windows runner 均实际执行并通过。每条原始跳过原因、完整日志和运行环境见对应 Job summary 与 `test-results-*` artifact。
 
 ## 正式安装版高 DPI 验收方法
 
