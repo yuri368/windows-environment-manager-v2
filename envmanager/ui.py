@@ -896,19 +896,22 @@ class CleanupSettingsDialog(QDialog):
 class OldSchemeDialog(QDialog):
     """Make ambiguous or partial old-scheme removal an explicit user choice."""
 
-    def __init__(self, app: str, options, *, required: bool, parent=None):
+    def __init__(self, app: str, options, *, required: bool, new_option: str = "", parent=None):
         super().__init__(parent)
         self.required = required
         self.setWindowTitle("选择待撤销旧方案")
-        self.resize(520, 390)
+        self.resize(560, 280)
         outer = QVBoxLayout(self)
         outer.setContentsMargins(20, 18, 20, 18)
         outer.setSpacing(10)
         outer.addWidget(_label("选择待撤销旧方案", "title"))
+        if new_option:
+            outer.addWidget(_label(f"准备应用：{app} / {new_option}", "selectionSummary"))
         explanation = ("检测到多个完全匹配方案，请明确选择本次作为旧方案撤销的范围。"
                        if required else
-                       "检测到部分匹配方案。仅勾选后才会撤销其中实际匹配的内容；不勾选可只应用新方案。")
+                       "检测到以下旧方案仍有匹配内容。勾选可将这些内容纳入撤销预览；不勾选则保留。")
         outer.addWidget(_label(f"{app}：{explanation}", "muted"))
+        outer.addWidget(_label("继续后查看变更预览，确认前不会写入环境变量。", "muted"))
         self.list = QListWidget()
         self.list.setAccessibleName(f"{app} 待撤销旧方案候选")
         for option, status in options:
@@ -924,12 +927,19 @@ class OldSchemeDialog(QDialog):
         outer.addWidget(self.validation)
         self.buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
-        self.buttons.button(QDialogButtonBox.StandardButton.Ok).setText("继续")
+        self.buttons.button(QDialogButtonBox.StandardButton.Ok).setText("继续预览")
         self.buttons.button(QDialogButtonBox.StandardButton.Ok).setObjectName("primary")
         self.buttons.button(QDialogButtonBox.StandardButton.Cancel).setText("取消")
         self.buttons.accepted.connect(self.accept)
         self.buttons.rejected.connect(self.reject)
         outer.addWidget(self.buttons)
+        # Keep the compact dialog from squeezing wrapped application/option
+        # names when there are many candidates. The list scrolls instead.
+        self.setMinimumWidth(560)
+        self.ensurePolished()
+        for label in self.findChildren(QLabel):
+            if label.text():
+                label.setMinimumHeight(label.heightForWidth(self.width() - 40))
         self._update_accept()
 
     def selected_options(self) -> tuple[str, ...]:
@@ -2465,8 +2475,8 @@ class MainWindow(QMainWindow):
         except Exception as exc:
             self._show_operation_error(exc)
 
-    def _choose_old_schemes(self, app: str, options, *, required: bool):
-        dialog = OldSchemeDialog(app, options, required=required, parent=self)
+    def _choose_old_schemes(self, app: str, options, *, required: bool, new_option: str = ""):
+        dialog = OldSchemeDialog(app, options, required=required, new_option=new_option, parent=self)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return None
         return dialog.selected_options()
@@ -2491,14 +2501,14 @@ class MainWindow(QMainWindow):
                 draft = self.service.prepare_scheme_switch(app, new_option)
             except AmbiguousOldSchemeError as exc:
                 options = tuple((option, "complete") for option in exc.candidates.complete)
-                old_options = self._choose_old_schemes(app, options, required=True)
+                old_options = self._choose_old_schemes(app, options, required=True, new_option=new_option)
                 if old_options is None:
                     return
                 draft = self.service.prepare_scheme_switch(app, new_option, old_options=old_options)
 
             if not draft.old_options and draft.candidates.partial:
                 options = tuple((option, "partial") for option in draft.candidates.partial)
-                old_options = self._choose_old_schemes(app, options, required=False)
+                old_options = self._choose_old_schemes(app, options, required=False, new_option=new_option)
                 if old_options is None:
                     return
                 if old_options:
@@ -2526,7 +2536,7 @@ class MainWindow(QMainWindow):
                 except AmbiguousOldSchemeError as exc:
                     app = exc.app
                     options = tuple((option, "complete") for option in exc.candidates.complete)
-                    chosen = self._choose_old_schemes(app, options, required=True)
+                    chosen = self._choose_old_schemes(app, options, required=True, new_option=selected[app])
                     if chosen is None:
                         return
                     choices[app] = chosen
@@ -2536,7 +2546,7 @@ class MainWindow(QMainWindow):
                     if app in choices or draft.old_options_by_app[app] or not candidates.partial:
                         continue
                     options = tuple((option, "partial") for option in candidates.partial)
-                    chosen = self._choose_old_schemes(app, options, required=False)
+                    chosen = self._choose_old_schemes(app, options, required=False, new_option=selected[app])
                     if chosen is None:
                         return
                     choices[app] = chosen

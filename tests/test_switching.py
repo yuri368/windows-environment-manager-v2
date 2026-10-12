@@ -74,6 +74,75 @@ class OldSchemeRecognitionTests(unittest.TestCase):
         self.assertEqual(explicit.changes[0].after.value, "B;Other")
         self.assertEqual(len(explicit.skipped), 1)
 
+    def test_existing_path_without_old_element_is_not_an_old_candidate(self):
+        old = spec("GitPortable", "OLD_CMD", app="Git")
+        new = spec("PortableGit", "NEW_CMD", app="Git")
+        config = config_for(old, new)
+        store = MemoryStore([path("NEW_CMD;Other")])
+        detected = scan_all(config, values(old, new), store)
+        # Keep the existing three-state detection contract; switching eligibility
+        # must not mistake an existing Path key for an old configured path.
+        self.assertEqual(detected.schemes[("Git", "GitPortable")].status.value, "partial")
+        for detection in (None, detected):
+            with self.subTest(detection=detection is not None):
+                draft = prepare_switch(config, "Git", "PortableGit", detected.targets,
+                                       values(old, new), detection=detection)
+                self.assertEqual(draft.candidates.partial, ())
+                self.assertEqual(draft.old_options, ())
+                self.assertFalse(any(change.changed for change in draft.changes))
+                with self.assertRaises(ValidationError):
+                    prepare_switch(config, "Git", "PortableGit", detected.targets,
+                                   values(old, new), detection=detection,
+                                   old_options=("GitPortable",))
+        self.assertEqual(store.writes, [])
+
+    def test_partial_candidate_uses_actual_removal_rules_for_all_modes(self):
+        for mode, special, old_value, actual, expected in (
+            ("+append", False, "A;Missing", "A;Other", ("Old",)),
+            ("-append", False, "A;Missing", "A;Other", ("Old",)),
+            ("append", False, "A;Missing", "Other", ()),
+            ("replace", False, "A;Missing", "A;Other", ("Old",)),
+            ("replace", True, "A;Missing", "A;Other", ()),
+            ("replace", False, "", "Other", ()),
+        ):
+            with self.subTest(mode=mode, special=special, old_value=old_value):
+                old = spec("Old", old_value, mode=mode, special=special)
+                new = spec("New", "New", mode=mode, special=special)
+                config = config_for(old, new)
+                detected = scan_all(config, values(old, new), MemoryStore([path(actual)]))
+                candidates = identify_old_options(config, detected, "Java", "New")
+                draft = prepare_switch(config, "Java", "New", detected.targets,
+                                       values(old, new))
+                self.assertEqual(candidates.partial, expected)
+                self.assertEqual(draft.candidates.partial, expected)
+
+    def test_common_matched_content_still_requires_explicit_old_choice(self):
+        old, new = spec("Old", "Common;Missing"), spec("New", "Common")
+        config = config_for(old, new)
+        detected = scan_all(config, values(old, new), MemoryStore([path("Common;Other")]))
+        self.assertEqual(identify_old_options(config, detected, "Java", "New").partial, ("Old",))
+        draft = prepare_switch(config, "Java", "New", detected.targets,
+                               values(old, new), old_options=("Old",))
+        self.assertEqual(draft.changes[0].after.value, "Common;Other")
+        self.assertEqual(draft.ordinary_atoms, ())
+
+    def test_partial_exact_atoms_and_runtime_selections_are_preserved(self):
+        for special, selected in ((True, "literal;exact"), (False, ""), (False, "Runtime")):
+            with self.subTest(special=special, selected=selected):
+                old = spec("Old", "Default", name="HOME", mode="replace", special=special)
+                missing = spec("Old", "Missing", name="OTHER_HOME", mode="replace")
+                new = spec("New", "New", name="HOME", mode="replace", special=special)
+                config = config_for(old, missing, new)
+                current = values(old, missing, new)
+                current[old.key] = selected
+                store = MemoryStore([RegistryState("HOME", "User", True, selected, 1)])
+                detected = scan_all(config, current, store)
+                self.assertEqual(detected.schemes[("Java", "Old")].status.value, "partial")
+                self.assertEqual(identify_old_options(config, detected, "Java", "New").partial, ("Old",))
+                draft = prepare_switch(config, "Java", "New", detected.targets, current)
+                self.assertEqual(draft.candidates.partial, ("Old",))
+                self.assertEqual(draft.old_options, ())
+
     def test_invalid_old_options_and_stale_detection_are_rejected(self):
         old, new = spec(), spec("17", "B")
         config = config_for(old, new)
