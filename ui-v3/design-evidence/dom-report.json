@@ -1,0 +1,49 @@
+{
+  "verification": "JSDOM interactions; visual rendering and real backend not verified",
+  "checks": [
+    {
+      "name": "Startup: seven applications and Maven current scheme",
+      "passed": true
+    },
+    {
+      "name": "Scheme menu: arrows, Escape, focus and exact new scheme",
+      "passed": true
+    },
+    {
+      "name": "Search and keyboard application selection",
+      "passed": true
+    },
+    {
+      "name": "Exact raw custom string retained in running draft",
+      "passed": true
+    },
+    {
+      "name": "Preview cancel and keyboard trap preserve mock Windows value",
+      "passed": true
+    },
+    {
+      "name": "Batch preview contains selected app names",
+      "passed": true
+    },
+    {
+      "name": "Editor defaults to one scheme and All view has explicit groups",
+      "passed": true
+    },
+    {
+      "name": "Configuration exact string only changes selected scheme",
+      "passed": true
+    },
+    {
+      "name": "Raw TOML and differences remain available and labelled as demo",
+      "passed": true
+    },
+    {
+      "name": "Windows and History views preserved",
+      "passed": true
+    },
+    {
+      "name": "No runtime errors; local polish stylesheet exists",
+      "passed": true
+    }
+  ]
+}

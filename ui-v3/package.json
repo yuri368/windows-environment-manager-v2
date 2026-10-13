@@ -1,0 +1,12 @@
+{
+  "name": "environment-manager-v3-ui-prototype",
+  "version": "0.1.0",
+  "private": true,
+  "description": "UI demo only. No runtime dependencies or Windows integration.",
+  "scripts": {
+    "test": "node design-evidence/verify_dom.cjs && node design-evidence/verify_elements.cjs"
+  },
+  "devDependencies": {
+    "jsdom": "26.1.0"
+  }
+}

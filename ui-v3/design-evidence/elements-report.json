@@ -1,0 +1,73 @@
+{
+  "verification": "JSDOM UI event checks only; native dragging, visual rendering and Windows integration not verified",
+  "checks": [
+    {
+      "name": "Highlight preserves exact raw text, empty and duplicate elements, and escapes markup",
+      "passed": true
+    },
+    {
+      "name": "Whole-string highlights only exact matches; blanks are not matched as list elements",
+      "passed": true
+    },
+    {
+      "name": "Workbench highlights just the selected Path element, leaving other elements unmarked",
+      "passed": true
+    },
+    {
+      "name": "Workbench double click opens shared editor with raw values and demo metadata",
+      "passed": true
+    },
+    {
+      "name": "Edit, move, add and delete stay in draft; cancel restores focus and snapshot",
+      "passed": true
+    },
+    {
+      "name": "Explicit workbench edit button provides a discoverable alternative",
+      "passed": true
+    },
+    {
+      "name": "Windows table highlights prepared schemes and shares the same editor",
+      "passed": true
+    },
+    {
+      "name": "Keyboard entry and Escape close editor without changing demo data",
+      "passed": true
+    },
+    {
+      "name": "Empty segments, repeated values and whitespace survive the editor unchanged",
+      "passed": true
+    },
+    {
+      "name": "Keyboard ordering retains stable row identity and input focus",
+      "passed": true
+    },
+    {
+      "name": "Drag/drop event handlers reorder elements without deduplication",
+      "passed": true
+    },
+    {
+      "name": "Separator validation prevents ambiguous element input while retaining typed text",
+      "passed": true
+    },
+    {
+      "name": "Apply updates only demo snapshot, keeps raw order, and records a demo history item",
+      "passed": true
+    },
+    {
+      "name": "Deleting all elements can be applied as an empty demo string",
+      "passed": true
+    },
+    {
+      "name": "Special value stays whole with semicolons and hides element sorting controls",
+      "passed": true
+    },
+    {
+      "name": "All schemes copy is simple and group headings separate name, count and flags",
+      "passed": true
+    },
+    {
+      "name": "Shared component and additional stylesheet are local; no UI runtime errors",
+      "passed": true
+    }
+  ]
+}
