@@ -9,7 +9,8 @@ const script = fs.readFileSync(path.join(root, 'windows-elements.js'), 'utf8');
 const errors = [], checks = [];
 const vc = new VirtualConsole(); vc.on('jsdomError', e => errors.push(e.message));
 const dom = new JSDOM(html, { runScripts: 'dangerously', pretendToBeVisual: true,
-  virtualConsole: vc, beforeParse(w) { w.confirm = () => true; w.eval(fs.readFileSync(path.join(root,'demo-configs.js'),'utf8')); w.eval(script); } });
+  virtualConsole: vc, beforeParse(w) {
+    w.eval(fs.readFileSync(path.join(__dirname,'../demo-plan.js'),'utf8')); w.confirm = () => true; w.eval(fs.readFileSync(path.join(root,'demo-configs.js'),'utf8')); w.eval(script); } });
 const w = dom.window, doc = w.document;
 const q = s => doc.querySelector(s), all = s => [...doc.querySelectorAll(s)];
 const check = (name, fn) => { fn(); checks.push({ name, passed: true }); };

@@ -10,6 +10,7 @@ virtualConsole.on('jsdomError', error => errors.push(error.message));
 const dom = new JSDOM(fs.readFileSync(path.join(root, 'temp.html'), 'utf8'), {
   runScripts: 'dangerously', pretendToBeVisual: true, virtualConsole,
   beforeParse(window) {
+    window.eval(fs.readFileSync(path.join(__dirname,'../demo-plan.js'),'utf8'));
     window.confirm = () => true;
     window.eval(fs.readFileSync(path.join(root, 'demo-configs.js'), 'utf8'));
     window.eval(fs.readFileSync(path.join(root, 'windows-elements.js'), 'utf8'));
@@ -191,7 +192,7 @@ try {
   });
   check('Dialog candidates are separate from live rows, stable IDs, duplicates and serialized result', () => {
     editorOpen('A;A;;', ['A;B;B']);
-    assert.deepEqual(values(), ['A', 'A', '', '']); assert.deepEqual(candidates(), ['B', 'B']);
+    assert.deepEqual(values(), ['A', 'A', '', '']); assert.deepEqual(candidates(), ['B']);
     assert.equal(serialized(), 'A;A;;');
     assert.ok(q('#pendingElements')); assert.match(q('#pendingElements').textContent, /待追加/);
     assert.match(q('#pendingElements').textContent, /未加入|不计入|未计入/);
@@ -255,9 +256,9 @@ try {
     assert.match(q('#elementOriginal').textContent, /不存在/); cancel();
     assert.equal(w.eval("windows['User|APPEND_TEST']"), undefined);
   });
-  check('Matching in the live editor uses trim without deduplicating or consuming matches', () => {
+  check('Matching preserves raw live rows; definite append candidates contain only the first normalized occurrence', () => {
     const ids = editorOpen(' A ', ['A;A;B']); assert.deepEqual(candidates(), ['B']);
-    edit(ids[0], 'a'); assert.deepEqual(candidates(), ['A', 'A', 'B']);
+    edit(ids[0], 'a'); assert.deepEqual(candidates(), ['A', 'B']);
     edit(ids[0], ' A '); assert.deepEqual(candidates(), ['B']); assert.equal(serialized(), ' A '); cancel();
   });
   check('Same target name keeps User and System candidates isolated', () => {

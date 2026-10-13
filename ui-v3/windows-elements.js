@@ -3,16 +3,11 @@ var WindowsElements = (() => {
   const escape = text => String(text ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   let session = null, sequence = 0;
   const normalized = value => value.trim();
-  const required = values => new Set(values.flatMap(value => value.split(';')).map(normalized).filter(Boolean));
-  const matches = (raw, values, whole) => whole ? values.some(value => value === raw) : normalized(raw) !== '' && required(values).has(normalized(raw));
-  function selectionInfo(raw, values = [], whole = false) {
-    const actual = new Set(raw === undefined ? [] : raw.split(';').map(normalized).filter(Boolean));
-    const parts = values.flatMap(value => whole ? [value] : value.split(';')).map((value,index) => ({
-      value,index,matched:whole ? raw !== undefined && raw === value : normalized(value) !== '' && actual.has(normalized(value))
-    }));
-    const effective = parts.filter(part => whole || normalized(part.value) !== '');
-    return {parts,total:effective.length,matched:effective.filter(part=>part.matched).length,
-      missing:effective.filter(part=>!part.matched).map(({value,index})=>({value,index}))};
+  const matches = (raw,values,whole) => DemoPlan.matches(raw,values,whole);
+  function selectionInfo(raw,values=[],whole=false){
+    const parts=values.flatMap(selectedRaw=>DemoPlan.build({mode:'-append',whole,actualRaw:raw,selectedRaw}).parts).map((part,index)=>({...part,index}));
+    const effective=parts.filter(part=>whole||normalized(part.value)!=='');
+    return {parts,total:effective.length,matched:effective.filter(part=>part.matched).length,missing:effective.filter(part=>!part.matched).map(({value,index})=>({value,index}))};
   }
   const isAppendMode = mode => ['+append','-append','append'].includes(mode);
   const pendingToken = (part,mode=null) => {
@@ -20,20 +15,27 @@ var WindowsElements = (() => {
     const button=isAppendMode(mode)?`<button type="button" class="pending-add-button" data-add-pending="${part.index}" title="加入当前编辑列表${position}" aria-label="将 ${escape(part.value)} 加入当前编辑列表${position}">＋</button>`:'';
     return `<span class="pending-add-token${button?' is-actionable':''}" data-selected-index="${part.index}"><span class="diff-value" data-raw-value="${escape(part.value)}">${escape(part.value)}</span><span class="diff-label is-pending-add">待追加</span>${button}</span>`;
   };
-  function selectionMarkup(raw, values = [], whole = false, append = false) {
+  function selectionMarkup(raw, values = [], whole = false, append = false, plan = null) {
     if (whole || !append) return escape(values.join(';')) || '<span class="empty-element">（空字符串）</span>';
     if (values.length===1 && values[0]==='') return '<span class="empty-element">（空字符串）</span>';
-    return selectionInfo(raw,values).parts.map(part => {
-      if (normalized(part.value) !== '' && !part.matched) return pendingToken(part);
+    const selectedPlan=plan||DemoPlan.build({mode:'-append',actualRaw:raw,selectedRaw:values.join(';')});
+    const insertionIndexes=new Set(selectedPlan.operations.filter(op=>op.type==='insert').map(op=>op.selectedIndex));
+    return selectedPlan.parts.map(part => {
+      if (insertionIndexes.has(part.index)) return pendingToken(part);
       if (part.matched) return `<mark class="matched-element"><span data-raw-value="${escape(part.value)}">${escape(part.value)}</span></mark>`;
       return part.value === '' ? '<span class="empty-element" data-raw-value="">（空元素）</span>' : escape(part.value);
     }).join('<span class="element-separator">;</span>');
   }
-  function pendingMarkup(raw, values = [], whole = false, editing = false, modes = []) {
+  function pendingMarkup(raw, values = [], whole = false, editing = false, modes = [], plan = null) {
     if (whole) return '';
-    const missing = selectionInfo(raw,values).missing;
+    const pendingPlan=plan||DemoPlan.build({mode:'-append',whole,actualRaw:raw,selectedRaw:values.join(';')});
+    const missing=pendingPlan.operations.filter(op=>op.type==='insert').map(op=>({value:op.value,index:op.selectedIndex}));
     if (!missing.length) return '';
     return `<div class="pending-additions"><span class="pending-additions-title">方案待追加 · ${editing?'尚未加入本次编辑结果':'尚未加入当前值'}</span><div class="pending-additions-values">${missing.map(part=>pendingToken(part,editing?modes[part.index]:null)).join('<span class="element-separator">;</span>')}</div></div>`;
+  }
+  function selectionChangeMarkup(edit,plan){
+    const raw=value=>value===''?'<span class="empty-element">（空字符串）</span>':escape(value);
+    return `<div class="selection-change-note"><span class="selection-edit-heading">选定值已修改</span><div class="selection-edit-pair"><span class="selection-edit-before">${raw(edit.beforeRaw)}</span><span class="selection-edit-arrow" aria-label="修改为">→</span><span class="selection-edit-after">${selectionMarkup(plan.beforeRaw,[edit.afterRaw],edit.whole,plan.kind==='append',plan)}</span></div></div>`;
   }
   function highlight(raw, values = [], whole = false, willReplace = false) {
     if (raw === undefined) return '<span class="empty-element">（不存在）</span>';
@@ -52,13 +54,16 @@ var WindowsElements = (() => {
   }
   const duplicateLabel = count => count > 1
     ? `<span class="diff-label is-duplicate" title="此栏有 ${count} 个原始文本完全相同的元素；仅提示，不自动去重">重复 ×${count}</span>` : '';
-  function stateFor(row) {
+  function editStateFor(row) {
     const original = session.originalById.get(row.id);
     if (!original) return {added:true,replaced:false,moved:false};
     const existing = session.rows.filter(item => session.originalById.has(item.id));
     const remaining = session.originalRows.filter(item => session.rows.some(current => current.id === item.id));
     return {added:false,replaced:row.value !== original.value,
       moved:existing.findIndex(item => item.id === row.id) !== remaining.findIndex(item => item.id === row.id)};
+  }
+  function stateFor(row){
+    return session.plan?.audit.elements.find(element=>element.elementId===row.id)||editStateFor(row);
   }
   function labels(state, removed = false, planned = false) {
     return (removed ? [['removed','删除']] : [
@@ -69,13 +74,13 @@ var WindowsElements = (() => {
   function auditSnapshot() {
     const elements=session.rows.map((row,afterIndex)=>{
       const beforeIndex=session.originalRows.findIndex(original=>original.id===row.id);
-      const state=stateFor(row);
-      return {beforeIndex:beforeIndex<0?null:beforeIndex,afterIndex,
+      const state=editStateFor(row);
+      return {elementId:row.id,beforeIndex:beforeIndex<0?null:beforeIndex,afterIndex,
         before:beforeIndex<0?undefined:session.originalRows[beforeIndex].value,after:row.value,
         ...state,removed:false};
     });
     session.originalRows.forEach((row,beforeIndex)=>{
-      if(!session.rows.some(current=>current.id===row.id))elements.push({beforeIndex,afterIndex:null,
+      if(!session.rows.some(current=>current.id===row.id))elements.push({elementId:row.id,beforeIndex,afterIndex:null,
         before:row.value,after:undefined,added:false,removed:true,replaced:false,moved:false});
     });
     return {before:session.original,after:serialized(),whole:session.whole,elements,
@@ -157,10 +162,11 @@ var WindowsElements = (() => {
   function update() {
     const root=session.container,raw=serialized(),changed=session.original === undefined?session.rows.length>0:raw!==session.original;
     session.currentCounts = countsFor(session.rows);
+    session.plan=DemoPlan.buildElementEdit({target:{scope:session.scope,name:session.name},snapshot:session.snapshot||{exists:session.original!==undefined,raw:session.original===undefined?null:session.original,type:session.registryType,revision:0},afterRaw:raw,audit:auditSnapshot()});
     const structureChanged=JSON.stringify(session.rows.map(row=>({id:row.id,value:row.value})))!==JSON.stringify(session.originalRows);
     root.querySelector('#elementTotal').textContent=`${session.rows.length} ${session.whole?'条字符串':'个元素'}`;
     root.querySelector('#elementValidation').textContent=valid()?'':session.whole?'字符串不能包含 NUL。':'一个元素内不能包含分号或 NUL；请将多项内容拆成多个元素。';
-    root.querySelector('#applyElements').disabled=!valid()||!changed;
+    root.querySelector('#applyElements').disabled=!valid()||!session.plan.operations.length;
     root.querySelector('#restoreElements').disabled=!structureChanged;
     root.querySelector('#elementStatus').textContent=changed?'有待应用修改 · 仅更新演示数据':structureChanged?'顺序或结构已调整 · 结果值未变化':'未修改 · 仅更新演示数据';
     root.querySelectorAll('[data-element-id]').forEach(el=>{if(!el.classList.contains('element-row'))return;const row=session.rows.find(row=>row.id===Number(el.dataset.elementId));if(row)paintRow(el,row);});
@@ -195,7 +201,7 @@ var WindowsElements = (() => {
     container.querySelector('#closeDialog').onclick=options.close;container.querySelector('#cancelDialog').onclick=options.close;
     container.querySelector('#addElement').onclick=()=>{session.rows.push({id:++sequence,value:''});renderRows(sequence);};
     container.querySelector('#restoreElements').onclick=()=>{session.rows=session.originalRows.map(row=>({...row}));session.dragging=null;session.hoveredId=null;session.focusedId=null;renderRows(session.rows[0]?.id);if(!session.rows.length)container.querySelector('#addElement').focus();};
-    container.querySelector('#applyElements').onclick=()=>{if(!session||!valid()||container.querySelector('#applyElements').disabled)return;const current=session,result=serialized(),audit=auditSnapshot();current.close();current.onApply(result,audit);};
+    container.querySelector('#applyElements').onclick=()=>{if(!session||!valid()||container.querySelector('#applyElements').disabled)return;const current=session,plan=session.plan;current.close();current.onApply(plan.afterRaw,plan.audit,plan);};
     renderRows();container.querySelector('#closeDialog').focus();
   }
   function adoptPending(index,button,editingSession) {
@@ -245,5 +251,5 @@ var WindowsElements = (() => {
     }
     session=null;
   }
-  return {highlight,selectionInfo,selectionMarkup,pendingMarkup,open,dismiss};
+  return {highlight,selectionInfo,selectionMarkup,pendingMarkup,selectionChangeMarkup,open,dismiss};
 })();

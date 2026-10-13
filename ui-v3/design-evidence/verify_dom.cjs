@@ -12,7 +12,8 @@ const errors = [], results = [];
 const vc = new VirtualConsole();
 vc.on('jsdomError', e => errors.push(e.message));
 const dom = new JSDOM(html, { runScripts: 'dangerously', pretendToBeVisual: true,
-  virtualConsole: vc, beforeParse(w) { w.confirm = () => true; w.eval(fs.readFileSync(path.join(__dirname,'../demo-configs.js'),'utf8')); w.eval(elementScript); } });
+  virtualConsole: vc, beforeParse(w) {
+    w.eval(fs.readFileSync(path.join(__dirname,'../demo-plan.js'),'utf8')); w.confirm = () => true; w.eval(fs.readFileSync(path.join(__dirname,'../demo-configs.js'),'utf8')); w.eval(elementScript); } });
 const w = dom.window, doc = w.document;
 const q = s => doc.querySelector(s);
 const all = s => [...doc.querySelectorAll(s)];
@@ -44,7 +45,8 @@ check('Search and keyboard application selection', () => {
 check('Exact raw custom string retained in running draft', () => {
   const exact = '  C:\\Tools\\A;C:\\Tools\\B  ';
   input(q('#varRows .vinput'), exact);
-  assert.equal(q('#compareDesired').textContent, exact);
+  assert.equal(q('#compareDesired .selection-edit-after').textContent, exact);
+  assert.equal(q('#compareDesired .selection-edit-before').textContent, 'H:\\ProgramFiles\\Python313');
   assert.equal(q('#varRows .source').value, '自定义值');
   assert.match(q('.footer-summary').textContent, /待应用修改/);
 });

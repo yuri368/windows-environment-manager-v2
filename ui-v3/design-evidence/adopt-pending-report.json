@@ -33,7 +33,7 @@
       "passed": true
     },
     {
-      "name": "Duplicate missing candidates disappear together after one adoption and stale button clicks cannot duplicate insertion",
+      "name": "Duplicate missing targets project one definite insertion; stale button clicks cannot duplicate it",
       "passed": true
     },
     {

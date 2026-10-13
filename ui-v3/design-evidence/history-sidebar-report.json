@@ -45,15 +45,15 @@
       "passed": true
     },
     {
-      "name": "Editor sidebar has separate app, profile and variable groups with independent list containers",
+      "name": "Editor sidebar has separate app and profile groups with independent list containers",
       "passed": true
     },
     {
-      "name": "Sidebar CSS assigns three constrained groups and overflow to each list",
+      "name": "Sidebar CSS assigns two constrained groups and overflow to each list",
       "passed": true
     },
     {
-      "name": "Sidebar app, profile and variable buttons still select correctly and remain keyboard focusable",
+      "name": "Sidebar app and profile buttons select correctly while table rows select variables by mouse and keyboard",
       "passed": true
     },
     {

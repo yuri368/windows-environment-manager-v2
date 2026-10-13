@@ -6,7 +6,8 @@ const errors = [], checks = [], vc = new VirtualConsole();
 vc.on('jsdomError', e => errors.push(e.message));
 const dom = new JSDOM(fs.readFileSync(path.join(root, 'temp.html'), 'utf8'), {
   runScripts: 'dangerously', pretendToBeVisual: true, virtualConsole: vc,
-  beforeParse(w) { w.eval(fs.readFileSync(path.join(root,'demo-configs.js'),'utf8')); w.eval(fs.readFileSync(path.join(root, 'windows-elements.js'), 'utf8')); }
+  beforeParse(w) {
+    w.eval(fs.readFileSync(path.join(__dirname,'../demo-plan.js'),'utf8')); w.eval(fs.readFileSync(path.join(root,'demo-configs.js'),'utf8')); w.eval(fs.readFileSync(path.join(root, 'windows-elements.js'), 'utf8')); }
 });
 const w = dom.window, doc = w.document;
 const q = s => doc.querySelector(s), all = s => [...doc.querySelectorAll(s)];

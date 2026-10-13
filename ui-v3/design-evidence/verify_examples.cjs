@@ -6,7 +6,8 @@ vc.on('jsdomError',e=>errors.push(e.message));
 const examples=fs.readFileSync(path.join(root,'demo-configs.js'),'utf8');new vm.Script(examples);
 const dom=new JSDOM(fs.readFileSync(path.join(root,'temp.html'),'utf8'),{
   runScripts:'dangerously',pretendToBeVisual:true,virtualConsole:vc,
-  beforeParse(w){w.confirm=()=>true;w.eval(examples);w.eval(fs.readFileSync(path.join(root,'windows-elements.js'),'utf8'));}
+  beforeParse(w){
+    w.eval(fs.readFileSync(path.join(__dirname,'../demo-plan.js'),'utf8'));w.confirm=()=>true;w.eval(examples);w.eval(fs.readFileSync(path.join(root,'windows-elements.js'),'utf8'));}
 });
 const w=dom.window,doc=w.document,q=s=>doc.querySelector(s),all=s=>[...doc.querySelectorAll(s)];
 const check=(name,fn)=>{fn();checks.push({name,passed:true});};
@@ -35,7 +36,9 @@ check('Scheme switching keeps each runtime draft in its own scheme',()=>{
   assert.equal(q('#addElement').hidden,true);q('#cancelDialog').click();
 });
 check('Seeded whole-string flags stay clean initially and restore to their seeded baseline',()=>{
-  q('#configBtn').click();q('[data-editapp="7"]').click();q('[data-editvar="2"]').click();
+  q('#configBtn').click();q('[data-editapp="7"]').click();
+  const specialRow=all('tr[data-tableplan][data-tablevar="2"]').find(row=>row.dataset.tableplan===w.eval('editor.profile'));
+  assert.ok(specialRow,'The current profile should expose its third variable row');specialRow.click();
   assert.equal(q('#cfgSpecial').checked,true);assert.equal(q('#cancelConfig').disabled,true);
   q('#cfgSpecial').checked=false;q('#cfgSpecial').dispatchEvent(new w.Event('change',{bubbles:true}));
   assert.match(q('#configStatus').textContent,/1 项属性修改/);q('#cancelConfig').click();

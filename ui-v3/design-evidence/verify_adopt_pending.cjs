@@ -10,6 +10,7 @@ virtualConsole.on('jsdomError', error => errors.push(error.message));
 const dom = new JSDOM(fs.readFileSync(path.join(root, 'temp.html'), 'utf8'), {
   runScripts: 'dangerously', pretendToBeVisual: true, virtualConsole,
   beforeParse(window) {
+    window.eval(fs.readFileSync(path.join(__dirname,'../demo-plan.js'),'utf8'));
     window.confirm = () => true;
     window.eval(fs.readFileSync(path.join(root, 'demo-configs.js'), 'utf8'));
     window.eval(fs.readFileSync(path.join(root, 'windows-elements.js'), 'utf8'));
@@ -113,13 +114,14 @@ try {
       assert.equal(w.eval('curProfile().vars[0].defaultValue'), JSON.parse(before).apps[2].profiles.find(p=>p.name===w.eval('curProfile().name')).vars[0].defaultValue);
     });
   }
-  check('Duplicate missing candidates disappear together after one adoption and stale button clicks cannot duplicate insertion', () => {
+  check('Duplicate missing targets project one definite insertion; stale button clicks cannot duplicate it', () => {
     const originalIds = direct('A;A;;', entries(' B ;B;C','-append'));
-    const oldFirst = button(0), oldDuplicate = button(1);
-    assert.deepEqual(pending(), [' B ','B','C']);
-    oldFirst.click(); oldFirst.click(); oldDuplicate.click();
+    const oldFirst = button(0);
+    assert.equal(button(1),null);
+    assert.deepEqual(pending(), [' B ','C']);
+    oldFirst.click(); oldFirst.click();
     // A stale queued control must remain harmless even if still under the delegated host.
-    q('#pendingElements').appendChild(oldDuplicate); oldDuplicate.click(); oldDuplicate.remove();
+    q('#pendingElements').appendChild(oldFirst); oldFirst.click(); oldFirst.remove();
     assert.deepEqual(values(), ['A','A','','',' B ']); assert.equal(adopted(originalIds).length,1);
     assert.deepEqual(pending(), ['C']); assert.equal(serialized(),'A;A;;; B '); cancel();
   });

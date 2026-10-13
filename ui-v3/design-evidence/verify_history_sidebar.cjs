@@ -12,6 +12,7 @@ virtualConsole.on('jsdomError', error => errors.push(error.message));
 const dom = new JSDOM(html, {
   runScripts: 'dangerously', pretendToBeVisual: true, virtualConsole,
   beforeParse(window) {
+    window.eval(fs.readFileSync(path.join(__dirname,'../demo-plan.js'),'utf8'));
     window.confirm = () => true;
     window.eval(fs.readFileSync(path.join(root, 'demo-configs.js'), 'utf8'));
     window.eval(fs.readFileSync(path.join(root, 'windows-elements.js'), 'utf8'));
@@ -233,34 +234,33 @@ try {
     assert.equal(disclosure.querySelector('button, input, select, textarea'), null);
   });
 
-  check('Editor sidebar has separate app, profile and variable groups with independent list containers', () => {
+  check('Editor sidebar has separate app and profile groups with independent list containers', () => {
     reset(); q('#configBtn').click();
     const groups = all('.editor-left .editor-nav-group');
-    assert.equal(groups.length, 3);
-    assert.deepEqual(groups.map(group => group.querySelector('.editor-nav-list')?.dataset.editorList), ['apps', 'profiles', 'variables']);
-    assert.deepEqual(groups.map(group => group.querySelector('.editor-nav-list')?.querySelectorAll('button').length), [13, 2, 2]);
-    assert.deepEqual(groups.map(group => group.querySelector('.editor-nav-list')?.contains(group.querySelector('strong'))), [false, false, false]);
+    assert.equal(groups.length, 2);
+    assert.deepEqual(groups.map(group => group.querySelector('.editor-nav-list')?.dataset.editorList), ['apps', 'profiles']);
+    assert.deepEqual(groups.map(group => group.querySelector('.editor-nav-list')?.querySelectorAll('button').length), [13, 2]);
+    assert.deepEqual(groups.map(group => group.querySelector('.editor-nav-list')?.contains(group.querySelector('.editor-section'))), [false, false]);
     const lists = groups.map(group => group.querySelector('.editor-nav-list'));
-    assert.equal(new Set(lists).size, 3);
+    assert.equal(new Set(lists).size, 2);
     assert.ok(groups[0].textContent.includes('应用'));
     assert.ok(groups[1].textContent.includes('方案'));
-    assert.ok(groups[2].textContent.includes('变量'));
   });
 
-  check('Sidebar CSS assigns three constrained groups and overflow to each list', () => {
+  check('Sidebar CSS assigns two constrained groups and overflow to each list', () => {
     const css = fs.readFileSync(path.join(root, 'ui-polish.css'), 'utf8');
     const rule = selector => {
       const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       return css.match(new RegExp(`${escaped}\\s*\\{([^}]+)\\}`))?.[1] || '';
     };
     assert.match(rule('.editor-left'), /display:\s*grid/);
-    assert.match(rule('.editor-left'), /grid-template-rows:\s*minmax\(0,/);
+    assert.match(rule('.editor-left'), /grid-template-rows:\s*minmax\(0,\s*2fr\)\s+minmax\(0,\s*1fr\)/);
     assert.match(rule('.editor-nav-group'), /min-height:\s*0/);
     assert.match(rule('.editor-nav-list'), /overflow-y:\s*auto/);
     assert.match(rule('.editor-nav-list'), /flex:\s*1/);
   });
 
-  check('Sidebar app, profile and variable buttons still select correctly and remain keyboard focusable', () => {
+  check('Sidebar app and profile buttons select correctly while table rows select variables by mouse and keyboard', () => {
     reset(); q('#configBtn').click();
     q('[data-editapp="0"]').click();
     assert.equal(w.eval('editor.app'), 0);
@@ -269,17 +269,43 @@ try {
     const profileName = profile.dataset.editplan;
     profile.click();
     assert.equal(w.eval('editor.profile'), profileName);
-    const secondVariable = all('[data-editvar]')[1];
-    assert.ok(secondVariable);
-    secondVariable.click();
+
+    const rows = () => all('tr[data-tableplan][data-tablevar]');
+    const variableRow = index => rows().find(row => row.dataset.tableplan === w.eval('editor.profile') && +row.dataset.tablevar === index);
+    let target = variableRow(1);
+    assert.ok(target, 'The selected profile should expose its second variable row');
+    assert.equal(target.tagName, 'TR');
+    assert.equal(target.getAttribute('tabindex'), '0');
+    target.click();
     assert.equal(w.eval('editor.varIdx'), 1);
-    assert.equal(q('[data-editvar="1"]').getAttribute('aria-current'), 'true');
-    const firstVariable = q('[data-editvar="0"]');
-    assert.equal(firstVariable.tagName, 'BUTTON');
-    firstVariable.focus();
-    assert.equal(doc.activeElement, firstVariable);
-    firstVariable.click();
+    assert.equal(variableRow(1).getAttribute('aria-current'), 'true');
+    assert.equal(doc.activeElement, variableRow(1));
+
+    target = variableRow(0);
+    target.focus();
+    target.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    assert.equal(w.eval('editor.varIdx'), 1);
+    assert.equal(variableRow(1).getAttribute('aria-current'), 'true');
+    assert.equal(doc.activeElement, variableRow(1));
+
+    variableRow(1).dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Home', bubbles: true }));
     assert.equal(w.eval('editor.varIdx'), 0);
+    assert.equal(variableRow(0).getAttribute('aria-current'), 'true');
+    assert.equal(doc.activeElement, variableRow(0));
+
+    variableRow(0).dispatchEvent(new w.KeyboardEvent('keydown', { key: 'End', bubbles: true }));
+    const lastRow = rows().filter(row => row.dataset.tableplan === w.eval('editor.profile')).at(-1);
+    assert.equal(w.eval('editor.varIdx'), +lastRow.dataset.tablevar);
+    assert.equal(lastRow.getAttribute('aria-current'), 'true');
+    assert.equal(doc.activeElement, lastRow);
+
+    lastRow.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    assert.equal(w.eval('editor.varIdx'), +lastRow.dataset.tablevar);
+    assert.equal(variableRow(+lastRow.dataset.tablevar).getAttribute('aria-current'), 'true');
+    assert.equal(doc.activeElement, variableRow(+lastRow.dataset.tablevar));
+    variableRow(+lastRow.dataset.tablevar).dispatchEvent(new w.KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+    assert.equal(w.eval('editor.varIdx'), +lastRow.dataset.tablevar);
+    assert.equal(doc.activeElement, variableRow(+lastRow.dataset.tablevar));
   });
 
   check('History and sidebar workflows produce no JSDOM runtime errors', () => assert.deepEqual(errors, []));

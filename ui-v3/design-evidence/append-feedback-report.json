@@ -105,7 +105,7 @@
       "passed": true
     },
     {
-      "name": "Matching in the live editor uses trim without deduplicating or consuming matches",
+      "name": "Matching preserves raw live rows; definite append candidates contain only the first normalized occurrence",
       "passed": true
     },
     {
