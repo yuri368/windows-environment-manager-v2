@@ -1,0 +1,118 @@
+# Environment Manager V3 AI Development Guide
+
+
+## 项目定位
+
+Environment Manager V3 是一个轻量 Windows 环境配置管理工具。
+
+核心目标：
+
+管理：
+
+Desired State
+
+与
+
+Actual State
+
+之间的变化。
+
+
+
+## 核心架构
+
+所有变化必须经过：
+
+Configuration
+
+↓
+
+WindowsSnapshot
+
+↓
+
+MatchResult
+
+↓
+
+ChangePlan
+
+↓
+
+ExecutionResult
+
+↓
+
+History
+
+
+
+## 禁止事项
+
+禁止：
+
+- UI自行判断状态
+- 添加重复业务状态
+- 修改Diff规则解决UI问题
+- 让执行层重新计算计划
+- 绕过ChangePlan直接修改环境
+
+
+## 修改流程
+
+修改前：
+
+1. 判断所属模块
+2. 查阅对应设计文档
+3. 确认数据来源
+4. 增加测试
+
+
+## 文档索引
+
+
+docs/
+
+V3_ARCHITECTURE
+    系统架构
+
+
+V3_DATA_MODEL
+    数据结构
+
+
+V3_CHANGEPLAN_RULES
+    变化规则
+
+
+V3_EXECUTION_PROTOCOL
+    执行流程
+
+
+V3_UI_DATA_CONTRACT
+    UI契约
+
+
+V3_MODULE_BOUNDARY
+    模块边界
+
+
+V3_CODING_GUIDELINES
+    开发规范
+
+
+## 当前阶段
+
+当前：
+
+UI原型已完成
+
+下一阶段：
+
+逐步迁移核心逻辑到ChangePlan架构
+
+
+不要一次性重构。
+
+
+END
