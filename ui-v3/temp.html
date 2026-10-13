@@ -54,6 +54,15 @@ function scheme(i=selected){return apps[i].profiles.find(p=>p.name===profileChoi
 function value(v){if(v.source.startsWith('候选值 '))return v.choices[Number(v.source.slice(4))-1]??v.defaultValue;return v.source==='自定义值'?v.custom:v.source==='已保存值'?v.savedValue??v.defaultValue:v.source==='候选值'?v.choices[0]??v.defaultValue:v.defaultValue}
 function key(v){return v.scope+'|'+v.name.toUpperCase()}
 function itemMatched(v){let actual=windows[key(v)],desired=value(v);if(actual===undefined)return false;if(v.special)return actual===desired;const pieces=actual.split(';').map(s=>s.trim()).filter(Boolean);const elems=desired.split(';').map(s=>s.trim()).filter(Boolean);if(v.mode==='replace')return new Set([...pieces,...elems]).size===new Set(pieces).size&&new Set(pieces).size===new Set(elems).size;return elems.every(e=>pieces.includes(e))}
+const isAppendMode=mode=>['+append','-append','append'].includes(mode);
+function detectionText(v){
+  const m=itemMatched(v),info=WindowsElements.selectionInfo(windows[key(v)],[value(v)],v.special);
+  if(v.special||!info.total)return m?'✓ 匹配':'! 不匹配';
+  const ratio=`${info.matched}/${info.total}`;
+  if(m)return `✓ 匹配 ${ratio}`;
+  if(info.matched===info.total)return `! 存在额外差异 · 元素 ${ratio}`;
+  return info.matched?`! 部分匹配 ${ratio}`:`! 不匹配 ${ratio}`;
+}
 function matchCount(p){return p.vars.filter(v=>itemMatched(v)).length}
 function status(p){const n=matchCount(p);return n===p.vars.length?'完全匹配':n===0?'未匹配':'部分匹配'}
 function colorStatus(p){return matchCount(p)===p.vars.length?'':'warn'}
@@ -98,7 +107,7 @@ function renderRows() {
   $('varRows').innerHTML=ids.length?ids.map(i=>{
     const v=p.vars[i],m=itemMatched(v),pending=hasPendingValue(v);
     const src=['默认值',...(v.savedValue!==null?['已保存值']:[]),...v.choices.map((_,index)=>'候选值 '+(index+1)),'自定义值'];
-    return `<tr class="${focusedVariable===i?'sel':''}" data-row="${i}"><td><span class="vname">${esc(v.name)}</span></td><td><span class="scope">${v.scope==='User'?'用户':'系统'} <span>· ${MODE[v.mode]||v.mode}</span></span></td><td><select class="source" aria-label="${esc(v.name)} 值来源">${src.map(source=>`<option ${v.source===source?'selected':''}>${esc(source)}</option>`).join('')}</select></td><td><div class="running-value"><input class="vinput ${pending?'modified':''}" aria-label="${esc(v.name)} 当前选定值" value="${esc(value(v))}" title="${esc(value(v))}" spellcheck="false"><span class="pending-state" ${pending?'':'hidden'} title="与初始或最近模拟应用的选定值不同；Windows 检测独立计算">待应用</span></div></td><td><span class="result ${m?'':'warn'}">${m?'✓ 匹配':'! 不匹配'}</span></td><td><button class="actmini" title="预览撤销此项" data-undo="${i}">撤销</button></td></tr>`;
+    return `<tr class="${focusedVariable===i?'sel':''}" data-row="${i}"><td><span class="vname">${esc(v.name)}</span></td><td><span class="scope">${v.scope==='User'?'用户':'系统'} <span>· ${MODE[v.mode]||v.mode}</span></span></td><td><select class="source" aria-label="${esc(v.name)} 值来源">${src.map(source=>`<option ${v.source===source?'selected':''}>${esc(source)}</option>`).join('')}</select></td><td><div class="running-value"><input class="vinput ${pending?'modified':''}" aria-label="${esc(v.name)} 当前选定值" value="${esc(value(v))}" title="${esc(value(v))}" spellcheck="false"><span class="pending-state" ${pending?'':'hidden'} title="与初始或最近模拟应用的选定值不同；Windows 检测独立计算">待应用</span></div></td><td><span class="result ${m?'':'warn'}" title="比例按选定的非空元素逐项统计；重复项分别计数，不要求当前值具有相同副本数量；空元素保留但不计比例。替换模式还需核对额外内容。">${esc(detectionText(v))}</span></td><td><button class="actmini" title="预览撤销此项" data-undo="${i}">撤销</button></td></tr>`;
   }).join(''):`<tr><td colspan="6" class="empty">${onlyMismatch?'当前方案没有未匹配的变量':'暂无变量'}</td></tr>`;
   $('varRows').querySelectorAll('[data-row]').forEach(tr=>{
     const i=+tr.dataset.row,v=p.vars[i],inp=tr.querySelector('.vinput'),src=tr.querySelector('.source');
@@ -107,7 +116,7 @@ function renderRows() {
     inp.oninput=e=>{
       v.custom=e.target.value;v.source='自定义值';v.dirty=hasPendingValue(v);src.value='自定义值';
       inp.classList.toggle('modified',v.dirty);inp.title=value(v);tr.querySelector('.pending-state').hidden=!v.dirty;
-      const m=itemMatched(v),result=tr.querySelector('.result');result.textContent=m?'✓ 匹配':'! 不匹配';result.classList.toggle('warn',!m);
+      const m=itemMatched(v),result=tr.querySelector('.result');result.textContent=detectionText(v);result.classList.toggle('warn',!m);
       renderInspector();renderFooter();renderAppList();renderOverview();
       const count=dirty(p);$('varTotal').textContent=`${p.vars.length} 项${count?' · '+count+' 项待应用':''}`;
     };
@@ -123,19 +132,23 @@ function renderRows() {
 function renderInspector() {
   const v=curProfile().vars[focusedVariable]||curProfile().vars[0]; if(!v)return;
   $('inspectTitle').textContent='Windows 值对照 · '+v.name;
-  $('compareDesired').textContent=value(v)||'（空字符串）';
+  $('compareDesired').innerHTML=WindowsElements.selectionMarkup(windows[key(v)],[value(v)],v.special,isAppendMode(v.mode));
   $('compareActual').innerHTML=WindowsElements.highlight(windows[key(v)],[value(v)],v.special,(v.special||v.mode==='replace')&&windows[key(v)]!==undefined&&windows[key(v)]!==value(v));
+  let pending=$('comparePending');
+  if(!pending){pending=document.createElement('div');pending.id='comparePending';$('compareActual').after(pending);}
+  pending.innerHTML=WindowsElements.pendingMarkup(windows[key(v)],isAppendMode(v.mode)?[value(v)]:[],v.special);
+  pending.hidden=!pending.innerHTML;
   $('compareLabel').textContent=`${v.scope==='User'?'用户':'系统'} · ${MODE[v.mode]} · ${v.source}`;
-  $('compareResult').textContent=(itemMatched(v)?'按演示规则检测：匹配':'按演示规则检测：不匹配')+(hasPendingValue(v)?' · 选定值有待应用修改':'');
+  $('compareResult').textContent='按演示规则检测：'+detectionText(v)+(hasPendingValue(v)?' · 选定值有待应用修改':'');
   const open=()=>openWindowsElements(v.scope,v.name,[value(v)],v.special,v.mode);
   $('compareActual').ondblclick=open;
   $('compareActual').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open()}};
   $('editWindowsElements').onclick=open;
 }
-function openWindowsElements(scope,name,selectedValues=[],whole=false,mode=null) {
+function openWindowsElements(scope,name,selectedValues=[],whole=false,mode=null,appendValues=null) {
   lastDialogFocus=document.activeElement;
   const target=scope+'|'+name.toUpperCase();
-  WindowsElements.open({container:$('modal'),name,scope,raw:windows[target],selectedValues,whole,replacementExpected:(whole||mode==='replace')&&selectedValues.length===1&&windows[target]!==undefined&&windows[target]!==selectedValues[0],
+  WindowsElements.open({container:$('modal'),name,scope,raw:windows[target],selectedValues,whole,appendValues:whole?[]:appendValues??(isAppendMode(mode)?selectedValues:[]),replacementExpected:(whole||mode==='replace')&&selectedValues.length===1&&windows[target]!==undefined&&windows[target]!==selectedValues[0],
     registryType:name.toUpperCase()==='PATH'?'REG_EXPAND_SZ':'REG_SZ',close:closeModal,
     onApply:raw=>{
       windows[target]=raw; revision++;
@@ -160,9 +173,9 @@ function renderWindows() {
   $('screen').innerHTML=`<div class="fullpage" style="width:100%"><div class="pageh"><div><h2>Windows 环境</h2><p>演示快照 · 双击变量值打开元素列表</p></div><span class="tag neutral">${items.length} 项变量</span></div>
     <table class="outline-table"><thead><tr><th style="width:130px">作用域</th><th style="width:155px">变量</th><th>模拟当前值</th><th style="width:86px">操作</th></tr></thead><tbody>${items.map(k=>{
       const specs=specsFor(k), whole=specs.some(v=>v.special);
-      return `<tr><td>${k.startsWith('User')?'用户':'系统'}</td><td><strong>${esc(k.split('|')[1])}</strong></td><td><div class="codevalue inspect-editable" tabindex="0" role="button" aria-label="编辑 ${esc(k.split('|')[1])} 元素" title="双击打开元素列表（演示）" data-windows-value="${esc(k)}">${WindowsElements.highlight(windows[k],specs.map(value),whole)}</div></td><td><button class="textbtn" data-windows-edit="${esc(k)}">编辑</button></td></tr>`;
+      return `<tr><td>${k.startsWith('User')?'用户':'系统'}</td><td><strong>${esc(k.split('|')[1])}</strong></td><td><div class="codevalue inspect-editable" tabindex="0" role="button" aria-label="编辑 ${esc(k.split('|')[1])} 元素" title="双击打开元素列表（演示）" data-windows-value="${esc(k)}">${WindowsElements.highlight(windows[k],specs.map(value),whole)}</div>${WindowsElements.pendingMarkup(windows[k],specs.filter(v=>isAppendMode(v.mode)).map(value),whole)}</td><td><button class="textbtn" data-windows-edit="${esc(k)}">编辑</button></td></tr>`;
     }).join('')}</tbody></table><div class="helpnote match-legend"><span class="legend-swatch"></span>高亮为当前准备方案中的匹配元素</div></div>`;
-  const open=k=>{const [scope,name]=k.split('|'),specs=specsFor(k);openWindowsElements(scope,name,specs.map(value),specs.some(v=>v.special))};
+  const open=k=>{const [scope,name]=k.split('|'),specs=specsFor(k);openWindowsElements(scope,name,specs.map(value),specs.some(v=>v.special),null,specs.filter(v=>isAppendMode(v.mode)).map(value))};
   document.querySelectorAll('[data-windows-value]').forEach(el=>{
     el.ondblclick=()=>open(el.dataset.windowsValue);
     el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open(el.dataset.windowsValue)}};

@@ -81,6 +81,15 @@
 .diff-token.is-related-highlight { box-shadow: 0 0 0 2px var(--element-related-ring), 0 2px 4px #314b6126; }
 .element-row.is-related-highlight { outline: 2px solid var(--element-related-ring); outline-offset: -2px; }
 .comparison-hint { color: var(--sub); font-size: 11px; margin: 8px 0 0; }
+.pending-add-token { display: inline; padding: 2px 4px; background: #eef5ff; color: #315b88; border: 1px dashed #81a2cf; border-radius: 3px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.diff-label.is-pending-add { color: #315b88; background: #dfebfa; }
+.pending-additions { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line2); }
+.pending-additions-title { display: block; color: var(--sub); font: 11px/1.5 'Microsoft YaHei UI','Segoe UI',sans-serif; margin-bottom: 6px; }
+.pending-additions-values { white-space: pre-wrap; overflow-wrap: anywhere; font: 12.5px/2.1 Consolas,'Microsoft YaHei UI',monospace; }
+.pending-additions-values .element-separator { margin: 0 4px; }
+#compareDesired { line-height: 2.1; }
+#pendingElements { margin-top: 12px; }
+#pendingElements .pending-additions { margin-top: 0; }
 .pending-replacement { border-bottom: 1px dashed #d8b878; }
 .removed-elements { display: block; margin-top: 10px; padding-top: 7px; border-top: 1px dashed var(--line2); }
 .removed-title { display: block; color: var(--sub); font: 11px/1.5 'Microsoft YaHei UI',sans-serif; margin-bottom: 5px; }

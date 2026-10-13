@@ -5,6 +5,31 @@ var WindowsElements = (() => {
   const normalized = value => value.trim();
   const required = values => new Set(values.flatMap(value => value.split(';')).map(normalized).filter(Boolean));
   const matches = (raw, values, whole) => whole ? values.some(value => value === raw) : normalized(raw) !== '' && required(values).has(normalized(raw));
+  function selectionInfo(raw, values = [], whole = false) {
+    const actual = new Set(raw === undefined ? [] : raw.split(';').map(normalized).filter(Boolean));
+    const parts = values.flatMap(value => whole ? [value] : value.split(';')).map((value,index) => ({
+      value,index,matched:whole ? raw !== undefined && raw === value : normalized(value) !== '' && actual.has(normalized(value))
+    }));
+    const effective = parts.filter(part => whole || normalized(part.value) !== '');
+    return {parts,total:effective.length,matched:effective.filter(part=>part.matched).length,
+      missing:effective.filter(part=>!part.matched).map(({value,index})=>({value,index}))};
+  }
+  const pendingToken = part => `<span class="pending-add-token" data-selected-index="${part.index}"><span class="diff-value" data-raw-value="${escape(part.value)}">${escape(part.value)}</span><span class="diff-label is-pending-add">待追加</span></span>`;
+  function selectionMarkup(raw, values = [], whole = false, append = false) {
+    if (whole || !append) return escape(values.join(';')) || '<span class="empty-element">（空字符串）</span>';
+    if (values.length===1 && values[0]==='') return '<span class="empty-element">（空字符串）</span>';
+    return selectionInfo(raw,values).parts.map(part => {
+      if (normalized(part.value) !== '' && !part.matched) return pendingToken(part);
+      if (part.matched) return `<mark class="matched-element"><span data-raw-value="${escape(part.value)}">${escape(part.value)}</span></mark>`;
+      return part.value === '' ? '<span class="empty-element" data-raw-value="">（空元素）</span>' : escape(part.value);
+    }).join('<span class="element-separator">;</span>');
+  }
+  function pendingMarkup(raw, values = [], whole = false, editing = false) {
+    if (whole) return '';
+    const missing = selectionInfo(raw,values).missing;
+    if (!missing.length) return '';
+    return `<div class="pending-additions"><span class="pending-additions-title">方案待追加 · ${editing?'尚未加入本次编辑结果':'尚未加入当前值'}</span><div class="pending-additions-values">${missing.map(pendingToken).join('<span class="element-separator">;</span>')}</div></div>`;
+  }
   function highlight(raw, values = [], whole = false, willReplace = false) {
     if (raw === undefined) return '<span class="empty-element">（不存在）</span>';
     if (raw === '') return '<span class="empty-element">（空字符串）</span>' + (willReplace ? '<span class="diff-label replacement-label">将替换</span>' : '');
@@ -119,6 +144,9 @@ var WindowsElements = (() => {
     root.querySelector('#restoreElements').disabled=!structureChanged;
     root.querySelector('#elementStatus').textContent=changed?'有待应用修改 · 仅更新演示数据':structureChanged?'顺序或结构已调整 · 结果值未变化':'未修改 · 仅更新演示数据';
     root.querySelectorAll('[data-element-id]').forEach(el=>{if(!el.classList.contains('element-row'))return;const row=session.rows.find(row=>row.id===Number(el.dataset.elementId));if(row)paintRow(el,row);});
+    const pending = root.querySelector('#pendingElements');
+    pending.innerHTML = pendingMarkup(raw,session.appendValues || [],session.whole,true);
+    pending.hidden = !pending.innerHTML;
     renderComparison();
   }
   function open(options) {
@@ -132,7 +160,7 @@ var WindowsElements = (() => {
       <div class="elements-meta"><span>作用域 <strong>${options.scope==='User'?'用户':'系统'}</strong></span><span>类型 <strong>${escape(options.registryType)}（示例）</strong></span><span id="elementTotal"></span></div>
       <div class="dialogbody elements-body"><div class="elements-toolbar"><span>${options.whole?'整体字符串 · 不拆分元素':'按分号排列 · Alt + ↑ / ↓ 调整顺序'}</span><div class="elements-toolbar-actions"><button class="textbtn" id="restoreElements" disabled title="恢复打开弹窗时的值，不改变页面快照">还原本次编辑</button><button class="btn" id="addElement" ${options.whole?'hidden':''}>＋ 新增元素</button></div></div>
         <div class="change-legend"><span class="legend-group"><span class="legend-heading">变更</span><span class="legend-replaced">替换</span><span class="legend-added">＋ 新增</span><span class="legend-moved">↕ 移动</span><span class="legend-removed">− 删除</span></span><span class="legend-group"><span class="legend-heading">提示</span><span class="legend-duplicate">重复 ×2</span><span class="legend-match">✓ 匹配</span></span></div>
-        <div class="element-list" id="elementList"></div><div class="element-validation" id="elementValidation" role="status"></div>
+        <div class="element-list" id="elementList"></div><div class="element-validation" id="elementValidation" role="status"></div><div id="pendingElements" hidden></div>
         <details class="element-raw"><summary>查看元素变更对照</summary><p class="comparison-hint">悬停色框可对照同一元素。重复按每栏的原始文本统计，空元素保留；删除项不计入新值。</p><div class="raw-comparison"><div><label>打开时的值</label><pre id="elementOriginal"></pre></div><div><label>编辑后的值 · 含删除标记</label><pre id="elementPreview"></pre></div></div><details class="serialized-result"><summary>实际结果字符串（不含标记或删除项）</summary><pre id="elementSerialized"></pre></details></details>
       </div><div class="dialogfoot element-footer"><span id="elementStatus" role="status">仅更新演示数据</span><button class="btn" id="cancelDialog" title="丢弃弹窗内修改，保留页面快照">取消修改</button><button class="btn primary" id="applyElements" disabled>应用（演示）</button></div></div>`;
     container.classList.add('open');
@@ -180,5 +208,5 @@ var WindowsElements = (() => {
     }
     session=null;
   }
-  return {highlight,open,dismiss};
+  return {highlight,selectionInfo,selectionMarkup,pendingMarkup,open,dismiss};
 })();
