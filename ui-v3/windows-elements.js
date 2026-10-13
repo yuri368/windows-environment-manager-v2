@@ -3,6 +3,7 @@ var WindowsElements = (() => {
   const escape = text => String(text ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   let session = null, sequence = 0;
   const normalized = value => value.trim();
+  const originalValues = () => session.original === undefined ? [] : session.whole ? [session.original] : session.original.split(';');
   const required = values => new Set(values.flatMap(value => value.split(';')).map(normalized).filter(Boolean));
   function matches(raw, values, whole) {
     return whole ? values.some(value => value === raw) : normalized(raw) !== '' && required(values).has(normalized(raw));
@@ -22,17 +23,22 @@ var WindowsElements = (() => {
     container.innerHTML = `<div class="dialog element-dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
       <div class="dialoghead"><div><div class="eyebrow">Windows 环境 / ${escape(options.scope === 'User' ? '用户' : '系统')}</div><h3 id="dialogTitle">${escape(options.name)} <span class="element-demo">演示数据</span></h3><p>调整元素顺序或内容，应用后更新本页展示。</p></div><button class="close" id="closeDialog" aria-label="关闭元素编辑器">×</button></div>
       <div class="elements-meta"><span>作用域 <strong>${options.scope === 'User' ? '用户' : '系统'}</strong></span><span>类型 <strong>${escape(options.registryType)}（示例）</strong></span><span id="elementTotal"></span></div>
-      <div class="dialogbody elements-body"><div class="elements-toolbar"><span>${options.whole ? '整体字符串 · 不拆分元素' : '按分号排列 · 拖动或使用箭头调整顺序'}</span><button class="btn" id="addElement" ${options.whole ? 'hidden' : ''}>＋ 新增元素</button></div>
+      <div class="dialogbody elements-body"><div class="elements-toolbar"><span>${options.whole ? '整体字符串 · 不拆分元素' : '按分号排列 · Alt + ↑ / ↓ 调整顺序'}</span><div class="elements-toolbar-actions"><button class="textbtn" id="restoreElements" disabled title="恢复打开弹窗时的值，不改变页面快照">还原本次编辑</button><button class="btn" id="addElement" ${options.whole ? 'hidden' : ''}>＋ 新增元素</button></div></div>
         <div class="element-list" id="elementList"></div>
         <div class="element-validation" id="elementValidation" role="status"></div>
         <details class="element-raw"><summary>查看完整字符串</summary><div class="raw-comparison"><div><label>打开时的值</label><pre id="elementOriginal"></pre></div><div><label>编辑后的值</label><pre id="elementPreview"></pre></div></div></details>
-      </div><div class="dialogfoot element-footer"><span id="elementStatus">仅更新演示数据</span><button class="btn" id="cancelDialog">取消</button><button class="btn primary" id="applyElements" disabled>应用（演示）</button></div>
+      </div><div class="dialogfoot element-footer"><span id="elementStatus" role="status">仅更新演示数据</span><button class="btn" id="cancelDialog" title="丢弃弹窗内修改，保留页面快照">取消修改</button><button class="btn primary" id="applyElements" disabled>应用（演示）</button></div>
     </div>`;
     container.classList.add('open');
     container.querySelector('#elementOriginal').textContent = original === undefined ? '（不存在）' : original;
     container.querySelector('#closeDialog').onclick = options.close;
     container.querySelector('#cancelDialog').onclick = options.close;
     container.querySelector('#addElement').onclick = () => { session.rows.push({id: ++sequence, value: ''}); renderRows(sequence); };
+    container.querySelector('#restoreElements').onclick = () => {
+      session.rows = originalValues().map(value => ({id: ++sequence, value}));
+      session.dragging = null; renderRows(session.rows[0]?.id);
+      if (!session.rows.length) container.querySelector('#addElement').focus();
+    };
     container.querySelector('#applyElements').onclick = () => {
       if (!session || !valid()) return;
       const current = session, result = serialized();
@@ -45,11 +51,12 @@ var WindowsElements = (() => {
   const serialized = () => session.rows.map(row => row.value).join(session.whole ? '' : ';');
   function valid() { return !session.rows.some(row => row.value.includes('\0') || (!session.whole && row.value.includes(';'))); }
   function update() {
-    const root = session.container, raw = serialized(), changed = raw !== session.original;
+    const root = session.container, raw = serialized(), changed = session.original === undefined ? session.rows.length > 0 : raw !== session.original;
     root.querySelector('#elementTotal').textContent = `${session.rows.length} ${session.whole ? '条字符串' : '个元素'}`;
     root.querySelector('#elementPreview').textContent = raw;
     root.querySelector('#elementValidation').textContent = valid() ? '' : '一个元素内不能包含分号或 NUL；请将多项内容拆成多个元素。';
     root.querySelector('#applyElements').disabled = !valid() || !changed;
+    root.querySelector('#restoreElements').disabled = JSON.stringify(session.rows.map(row => row.value)) === JSON.stringify(originalValues());
     root.querySelector('#elementStatus').textContent = changed ? '有未应用修改 · 仅更新演示数据' : '未修改 · 仅更新演示数据';
   }
   function move(id, offset) {
@@ -90,6 +97,7 @@ var WindowsElements = (() => {
     root.querySelectorAll('[data-delete]').forEach(button => button.onclick = () => {
       const index = session.rows.findIndex(row => row.id === Number(button.dataset.delete));
       session.rows.splice(index, 1); renderRows(session.rows[Math.min(index, session.rows.length-1)]?.id);
+      if (!session.rows.length) root.querySelector('#addElement').focus();
     });
     root.querySelectorAll('[data-element-id]').forEach(element => {
       const id = Number(element.dataset.elementId);

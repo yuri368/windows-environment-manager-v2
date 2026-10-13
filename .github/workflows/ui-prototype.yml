@@ -1,0 +1,37 @@
+name: V3 UI prototype checks
+
+on:
+  push:
+    branches: ['v3/**']
+    paths: ['ui-v3/**', '.github/workflows/ui-prototype.yml']
+  pull_request:
+    paths: ['ui-v3/**', '.github/workflows/ui-prototype.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ui-events:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: ui-v3
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: ui-v3/package-lock.json
+      - run: npm ci --ignore-scripts
+      - run: npm test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v3-ui-event-reports
+          path: ui-v3/design-evidence/*-report.json
+          if-no-files-found: warn

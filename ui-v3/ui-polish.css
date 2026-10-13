@@ -108,6 +108,15 @@ body { padding: 12px; font-size: 13px; line-height: 1.55; }
 .editor-section strong { font-size: 12px; color: var(--sub); }
 .editor-item { font-size: 13px; min-height: 34px; padding: 7px 9px; }
 .editor-item.active { background: #f0f2f1; color: var(--ink); }
+.editor-item { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.config-page { width: 100%; display: flex; flex-direction: column; min-height: 0; }
+.editor-body { min-height: 0; flex: 1; display: flex; }
+.editor-tabs { min-height: 38px; flex: none; display: flex; gap: 4px; align-items: center; padding: 0 13px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.editor-tabs .navtab { align-self: stretch; white-space: nowrap; }
+.editor-tabs .tag { margin-left: 8px; }
+.config-file-label { margin-left: auto; color: var(--sub); font-size: 12px; padding: 5px 0; }
+.has-changes { color: var(--amber); }
+.app-title, .editor-mid h2, .editor-right h3 { overflow-wrap: anywhere; min-width: 0; }
 .editor-mid { padding: 20px; }
 .editor-mid h2 { font-size: 20px; margin: 0 0 6px; }
 .editor-mid .littlemeta { font-size: 12px; margin-bottom: 20px; }
@@ -131,6 +140,7 @@ body { padding: 12px; font-size: 13px; line-height: 1.55; }
 .editor-table .scheme-group th { padding: 10px 12px; background: #f5f6f5; color: var(--ink); border-top: 1px solid var(--line); font-size: 13px; }
 .scheme-heading { display: flex; align-items: center; gap: 12px; min-height: 20px; flex-wrap: wrap; }
 .scheme-name { font-weight: 650; }
+.scheme-name { overflow-wrap: anywhere; min-width: 0; }
 .scheme-group .group-meta { font-size: 12px; font-weight: 400; color: var(--sub); margin-left: 0; }
 .scheme-flags { margin-left: auto; color: var(--sub); font-size: 12px; font-weight: 400; }
 .view-select { height: 32px; background: #f8faf9; border: 1px solid var(--line2); border-radius: 5px; padding: 0 8px; font-size: 12px; }
