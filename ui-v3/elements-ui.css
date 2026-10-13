@@ -83,10 +83,13 @@
 .comparison-hint { color: var(--sub); font-size: 11px; margin: 8px 0 0; }
 .pending-add-token { display: inline; padding: 2px 4px; background: #eef5ff; color: #315b88; border: 1px dashed #81a2cf; border-radius: 3px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
 .diff-label.is-pending-add { color: #315b88; background: #dfebfa; }
-.pending-add-button { display: inline-block; width: 24px; height: 22px; margin-left: 6px; padding: 0; border: 1px solid #81a2cf; border-radius: 3px; background: #fff; color: #315b88; font: 16px/1 'Segoe UI',sans-serif; vertical-align: middle; }
-.pending-add-button:hover { background: #dcebff; border-color: #6294d0; }
+.pending-add-token.is-actionable { display: inline-flex; align-items: center; gap: 4px; max-width: 100%; min-height: 30px; margin: 3px 0; padding: 0 0 0 8px; vertical-align: middle; line-height: 18px; }
+.pending-add-token.is-actionable > .diff-value { min-width: 0; padding: 4px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.pending-add-token.is-actionable > .diff-label { flex: none; margin-left: 0; }
+.pending-add-button { display: inline-flex; align-items: center; justify-content: center; flex: none; align-self: stretch; width: 28px; min-height: 28px; margin: 0; padding: 0; border: 0; border-left: 1px solid #c1d2e8; border-radius: 0 2px 2px 0; background: transparent; color: #315b88; font: 18px/1 'Segoe UI',sans-serif; }
+.pending-add-button:hover { background: #dcebff; }
 .pending-add-button:active { background: #c4ddff; }
-.pending-add-button:focus-visible { outline: 2px solid #315b88; outline-offset: 2px; }
+.pending-add-button:focus-visible { outline: 2px solid #315b88; outline-offset: -3px; background: #dcebff; }
 .pending-additions { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line2); }
 .pending-additions-title { display: block; color: var(--sub); font: 11px/1.5 'Microsoft YaHei UI','Segoe UI',sans-serif; margin-bottom: 6px; }
 .pending-additions-values { white-space: pre-wrap; overflow-wrap: anywhere; font: 12.5px/2.1 Consolas,'Microsoft YaHei UI',monospace; }

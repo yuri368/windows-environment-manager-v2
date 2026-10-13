@@ -18,7 +18,7 @@ var WindowsElements = (() => {
   const pendingToken = (part,mode=null) => {
     const position=mode==='+append'?'开头':'末尾';
     const button=isAppendMode(mode)?`<button type="button" class="pending-add-button" data-add-pending="${part.index}" title="加入当前编辑列表${position}" aria-label="将 ${escape(part.value)} 加入当前编辑列表${position}">＋</button>`:'';
-    return `<span class="pending-add-token" data-selected-index="${part.index}"><span class="diff-value" data-raw-value="${escape(part.value)}">${escape(part.value)}</span><span class="diff-label is-pending-add">待追加</span>${button}</span>`;
+    return `<span class="pending-add-token${button?' is-actionable':''}" data-selected-index="${part.index}"><span class="diff-value" data-raw-value="${escape(part.value)}">${escape(part.value)}</span><span class="diff-label is-pending-add">待追加</span>${button}</span>`;
   };
   function selectionMarkup(raw, values = [], whole = false, append = false) {
     if (whole || !append) return escape(values.join(';')) || '<span class="empty-element">（空字符串）</span>';
