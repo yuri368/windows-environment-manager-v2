@@ -14,7 +14,12 @@ var WindowsElements = (() => {
     return {parts,total:effective.length,matched:effective.filter(part=>part.matched).length,
       missing:effective.filter(part=>!part.matched).map(({value,index})=>({value,index}))};
   }
-  const pendingToken = part => `<span class="pending-add-token" data-selected-index="${part.index}"><span class="diff-value" data-raw-value="${escape(part.value)}">${escape(part.value)}</span><span class="diff-label is-pending-add">待追加</span></span>`;
+  const isAppendMode = mode => ['+append','-append','append'].includes(mode);
+  const pendingToken = (part,mode=null) => {
+    const position=mode==='+append'?'开头':'末尾';
+    const button=isAppendMode(mode)?`<button type="button" class="pending-add-button" data-add-pending="${part.index}" title="加入当前编辑列表${position}" aria-label="将 ${escape(part.value)} 加入当前编辑列表${position}">＋</button>`:'';
+    return `<span class="pending-add-token" data-selected-index="${part.index}"><span class="diff-value" data-raw-value="${escape(part.value)}">${escape(part.value)}</span><span class="diff-label is-pending-add">待追加</span>${button}</span>`;
+  };
   function selectionMarkup(raw, values = [], whole = false, append = false) {
     if (whole || !append) return escape(values.join(';')) || '<span class="empty-element">（空字符串）</span>';
     if (values.length===1 && values[0]==='') return '<span class="empty-element">（空字符串）</span>';
@@ -24,11 +29,11 @@ var WindowsElements = (() => {
       return part.value === '' ? '<span class="empty-element" data-raw-value="">（空元素）</span>' : escape(part.value);
     }).join('<span class="element-separator">;</span>');
   }
-  function pendingMarkup(raw, values = [], whole = false, editing = false) {
+  function pendingMarkup(raw, values = [], whole = false, editing = false, modes = []) {
     if (whole) return '';
     const missing = selectionInfo(raw,values).missing;
     if (!missing.length) return '';
-    return `<div class="pending-additions"><span class="pending-additions-title">方案待追加 · ${editing?'尚未加入本次编辑结果':'尚未加入当前值'}</span><div class="pending-additions-values">${missing.map(pendingToken).join('<span class="element-separator">;</span>')}</div></div>`;
+    return `<div class="pending-additions"><span class="pending-additions-title">方案待追加 · ${editing?'尚未加入本次编辑结果':'尚未加入当前值'}</span><div class="pending-additions-values">${missing.map(part=>pendingToken(part,editing?modes[part.index]:null)).join('<span class="element-separator">;</span>')}</div></div>`;
   }
   function highlight(raw, values = [], whole = false, willReplace = false) {
     if (raw === undefined) return '<span class="empty-element">（不存在）</span>';
@@ -145,15 +150,22 @@ var WindowsElements = (() => {
     root.querySelector('#elementStatus').textContent=changed?'有待应用修改 · 仅更新演示数据':structureChanged?'顺序或结构已调整 · 结果值未变化':'未修改 · 仅更新演示数据';
     root.querySelectorAll('[data-element-id]').forEach(el=>{if(!el.classList.contains('element-row'))return;const row=session.rows.find(row=>row.id===Number(el.dataset.elementId));if(row)paintRow(el,row);});
     const pending = root.querySelector('#pendingElements');
-    pending.innerHTML = pendingMarkup(raw,session.appendValues || [],session.whole,true);
+    pending.innerHTML = pendingMarkup(raw,session.appendValues,session.whole,true,session.appendModes);
     pending.hidden = !pending.innerHTML;
+    const editingSession=session;
+    pending.querySelectorAll('[data-add-pending]').forEach(button=>{
+      button.onclick=()=>adoptPending(Number(button.dataset.addPending),button,editingSession);
+    });
     renderComparison();
   }
   function open(options) {
     dismiss();
     const original=options.raw,rawValues=original===undefined?[]:options.whole?[original]:original.split(';');
     const originalRows=rawValues.map(value=>({id:++sequence,value}));
-    session={...options,original,originalRows,originalById:new Map(originalRows.map(row=>[row.id,row])),originalCounts:countsFor(originalRows),currentCounts:new Map(),rows:originalRows.map(row=>({...row})),dragging:null,hoveredId:null,focusedId:null};
+    const entries=Array.isArray(options.appendEntries)?options.appendEntries:null;
+    const appendValues=entries?entries.map(entry=>entry.value):[...(options.appendValues || [])];
+    const appendModes=entries?entries.flatMap(entry=>entry.value.split(';').map(()=>entry.mode)):[];
+    session={...options,appendValues,appendModes,original,originalRows,originalById:new Map(originalRows.map(row=>[row.id,row])),originalCounts:countsFor(originalRows),currentCounts:new Map(),rows:originalRows.map(row=>({...row})),dragging:null,hoveredId:null,focusedId:null};
     const container=options.container;
     container.innerHTML=`<div class="dialog element-dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
       <div class="dialoghead"><div><div class="eyebrow">Windows 环境 / ${options.scope==='User'?'用户':'系统'}</div><h3 id="dialogTitle">${escape(options.name)} <span class="element-demo">演示数据</span></h3><p>调整元素顺序或内容，应用后更新本页展示。</p></div><button class="close" id="closeDialog" aria-label="关闭元素编辑器">×</button></div>
@@ -170,6 +182,16 @@ var WindowsElements = (() => {
     container.querySelector('#restoreElements').onclick=()=>{session.rows=session.originalRows.map(row=>({...row}));session.dragging=null;session.hoveredId=null;session.focusedId=null;renderRows(session.rows[0]?.id);if(!session.rows.length)container.querySelector('#addElement').focus();};
     container.querySelector('#applyElements').onclick=()=>{if(!session||!valid()||container.querySelector('#applyElements').disabled)return;const current=session,result=serialized();current.close();current.onApply(result);};
     renderRows();container.querySelector('#closeDialog').focus();
+  }
+  function adoptPending(index,button,editingSession) {
+    if(!session||session!==editingSession||session.whole||!button.isConnected||!session.container.querySelector('#pendingElements').contains(button))return;
+    const mode=session.appendModes[index];
+    if(!isAppendMode(mode))return;
+    const candidate=selectionInfo(serialized(),session.appendValues).missing.find(part=>part.index===index);
+    if(!candidate)return;
+    const row={id:++sequence,value:candidate.value};
+    if(mode==='+append')session.rows.unshift(row);else session.rows.push(row);
+    renderRows(row.id);
   }
   function move(id,offset) {
     const index=session.rows.findIndex(row=>row.id===id),target=index+offset;

@@ -145,10 +145,10 @@ function renderInspector() {
   $('compareActual').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open()}};
   $('editWindowsElements').onclick=open;
 }
-function openWindowsElements(scope,name,selectedValues=[],whole=false,mode=null,appendValues=null) {
+function openWindowsElements(scope,name,selectedValues=[],whole=false,mode=null,appendValues=null,appendEntries=null) {
   lastDialogFocus=document.activeElement;
   const target=scope+'|'+name.toUpperCase();
-  WindowsElements.open({container:$('modal'),name,scope,raw:windows[target],selectedValues,whole,appendValues:whole?[]:appendValues??(isAppendMode(mode)?selectedValues:[]),replacementExpected:(whole||mode==='replace')&&selectedValues.length===1&&windows[target]!==undefined&&windows[target]!==selectedValues[0],
+  WindowsElements.open({container:$('modal'),name,scope,raw:windows[target],selectedValues,whole,appendValues:whole?[]:appendValues??(isAppendMode(mode)?selectedValues:[]),appendEntries:whole?null:appendEntries??(isAppendMode(mode)?selectedValues.map(value=>({value,mode})):null),replacementExpected:(whole||mode==='replace')&&selectedValues.length===1&&windows[target]!==undefined&&windows[target]!==selectedValues[0],
     registryType:name.toUpperCase()==='PATH'?'REG_EXPAND_SZ':'REG_SZ',close:closeModal,
     onApply:raw=>{
       windows[target]=raw; revision++;
@@ -175,7 +175,10 @@ function renderWindows() {
       const specs=specsFor(k), whole=specs.some(v=>v.special);
       return `<tr><td>${k.startsWith('User')?'用户':'系统'}</td><td><strong>${esc(k.split('|')[1])}</strong></td><td><div class="codevalue inspect-editable" tabindex="0" role="button" aria-label="编辑 ${esc(k.split('|')[1])} 元素" title="双击打开元素列表（演示）" data-windows-value="${esc(k)}">${WindowsElements.highlight(windows[k],specs.map(value),whole)}</div>${WindowsElements.pendingMarkup(windows[k],specs.filter(v=>isAppendMode(v.mode)).map(value),whole)}</td><td><button class="textbtn" data-windows-edit="${esc(k)}">编辑</button></td></tr>`;
     }).join('')}</tbody></table><div class="helpnote match-legend"><span class="legend-swatch"></span>高亮为当前准备方案中的匹配元素</div></div>`;
-  const open=k=>{const [scope,name]=k.split('|'),specs=specsFor(k);openWindowsElements(scope,name,specs.map(value),specs.some(v=>v.special),null,specs.filter(v=>isAppendMode(v.mode)).map(value))};
+  const open=k=>{
+    const [scope,name]=k.split('|'),specs=specsFor(k),appendSpecs=specs.filter(v=>isAppendMode(v.mode));
+    openWindowsElements(scope,name,specs.map(value),specs.some(v=>v.special),null,appendSpecs.map(value),appendSpecs.map(v=>({value:value(v),mode:v.mode})));
+  };
   document.querySelectorAll('[data-windows-value]').forEach(el=>{
     el.ondblclick=()=>open(el.dataset.windowsValue);
     el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open(el.dataset.windowsValue)}};

@@ -195,7 +195,11 @@ try {
     assert.equal(serialized(), 'A;A;;');
     assert.ok(q('#pendingElements')); assert.match(q('#pendingElements').textContent, /待追加/);
     assert.match(q('#pendingElements').textContent, /未加入|不计入|未计入/);
-    assert.equal(q('#pendingElements').querySelector('[data-element-id],input,textarea,button,.is-duplicate,.element-row'), null);
+    assert.equal(q('#pendingElements').querySelector('[data-element-id],input,textarea,[data-move-up],[data-move-down],[data-delete],.is-duplicate,.element-row'), null);
+    for (const button of q('#pendingElements').querySelectorAll('button')) {
+      assert.ok(button.matches('.pending-add-button[data-add-pending]'));
+      assert.match(button.textContent, /＋/);
+    }
     assert.equal(q('#applyElements').disabled, true); assert.equal(q('#restoreElements').disabled, true); cancel();
   });
   check('Readonly guidance cannot change dirty state, apply state or persisted demo values', () => {
