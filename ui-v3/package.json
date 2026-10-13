@@ -4,7 +4,7 @@
   "private": true,
   "description": "UI demo only. No runtime dependencies or Windows integration.",
   "scripts": {
-    "test": "node design-evidence/verify_dom.cjs && node design-evidence/verify_elements.cjs && node design-evidence/verify_interactions.cjs && node design-evidence/verify_examples.cjs && node design-evidence/verify_change_states.cjs && node design-evidence/verify_element_feedback.cjs && node design-evidence/verify_append_feedback.cjs && node design-evidence/verify_adopt_pending.cjs && node design-evidence/verify_history_sidebar.cjs"
+    "test": "node design-evidence/verify_dom.cjs && node design-evidence/verify_elements.cjs && node design-evidence/verify_interactions.cjs && node design-evidence/verify_examples.cjs && node design-evidence/verify_change_states.cjs && node design-evidence/verify_element_feedback.cjs && node design-evidence/verify_append_feedback.cjs && node design-evidence/verify_adopt_pending.cjs && node design-evidence/verify_history_sidebar.cjs && node design-evidence/verify_overall_audit.cjs"
   },
   "devDependencies": {
     "jsdom": "26.1.0"

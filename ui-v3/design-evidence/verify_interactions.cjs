@@ -18,8 +18,8 @@ const snapshot = () => w.eval('JSON.stringify(windows)');
 const configs = () => w.eval('JSON.stringify(apps)');
 check('Keyboard application selection preserves focus and current semantics', () => {
   const el=q('[data-app="0"]'); el.focus(); key(el,'Enter');
-  assert.equal(doc.activeElement.dataset.app,'0');
-  assert.equal(doc.activeElement.getAttribute('aria-current'),'page');
+  assert.equal(doc.activeElement.dataset.appSelect,'0');
+  assert.equal(doc.activeElement.getAttribute('aria-pressed'),'true');
   assert.equal(q('.app-title').textContent,'Java');
 });
 check('Batch checkbox refresh returns focus to that checkbox', () => {
