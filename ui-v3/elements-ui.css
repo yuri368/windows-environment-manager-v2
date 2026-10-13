@@ -16,6 +16,11 @@
   --element-added-bg: #dcebff; --element-added-border: #6294d0; --element-added-ink: #254f81;
   --element-removed-bg: #e0e3e7; --element-removed-border: #8a929e; --element-removed-ink: #565f6c;
   --element-duplicate-bg: #fce3dd; --element-duplicate-border: #c77c68; --element-duplicate-ink: #8a4435;
+  --element-moved-label-bg: #d8c2f1;
+  --element-replaced-label-bg: #ffd48b;
+  --element-added-label-bg: #bcd7ff;
+  --element-removed-label-bg: #c6ccd4;
+  --element-duplicate-label-bg: #f3bfb2;
   --element-related-ring: #314b61;
   width: min(880px,100%); max-height: min(800px,90dvh); display: flex; flex-direction: column;
 }
@@ -70,19 +75,21 @@
 .diff-token.is-added { color: var(--element-added-ink); background: var(--element-added-bg); border-color: var(--element-added-border); }
 .diff-token.is-removed { color: var(--element-removed-ink); background: var(--element-removed-bg); border-color: var(--element-removed-border); }
 .diff-token.is-removed .diff-value { text-decoration: line-through; text-decoration-thickness: 1px; }
-.diff-label { display: inline-block; margin-left: 6px; padding: 0 3px; border-radius: 2px; font: 10px/1.5 'Microsoft YaHei UI','Segoe UI',sans-serif; vertical-align: middle; white-space: nowrap; }
-.diff-label.is-replaced { color: var(--element-replaced-ink); background: var(--element-replaced-bg); }
-.diff-label.is-planned, .replacement-label { color: #815c20; background: #fff0d1; }
-.diff-label.is-added { color: var(--element-added-ink); background: var(--element-added-bg); }
-.diff-label.is-moved { color: var(--element-moved-ink); background: var(--element-moved-bg); }
-.diff-label.is-removed { color: var(--element-removed-ink); background: var(--element-removed-bg); }
-.diff-label.is-duplicate { color: var(--element-duplicate-ink); background: var(--element-duplicate-bg); border: 1px solid var(--element-duplicate-border); }
+.diff-label { display: inline-block; margin-left: 6px; padding: 0 4px; border: 1px solid transparent; border-radius: 2px; font: 10px/1.5 'Microsoft YaHei UI','Segoe UI',sans-serif; vertical-align: middle; white-space: nowrap; }
+.diff-label + .diff-label { margin-left: 4px; }
+.element-change-state > .diff-label { margin-left: 0; }
+.diff-label.is-replaced { color: var(--element-replaced-ink); background: var(--element-replaced-label-bg); border-color: var(--element-replaced-border); }
+.diff-label.is-planned, .replacement-label { color: #815c20; background: #ffda9b; border-color: #bf862b; }
+.diff-label.is-added { color: var(--element-added-ink); background: var(--element-added-label-bg); border-color: var(--element-added-border); }
+.diff-label.is-moved { color: var(--element-moved-ink); background: var(--element-moved-label-bg); border-color: var(--element-moved-border); }
+.diff-label.is-removed { color: var(--element-removed-ink); background: var(--element-removed-label-bg); border-color: var(--element-removed-border); }
+.diff-label.is-duplicate { color: var(--element-duplicate-ink); background: var(--element-duplicate-label-bg); border-color: var(--element-duplicate-border); }
 .element-match-mark { color: #205f46; font: 11px 'Segoe UI',sans-serif; margin-left: 6px; }
 .diff-token.is-related-highlight { box-shadow: 0 0 0 2px var(--element-related-ring), 0 2px 4px #314b6126; }
 .element-row.is-related-highlight { outline: 2px solid var(--element-related-ring); outline-offset: -2px; }
 .comparison-hint { color: var(--sub); font-size: 11px; margin: 8px 0 0; }
 .pending-add-token { display: inline; padding: 2px 4px; background: #eef5ff; color: #315b88; border: 1px dashed #81a2cf; border-radius: 3px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
-.diff-label.is-pending-add { color: #315b88; background: #dfebfa; }
+.diff-label.is-pending-add { color: #315b88; background: #d4e4fa; border-color: #81a2cf; }
 .pending-add-token.is-actionable { display: inline-flex; align-items: center; gap: 4px; max-width: 100%; min-height: 30px; margin: 3px 0; padding: 0 0 0 8px; vertical-align: middle; line-height: 18px; }
 .pending-add-token.is-actionable > .diff-value { min-width: 0; padding: 4px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .pending-add-token.is-actionable > .diff-label { flex: none; margin-left: 0; }
@@ -105,11 +112,11 @@
 .legend-heading { margin-right: 2px; }
 .legend-group > span:not(.legend-heading):not(.legend-match) { padding: 1px 4px; border: 1px solid var(--legend-border,currentColor); border-radius: 3px; }
 .legend-match { color: #205f46; }
-.legend-replaced { color: var(--element-replaced-ink); background: var(--element-replaced-bg); --legend-border: var(--element-replaced-border); }
-.legend-added { color: var(--element-added-ink); background: var(--element-added-bg); --legend-border: var(--element-added-border); }
-.legend-moved { color: var(--element-moved-ink); background: var(--element-moved-bg); --legend-border: var(--element-moved-border); }
-.legend-removed { color: var(--element-removed-ink); background: var(--element-removed-bg); --legend-border: var(--element-removed-border); text-decoration: line-through; }
-.legend-duplicate { color: var(--element-duplicate-ink); background: var(--element-duplicate-bg); --legend-border: var(--element-duplicate-border); }
+.legend-replaced { color: var(--element-replaced-ink); background: var(--element-replaced-label-bg); --legend-border: var(--element-replaced-border); }
+.legend-added { color: var(--element-added-ink); background: var(--element-added-label-bg); --legend-border: var(--element-added-border); }
+.legend-moved { color: var(--element-moved-ink); background: var(--element-moved-label-bg); --legend-border: var(--element-moved-border); }
+.legend-removed { color: var(--element-removed-ink); background: var(--element-removed-label-bg); --legend-border: var(--element-removed-border); text-decoration: line-through; }
+.legend-duplicate { color: var(--element-duplicate-ink); background: var(--element-duplicate-label-bg); --legend-border: var(--element-duplicate-border); }
 .serialized-result { margin-top: 12px; }
 .serialized-result pre { white-space: pre-wrap; overflow-wrap: anywhere; font: 12px/1.7 Consolas,monospace; padding: 10px; background: #f8faf9; border: 1px solid var(--line); border-radius: 4px; }
 .element-footer { align-items: center; flex: none; }
