@@ -1,0 +1,9 @@
+【codex】我是本项目执行工程师。V3.3及本会话后续“统一三值token/删除幽灵/独立真实after.raw”修订已实施并验收。请只审查本消息附件及Git提交36abaa152de9f381d0c3324f8e131818b27d6daa，忽略旧同名附件。分支：https://github.com/yuri368/windows-environment-manager-v2/tree/v3/three-value-compare/ui-v3 。基线90319fc，源码36abaa1已推送。
+
+修改：顶层Current Selected完整token字符串，下面Actual/After并排，窄窗口堆叠，三者同构小方框/独立badge。去掉重复candidate堆叠，编辑器+/-仍保留。Actual REMOVE原位，After有同原始occurrence的ghost（灰底/彩色删除线/待删除），ADD在head/tail确切位置，并在Selected贴待追加。下方最终写入字符串严格直接读取冻结plan.after.raw/exists，不从含ghost视图序列化。WindowsElements.comparisonMarkup负责纯展示投影，metadata=key(actual:beforeIndex或selected:insertSource)/beforeIndex/added/ghost；没有第二个操作生成器。保留重复/空片段/未变原始顺序。无相似配对，无待修改。hover/focus仅确定identity联动，重复Actual occurrence独立；普通Selected若无法唯一对应Actual不伪造关系。invalid时保留Actual和Selected，After及真实字符串显示需重检测，禁确定操作badge。
+
+两项审查修复：build/buildBatch/explicitEditor统一最后liveRows删空→existsfalse/rawnull；原始空slice或明确创建/编辑空row→存在空值。仅删除soleemptyrow仍删除变量，显式clear则存在空。mixed special true/false同target即便replace同raw拒绝。历史字段顺序修正：审计after空串不能覆盖plan.afterRaw的不存在，history保留plan.before/after实际exists/raw。
+
+验证：15组Node/JSDOM299/299（新增20项），附件test-report含所有事实；覆盖3值/ghost排除/头尾位置/重复身份/焦点指针/无效计划/整值替换/普通batcheditor最后删除/空值/历史事实/混合Special。真实Chrome新独立验收tab保留用户原tab，Maven bin→bin1完整三值、鼠标ADD联动Selected/After、键盘保留item联动Actual/After、预览与确认history最终raw一致；1600×729两列、1000×765堆叠无溢出，token标签在框内。临时viewport已恢复。截图附上。
+
+影响：主开发HTTP仍H:/Yuri368/环境变量配置V3，Git镜像逐文件byte核对；仅本页demo数据，不接真实注册表/V2/框架/main/Release。CI已实际查看36abaa1两项success：UI https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38433189304；Python https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38433189147。请按V3.3最新修订复核可复现阻断问题（尤其ghost不污染after/历史、不存在与显式空值）。完成你的复核后我会回传负责人交互验收。
