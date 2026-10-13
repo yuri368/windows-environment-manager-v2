@@ -1,0 +1,64 @@
+{
+  "verification": "JSDOM data and interaction checks only; visual layout, native browser scrolling and Windows integration not verified",
+  "total": 14,
+  "passed": 14,
+  "failed": 0,
+  "checks": [
+    {
+      "name": "Cancelled preview and cancelled element edit leave history and page state exact",
+      "passed": true
+    },
+    {
+      "name": "Confirmed single change stores exact raw before and after values independent of later snapshot edits",
+      "passed": true
+    },
+    {
+      "name": "Whole value editor retains semicolons as one audited replacement",
+      "passed": true
+    },
+    {
+      "name": "Confirming an unchanged preview creates no operation history entry",
+      "passed": true
+    },
+    {
+      "name": "Batch confirmation records each target with its own exact before and after",
+      "passed": true
+    },
+    {
+      "name": "Sequential batch changes to one target retain each intermediate raw value without invented element diffs",
+      "passed": true
+    },
+    {
+      "name": "All-unchanged batch confirmation adds no history entry",
+      "passed": true
+    },
+    {
+      "name": "Missing original and present empty original remain distinct in stored history",
+      "passed": true
+    },
+    {
+      "name": "Element editor apply records exact raw strings after duplicate, empty and markup edits",
+      "passed": true
+    },
+    {
+      "name": "History disclosure shows escaped raw strings and cannot change operational state",
+      "passed": true
+    },
+    {
+      "name": "Editor sidebar has separate app, profile and variable groups with independent list containers",
+      "passed": true
+    },
+    {
+      "name": "Sidebar CSS assigns three constrained groups and overflow to each list",
+      "passed": true
+    },
+    {
+      "name": "Sidebar app, profile and variable buttons still select correctly and remain keyboard focusable",
+      "passed": true
+    },
+    {
+      "name": "History and sidebar workflows produce no JSDOM runtime errors",
+      "passed": true
+    }
+  ]
+}

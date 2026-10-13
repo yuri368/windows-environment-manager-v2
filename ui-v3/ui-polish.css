@@ -104,8 +104,10 @@ body { padding: 12px; font-size: 13px; line-height: 1.55; }
 .pageh p { font-size: 12px; }
 .outline-table th { font-size: 12px; color: var(--sub); height: 38px; }
 .outline-table td { font-size: 13px; }
-.editor-left { width: 196px; padding: 16px 12px; }
-.editor-section { margin-top: 18px; }
+.editor-left { width: 196px; padding: 12px; display: grid; grid-template-rows: minmax(0,1.2fr) minmax(0,.8fr) minmax(0,1fr); gap: 12px; min-height: 0; overflow: hidden; }
+.editor-nav-group { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.editor-nav-list { min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; flex: 1; }
+.editor-section { margin: 0 0 6px; flex: none; min-height: 20px; }
 .editor-section strong { font-size: 12px; color: var(--sub); }
 .editor-item { font-size: 13px; min-height: 34px; padding: 7px 9px; }
 .editor-item.active { background: #f0f2f1; color: var(--ink); }
@@ -152,6 +154,22 @@ body { padding: 12px; font-size: 13px; line-height: 1.55; }
 .edfooter { min-height: 58px; height: auto; padding: 10px 18px; flex-wrap: wrap; }
 .edfooter span { font-size: 12px; }
 .codetext { font-size: 13px; }
+.history-page .outline-table { table-layout: fixed; }
+.history-page .outline-table > tbody > tr > td { vertical-align: top; }
+.history-details summary { cursor: pointer; overflow-wrap: anywhere; }
+.history-expand { display: inline-block; margin-left: 12px; color: var(--green); font-size: 12px; }
+.history-detail-body { margin-top: 12px; }
+.history-change { border-top: 1px solid var(--line); padding: 12px 0; }
+.history-change-heading { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.history-source, .history-counts { margin: 6px 0; font-size: 12px; }
+.history-values { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 12px; margin: 10px 0; }
+.history-values pre { white-space: pre-wrap; overflow-wrap: anywhere; margin: 5px 0; padding: 8px; border: 1px solid var(--line); border-radius: 4px; background: #f8faf9; font: 12px/1.65 Consolas,'Microsoft YaHei UI',monospace; max-height: 180px; overflow-y: auto; }
+.history-element-table { width: 100%; table-layout: fixed; border-collapse: collapse; }
+.history-element-table th, .history-element-table td { padding: 6px !important; font-size: 12px !important; overflow-wrap: anywhere; }
+.history-element-table th:first-child { width: 100px; }
+.history-element-table th:nth-child(2) { width: 100px; }
+.history-element-table .diff-label { margin: 2px; }
+.history-element-table code { white-space: pre-wrap; font: 12px/1.6 Consolas,'Microsoft YaHei UI',monospace; }
 .dialoghead h3 { font-size: 18px; }
 .dialoghead p, .banner { font-size: 12px; color: var(--sub); }
 .dialogbody { padding: 16px 20px; }
@@ -178,7 +196,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .overview { flex-wrap: wrap; }
   .plan-side { margin-left: 0; }
   .editor-shell { flex-wrap: wrap; overflow: auto; }
-  .editor-left { width: 150px; }
+  .editor-left { width: 150px; height: clamp(240px,calc(100dvh - 190px),520px); }
   .editor-mid { flex-basis: calc(100% - 150px); overflow: visible; }
   .editor-right { width: 100%; border-left: 0; border-top: 1px solid var(--line); }
 }

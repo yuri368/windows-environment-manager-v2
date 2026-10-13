@@ -10,7 +10,7 @@
 .match-legend { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--sub); margin-top: 8px; }
 .legend-swatch { width: 10px; height: 10px; border-radius: 2px; background: #e8f2ec; border: 1px solid #a9c7b4; flex: none; }
 .empty-element { color: var(--sub); }
-.element-dialog {
+.element-dialog, .history-change {
   --element-moved-bg: #ede3fa; --element-moved-border: #9770c5; --element-moved-ink: #56327e;
   --element-replaced-bg: #ffe8be; --element-replaced-border: #bf862b; --element-replaced-ink: #755018;
   --element-added-bg: #dcebff; --element-added-border: #6294d0; --element-added-ink: #254f81;
@@ -22,6 +22,8 @@
   --element-removed-label-bg: #c6ccd4;
   --element-duplicate-label-bg: #f3bfb2;
   --element-related-ring: #314b61;
+}
+.element-dialog {
   width: min(880px,100%); max-height: min(800px,90dvh); display: flex; flex-direction: column;
 }
 .element-dialog .dialoghead { flex: none; padding-bottom: 15px; }

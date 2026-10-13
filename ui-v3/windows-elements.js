@@ -66,6 +66,21 @@ var WindowsElements = (() => {
       ...(state.moved ? [['moved','移动']] : []), ...(planned && !state.added && !state.replaced ? [['planned','将替换']] : [])
     ]).map(([kind,text]) => `<span class="diff-label is-${kind}">${text}</span>`).join('');
   }
+  function auditSnapshot() {
+    const elements=session.rows.map((row,afterIndex)=>{
+      const beforeIndex=session.originalRows.findIndex(original=>original.id===row.id);
+      const state=stateFor(row);
+      return {beforeIndex:beforeIndex<0?null:beforeIndex,afterIndex,
+        before:beforeIndex<0?undefined:session.originalRows[beforeIndex].value,after:row.value,
+        ...state,removed:false};
+    });
+    session.originalRows.forEach((row,beforeIndex)=>{
+      if(!session.rows.some(current=>current.id===row.id))elements.push({beforeIndex,afterIndex:null,
+        before:row.value,after:undefined,added:false,removed:true,replaced:false,moved:false});
+    });
+    return {before:session.original,after:serialized(),whole:session.whole,elements,
+      counts:Object.fromEntries(['added','removed','replaced','moved'].map(kind=>[kind,elements.filter(element=>element[kind]).length]))};
+  }
   function token(row, state, removed = false, duplicateCount = 1) {
     const matched = matches(row.value,session.selectedValues || [],session.whole);
     const classes = [removed?'is-removed':'',state.added?'is-added':'',state.replaced?'is-replaced':'',state.moved?'is-moved':'',matched?'is-matched':'',duplicateCount>1?'is-duplicate':''].filter(Boolean).join(' ');
@@ -180,7 +195,7 @@ var WindowsElements = (() => {
     container.querySelector('#closeDialog').onclick=options.close;container.querySelector('#cancelDialog').onclick=options.close;
     container.querySelector('#addElement').onclick=()=>{session.rows.push({id:++sequence,value:''});renderRows(sequence);};
     container.querySelector('#restoreElements').onclick=()=>{session.rows=session.originalRows.map(row=>({...row}));session.dragging=null;session.hoveredId=null;session.focusedId=null;renderRows(session.rows[0]?.id);if(!session.rows.length)container.querySelector('#addElement').focus();};
-    container.querySelector('#applyElements').onclick=()=>{if(!session||!valid()||container.querySelector('#applyElements').disabled)return;const current=session,result=serialized();current.close();current.onApply(result);};
+    container.querySelector('#applyElements').onclick=()=>{if(!session||!valid()||container.querySelector('#applyElements').disabled)return;const current=session,result=serialized(),audit=auditSnapshot();current.close();current.onApply(result,audit);};
     renderRows();container.querySelector('#closeDialog').focus();
   }
   function adoptPending(index,button,editingSession) {
