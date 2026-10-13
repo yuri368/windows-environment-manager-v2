@@ -1,0 +1,173 @@
+{
+  "sourceCommit": "bc94018326467a67be381841a51840cf5f9f4989",
+  "url": "http://127.0.0.1:8000/temp.html",
+  "browser": "Chrome",
+  "date": "2026-10-13",
+  "evidence": [
+    {
+      "documentOverflow": false,
+      "name": "Workbench1360",
+      "rows": [
+        {
+          "centerOffset": 0.00390625
+        },
+        {
+          "centerOffset": 0.00390625
+        },
+        {
+          "centerOffset": 0.00390625
+        }
+      ],
+      "viewport": [
+        1360,
+        680
+      ]
+    },
+    {
+      "groups": [
+        {
+          "bottom": 317.3984375,
+          "clientHeight": 144,
+          "scrollHeight": 444,
+          "scrollTop": 0,
+          "title": "应用",
+          "top": 147
+        },
+        {
+          "bottom": 443,
+          "clientHeight": 88,
+          "scrollHeight": 88,
+          "scrollTop": 0,
+          "title": "方案",
+          "top": 329.3984375
+        },
+        {
+          "bottom": 597,
+          "clientHeight": 116,
+          "scrollHeight": 116,
+          "scrollTop": 0,
+          "title": "当前方案变量",
+          "top": 455
+        }
+      ],
+      "name": "Config1360-scroll",
+      "viewport": [
+        1360,
+        680
+      ]
+    },
+    {
+      "documentOverflow": false,
+      "groups": [
+        {
+          "bottom": 267.796875,
+          "title": "应用",
+          "top": 147
+        },
+        {
+          "bottom": 360.328125,
+          "title": "方案",
+          "top": 279.796875
+        },
+        {
+          "bottom": 473,
+          "title": "当前方案变量",
+          "top": 372.328125
+        }
+      ],
+      "name": "Config1112",
+      "viewport": [
+        1112,
+        556
+      ]
+    },
+    {
+      "case": "history-after-element-edit",
+      "details": "用户 / Path · 新增 1 · 删除 1 · 替换 2 · 移动 2 · 仅更新页面数据查看详情\n用户 / Path\n元素列表\n\n新增 1 · 删除 1 · 替换 2 · 移动 2 同一元素可同时计入替换与移动\n\n修改前\n%JAVA_HOME%\\bin;%PYTHON_HOME%;%PYTHON_HOME%\\Scripts;%MAVEN_HOME%\\bin;H:\\ProgramFiles\\PortableGit\\cmd;H:\\ProgramFiles\\VSCode\\bin;%NODE_HOME%\\bin;%DOTNET_ROOT%;%TEAM_TOOLS_HOME%\\bin\n修改后\nC:\\Demo Tools\\新增路径;%JAVA_HOME%\\bin;%PYTHON_HOME%;%PYTHON_HOME%\\Scripts;C:\\Demo Tools\\maven edited;%NODE_HOME%\\bin;H:\\ProgramFiles\\VSCode\\bin;%DOTNET_ROOT%;%PYTHON_HOME%\n位置（原 → 新）\t状态\t原元素\t新元素\n— → 1\t新增\t—\tC:\\Demo Tools\\新增路径\n4 → 5\t替换\t%MAVEN_HOME%\\bin\tC:\\Demo Tools\\maven edited\n7 → 6\t移动\t%NODE_HOME%\\bin\t%NODE_HOME%\\bin\n6 → 7\t移动\tH:\\ProgramFiles\\VSCode\\bin\tH:\\ProgramFiles\\VSCode\\bin\n9 → 9\t替换\t%TEAM_TOOLS_HOME%\\bin\t%PYTHON_HOME%\n5 → —\t删除\tH:\\ProgramFiles\\PortableGit\\cmd\t—\n\n仅更新本页演示数据；此记录不提供真实环境恢复。"
+    },
+    {
+      "active": "JDK171/2",
+      "case": "menu-arrow"
+    },
+    {
+      "active": "planButton",
+      "case": "menu-escape",
+      "expanded": "false"
+    },
+    {
+      "case": "select-visible",
+      "checked": [
+        "批量选择Java"
+      ],
+      "selected": "应用已选 2 / 13 · 其中 1 个在当前筛选中隐藏⌕全部 13已匹配 4需配置 9批量选择全选可见清空JJavaJDK8 · 有待应用修改✓ 2/2匹配☑ 勾选用于批量操作；点击应用行查看详情。切换方案不会直接修改 Windows。"
+    },
+    {
+      "case": "config800",
+      "groups": [
+        {
+          "bottom": 278.796875,
+          "title": "应用13 项\n     ",
+          "top": 134
+        },
+        {
+          "bottom": 387.328125,
+          "title": "方案2 项\n      ",
+          "top": 290.796875
+        },
+        {
+          "bottom": 520,
+          "title": "当前方案变量2 项\n  ",
+          "top": 399.328125
+        }
+      ],
+      "overflow": false,
+      "viewport": [
+        800,
+        600
+      ]
+    },
+    {
+      "active": "editWindowsElements",
+      "case": "dialog-escape",
+      "dialogs": 0
+    },
+    {
+      "case": "dialog-tab-cycle",
+      "shiftTab": "cancelDialog",
+      "tab": "closeDialog",
+      "result": "verified via native key input"
+    },
+    {
+      "case": "element-combination",
+      "added": 1,
+      "removed": 1,
+      "replaced": 2,
+      "moved": 2,
+      "duplicate": "%PYTHON_HOME% ×2",
+      "relatedHighlight": "row, original and edited tokens share stable identity"
+    },
+    {
+      "apps": 83,
+      "case": "native-sidebar-scroll",
+      "headings": [
+        {
+          "text": "应用",
+          "top": 147.703125
+        },
+        {
+          "text": "方案",
+          "top": 280.5
+        },
+        {
+          "text": "当前方案变量",
+          "top": 373.03125
+        }
+      ]
+    }
+  ],
+  "consoleErrors": [],
+  "limits": [
+    "CSS viewport checks do not verify Windows DPI settings",
+    "No real Windows reads or writes tested"
+  ]
+}
