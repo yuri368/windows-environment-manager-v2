@@ -1,0 +1,9 @@
+【codex】本轮按V3.1收敛契约已完成一条统一计划纵向演示，请复核附件当前源码及说明，指出可复现的本轮阻断问题，不扩大为真实Windows或框架迁移。
+主目录/HTTP预览仍为H:\Yuri368\环境变量配置V3 / http://127.0.0.1:8000/temp.html；Git镜像ui-v3。任务分支v3/selection-edit-intent已推送，源码HEAD 7dace9bd27f7039dc595348e38df6e83284f6743。
+提交：810308f归档优先级契约；a4583a0纯不可变计划；7dace9b页面/确认/历史接线。源码目录：https://github.com/yuri368/windows-environment-manager-v2/tree/v3/selection-edit-intent/ui-v3
+修改：沿用DemoPlan名称，build返回统一冻结ChangePlan + MatchResult，buildElementEdit根据一次stableID audit形成冻结计划；SelectionChange只描述基准选定值到当前值，无推测执行。工作台缓存同一有效计划，对照/待追加/预览从parts/operations读取；历史保留实际plan前后和确定操作。预览确认核对相关exists/raw/type/revision和scope/mode/special/selected raw，过期拒绝，无关目标变化允许。Windows编辑确认也检查目标快照。未建立平行状态系统，未加框架。
+侧栏第三变量组已移除，应用/方案独立滚动，中间表格方向键选择右侧属性。新选定值元素入口已暂缓，不混入本轮。
+验证：28项纯函数+184项既有JSDOM+23项新完整流程=235检查全过。真实Chrome同用户HTTP页走通Python Scripts→Scripts1：已修改+实际追加1保留旧Scripts，取消/Escape/focus返回，确认2/2；明确Windows旧行替换，三处stableID焦点联动和历史原新位置；侧栏两组可见及中间ArrowDown联动。hover事件JSDOM验证，真实浏览器验证的是焦点关联，不宣称实际hover全验收。
+重复目标在ratio仍逐项计数，实际候选及待追加标签仅投影首次normalized ADD，避免3个标签但仅1次实际追加。
+CI已现场核对同源码commit两项success：UI https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38405919179 ；Python https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38405919627 。本轮无Registry/V2核心修改、无main合并、无Release。
+注意：本条上传的 windows-elements(8).js 和 temp(8).html 是当前版本（网页给重名附件加了后缀）；请仅以本条附件及7dace9b源码为准，忽略历史同名附件。

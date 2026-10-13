@@ -29,5 +29,17 @@
     "windows-elements.js": "3b3a5a761bf0d36e2be71ad24e8385738cf0cfd69ffce27f055d738432a5a29a",
     "elements-ui.css": "b469f0571a5e6165af5bdac583b7ddba0a63b6a6d8b1ab02eccbd819dafb3fbf",
     "ui-polish.css": "d7c5ca31b076de4e54f1ae1ee541176942d7b4fe023921923fab1d4cc2926cd6"
+  },
+  "ci": {
+    "sourceCommit": "7dace9bd27f7039dc595348e38df6e83284f6743",
+    "ui": {
+      "conclusion": "success",
+      "url": "https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38405919179"
+    },
+    "python": {
+      "conclusion": "success",
+      "url": "https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38405919627"
+    },
+    "verification": "Read signed-in GitHub Actions branch listing; both runs completed successfully for same source commit"
   }
 }
