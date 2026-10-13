@@ -1,0 +1,173 @@
+【架构顾问 → Codex】
+
+V3.2 复核结果
+
+本轮主要改动方向正确：普通选定值编辑以首次编辑前的匹配快照为依据，生成独立的 REMOVE 和 ADD，不再猜测 REPLACE。
+
+已经核对源码中的 captureBaseline、removalCandidates、buildBatch、预览确认及元素编辑器候选逻辑。重复 occurrence 和共享元素采取保守保护，没有发现把它们强行配对成替换的行为。
+
+GitHub 上的两条 CI 也已核实，均为 b5d759c 提交、完成状态为 success：
+
+V3 UI CI
+
+Python CI
+
+但我发现一个涉及最终结果状态的边界缺陷，需要修复后再给出本轮完全通过的结论。
+
+1. 阻断问题：删除最后一个元素后，变量仍然存在
+需要修复
+
+位置：demo-plan.js 的 build()，约第 134–140 行。
+demo-plan.js
+
+复现代码可直接在当前演示页的开发者控制台运行：
+
+JavaScript
+const target = { scope: 'User', name: 'TEST' };
+const snapshot = {
+  exists: true,
+  raw: 'A',
+  type: 'REG_SZ',
+  revision: 1
+};
+
+const baseline = DemoPlan.captureBaseline({
+  target, mode: '-append',
+  snapshot, selectedRaw: 'A'
+});
+
+const plan = DemoPlan.build({
+  target, mode: '-append',
+  snapshot, selectedRaw: '',
+  baseline
+});
+
+console.log(plan.operations, plan.after);
+
+按当前源码，结果为：
+
+REMOVE A
+
+after.exists === true
+
+after.raw === ''
+
+但根据此前约定的“撤销最后一个非空元素后删除变量键”规则，在没有需要保留的空元素时，预期应是：
+
+after.exists === false
+
+after.raw === null
+
+这不是标签问题，而是冻结计划的最终状态错误。执行后，历史可能显示空字符串，而非变量不存在。
+
+最小修复： 明确最终元素列表为空与保留原始空元素的区别，统一 build() 和显式元素编辑器的删除边界，并补回归测试。不要把所有空字符串一律解释成删除，因为用户明确创建空变量也是合法操作。
+
+2. 同目标批量仍存在一个特殊类型冲突漏洞
+
+位置：demo-plan.js 的 buildBatch()，约第 165–180 行。
+demo-plan.js
+
+当前冲突检测检查了 replace 与 append 混用，以及多个 replace 目标值不同的情况，但没有拒绝同一目标同时出现 special=true 和 special=false。
+
+可复现输入：
+
+JavaScript
+const plan = DemoPlan.buildBatch({
+  target: { scope: 'User', name: 'Path' },
+  snapshot: {
+    exists: true,
+    raw: 'OLD',
+    type: 'REG_EXPAND_SZ',
+    revision: 0
+  },
+  requests: [
+    { id: 'a', mode: 'replace', whole: false, selectedRaw: 'NEW' },
+    { id: 'b', mode: 'replace', whole: true, selectedRaw: 'NEW' }
+  ]
+});
+
+console.log(plan.valid, plan.kind, plan.issues);
+
+当前实现会接受该组合，因为两个请求都是 replace，目标字符串也一致。
+
+但此前已有规则是：同一个 Windows 变量不能同时被普通变量与 Special 变量管理。
+
+最小修复： 在同目标批量计划中增加 Special 一致性校验，发现混用直接禁止确认。无需重构配置模块。
+
+本轮审查裁定
+
+审查项
+
+	
+
+结论
+
+
+
+
+首次编辑基线捕获
+
+	
+
+符合 V3.2
+
+
+
+
+普通输入 REMOVE / ADD
+
+	
+
+符合 V3.2
+
+
+
+
+重复 occurrence 保护
+
+	
+
+符合 V3.2
+
+
+
+
+当前有效方案共享保护
+
+	
+
+符合本轮演示范围
+
+
+
+
+冻结计划与过期验证
+
+	
+
+未发现本轮阻断
+
+
+
+
+删除最后元素
+
+	
+
+需修复
+
+
+
+
+同目标 Special 冲突
+
+	
+
+需修复
+
+以上两个边界问题是根据当前源码确定性推导的，并提供了可执行复现输入；本次没有独立重跑附件中的全部 Node/JSDOM 测试或实际 Chrome 操作，因此不把静态审查冒充完整实机验收。
+
+给 Codex 的最终指示： 仅修复上述两个小范围问题，补对应回归测试，不更改 V3.2 主流程、不调整紧凑 UI、不引入框架、不接入注册表。通过后再提交负责人交互验收。
+
+这轮主体已经基本收敛，没必要为了两个边界条件再次把整个架构拆开。
+
