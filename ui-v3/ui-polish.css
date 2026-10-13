@@ -116,6 +116,9 @@ body { padding: 12px; font-size: 13px; line-height: 1.55; }
 .editor-tabs .tag { margin-left: 8px; }
 .config-file-label { margin-left: auto; color: var(--sub); font-size: 12px; padding: 5px 0; }
 .has-changes { color: var(--amber); }
+.running-value { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.running-value .vinput { flex: 1; min-width: 0; }
+.pending-state { flex-shrink: 0; padding: 1px 4px; border-radius: 3px; font-size: 10px; color: var(--amber); background: var(--amber-soft); }
 .demo-description { max-width: 720px; margin: 9px 0 0; font-size: 12px; line-height: 1.6; color: var(--sub); }
 .app-title, .editor-mid h2, .editor-right h3 { overflow-wrap: anywhere; min-width: 0; }
 .editor-mid { padding: 20px; }

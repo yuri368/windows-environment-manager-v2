@@ -46,7 +46,7 @@ check('Exact raw custom string retained in running draft', () => {
   input(q('#varRows .vinput'), exact);
   assert.equal(q('#compareDesired').textContent, exact);
   assert.equal(q('#varRows .source').value, '自定义值');
-  assert.match(q('.footer-summary').textContent, /输入草稿/);
+  assert.match(q('.footer-summary').textContent, /待应用修改/);
 });
 check('Preview cancel and keyboard trap preserve mock Windows value', () => {
   const before = q('#compareActual').textContent;

@@ -71,7 +71,7 @@ check('Empty segments, repeated values and whitespace survive the editor unchang
   w.eval("windows['User|PATH']=' A ;;A;B;' ; renderWindows()");
   dbl(q('[data-windows-value="User|PATH"]'));
   assert.deepEqual(values(), [' A ', '', 'A', 'B', '']);
-  assert.equal(q('#elementPreview').textContent, ' A ;;A;B;');
+  assert.equal(q('#elementSerialized').textContent, ' A ;;A;B;');
   assert.equal(q('#applyElements').disabled, true);
 });
 check('Keyboard ordering retains stable row identity and input focus', () => {
@@ -104,7 +104,7 @@ check('Apply updates only demo snapshot, keeps raw order, and records a demo his
 check('Deleting all elements can be applied as an empty demo string', () => {
   dbl(q('[data-windows-value="User|PATH"]'));
   while (q('[data-delete]')) q('[data-delete]').click();
-  assert.equal(values().length, 0); assert.equal(q('#elementPreview').textContent, '');
+  assert.equal(values().length, 0); assert.equal(q('#elementSerialized').textContent, '');
   q('#applyElements').click(); assert.equal(raw(), '');
 });
 check('Special value stays whole with semicolons and hides element sorting controls', () => {

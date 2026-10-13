@@ -1,0 +1,65 @@
+{
+  "verification": "JSDOM event and semantic DOM checks only; browser rendering, native drag and Windows integration not verified",
+  "checks": [
+    {
+      "name": "Runtime edit and default restore count exact string differences, including whitespace",
+      "passed": true
+    },
+    {
+      "name": "Choosing a custom, saved or candidate source with the same value creates no pending change",
+      "passed": true
+    },
+    {
+      "name": "Typing the original runtime value back removes pending styling and count",
+      "passed": true
+    },
+    {
+      "name": "Matching result stays independent from pending edits in both matching and mismatching states",
+      "passed": true
+    },
+    {
+      "name": "Simulated application resets the runtime baseline to the applied string",
+      "passed": true
+    },
+    {
+      "name": "Runtime pending copy uses pending-application language without draft wording",
+      "passed": true
+    },
+    {
+      "name": "Matched elements carry the semantic match class; edits refresh that class independently",
+      "passed": true
+    },
+    {
+      "name": "Editing the second duplicate marks only its stable identity in both original and edited diff",
+      "passed": true
+    },
+    {
+      "name": "Changing an element back clears replacement annotations without changing its identity",
+      "passed": true
+    },
+    {
+      "name": "Mixed deletion, addition and movement preserve old identities and serialize only the edited values",
+      "passed": true
+    },
+    {
+      "name": "Restore reinstates exact initial strings, identities, matching and clean change labels",
+      "passed": true
+    },
+    {
+      "name": "Empty duplicate positions stay distinct when only the second empty segment is removed",
+      "passed": true
+    },
+    {
+      "name": "Diff values escape markup and annotations never contaminate serialized or applied data",
+      "passed": true
+    },
+    {
+      "name": "Whole strings retain semicolons as one replacement and keep actual-value marks separate",
+      "passed": true
+    },
+    {
+      "name": "Semantic change-state workflows emit no JSDOM runtime errors",
+      "passed": true
+    }
+  ]
+}
