@@ -1,0 +1,92 @@
+{
+  "verification": "DOM-only: JSDOM event, semantic class, raw serialization and node identity checks; real browser visual rendering, native pointer behavior and Windows integration not verified",
+  "total": 21,
+  "passed": 21,
+  "failed": 0,
+  "checks": [
+    {
+      "name": "Initial duplicates annotate every member independently in original, preview and editing rows",
+      "passed": true
+    },
+    {
+      "name": "Editing second A to B keeps original A x2 and marks both live B members x2",
+      "passed": true
+    },
+    {
+      "name": "Deleting one A preserves original duplicates but excludes preview deletion ghost from live counts",
+      "passed": true
+    },
+    {
+      "name": "Deleting changed duplicate does not count the ghost old value or the removed new value",
+      "passed": true
+    },
+    {
+      "name": "Adding a duplicate marks existing and new members, then changing it back removes stale marks",
+      "passed": true
+    },
+    {
+      "name": "Raw equality keeps A, a, leading/trailing whitespace, slash and case variants distinct",
+      "passed": true
+    },
+    {
+      "name": "Repeated empty segments are real duplicate members and trailing empty values survive application",
+      "passed": true
+    },
+    {
+      "name": "Whole special strings retain semicolons without internal duplicate warnings",
+      "passed": true
+    },
+    {
+      "name": "Moving, replacing, adding and removing retain all four semantic inline token states",
+      "passed": true
+    },
+    {
+      "name": "Original pointer hover distinguishes equal-valued elements by stable ID",
+      "passed": true
+    },
+    {
+      "name": "Preview pointer hover is symmetric with original hover and row hover",
+      "passed": true
+    },
+    {
+      "name": "Token child-to-child pointer transitions preserve hover without highlight flicker",
+      "passed": true
+    },
+    {
+      "name": "Input focus links all representations; hover overrides focus and leaving restores focused ID",
+      "passed": true
+    },
+    {
+      "name": "Programmatic token focus links both sides without adding tokens to normal Tab order",
+      "passed": true
+    },
+    {
+      "name": "Typing and row redraw preserve focused identity highlighting",
+      "passed": true
+    },
+    {
+      "name": "Hover changes classes only: node identity, comparison content and serialization remain untouched",
+      "passed": true
+    },
+    {
+      "name": "Deletion clears deleted hover identity, focuses remaining row and does not leave ghost highlight",
+      "passed": true
+    },
+    {
+      "name": "Restoring resets duplicate annotations and clears hover of removed added identities",
+      "passed": true
+    },
+    {
+      "name": "Close and cancel dismiss highlights; reopening starts without previous hover or focused IDs",
+      "passed": true
+    },
+    {
+      "name": "Applying duplicate edits dismisses all highlight state while preserving raw output",
+      "passed": true
+    },
+    {
+      "name": "Element feedback workflows emit no JSDOM runtime errors",
+      "passed": true
+    }
+  ]
+}
