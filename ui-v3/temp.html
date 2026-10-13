@@ -48,7 +48,7 @@ const MODE={'replace':'替换','+append':'前置','-append':'后置','append':'�
 const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 let apps=[],windows={},checked=new Set(),selected=2,profileChoice={},filter='all',search='',onlyMismatch=false,compareShown=true,focusedVariable=0,screen='workbench',modalAction=null,revision=0,history=[],editor={app:2,profile:'3.9.11',varIdx:0,tab:'visual'},toastTimer=null;
 let lastDialogFocus = null, targetRevisions = {}, targetTypes = {}, planCache = new WeakMap();
-function mkVar(v,i){return {id:i,name:v[0],scope:v[1],mode:v[2],defaultValue:v[3],savedValue:v[4]?.savedValue??null,source:'默认值',custom:null,choices:[...(v[4]?.choices||[])],special:!!v[4]?.special,baselineValue:v[3],dirty:false}}
+function mkVar(v,i){return {id:i,name:v[0],scope:v[1],mode:v[2],defaultValue:v[3],savedValue:v[4]?.savedValue??null,source:'默认值',custom:null,choices:[...(v[4]?.choices||[])],special:!!v[4]?.special,baselineValue:v[3],matchBaseline:null,dirty:false}}
 function reset(quiet=false){apps=clone(initialApps).map(a=>({...a,profiles:a.profiles.map(p=>({...p,vars:p.vars.map(mkVar)}))}));windows={'User|JAVA_HOME':'H:\\ProgramFiles\\DevTools\\Java\\jdk1.8.0_202','User|PYTHON_HOME':'H:\\ProgramFiles\\Python313','User|MAVEN_HOME':'H:\\ProgramFiles\\DevTools\\Maven\\apache-maven-3.9.11','User|PATH':['%JAVA_HOME%\\bin','%PYTHON_HOME%;%PYTHON_HOME%\\Scripts','%MAVEN_HOME%\\bin','H:\\ProgramFiles\\PortableGit\\cmd','H:\\ProgramFiles\\VSCode\\bin'].join(';')};Object.assign(windows,extraDemoWindows);windows['User|PATH']+=';'+extraDemoUserPath.join(';');checked=new Set();selected=2;profileChoice={};apps.forEach((a,i)=>profileChoice[i]=a.default);filter='all';search='';onlyMismatch=false;compareShown=true;focusedVariable=0;history=[{when:'演示初始快照',action:'打开演示环境',detail:'模拟 Windows 数据已载入'}];revision=0;targetRevisions={};targetTypes={};planCache=new WeakMap();editor={app:2,profile:'3.9.11',varIdx:0,tab:'visual'};screen='workbench';render();if(!quiet)notify('已恢复演示初始状态')}
 function appNow(i=selected){return apps[i]}
 function scheme(i=selected){return apps[i].profiles.find(p=>p.name===profileChoice[i])||apps[i].profiles[0]}
@@ -58,20 +58,51 @@ function demoSnapshot(v,raw){
  const current=arguments.length>1?raw:windows[key(v)];
  return {exists:current!==undefined,raw:current===undefined?null:current,type:targetTypes[key(v)]||(v.name.toUpperCase()==='PATH'?'REG_EXPAND_SZ':'REG_SZ'),revision:targetRevisions[key(v)]||0};
 }
+function variableOwner(v){
+ for(let app=0;app<apps.length;app++)for(const p of apps[app].profiles){const varIdx=p.vars.indexOf(v);if(varIdx>=0)return {app,profile:p.name,varIdx};}
+ return null;
+}
+function protectedSelections(vars){
+ const excluded=new Set(vars),target=key(vars[0]);
+ return apps.flatMap((a,i)=>scheme(i).vars).filter(v=>!excluded.has(v)&&key(v)===target).map(value);
+}
+function planContextSignature(vars){return JSON.stringify(vars.map(v=>[key(v),v.mode,v.special,value(v),v.matchBaseline]));}
 function demoPlan(v,actualRaw){
- const snapshot=arguments.length>1?demoSnapshot(v,actualRaw):demoSnapshot(v);
- const signature=JSON.stringify([snapshot,v.scope,v.name,v.mode,v.special,value(v)]),cached=planCache.get(v);
+ const snapshot=arguments.length>1?demoSnapshot(v,actualRaw):demoSnapshot(v),protectedValues=protectedSelections([v]);
+ const signature=JSON.stringify([snapshot,v.scope,v.name,v.mode,v.special,value(v),v.matchBaseline,protectedValues]),cached=planCache.get(v);
  if(cached?.signature===signature)return cached.plan;
- const plan=DemoPlan.build({target:{scope:v.scope,name:v.name},mode:v.mode,whole:v.special,snapshot,selectedRaw:value(v)});
+ const plan=DemoPlan.build({target:{scope:v.scope,name:v.name},mode:v.mode,whole:v.special,snapshot,selectedRaw:value(v),baseline:v.matchBaseline,protectedValues});
  planCache.set(v,{signature,plan});return plan;
 }
-function selectionEdit(v){return DemoPlan.selectionChange({target:{scope:v.scope,name:v.name},beforeRaw:v.baselineValue,afterRaw:value(v),whole:v.special})}
-function setSelectedValue(v,raw){v.custom=raw;v.source='自定义值';v.dirty=hasPendingValue(v)}
+function beginSelectedEdit(v,raw){
+ if(raw===value(v)||v.matchBaseline||v.special||!isAppendMode(v.mode))return;
+ v.matchBaseline=DemoPlan.captureBaseline({target:{scope:v.scope,name:v.name},mode:v.mode,whole:v.special,snapshot:demoSnapshot(v),selectedRaw:value(v),owner:variableOwner(v)});
+}
+function selectionEdit(v){return DemoPlan.selectionChange({target:{scope:v.scope,name:v.name},beforeRaw:v.matchBaseline?.selectedRaw??v.baselineValue,afterRaw:value(v),whole:v.special})}
+function setSelectedValue(v,raw){beginSelectedEdit(v,raw);v.custom=raw;v.source='自定义值';v.dirty=hasPendingValue(v)}
+function restoreSelectedValue(v){
+ const original=v.matchBaseline?.selectedRaw??v.baselineValue;
+ v.custom=original;v.source='自定义值';v.matchBaseline=null;v.dirty=hasPendingValue(v);render();
+}
+function rebaseSelectedValue(v){
+ if(!v.matchBaseline)return;
+ const original=v.matchBaseline.selectedRaw;
+ v.matchBaseline=DemoPlan.captureBaseline({target:{scope:v.scope,name:v.name},mode:v.mode,whole:v.special,snapshot:demoSnapshot(v),selectedRaw:original,owner:variableOwner(v)});
+ render();
+}
+function confirmRebase(v){
+ lastDialogFocus=document.activeElement;
+ const previous=v.matchBaseline?.snapshot,now=demoSnapshot(v);
+ $('modal').innerHTML=`<div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialoghead"><h3 id="dialogTitle">重新检测编辑基线</h3><button class="close" id="closeDialog" aria-label="关闭">×</button></div><div class="dialogbody"><p>保留当前输入，重新核对编辑前的选定值在最新快照中匹配了哪些元素。重建后仍需重新预览确认。</p><div class="pair del"><span>原快照</span><span>${historyValue(previous?.exists?previous.raw:undefined)}</span></div><div class="pair add"><span>当前快照</span><span>${historyValue(now.exists?now.raw:undefined)}</span></div></div><div class="dialogfoot"><button class="btn" id="cancelDialog">取消</button><button class="btn primary" id="confirmRebase">确认重新检测</button></div></div>`;
+ $('modal').classList.add('open');$('closeDialog').onclick=closeModal;$('cancelDialog').onclick=closeModal;
+ $('confirmRebase').onclick=()=>{closeModal();rebaseSelectedValue(v);notify('已重新建立编辑基线，请重新预览确认。')};$('closeDialog').focus();
+}
 function planSummary(plan){
+ if(plan.valid===false)return '编辑基线或目标冲突，请重新检测后预览。';
  if(!plan.operations.length)return '';
  if(plan.kind!=='append')return '应用时整体替换当前值。';
- const inserts=plan.operations.filter(op=>op.type==='insert');
- return `按${MODE[plan.mode]||MODE[inserts[0].position==='head'?'+append':'-append']}模式应用：保留现有元素，在${inserts[0].position==='head'?'开头':'末尾'}追加 ${inserts.length} 项。`;
+ const removes=plan.operations.filter(op=>op.type==='remove'),inserts=plan.operations.filter(op=>op.type==='insert');
+ return [removes.length?`删除 ${removes.length} 项`:'',inserts.length?`在${inserts.every(op=>op.position==='head')?'开头':inserts.every(op=>op.position==='tail')?'末尾':'各方案指定位置'}追加 ${inserts.length} 项`:'','保留其他元素'].filter(Boolean).join(' · ');
 }
 function itemMatched(v){return demoPlan(v).matchResult.satisfied}
 const isAppendMode=mode=>['+append','-append','append'].includes(mode);
@@ -157,7 +188,7 @@ function renderRows() {
       const count=dirty(p);$('varTotal').textContent=`${p.vars.length} 项${count?' · '+count+' 项待应用':''}`;
     };
     src.onchange=e=>{
-      const prev=value(v);v.source=e.target.value;if(v.source==='自定义值'&&v.custom===null)v.custom=prev;
+      const prev=value(v);v.matchBaseline=null;v.source=e.target.value;if(v.source==='自定义值'&&v.custom===null)v.custom=prev;
       v.dirty=hasPendingValue(v);focusedVariable=i;renderRows();renderFooter();renderAppList();renderOverview();
       ($('varRows').querySelector('[data-row="'+i+'"] .source')||$('onlyMismatch'))?.focus();
     };
@@ -170,14 +201,24 @@ function renderInspector() {
   $('inspectTitle').textContent='Windows 值对照 · '+v.name;
   const plan=demoPlan(v),edit=selectionEdit(v);
   $('compareDesired').innerHTML=edit?WindowsElements.selectionChangeMarkup(edit,plan):WindowsElements.selectionMarkup(plan.beforeRaw,[value(v)],v.special,isAppendMode(v.mode),plan);
-  $('compareActual').innerHTML=WindowsElements.highlight(plan.beforeRaw,[value(v)],v.special,plan.kind!=='append'&&plan.beforeRaw!==undefined&&plan.beforeRaw!==plan.afterRaw);
+  $('compareActual').innerHTML=WindowsElements.highlight(plan.beforeRaw,[value(v)],v.special,plan.kind!=='append'&&plan.beforeRaw!==undefined&&plan.beforeRaw!==plan.afterRaw,plan);
   let pending=$('comparePending');
   if(!pending){pending=document.createElement('div');pending.id='comparePending';$('compareActual').after(pending);}
   pending.innerHTML=WindowsElements.pendingMarkup(plan.beforeRaw,isAppendMode(v.mode)?[value(v)]:[],v.special,false,[],plan)+(planSummary(plan)?`<p class="plan-summary">${esc(planSummary(plan))}</p>`:'');
+  if(plan.issues?.some(issue=>issue.reason==='stale')&&v.matchBaseline){
+   const old=v.matchBaseline.snapshot,now=demoSnapshot(v);
+   pending.innerHTML+=`<div class="stale-snapshot-values"><span class="sub mini">原快照</span><pre>${historyValue(old.exists?old.raw:undefined)}</pre><span class="sub mini">当前快照</span><pre>${historyValue(now.exists?now.raw:undefined)}</pre></div>`;
+  }
   pending.hidden=!pending.innerHTML;
+  if(v.matchBaseline){
+   const controls=document.createElement('div');controls.className='selection-edit-controls';
+   controls.innerHTML='<button class="textbtn" id="restoreSelectedEdit">恢复编辑</button>'+(plan.valid===false?'<button class="textbtn" id="rebaseSelectedEdit">重新检测编辑基线</button>':'');
+   $('compareDesired').append(controls);$('restoreSelectedEdit').onclick=()=>restoreSelectedValue(v);
+   if($('rebaseSelectedEdit'))$('rebaseSelectedEdit').onclick=()=>confirmRebase(v);
+  }
   $('compareLabel').textContent=`${v.scope==='User'?'用户':'系统'} · ${MODE[v.mode]} · ${v.source}`;
   $('compareResult').textContent='按演示规则检测：'+detectionText(v)+(hasPendingValue(v)?' · 选定值有待应用修改':'');
-  const open=()=>openWindowsElements(v.scope,v.name,[value(v)],v.special,v.mode);
+  const open=()=>openWindowsElements(v.scope,v.name,[value(v)],v.special,v.mode,null,null,plan);
   $('compareActual').ondblclick=open;
   $('compareActual').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open()}};
   $('editWindowsElements').onclick=open;
@@ -194,10 +235,10 @@ function applyDemoPlan(plan){
 function historyChangeFromPlan(plan,extra={}){
  return Object.freeze({scope:plan.targetKey.scope,name:plan.targetKey.name,before:plan.beforeRaw,after:plan.afterRaw,whole:plan.special,mode:plan.mode,operations:plan.operations,plan,...(plan.audit||{}),...extra,unchanged:!plan.operations.length});
 }
-function openWindowsElements(scope,name,selectedValues=[],whole=false,mode=null,appendValues=null,appendEntries=null) {
+function openWindowsElements(scope,name,selectedValues=[],whole=false,mode=null,appendValues=null,appendEntries=null,selectionPlan=null) {
  lastDialogFocus=document.activeElement;
  const variable={scope,name},target=key(variable),snapshot=demoSnapshot(variable);
- WindowsElements.open({container:$('modal'),name,scope,raw:windows[target],snapshot,selectedValues,whole,appendValues:whole?[]:appendValues??(isAppendMode(mode)?selectedValues:[]),appendEntries:whole?null:appendEntries??(isAppendMode(mode)?selectedValues.map(value=>({value,mode})):null),replacementExpected:(whole||mode==='replace')&&selectedValues.length===1&&windows[target]!==undefined&&windows[target]!==selectedValues[0],
+ WindowsElements.open({container:$('modal'),name,scope,raw:windows[target],snapshot,selectionPlan,selectedValues,whole,appendValues:whole?[]:appendValues??(isAppendMode(mode)?selectedValues:[]),appendEntries:whole?null:appendEntries??(isAppendMode(mode)?selectedValues.map(value=>({value,mode})):null),replacementExpected:(whole||mode==='replace')&&selectedValues.length===1&&windows[target]!==undefined&&windows[target]!==selectedValues[0],
    registryType:snapshot.type,close:closeModal,
    onApply:(raw,audit,plan)=>{
      if(!sameSnapshot(plan,variable)){render();notify('当前值已变化，本次编辑已失效；请重新打开元素编辑器。');return;}
@@ -216,44 +257,44 @@ function newValue(v,actual){
  return demoPlan(v,actual).afterRaw;
 }
 function recordsFor(targets,kind){
- const state={...windows},base=new Map();
- return targets.map(t=>{
-   const v=apps[t.app].profiles.find(p=>p.name===t.profile).vars[t.varIdx],k=key(v);
-   if(!base.has(k))base.set(k,demoSnapshot(v));
-   const before=state[k],plan=kind==='应用'?demoPlan(v,before):null,after=plan?plan.afterRaw:'（撤销后值需由真实操作日志计算）';
-   if(plan){if(plan.after.exists)state[k]=after;else delete state[k];}
-   return Object.freeze({...t,v,before,after,plan,baseSnapshot:Object.freeze({...base.get(k)}),selectionSignature:JSON.stringify([k,v.mode,v.special,value(v)]),scope:v.scope,name:v.name,mode:v.mode,whole:v.special});
+ const groups=new Map();
+ for(const t of targets){const v=apps[t.app].profiles.find(p=>p.name===t.profile).vars[t.varIdx],k=key(v);if(!groups.has(k))groups.set(k,[]);groups.get(k).push({...t,v,selectedRaw:value(v)});}
+ return [...groups.values()].map(members=>{
+  const first=members[0],v=first.v,vars=members.map(m=>m.v),protectedValues=protectedSelections(vars),snapshot=demoSnapshot(v);
+  const plan=kind!=='应用'?null:members.length===1?demoPlan(v):DemoPlan.buildBatch({target:{scope:v.scope,name:v.name},snapshot,requests:members.map(m=>({id:m.app+'|'+m.profile+'|'+m.varIdx,mode:m.v.mode,whole:m.v.special,selectedRaw:m.selectedRaw,baseline:m.v.matchBaseline})),protectedValues});
+  return Object.freeze({...first,members:Object.freeze(members.map(Object.freeze)),before:snapshot.exists?snapshot.raw:undefined,after:plan?plan.afterRaw:'（撤销后值需由真实操作日志计算）',plan,baseSnapshot:Object.freeze(snapshot),selectionSignature:planContextSignature(vars),protectionSignature:JSON.stringify(protectedValues),scope:v.scope,name:v.name,mode:v.mode,whole:v.special});
  });
 }
-function showPreview(kind,title,targets){lastDialogFocus=document.activeElement?.closest('#revokeMenu')?$('revokeButton'):document.activeElement;closeDropdowns();const rows=recordsFor(targets,kind);modalAction={kind,targets,rows};const replacements=new Map();rows.forEach(r=>{if(kind!=='应用'||r.v.mode!=='replace'&&!r.v.special)return;const k=key(r.v);const s=replacements.get(k)||new Set();s.add(value(r.v));replacements.set(k,s)});const conflict=[...replacements.values()].some(s=>s.size>1);modalAction.conflict=conflict;const needsOrdering=rows.some(r=>kind==='应用'&&r.v.mode==='append');modalAction.needsOrdering=needsOrdering;const unchanged=rows.filter(r=>r.after===r.before).length;$('modal').innerHTML=`<div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialoghead"><div><h3 id="dialogTitle">${esc(title)}</h3><p>${rows.length} 条变量记录 · ${unchanged} 条无需变化 · ${kind==='应用'?'将模拟应用到浏览器内存':'演示撤销流程与操作范围'}</p></div><button class="close" id="closeDialog" aria-label="关闭">×</button></div><div class="dialogbody">${needsOrdering?'<div class="banner warn">所选方案包含 append 自定义排序模式。本原型不实现完整排序确认，因此禁止模拟应用；正式应用必须先确认合并后的元素顺序。</div>':''}${conflict?'<div class="banner warn">检测到相同 Windows 环境变量的目标值存在冲突，演示中禁止确认。真实程序必须交由专门的共享冲突分析引擎处理。</div>':`<div class="banner">这是离线 UI 原型。${kind==='应用'?'确认后只更新页面中的模拟 Windows 环境。':'不具备真正的撤销日志，不会伪造精确的撤销结果。'}</div>`}${rows.map(r=>`<div class="diffrow"><div class="k">${esc(apps[r.app].name)} / ${esc(r.profile)} · ${esc(r.v.name)} <span class="sub mini">${r.v.scope==='User'?'用户':'系统'} · ${esc(MODE[r.v.mode])}</span></div><div class="pair del"><span>模拟当前</span><span>${esc(r.before===undefined?'（不存在）':r.before)}</span></div><div class="pair add"><span>${kind==='应用'?'目标结果':'操作说明'}</span><span>${esc(r.after===undefined?'（不存在）':r.after===''?'（空字符串）':r.after)}</span></div>${r.plan&&planSummary(r.plan)?`<p class="plan-summary">${esc(planSummary(r.plan))}</p>`:''}</div>`).join('')}</div><div class="dialogfoot"><button class="btn" id="cancelDialog">取消</button><button class="btn primary" id="confirmDialog" ${conflict||needsOrdering||kind==='撤销'?'disabled':''}>${kind==='应用'?'模拟确认应用':'需要真实操作日志'}</button></div></div>`;$('modal').classList.add('open');$('closeDialog').onclick=closeModal;$('cancelDialog').onclick=closeModal;$('confirmDialog').onclick=confirmPreview;$('closeDialog').focus()}
+function showPreview(kind,title,targets){lastDialogFocus=document.activeElement?.closest('#revokeMenu')?$('revokeButton'):document.activeElement;closeDropdowns();const rows=recordsFor(targets,kind);modalAction={kind,targets,rows};const replacements=new Map();rows.forEach(r=>{if(kind!=='应用'||r.v.mode!=='replace'&&!r.v.special)return;const k=key(r.v);const s=replacements.get(k)||new Set();s.add(value(r.v));replacements.set(k,s)});const conflict=[...replacements.values()].some(s=>s.size>1);const invalidPlan=rows.some(r=>r.plan?.valid===false);modalAction.conflict=conflict||invalidPlan;const needsOrdering=rows.some(r=>kind==='应用'&&r.members.some(m=>m.v.mode==='append'));modalAction.needsOrdering=needsOrdering;const unchanged=rows.filter(r=>r.after===r.before).length;$('modal').innerHTML=`<div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialoghead"><div><h3 id="dialogTitle">${esc(title)}</h3><p>${targets.length} 条变量记录 · ${rows.length} 个目标 · ${unchanged} 条无需变化 · ${kind==='应用'?'将模拟应用到浏览器内存':'演示撤销流程与操作范围'}</p></div><button class="close" id="closeDialog" aria-label="关闭">×</button></div><div class="dialogbody">${needsOrdering?'<div class="banner warn">所选方案包含 append 自定义排序模式。本原型不实现完整排序确认，因此禁止模拟应用；正式应用必须先确认合并后的元素顺序。</div>':''}${invalidPlan?'<div class="banner warn">编辑基线已失效，或同一目标值存在冲突。本次不能确认；请返回对照区重新检测编辑基线。</div>':''}${conflict?'<div class="banner warn">检测到相同 Windows 环境变量的目标值存在冲突，演示中禁止确认。真实程序必须交由专门的共享冲突分析引擎处理。</div>':`<div class="banner">这是离线 UI 原型。${kind==='应用'?'确认后只更新页面中的模拟 Windows 环境。':'不具备真正的撤销日志，不会伪造精确的撤销结果。'}</div>`}${rows.map(r=>`<div class="diffrow"><div class="k">${r.members.map(m=>esc(apps[m.app].name)+' / '+esc(m.profile)).join('、')} · ${esc(r.v.name)} <span class="sub mini">${r.v.scope==='User'?'用户':'系统'} · ${esc(r.members.length>1?'批量合并':MODE[r.v.mode])}</span></div><div class="pair del"><span>模拟当前</span><span>${esc(r.before===undefined?'（不存在）':r.before)}</span></div><div class="pair add"><span>${kind==='应用'?'目标结果':'操作说明'}</span><span>${esc(r.after===undefined?'（不存在）':r.after===''?'（空字符串）':r.after)}</span></div>${r.plan&&planSummary(r.plan)?`<p class="plan-summary">${esc(planSummary(r.plan))}</p>`:''}</div>`).join('')}</div><div class="dialogfoot"><button class="btn" id="cancelDialog">取消</button><button class="btn primary" id="confirmDialog" ${conflict||invalidPlan||needsOrdering||kind==='撤销'?'disabled':''}>${kind==='应用'?'模拟确认应用':'需要真实操作日志'}</button></div></div>`;$('modal').classList.add('open');$('closeDialog').onclick=closeModal;$('cancelDialog').onclick=closeModal;$('confirmDialog').onclick=confirmPreview;$('closeDialog').focus()}
 function closeModal(){const wasOpen=$('modal').classList.contains('open');$('modal').classList.remove('open');modalAction=null;WindowsElements.dismiss();if(wasOpen&&lastDialogFocus?.isConnected)lastDialogFocus.focus();lastDialogFocus=null}
 function confirmPreview(){
  if(!modalAction||modalAction.kind!=='应用'||modalAction.conflict||modalAction.needsOrdering)return;
  const {targets,rows}=modalAction;
  const stale=rows.some(r=>{
    const now=demoSnapshot(r.v),base=r.baseSnapshot;
-   return JSON.stringify([key(r.v),r.v.mode,r.v.special,value(r.v)])!==r.selectionSignature||now.exists!==base.exists||now.raw!==base.raw||now.type!==base.type||now.revision!==base.revision;
+   return planContextSignature(r.members.map(m=>m.v))!==r.selectionSignature||JSON.stringify(protectedSelections(r.members.map(m=>m.v)))!==r.protectionSignature||r.plan.valid===false||now.exists!==base.exists||now.raw!==base.raw||now.type!==base.type||now.revision!==base.revision;
  });
  if(stale){closeModal();render();notify('预览已失效，当前值或选定值已变化；请重新预览确认。');return;}
- const changes=Object.freeze(rows.map(r=>historyChangeFromPlan(r.plan,{app:apps[r.app].name,profile:r.profile})));
+ const changes=Object.freeze(rows.map(r=>historyChangeFromPlan(r.plan,{app:r.members.map(m=>apps[m.app].name).join('、'),profile:r.members.map(m=>m.profile).join('、')})));
  for(const r of rows){
    if(r.plan.operations.length)applyDemoPlan(r.plan);
-   r.v.savedValue=r.plan.desiredRaw;r.v.baselineValue=r.plan.desiredRaw;r.v.dirty=false;apps[r.app].active=r.profile;
+   for(const m of r.members){m.v.savedValue=m.selectedRaw;m.v.baselineValue=m.selectedRaw;m.v.matchBaseline=null;m.v.dirty=false;apps[m.app].active=m.profile;}
  }
  if(changes.some(c=>!c.unchanged))history.unshift(Object.freeze({when:new Date().toLocaleString('zh-CN'),action:'模拟应用',detail:`${new Set(targets.map(t=>apps[t.app].name)).size} 个应用，${targets.length} 项变量 · ${changes.filter(c=>!c.unchanged).length} 条修改`,changes}));
  revision++;closeModal();render();notify('已模拟应用到页面数据，未写入 Windows');
 }
 function renderWindows() {
   const items=Object.keys(windows).sort();
-  const specsFor=k=>apps.flatMap((app,i)=>scheme(i).vars).filter(v=>key(v)===k);
+  const targetsFor=k=>apps.flatMap((a,i)=>scheme(i).vars.map((v,j)=>({app:i,profile:scheme(i).name,varIdx:j,v}))).filter(t=>key(t.v)===k);
+  const specsFor=k=>targetsFor(k).map(t=>t.v),plans=new Map(items.map(k=>[k,recordsFor(targetsFor(k),'应用')[0]?.plan]));
   $('screen').innerHTML=`<div class="fullpage" style="width:100%"><div class="pageh"><div><h2>Windows 环境</h2><p>演示快照 · 双击变量值打开元素列表</p></div><span class="tag neutral">${items.length} 项变量</span></div>
     <table class="outline-table"><thead><tr><th style="width:130px">作用域</th><th style="width:155px">变量</th><th>模拟当前值</th><th style="width:86px">操作</th></tr></thead><tbody>${items.map(k=>{
       const specs=specsFor(k), whole=specs.some(v=>v.special);
-      return `<tr><td>${k.startsWith('User')?'用户':'系统'}</td><td><strong>${esc(k.split('|')[1])}</strong></td><td><div class="codevalue inspect-editable" tabindex="0" role="button" aria-label="编辑 ${esc(k.split('|')[1])} 元素" title="双击打开元素列表（演示）" data-windows-value="${esc(k)}">${WindowsElements.highlight(windows[k],specs.map(value),whole)}</div>${WindowsElements.pendingMarkup(windows[k],specs.filter(v=>isAppendMode(v.mode)).map(value),whole)}</td><td><button class="textbtn" data-windows-edit="${esc(k)}">编辑</button></td></tr>`;
+      return `<tr><td>${k.startsWith('User')?'用户':'系统'}</td><td><strong>${esc(k.split('|')[1])}</strong></td><td><div class="codevalue inspect-editable" tabindex="0" role="button" aria-label="编辑 ${esc(k.split('|')[1])} 元素" title="双击打开元素列表（演示）" data-windows-value="${esc(k)}">${WindowsElements.highlight(windows[k],specs.map(value),whole,false,plans.get(k))}</div>${WindowsElements.pendingMarkup(windows[k],specs.filter(v=>isAppendMode(v.mode)).map(value),whole,false,[],plans.get(k))}</td><td><button class="textbtn" data-windows-edit="${esc(k)}">编辑</button></td></tr>`;
     }).join('')}</tbody></table><div class="helpnote match-legend"><span class="legend-swatch"></span>高亮为当前准备方案中的匹配元素</div></div>`;
   const open=k=>{
     const [scope,name]=k.split('|'),specs=specsFor(k),appendSpecs=specs.filter(v=>isAppendMode(v.mode));
-    openWindowsElements(scope,name,specs.map(value),specs.some(v=>v.special),null,appendSpecs.map(value),appendSpecs.map(v=>({value:value(v),mode:v.mode})));
+    openWindowsElements(scope,name,specs.map(value),specs.some(v=>v.special),null,appendSpecs.map(value),appendSpecs.map(v=>({value:value(v),mode:v.mode})),plans.get(k));
   };
   document.querySelectorAll('[data-windows-value]').forEach(el=>{
     el.ondblclick=()=>open(el.dataset.windowsValue);
@@ -268,9 +309,9 @@ function historyValue(raw){return raw===undefined?'（不存在）':raw===''?'�
 function historyElementValue(raw){return raw===undefined?'—':raw===''?'（空元素）':esc(raw)}
 function historyChangeMarkup(c){
   const changed=c.whole?[]:(c.elements||[]).filter(e=>e.added||e.removed||e.replaced||e.moved);
-  return `<section class="history-change"><div class="history-change-heading"><strong>${c.scope==='User'?'用户':'系统'} / ${esc(c.name)}</strong><span class="sub mini">${c.whole?'整体值':'元素列表'}${c.mode?' · '+esc(MODE[c.mode]||'元素编辑'):''}${c.unchanged?' · 无需变化':''}</span></div>
+  return `<section class="history-change"><div class="history-change-heading"><strong>${c.scope==='User'?'用户':'系统'} / ${esc(c.name)}</strong><span class="sub mini">${c.whole?'整体值':'元素列表'}${c.mode?' · '+esc(c.mode==='batch'?'批量合并':MODE[c.mode]||'元素编辑'):''}${c.unchanged?' · 无需变化':''}</span></div>
     ${c.app?`<p class="history-source">来源：${esc(c.app)} / ${esc(c.profile)}</p>`:''}
-    ${!c.elements&&c.operations?.length?`<p class="history-counts">${c.operations.filter(op=>op.type==='insert').length?`追加 ${c.operations.filter(op=>op.type==='insert').length} 项 · 保留原有元素`:'整体替换'}</p>`:''}
+    ${!c.elements&&c.operations?.length?`<p class="history-counts">${esc(planSummary(c.plan))}</p>`:''}
     ${c.counts&&!c.whole?`<p class="history-counts">${esc(changeCountText(c.counts))} <span class="sub mini">同一元素可同时计入替换与移动</span></p>`:''}
     <div class="history-values"><div><span class="k">修改前</span><pre class="history-before">${historyValue(c.before)}</pre></div><div><span class="k">修改后</span><pre class="history-after">${historyValue(c.after)}</pre></div></div>
     ${changed.length?`<table class="history-element-table"><thead><tr><th>位置（原 → 新）</th><th>状态</th><th>原元素</th><th>新元素</th></tr></thead><tbody>${changed.map(e=>`<tr><td>${e.beforeIndex===null?'—':e.beforeIndex+1} → ${e.afterIndex===null?'—':e.afterIndex+1}</td><td>${[['added','新增'],['removed','删除'],['replaced','替换'],['moved','移动']].filter(([kind])=>e[kind]).map(([kind,label])=>`<span class="diff-label is-${kind}">${label}</span>`).join('')}</td><td><code>${historyElementValue(e.before)}</code></td><td><code>${historyElementValue(e.after)}</code></td></tr>`).join('')}</tbody></table>`:''}
@@ -300,7 +341,8 @@ function updateConfigStatus() {
 function restoreConfig() {
   apps.forEach((a,i)=>a.profiles.forEach(p=>p.vars.forEach((v,j)=>{
     const m=initialApps[i].profiles.find(x=>x.name===p.name).vars[j];
-    Object.assign(v,{defaultValue:m[3],scope:m[1],mode:m[2],special:!!m[4]?.special});
+    const contextChanged=v.scope!==m[1]||v.mode!==m[2]||v.special!==!!m[4]?.special||(v.source==='默认值'&&v.defaultValue!==m[3]);
+    Object.assign(v,{defaultValue:m[3],scope:m[1],mode:m[2],special:!!m[4]?.special});if(contextChanged)v.matchBaseline=null;v.dirty=hasPendingValue(v);
   })));
   renderConfig();$('downloadToml').focus();notify('已还原配置修改，页面环境快照未改变');
 }
@@ -361,7 +403,7 @@ function renderEditorBody(focusId) {
   if (focusId) $(focusId)?.focus();
 }
 function renderEditorInspector(){const v=configVar();$('editorInspector').innerHTML=`<h3>${esc(v.name)}</h3><div class="inspector-context">${esc(apps[editor.app].name)} / ${esc(configProfile().name)} · 变量属性</div><div class="field"><label for="cfgName">变量名</label><input id="cfgName" value="${esc(v.name)}" disabled title="演示中变量名固定，不支持重命名"></div><div class="field"><label for="cfgScope">作用域</label><select id="cfgScope"><option value="User" ${v.scope==='User'?'selected':''}>用户 (User)</option><option value="System" ${v.scope==='System'?'selected':''}>系统 (System)</option></select></div><div class="field"><label for="cfgMode">模式</label><select id="cfgMode">${Object.entries(MODE).map(([k,x])=>`<option value="${k}" ${v.mode===k?'selected':''} ${v.special&&k!=='replace'?'disabled':''}>${esc(k)} · ${x}</option>`).join('')}</select></div><div class="field"><label for="cfgDefault">默认值（保留原始字符串）</label><textarea id="cfgDefault" spellcheck="false">${esc(v.defaultValue)}</textarea></div><div class="field"><label for="cfgSaved">已保存值（只读演示数据）</label><input id="cfgSaved" value="${esc(v.savedValue??'（无）')}" disabled></div><div class="field"><label for="cfgSource">当前选定值来源</label><input id="cfgSource" value="${esc(v.source)}" disabled></div><label class="checklabel" style="margin-top:5px"><input type="checkbox" id="cfgSpecial" ${v.special?'checked':''}>特殊变量 (Special)</label><p class="helpnote">特殊变量的值作为一个整体处理。配置修改保留在此演示状态中，可以导出为新 TOML 文件。工作台使用“默认值”来源时会跟随此处默认值修改；其他来源保持原选定值，仍需预览确认才更新演示环境。</p>`;
- $('cfgScope').onchange=e=>{v.scope=e.target.value;renderEditorBody('cfgScope')};$('cfgMode').onchange=e=>{v.mode=e.target.value;renderEditorBody('cfgMode')};$('cfgDefault').oninput=e=>{v.defaultValue=e.target.value;const trs=document.querySelectorAll('[data-tableplan]');trs.forEach(tr=>{if(tr.dataset.tableplan===configProfile().name&&+tr.dataset.tablevar===editor.varIdx){const td=tr.lastElementChild;td.textContent=v.defaultValue;td.title=v.defaultValue}});updateConfigStatus()};$('cfgSpecial').onchange=e=>{v.special=e.target.checked;if(v.special)v.mode='replace';renderEditorBody('cfgSpecial')}}
+ $('cfgScope').onchange=e=>{v.matchBaseline=null;v.scope=e.target.value;renderEditorBody('cfgScope')};$('cfgMode').onchange=e=>{v.matchBaseline=null;v.mode=e.target.value;renderEditorBody('cfgMode')};$('cfgDefault').oninput=e=>{if(v.source==='默认值')beginSelectedEdit(v,e.target.value);v.defaultValue=e.target.value;v.dirty=hasPendingValue(v);const trs=document.querySelectorAll('[data-tableplan]');trs.forEach(tr=>{if(tr.dataset.tableplan===configProfile().name&&+tr.dataset.tablevar===editor.varIdx){const td=tr.lastElementChild;td.textContent=v.defaultValue;td.title=v.defaultValue}});updateConfigStatus()};$('cfgSpecial').onchange=e=>{v.matchBaseline=null;v.special=e.target.checked;if(v.special)v.mode='replace';renderEditorBody('cfgSpecial')}}
 function tomlQuote(s){return '"'+String(s).replace(/\\/g,'\\\\').replace(/"/g,'\\"').replace(/\r/g,'\\r').replace(/\n/g,'\\n')+'"'}
 function generateToml(){let out=['# 由 Compact UI 演示生成（示例结构，非仓库配置格式的正式序列化）',''];apps.forEach(a=>{out.push('# '+a.name);a.profiles.forEach(p=>{out.push('[[application]]');out.push('name = '+tomlQuote(a.name));out.push('profile = '+tomlQuote(p.name));out.push('default_profile = '+(a.default===p.name?'true':'false'));p.vars.forEach(v=>{out.push('[[application.variable]]');out.push('name = '+tomlQuote(v.name));out.push('scope = '+tomlQuote(v.scope));out.push('mode = '+tomlQuote(v.mode));out.push('default_value = '+tomlQuote(v.defaultValue));if(v.special)out.push('special = true')});out.push('')})});return out.join('\n')}
 function generateDiff() {

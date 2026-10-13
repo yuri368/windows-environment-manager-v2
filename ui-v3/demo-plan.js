@@ -30,6 +30,7 @@ var DemoPlan = (() => {
   const state = snapshot => ({ exists: snapshot.exists, raw: snapshot.raw, type: copy(snapshot.type) });
   const legacyRaw = snapshot => snapshot.exists ? snapshot.raw : undefined;
   const normalizedParts = raw => raw.split(';').map(value => value.trim()).filter(Boolean);
+  const actualPartsFor = snapshot => snapshot.exists ? snapshot.raw.split(';') : [];
   function matches(raw, values = [], whole = false) {
     if (raw === undefined || raw === null) return false;
     return whole ? values.some(value => value === raw)
@@ -49,6 +50,73 @@ var DemoPlan = (() => {
       ? complete && [...present].every(value => desired.has(value)) : complete);
     return { parts, result: { targetKey: key, matchedCount: matched.length, totalCount: effective.length, matched, missing, complete, exact, satisfied } };
   }
+  function captureBaseline(options) {
+    if (typeof options.selectedRaw !== 'string') throw new TypeError('selectedRaw must be a string.');
+    const snapshot = snapshotFor(options), key = targetKey(options.target ?? options.snapshot?.targetKey);
+    const whole = !!(options.whole || options.special);
+    const actual = actualPartsFor(snapshot), occurrences = new Map();
+    if (!whole) actual.forEach((value, index) => {
+      const normalized = value.trim();
+      if (normalized === '') return;
+      const entry = occurrences.get(normalized) || { normalized, actualIndexes: [], actualValues: [], occurrenceCount: 0 };
+      entry.actualIndexes.push(index); entry.actualValues.push(value); entry.occurrenceCount++;
+      occurrences.set(normalized, entry);
+    });
+    const { parts: selectedParts } = computeMatch(key, state(snapshot), options.selectedRaw, options.mode, whole);
+    const parts = selectedParts.map(part => ({
+      ...part, normalized: whole ? part.value : part.value.trim(),
+      actualIndexes: whole ? (part.matched ? [0] : []) : [...(occurrences.get(part.value.trim())?.actualIndexes || [])]
+    }));
+    const matched = whole ? [] : [...new Set(parts.filter(part => part.matched).map(part => part.normalized))]
+      .map(normalized => copy(occurrences.get(normalized)));
+    return freeze({
+      targetKey: key, mode: options.mode, special: whole, selectedRaw: options.selectedRaw,
+      snapshot, parts, matched, ...(options.owner === undefined ? {} : { owner: copy(options.owner) })
+    });
+  }
+  function baselineIssues(baseline, key, mode, whole, snapshot) {
+    if (!baseline) return [];
+    const changed = [];
+    if (baseline.targetKey?.scope !== key.scope || baseline.targetKey?.canonicalName !== key.canonicalName) changed.push('target');
+    if (baseline.mode !== mode) changed.push('mode');
+    if (baseline.special !== whole) changed.push('special');
+    for (const field of ['exists', 'raw', 'type', 'revision']) {
+      if (JSON.stringify(baseline.snapshot?.[field]) !== JSON.stringify(snapshot[field])) changed.push(field);
+    }
+    return changed.length ? [{
+      reason: 'stale', value: baseline.selectedRaw, actualIndexes: [], fields: changed,
+      originalSnapshot: copy(baseline.snapshot), currentSnapshot: copy(snapshot)
+    }] : [];
+  }
+  function removalCandidates(baseline, selectedRaw, protectedValues) {
+    const desired = new Set(normalizedParts(selectedRaw));
+    const protectedSet = new Set(protectedValues.flatMap(normalizedParts));
+    const operations = [], issues = [];
+    for (const matched of baseline?.matched || []) {
+      if (desired.has(matched.normalized)) continue;
+      if (matched.actualIndexes.length !== 1) {
+        issues.push({ reason: 'duplicate', value: matched.normalized, actualIndexes: [...matched.actualIndexes] });
+      } else if (protectedSet.has(matched.normalized)) {
+        issues.push({ reason: 'shared', value: matched.normalized, actualIndexes: [...matched.actualIndexes] });
+      } else {
+        operations.push({ type: 'remove', action: 'REMOVE', value: matched.actualValues[0], beforeIndex: matched.actualIndexes[0] });
+      }
+    }
+    return { operations, issues };
+  }
+  function appendParts(actualParts, parts, mode) {
+    const present = new Set(actualParts.map(value => value.trim()).filter(Boolean));
+    const missing = [], operations = [], position = mode === '+append' ? 'head' : 'tail';
+    for (const part of parts) {
+      const normalized = part.value.trim();
+      if (normalized !== '' && !present.has(normalized)) {
+        missing.push(part.value); present.add(normalized);
+        operations.push({ type: 'insert', action: 'ADD', value: part.value, selectedIndex: part.index, position,
+          ...(part.requestId === undefined ? {} : { requestId: part.requestId, requestSelectedIndex: part.requestSelectedIndex }) });
+      }
+    }
+    return { parts: position === 'head' ? [...missing, ...actualParts] : [...actualParts, ...missing], operations };
+  }
   function build(options) {
     const { target, mode, selectedRaw } = options;
     if (typeof selectedRaw !== 'string') throw new TypeError('selectedRaw must be a string.');
@@ -56,30 +124,79 @@ var DemoPlan = (() => {
     const snapshot = snapshotFor(options), before = state(snapshot), key = targetKey(target ?? options.snapshot?.targetKey);
     const replace = whole || mode === 'replace';
     const { parts, result: matchResult } = computeMatch(key, before, selectedRaw, mode, whole);
+    const issues = baselineIssues(options.baseline, key, mode, whole, snapshot), valid = issues.length === 0;
     const operations = [];
     let after = state(snapshot);
-    if (replace) {
+    if (valid && replace) {
       after = { exists: true, raw: selectedRaw, type: copy(before.type) };
       if (!before.exists || before.raw !== after.raw) operations.push({ type: 'replace', action: 'REPLACE', whole: true, before: legacyRaw(before), after: selectedRaw });
-    } else {
-      const actualParts = before.exists ? before.raw.split(';') : [];
-      const present = new Set(actualParts.map(value => value.trim()).filter(Boolean));
-      const missing = [], position = mode === '+append' ? 'head' : 'tail';
-      for (const part of parts) {
-        const normalized = part.value.trim();
-        if (normalized !== '' && !present.has(normalized)) {
-          missing.push(part.value);
-          present.add(normalized);
-          operations.push({ type: 'insert', action: 'ADD', value: part.value, selectedIndex: part.index, position });
-        }
-      }
-      if (missing.length) after = { exists: true, raw: (position === 'head' ? [...missing, ...actualParts] : [...actualParts, ...missing]).join(';'), type: copy(before.type) };
+    } else if (valid) {
+      const removals = removalCandidates(options.baseline, selectedRaw, options.protectedValues || []);
+      issues.push(...removals.issues); operations.push(...removals.operations);
+      const removedIndexes = new Set(removals.operations.map(operation => operation.beforeIndex));
+      const remaining = actualPartsFor(snapshot).filter((_, index) => !removedIndexes.has(index));
+      const additions = appendParts(remaining, parts, mode);
+      operations.push(...additions.operations);
+      if (operations.length) after = { exists: true, raw: additions.parts.join(';'), type: copy(before.type) };
     }
     return freeze({
       target: copy(target), targetKey: key, mode, special: whole,
       kind: whole ? 'whole' : replace ? 'replace' : 'append', source: 'scheme-apply',
       baseRevision: snapshot.revision, before, desiredRaw: selectedRaw, after,
-      beforeRaw: legacyRaw(before), afterRaw: legacyRaw(after), operations, parts, matchResult
+      beforeRaw: legacyRaw(before), afterRaw: legacyRaw(after), operations, parts, matchResult, valid, issues,
+      ...(options.baseline ? { baseline: copy(options.baseline) } : {})
+    });
+  }
+  function buildBatch({ target, snapshot, requests, protectedValues = [] }) {
+    if (!Array.isArray(requests) || !requests.length) throw new TypeError('A batch requires at least one request.');
+    const inputs = copy(requests), original = snapshotFor({ snapshot }), before = state(original), key = targetKey(target ?? snapshot?.targetKey);
+    const plans = inputs.map((request, index) => build({
+      ...request, target, snapshot: original,
+      protectedValues: [...protectedValues, ...inputs.filter((_, other) => other !== index).map(other => other.selectedRaw)]
+    }));
+    if (plans.length === 1) {
+      const plan = copy(plans[0]);
+      plan.requests = inputs;
+      plan.operations = plan.operations.map(operation => ({ ...operation, requestId: inputs[0].id,
+        ...(operation.type === 'insert' ? { requestSelectedIndex: operation.selectedIndex } : {}) }));
+      plan.issues = plan.issues.map(issue => ({ ...issue, requestId: inputs[0].id }));
+      return freeze(plan);
+    }
+    const issues = plans.flatMap((plan, index) => plan.issues.map(issue => ({ ...issue, requestId: inputs[index].id })));
+    const replacements = plans.filter(plan => plan.kind !== 'append');
+    const conflict = replacements.length && (replacements.length !== plans.length || new Set(inputs.map(request => request.selectedRaw)).size > 1);
+    if (conflict) issues.push({ reason: 'conflict', value: inputs.map(request => request.selectedRaw), actualIndexes: [], requestIds: inputs.map(request => request.id) });
+    const valid = plans.every(plan => plan.valid) && !conflict;
+    const whole = replacements.length === plans.length && plans.some(plan => plan.special);
+    const desiredRaw = replacements.length === plans.length ? inputs[0].selectedRaw : inputs.map(request => request.selectedRaw).join(';');
+    const kind = replacements.length === plans.length ? (whole ? 'whole' : 'replace') : 'append';
+    const combined = computeMatch(key, before, desiredRaw, kind === 'append' ? '-append' : 'replace', whole);
+    const parts = kind === 'append' ? plans.flatMap((plan, index) => plan.parts.map(part => ({
+      ...part, requestId: inputs[index].id, requestSelectedIndex: part.index
+    }))).map((part, index) => ({ ...part, index })) : combined.parts;
+    const operations = [];
+    let after = state(original);
+    if (valid && kind !== 'append') {
+      after = { exists: true, raw: desiredRaw, type: copy(before.type) };
+      if (!before.exists || before.raw !== desiredRaw) operations.push({ type: 'replace', action: 'REPLACE', whole: true, before: legacyRaw(before), after: desiredRaw, requestId: inputs[0].id, requestIds: inputs.map(request => request.id) });
+    } else if (valid) {
+      const removedIndexes = new Set();
+      plans.forEach((plan, index) => plan.operations.filter(operation => operation.type === 'remove').forEach(operation => {
+        if (removedIndexes.has(operation.beforeIndex)) return;
+        removedIndexes.add(operation.beforeIndex); operations.push({ ...copy(operation), requestId: inputs[index].id });
+      }));
+      let remaining = actualPartsFor(original).filter((_, index) => !removedIndexes.has(index));
+      inputs.forEach((request, index) => {
+        const addition = appendParts(remaining, parts.filter(part => part.requestId === request.id && part.requestSelectedIndex < plans[index].parts.length), request.mode);
+        remaining = addition.parts; operations.push(...addition.operations);
+      });
+      if (operations.length) after = { exists: true, raw: remaining.join(';'), type: copy(before.type) };
+    }
+    return freeze({
+      target: copy(target), targetKey: key, mode: 'batch', special: whole, kind, source: 'scheme-apply',
+      baseRevision: original.revision, before, desiredRaw, after, beforeRaw: legacyRaw(before), afterRaw: legacyRaw(after),
+      operations, parts, matchResult: { ...combined.result, matched: parts.filter(part => part.matched), missing: parts.filter(part => !part.matched && part.value.trim() !== '') },
+      valid: !!valid, issues, requests: inputs
     });
   }
   function selectionChange({ target, beforeRaw, afterRaw, whole = false, explicitElementEdits }) {
@@ -114,8 +231,8 @@ var DemoPlan = (() => {
     return freeze({
       target: copy(target), targetKey: key, mode: 'element-edit', special: whole, kind: whole ? 'whole' : 'element-edit',
       source: 'windows-element-edit', baseRevision: original.revision, before, desiredRaw: afterRaw, after,
-      beforeRaw: legacyRaw(before), afterRaw: legacyRaw(after), operations, parts, matchResult, audit: frozenAudit
+      beforeRaw: legacyRaw(before), afterRaw: legacyRaw(after), operations, parts, matchResult, audit: frozenAudit, valid: true, issues: []
     });
   }
-  return Object.freeze({ build, buildElementEdit, matches, selectionChange });
+  return Object.freeze({ build, buildBatch, captureBaseline, buildElementEdit, matches, selectionChange });
 })();

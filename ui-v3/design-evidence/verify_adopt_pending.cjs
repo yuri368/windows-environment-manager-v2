@@ -238,7 +238,7 @@ try {
     w.eval(`{
       curProfile().vars.push(mkVar(['ADOPT_TEST','User','-append',' BACK '],1));
       curProfile().vars.push(mkVar(['ADOPT_TEST','User','append','CUSTOM'],2));
-      curProfile().vars.push(mkVar(['ADOPT_TEST','User','replace','REPLACEMENT'],3));
+      curProfile().vars.push(mkVar(['ADOPT_OTHER','User','replace','REPLACEMENT'],3));
       curProfile().vars.push(mkVar(['ADOPT_TEST','System','+append','SYS_FRONT'],4));
       curProfile().vars.push(mkVar(['ADOPT_TEST','System','-append','SYS_BACK'],5));
       windows['System|ADOPT_TEST']='S';go('windows');

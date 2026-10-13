@@ -1,0 +1,26 @@
+[
+  {
+    "file": "temp.html",
+    "sha256": "682e0d45b50898098e24dc907c578976b42968707c06a335c5ae5b7ce627403c"
+  },
+  {
+    "file": "demo-plan.js",
+    "sha256": "57c16a11a292e31125debdeb3527bd122e91e666e8190cc78592f859db7d8986"
+  },
+  {
+    "file": "windows-elements.js",
+    "sha256": "7140f11c0463c49a5814981f48a5b0abeb49cedc4e13e899f3d85665ccc279ea"
+  },
+  {
+    "file": "elements-ui.css",
+    "sha256": "9910d4af478519ac0f54f5242e7d4b192f6a0696ec630f035c6c8459d8d57c02"
+  },
+  {
+    "file": "package.json",
+    "sha256": "9f32b05ab01b1bb086688734464286974ac4874eb0bcb5ef51970ba293cf10fb"
+  },
+  {
+    "file": "AGENTS.md",
+    "sha256": "967b835bd7924b4c5e6fc0b1623f1f280220051b31f45c6b2fcdf7dddc01eedb"
+  }
+]

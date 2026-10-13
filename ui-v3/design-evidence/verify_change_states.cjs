@@ -276,7 +276,7 @@ try {
     assert.equal(w.eval("windows['User|REGRESSION']"), ' X;;Y; ');
     reset();
     w.eval("{ const v=curProfile().vars[0]; v.mode='replace'; v.special=false; v.defaultValue='A;B'; v.source='默认值'; windows[key(v)]=' B;A '; renderRows(); }");
-    assert.equal(q('#compareActual .diff-label').textContent, '将替换');
+    assert.equal(q('#compareActual .diff-label').textContent, '整体待替换');
     q('#editWindowsElements').click();
     assert.equal(serialized(), ' B;A ');
     assert.equal(all('.element-row.is-replaced').length, 0);
@@ -286,7 +286,7 @@ try {
     w.eval('windows[key(curProfile().vars[0])] = value(curProfile().vars[0]); renderRows()');
     assert.equal(q('#compareActual .diff-label'), null);
     w.eval("{ const v=curProfile().vars[0]; v.special=true; windows[key(v)]='A;B;'; renderRows(); }");
-    assert.equal(q('#compareActual .diff-label').textContent, '将替换');
+    assert.equal(q('#compareActual .diff-label').textContent, '整体待替换');
     w.eval("{ const v=curProfile().vars[0]; v.special=false; v.mode='+append'; renderRows(); }");
     assert.equal(q('#compareActual .diff-label'), null, 'Append intent is not whole-value replacement');
   });

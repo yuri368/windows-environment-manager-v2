@@ -134,7 +134,7 @@ try {
     for (const raw of ['old A', 'next A', 'old B', 'next B']) assert.ok(q('#screen').textContent.includes(raw));
   });
 
-  check('Sequential batch changes to one target retain each intermediate raw value without invented element diffs', () => {
+  check('Batch changes to one target store one snapshot-bound result with both original requests', () => {
     reset();
     w.eval(`{
       scheme(0).vars = [mkVar(['SHARED_BATCH', 'User', '+append', 'front'], 0)];
@@ -144,12 +144,9 @@ try {
     }`);
     confirmPreview();
     const changes = entry().changes;
-    assert.equal(changes.length, 2);
-    assert.deepEqual(changes.map(({ before, after }) => ({ before, after })), [
-      { before: 'core', after: 'front;core' },
-      { before: 'front;core', after: 'front;core;tail' }
-    ]);
-    assert.deepEqual(changes.map(change => change.mode), ['+append', '-append']);
+    assert.equal(changes.length, 1);
+    assert.deepEqual(changes.map(({before,after})=>({before,after})),[{before:'core',after:'front;core;tail'}]);
+    assert.deepEqual(Array.from(changes[0].plan.requests,r=>r.mode),['+append','-append']);
     for (const change of changes) {
       assert.equal(change.counts, undefined);
       assert.equal(change.elements, undefined);

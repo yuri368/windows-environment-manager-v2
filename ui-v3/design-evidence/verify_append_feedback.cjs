@@ -42,11 +42,11 @@ const snapshot = () => w.eval('JSON.stringify(windows)');
 const state = () => w.eval('JSON.stringify({apps,windows,history,revision})');
 const cancel = () => q('#cancelDialog').click();
 const rawValues = container => container ? Array.from(container.querySelectorAll('[data-raw-value]')).map(node => node.getAttribute('data-raw-value')) : [];
-const candidates = () => rawValues(q('#pendingElements'));
+const candidates = () => rawValues(q('#pendingElements .pending-additions'));
 const inspectorCandidates = () => rawValues(q('#comparePending .pending-additions'));
 const actualText = () => {
   const clone = q('#compareActual').cloneNode(true);
-  clone.querySelectorAll('.pending-additions').forEach(node => node.remove());
+  clone.querySelectorAll('.pending-additions,.diff-label').forEach(node => node.remove());
   return clone.textContent;
 };
 const selection = (raw, selected, whole = false) => plain(w.WindowsElements.selectionInfo(raw, selected, whole));
@@ -124,7 +124,7 @@ try {
     reset(); q('#varRows [data-row="1"] .vinput').focus();
     const raw = w.eval("windows['User|PATH']");
     input(q('#varRows [data-row="1"] .vinput'), ' Pathcustom ');
-    assert.deepEqual(rawValues(q('#compareDesired')), [' Pathcustom ']);
+    assert.deepEqual(rawValues(q('#compareDesired .selection-current')), [' Pathcustom ']);
     assert.equal(q('#compareDesired .pending-add-token').textContent.includes(' Pathcustom '), true);
     assert.deepEqual(inspectorCandidates(), [' Pathcustom ']);
     assert.equal(actualText(), raw); ratio(0, 1);
@@ -163,7 +163,7 @@ try {
     assert.ok(q('#varRows tr.sel .result').classList.contains('warn'));
     assert.doesNotMatch(q('#compareResult').textContent, /全匹配|完全匹配/);
     assert.equal(q('#compareDesired .pending-add-token'), null); assert.deepEqual(inspectorCandidates(), []);
-    assert.match(q('#compareActual').textContent, /将替换/);
+    assert.match(q('#compareActual').textContent, /整体待替换/);
     openFixture(); assert.deepEqual(candidates(), []); assert.match(q('#elementPreview').textContent, /将替换/); cancel();
   });
   check('Whole editor preserves semicolon string with no pending candidate or misleading 0/0', () => {
@@ -269,7 +269,7 @@ try {
     edit(rows()[0].dataset.elementId, 'C'); q('#applyElements').click();
     assert.equal(w.eval("windows['User|PATH']"), 'A'); assert.equal(w.eval("windows['System|PATH']"), 'C');
   });
-  check('Windows environment candidates stay outside the real value and use append specs only', () => {
+  check('Windows target conflicts suppress executable candidates while isolated System append remains available', () => {
     fixture({name:'APPEND_TEST',actual:'A',desired:'A;B'});
     w.eval(`{
       curProfile().vars.push(mkVar(['APPEND_TEST','User','replace','A;C'],1));
@@ -280,10 +280,10 @@ try {
     const system = q('[data-windows-value="System|APPEND_TEST"]');
     assert.equal(user.textContent, 'A'); assert.equal(system.textContent, 'D');
     assert.equal(user.querySelector('.pending-additions'), null);
-    assert.deepEqual(rawValues(user.parentElement.querySelector('.pending-additions')), ['B']);
+    assert.deepEqual(rawValues(user.parentElement.querySelector('.pending-additions')), []);assert.match(user.parentElement.textContent,/目标计划冲突/);
     assert.deepEqual(rawValues(system.parentElement.querySelector('.pending-additions')), ['A']);
     q('[data-windows-edit="User|APPEND_TEST"]').click();
-    assert.deepEqual(candidates(), ['B']); assert.equal(serialized(), 'A'); cancel();
+    assert.deepEqual(candidates(), []); assert.equal(serialized(), 'A'); cancel();
     q('[data-windows-edit="System|APPEND_TEST"]').click();
     assert.deepEqual(candidates(), ['A']); assert.equal(serialized(), 'D'); cancel();
   });

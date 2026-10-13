@@ -61,7 +61,7 @@ function check(name, verify) {
   catch (error) { checks.push({ name, passed: false, error: error.stack }); }
 }
 try {
-  check('Python Path starts matched; ordinary Scripts1 input changes selection, never labels the old Windows row as a replacement', () => {
+  check('Python Path starts matched; ordinary Scripts1 input generates independent removal and append, never inferred replacement', () => {
     python();
     assert.match(q('#varRows [data-row="1"] .result').textContent, /匹配 2\/2/);
     const before = actual(), count = historySize();
@@ -69,8 +69,8 @@ try {
     assert.equal(actual(), before);
     assert.equal(historySize(), count);
     assert.match(q('#compareDesired').textContent, /选定值已修改/);
-    assert.equal(q('.selection-edit-before').textContent, oldSelection);
-    assert.equal(q('.selection-edit-after').textContent.replace(/待追加/g, ''), newSelection);
+    assert.ok(q('#compareActual').textContent.includes('待删除'));
+    assert.equal(q('#compareDesired .selection-current').textContent.replace(/待追加/g, ''), newSelection);
     assert.match(q('#varRows [data-row="1"] .result').textContent, /部分匹配 1\/2/);
     assert.match(q('#comparePending').textContent, /Scripts1.*待追加/);
     assert.doesNotMatch(q('#compareActual').textContent, /待修改|将替换|替换/);
@@ -85,24 +85,26 @@ try {
     previewPath();
     assert.strictEqual(evaluate('modalAction.rows[0].plan'), plan);
     assert.strictEqual(evaluate('demoPlan(scheme(1).vars[1])'), plan);
-    assert.equal(evaluate('modalAction.rows[0].after'), `${pathRaw()};%PYTHON_HOME%\\Scripts1`);
+    assert.equal(evaluate('modalAction.rows[0].after'), `${pathRaw().split(';').filter(x=>x!=='%PYTHON_HOME%\\Scripts').join(';')};%PYTHON_HOME%\\Scripts1`);
     q('#cancelDialog').click();
     assert.equal(actual(), before);
     assert.equal(historySize(), count);
     assert.equal(evaluate('scheme(1).vars[1].savedValue'), saved);
   });
-  check('Confirm appends Scripts1, preserves every old raw segment, and stores the same immutable plan in history', () => {
+  check('Confirm removes the matched Scripts, appends Scripts1, preserves unrelated segments and freezes history', () => {
     editPython();
     const before = pathRaw(), count = historySize();
     previewPath();
     const plan = evaluate('modalAction.rows[0].plan');
-    assert.equal(plan.operations.length, 1);
-    assert.equal(plan.operations[0].type, 'insert');
-    assert.equal(plan.operations[0].value, '%PYTHON_HOME%\\Scripts1');
-    assert.equal(plan.operations[0].position, 'tail');
+    assert.equal(plan.operations.length, 2);
+    assert.equal(plan.operations[0].type, 'remove');
+    assert.equal(plan.operations[0].value, '%PYTHON_HOME%\\Scripts');
+    assert.equal(plan.operations[1].type, 'insert');
+    assert.equal(plan.operations[1].value, '%PYTHON_HOME%\\Scripts1');
+    assert.equal(plan.operations[1].position, 'tail');
     q('#confirmDialog').click();
-    assert.equal(pathRaw(), `${before};%PYTHON_HOME%\\Scripts1`);
-    assert.ok(pathRaw().split(';').includes('%PYTHON_HOME%\\Scripts'));
+    assert.equal(pathRaw(), `${before.split(';').filter(x=>x!=='%PYTHON_HOME%\\Scripts').join(';')};%PYTHON_HOME%\\Scripts1`);
+    assert.equal(pathRaw().split(';').includes('%PYTHON_HOME%\\Scripts'), false);
     assert.equal(historySize(), count + 1);
     const event = evaluate('history[0]'), change = event.changes[0];
     frozenTree(event);
@@ -191,7 +193,7 @@ try {
     editPython(); const before = pathRaw(), count = historySize(); previewPath();
     evaluate("windows['System|UNRELATED']='external'; targetRevisions['System|UNRELATED']=91; revision+=10");
     q('#confirmDialog').click();
-    assert.equal(pathRaw(), `${before};%PYTHON_HOME%\\Scripts1`);
+    assert.equal(pathRaw(), `${before.split(';').filter(x=>x!=='%PYTHON_HOME%\\Scripts').join(';')};%PYTHON_HOME%\\Scripts1`);
     assert.equal(evaluate("windows['System|UNRELATED']"), 'external');
     assert.equal(historySize(), count + 1);
   });
@@ -275,7 +277,7 @@ try {
     assert.match(q('#varRows [data-row="1"] .result').textContent, /0\/3/);
     assert.equal(all('#comparePending .pending-add-token').length, 1);
     assert.equal(all('#compareDesired .is-pending-add').length, 1);
-    assert.equal(q('.selection-edit-after').textContent.replace(/待追加/g, ''), 'B; B ;B');
+    assert.equal(q('#compareDesired .selection-current').textContent.replace(/待追加/g, ''), 'B; B ;B');
     assert.equal(plan.after.raw, 'A;B');
     assert.equal(pathRaw(), 'A');
   });

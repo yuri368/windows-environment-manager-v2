@@ -25,7 +25,7 @@
       "passed": true
     },
     {
-      "name": "Sequential batch changes to one target retain each intermediate raw value without invented element diffs",
+      "name": "Batch changes to one target store one snapshot-bound result with both original requests",
       "passed": true
     },
     {

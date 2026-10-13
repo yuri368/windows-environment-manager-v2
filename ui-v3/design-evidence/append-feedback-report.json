@@ -113,7 +113,7 @@
       "passed": true
     },
     {
-      "name": "Windows environment candidates stay outside the real value and use append specs only",
+      "name": "Windows target conflicts suppress executable candidates while isolated System append remains available",
       "passed": true
     },
     {

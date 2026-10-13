@@ -26,24 +26,36 @@ var WindowsElements = (() => {
       return part.value === '' ? '<span class="empty-element" data-raw-value="">（空元素）</span>' : escape(part.value);
     }).join('<span class="element-separator">;</span>');
   }
+  const removalToken=(op,editing=false)=>`<span class="pending-remove-token" data-pending-before-index="${op.beforeIndex}"${op.elementId===undefined?'':` data-element-id="${op.elementId}"`}><span class="diff-value" data-raw-value="${escape(op.value)}">${escape(op.value)}</span><span class="diff-label is-removed">待删除</span>${editing?`<button type="button" class="pending-remove-button" data-remove-pending="${op.beforeIndex}" aria-label="从本次编辑列表移除 ${escape(op.value)}" title="从本次编辑列表移除">−</button>`:''}</span>`;
+  function removalMarkup(plan,editing=false){
+    const removals=(plan?.operations||[]).filter(op=>op.type==='remove');
+    return removals.length?`<div class="pending-removals"><span class="pending-additions-title">方案待删除 · ${editing?'尚未从本次编辑列表移除':'确认应用后移除'}</span><div class="pending-additions-values">${removals.map(op=>removalToken(op,editing)).join('<span class="element-separator">;</span>')}</div></div>`:'';
+  }
+  function issuesMarkup(plan){
+    return (plan?.issues||[]).length?`<div class="plan-issues">${plan.issues.map(issue=>`<span class="plan-issue"><code>${escape(issue.value)}</code><span class="diff-label is-retained">${issue.reason==='duplicate'?'存在重复，删除需确认':issue.reason==='shared'?'共享保留':issue.reason==='stale'?'编辑基线已失效':'目标计划冲突'}</span></span>`).join('')}</div>`:'';
+  }
   function pendingMarkup(raw, values = [], whole = false, editing = false, modes = [], plan = null) {
     if (whole) return '';
     const pendingPlan=plan||DemoPlan.build({mode:'-append',whole,actualRaw:raw,selectedRaw:values.join(';')});
-    const missing=pendingPlan.operations.filter(op=>op.type==='insert').map(op=>({value:op.value,index:op.selectedIndex}));
-    if (!missing.length) return '';
-    return `<div class="pending-additions"><span class="pending-additions-title">方案待追加 · ${editing?'尚未加入本次编辑结果':'尚未加入当前值'}</span><div class="pending-additions-values">${missing.map(part=>pendingToken(part,editing?modes[part.index]:null)).join('<span class="element-separator">;</span>')}</div></div>`;
+    const missing=pendingPlan.operations.filter(op=>op.type==='insert').map(op=>({value:op.value,index:op.selectedIndex,mode:op.position==='head'?'+append':'-append'}));
+    const additions=missing.length?`<div class="pending-additions"><span class="pending-additions-title">方案待追加 · ${editing?'尚未加入本次编辑结果':'尚未加入当前值'}</span><div class="pending-additions-values">${missing.map(part=>pendingToken(part,editing?modes[part.index]:null)).join('<span class="element-separator">;</span>')}</div></div>`:'';
+    return removalMarkup(pendingPlan,editing)+additions+issuesMarkup(pendingPlan);
   }
   function selectionChangeMarkup(edit,plan){
-    const raw=value=>value===''?'<span class="empty-element">（空字符串）</span>':escape(value);
-    return `<div class="selection-change-note"><span class="selection-edit-heading">选定值已修改</span><div class="selection-edit-pair"><span class="selection-edit-before">${raw(edit.beforeRaw)}</span><span class="selection-edit-arrow" aria-label="修改为">→</span><span class="selection-edit-after">${selectionMarkup(plan.beforeRaw,[edit.afterRaw],edit.whole,plan.kind==='append',plan)}</span></div></div>`;
+    return `<div class="selection-change-note"><span class="selection-edit-heading">选定值已修改</span><div class="selection-current">${selectionMarkup(plan.beforeRaw,[edit.afterRaw],edit.whole,plan.kind==='append',plan)}</div>${removalMarkup(plan)}</div>`;
   }
-  function highlight(raw, values = [], whole = false, willReplace = false) {
+  function highlight(raw, values = [], whole = false, willReplace = false, plan = null) {
     if (raw === undefined) return '<span class="empty-element">（不存在）</span>';
-    if (raw === '') return '<span class="empty-element">（空字符串）</span>' + (willReplace ? '<span class="diff-label replacement-label">将替换</span>' : '');
+    if (raw === '') return '<span class="empty-element">（空字符串）</span>' + (willReplace ? '<span class="diff-label replacement-label">整体待替换</span>' : '');
     const parts = whole ? [raw] : raw.split(';');
-    const content = parts.map(part => matches(part, values, whole)
-      ? `<mark class="matched-element" title="与准备方案中的元素匹配">${escape(part)}</mark>` : escape(part)).join('<span class="element-separator">;</span>');
-    return willReplace ? `<span class="pending-replacement"><span class="diff-value" data-raw-value="${escape(raw)}">${content}</span><span class="diff-label replacement-label">将替换</span></span>` : content;
+    const removals=new Map((plan?.operations||[]).filter(op=>op.type==='remove').map(op=>[op.beforeIndex,op]));
+    const content = parts.map((part,index) => {
+      if(removals.has(index))return removalToken(removals.get(index));
+      const issue=plan?.issues?.find(item=>item.actualIndexes?.includes(index));
+      const rawValue=matches(part,values,whole)?`<mark class="matched-element" title="与准备方案中的元素匹配">${escape(part)}</mark>`:escape(part);
+      return issue?`<span class="retained-element">${rawValue}<span class="diff-label is-retained">${issue.reason==='shared'?'共享保留':'删除需确认'}</span></span>`:rawValue;
+    }).join('<span class="element-separator">;</span>');
+    return willReplace ? `<span class="pending-replacement"><span class="diff-value" data-raw-value="${escape(raw)}">${content}</span><span class="diff-label replacement-label">整体待替换</span></span>` : content;
   }
   const serialized = () => session.rows.map(row => row.value).join(session.whole ? '' : ';');
   const valid = () => !session.rows.some(row => row.value.includes('\0') || (!session.whole && row.value.includes(';')));
@@ -88,8 +100,8 @@ var WindowsElements = (() => {
   }
   function token(row, state, removed = false, duplicateCount = 1) {
     const matched = matches(row.value,session.selectedValues || [],session.whole);
-    const classes = [removed?'is-removed':'',state.added?'is-added':'',state.replaced?'is-replaced':'',state.moved?'is-moved':'',matched?'is-matched':'',duplicateCount>1?'is-duplicate':''].filter(Boolean).join(' ');
-    return `<span class="diff-token ${classes}" data-element-id="${row.id}" data-duplicate-count="${duplicateCount}" tabindex="-1"><span class="diff-value" data-raw-value="${escape(row.value)}">${row.value === '' ? `<span class="empty-element">${session.whole?'（空字符串）':'（空元素）'}</span>` : escape(row.value)}</span>${labels(state,removed,session.replacementExpected)}${duplicateLabel(duplicateCount)}${matched&&!removed?'<span class="element-match-mark" title="与准备方案匹配" aria-label="匹配">✓</span>':''}</span>`;
+    const classes = [removed?'is-removed':'',state.added?'is-added':'',state.replaced?'is-replaced':'',state.moved?'is-moved':'',!removed&&plannedRemoval(row)?'is-pending-remove':'',matched?'is-matched':'',duplicateCount>1?'is-duplicate':''].filter(Boolean).join(' ');
+    return `<span class="diff-token ${classes}" data-element-id="${row.id}" data-duplicate-count="${duplicateCount}" tabindex="-1"><span class="diff-value" data-raw-value="${escape(row.value)}">${row.value === '' ? `<span class="empty-element">${session.whole?'（空字符串）':'（空元素）'}</span>` : escape(row.value)}</span>${labels(state,removed,session.replacementExpected)}${!removed&&plannedRemoval(row)?'<span class="diff-label is-removed">待删除</span>':''}${duplicateLabel(duplicateCount)}${matched&&!removed?'<span class="element-match-mark" title="与准备方案匹配" aria-label="匹配">✓</span>':''}</span>`;
   }
   function renderComparison() {
     const root=session.container;
@@ -156,8 +168,23 @@ var WindowsElements = (() => {
     element.dataset.duplicateCount = duplicateCount;
     element.classList.toggle('will-be-replaced',!!session.replacementExpected&&!state.added&&!state.replaced);
     element.querySelector('.element-match-state').textContent=matched?'✓ 匹配':'';
-    element.querySelector('.element-change-state').innerHTML=labels(state,false,session.replacementExpected)+duplicateLabel(duplicateCount);
+    const removal=plannedRemoval(row);element.classList.toggle('is-pending-remove',!!removal);
+    element.querySelector('.element-change-state').innerHTML=labels(state,false,session.replacementExpected)+duplicateLabel(duplicateCount)+(removal?'<span class="diff-label is-removed">待删除</span>':'');
     element.querySelector('.element-input').setAttribute('aria-invalid',String(row.value.includes('\0') || (!session.whole && row.value.includes(';'))));
+  }
+  function plannedRemoval(row){
+    if(session.selectionPlan?.valid===false)return null;
+    return (session.selectionPlan?.operations||[]).find(op=>op.type==='remove'&&session.originalRows[op.beforeIndex]?.id===row.id&&session.originalRows[op.beforeIndex].value===row.value);
+  }
+  function candidatePlan(){
+    const values=session.appendValues,additions=DemoPlan.build({mode:'-append',actualRaw:serialized(),selectedRaw:values.join(';')});
+    const originalPlan=session.selectionPlan;
+    if(originalPlan?.valid===false)return {...originalPlan,operations:[]};
+    const removals=(originalPlan?.operations||[]).filter(op=>op.type==='remove').flatMap(op=>{
+      const original=session.originalRows[op.beforeIndex],row=session.rows.find(row=>row.id===original?.id);
+      return row&&row.value===op.value?[{...op,elementId:row.id}]:[];
+    });
+    return {...additions,operations:[...removals,...additions.operations],issues:originalPlan?.issues||[]};
   }
   function update() {
     const root=session.container,raw=serialized(),changed=session.original === undefined?session.rows.length>0:raw!==session.original;
@@ -171,11 +198,17 @@ var WindowsElements = (() => {
     root.querySelector('#elementStatus').textContent=changed?'有待应用修改 · 仅更新演示数据':structureChanged?'顺序或结构已调整 · 结果值未变化':'未修改 · 仅更新演示数据';
     root.querySelectorAll('[data-element-id]').forEach(el=>{if(!el.classList.contains('element-row'))return;const row=session.rows.find(row=>row.id===Number(el.dataset.elementId));if(row)paintRow(el,row);});
     const pending = root.querySelector('#pendingElements');
-    pending.innerHTML = pendingMarkup(raw,session.appendValues,session.whole,true,session.appendModes);
+    pending.innerHTML = pendingMarkup(raw,session.appendValues,session.whole,true,session.appendModes,candidatePlan());
     pending.hidden = !pending.innerHTML;
     const editingSession=session;
     pending.querySelectorAll('[data-add-pending]').forEach(button=>{
       button.onclick=()=>adoptPending(Number(button.dataset.addPending),button,editingSession);
+    });
+    pending.querySelectorAll('[data-remove-pending]').forEach(button=>button.onclick=()=>{
+      if(session!==editingSession||!button.isConnected)return;
+      const original=session.originalRows[Number(button.dataset.removePending)],row=session.rows.find(row=>row.id===original?.id);
+      if(!row||!plannedRemoval(row))return;
+      session.rows=session.rows.filter(item=>item.id!==row.id);renderRows(session.rows[0]?.id);
     });
     renderComparison();
   }

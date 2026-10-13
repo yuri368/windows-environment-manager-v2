@@ -1,0 +1,119 @@
+{
+  "kind": "Node and JSDOM offline contracts",
+  "passed": 279,
+  "total": 279,
+  "allPassed": true,
+  "suites": [
+    {
+      "file": "verify_demo_plan.cjs",
+      "exit": 0,
+      "passed": 28,
+      "total": 28,
+      "stderr": ""
+    },
+    {
+      "file": "verify_dom.cjs",
+      "exit": 0,
+      "passed": 11,
+      "total": 11,
+      "failed": [],
+      "stderr": ""
+    },
+    {
+      "file": "verify_elements.cjs",
+      "exit": 0,
+      "passed": 17,
+      "total": 17,
+      "failed": [],
+      "stderr": ""
+    },
+    {
+      "file": "verify_interactions.cjs",
+      "exit": 0,
+      "passed": 13,
+      "total": 13,
+      "failed": [],
+      "stderr": ""
+    },
+    {
+      "file": "verify_examples.cjs",
+      "exit": 0,
+      "passed": 9,
+      "total": 9,
+      "failed": [],
+      "stderr": ""
+    },
+    {
+      "file": "verify_change_states.cjs",
+      "exit": 0,
+      "passed": 15,
+      "total": 15,
+      "failed": [],
+      "stderr": ""
+    },
+    {
+      "file": "verify_element_feedback.cjs",
+      "exit": 0,
+      "passed": 21,
+      "total": 21,
+      "failed": [],
+      "stderr": ""
+    },
+    {
+      "file": "verify_append_feedback.cjs",
+      "exit": 0,
+      "passed": 33,
+      "total": 33,
+      "failed": [],
+      "stderr": ""
+    },
+    {
+      "file": "verify_adopt_pending.cjs",
+      "exit": 0,
+      "passed": 26,
+      "total": 26,
+      "failed": [],
+      "stderr": ""
+    },
+    {
+      "file": "verify_history_sidebar.cjs",
+      "exit": 0,
+      "passed": 14,
+      "total": 14,
+      "failed": [],
+      "stderr": ""
+    },
+    {
+      "file": "verify_overall_audit.cjs",
+      "exit": 0,
+      "passed": 25,
+      "total": 25,
+      "failed": [],
+      "stderr": ""
+    },
+    {
+      "file": "verify_unified_plan.cjs",
+      "exit": 0,
+      "passed": 23,
+      "total": 23,
+      "failed": [],
+      "stderr": ""
+    },
+    {
+      "file": "verify_matched_baseline.cjs",
+      "exit": 0,
+      "passed": 28,
+      "total": 28,
+      "failed": [],
+      "stderr": ""
+    },
+    {
+      "file": "verify_matched_workflow.cjs",
+      "exit": 0,
+      "passed": 16,
+      "total": 16,
+      "failed": [],
+      "stderr": ""
+    }
+  ]
+}

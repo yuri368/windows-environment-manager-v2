@@ -45,8 +45,8 @@ check('Search and keyboard application selection', () => {
 check('Exact raw custom string retained in running draft', () => {
   const exact = '  C:\\Tools\\A;C:\\Tools\\B  ';
   input(q('#varRows .vinput'), exact);
-  assert.equal(q('#compareDesired .selection-edit-after').textContent, exact);
-  assert.equal(q('#compareDesired .selection-edit-before').textContent, 'H:\\ProgramFiles\\Python313');
+  assert.equal(q('#compareDesired .selection-current').textContent, exact);
+  assert.equal(w.eval('selectionEdit(curProfile().vars[0]).beforeRaw'), 'H:\\ProgramFiles\\Python313');
   assert.equal(q('#varRows .source').value, '自定义值');
   assert.match(q('.footer-summary').textContent, /待应用修改/);
 });
