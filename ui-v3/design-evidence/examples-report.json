@@ -1,0 +1,41 @@
+{
+  "verification": "JSDOM demo data and UI events only; actual browser visual rendering and system operations not verified",
+  "checks": [
+    {
+      "name": "Expanded fixtures have 13 apps, 23 schemes and 60 variable definitions; no initial config drafts",
+      "passed": true
+    },
+    {
+      "name": "Second candidate and saved value select distinct strings without writing the mock snapshot",
+      "passed": true
+    },
+    {
+      "name": "Scheme switching keeps each runtime draft in its own scheme",
+      "passed": true
+    },
+    {
+      "name": "Seeded whole-string flags stay clean initially and restore to their seeded baseline",
+      "passed": true
+    },
+    {
+      "name": "System scope examples expose partial matching and a separate system Path",
+      "passed": true
+    },
+    {
+      "name": "List example retains duplicates and blanks; empty and missing values display differently",
+      "passed": true
+    },
+    {
+      "name": "Shared variable conflict is visible and confirmation is disabled",
+      "passed": true
+    },
+    {
+      "name": "Long Chinese example exposes six variables with full values and reset restores sample choices",
+      "passed": true
+    },
+    {
+      "name": "No runtime errors with the expanded configurations",
+      "passed": true
+    }
+  ]
+}

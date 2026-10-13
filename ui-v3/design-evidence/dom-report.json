@@ -2,7 +2,7 @@
   "verification": "JSDOM interactions; visual rendering and real backend not verified",
   "checks": [
     {
-      "name": "Startup: seven applications and Maven current scheme",
+      "name": "Startup: thirteen applications and Maven current scheme",
       "passed": true
     },
     {

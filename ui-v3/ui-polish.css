@@ -116,6 +116,7 @@ body { padding: 12px; font-size: 13px; line-height: 1.55; }
 .editor-tabs .tag { margin-left: 8px; }
 .config-file-label { margin-left: auto; color: var(--sub); font-size: 12px; padding: 5px 0; }
 .has-changes { color: var(--amber); }
+.demo-description { max-width: 720px; margin: 9px 0 0; font-size: 12px; line-height: 1.6; color: var(--sub); }
 .app-title, .editor-mid h2, .editor-right h3 { overflow-wrap: anywhere; min-width: 0; }
 .editor-mid { padding: 20px; }
 .editor-mid h2 { font-size: 20px; margin: 0 0 6px; }

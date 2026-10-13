@@ -9,7 +9,7 @@ const script = fs.readFileSync(path.join(root, 'windows-elements.js'), 'utf8');
 const errors = [], checks = [];
 const vc = new VirtualConsole(); vc.on('jsdomError', e => errors.push(e.message));
 const dom = new JSDOM(html, { runScripts: 'dangerously', pretendToBeVisual: true,
-  virtualConsole: vc, beforeParse(w) { w.confirm = () => true; w.eval(script); } });
+  virtualConsole: vc, beforeParse(w) { w.confirm = () => true; w.eval(fs.readFileSync(path.join(root,'demo-configs.js'),'utf8')); w.eval(script); } });
 const w = dom.window, doc = w.document;
 const q = s => doc.querySelector(s), all = s => [...doc.querySelectorAll(s)];
 const check = (name, fn) => { fn(); checks.push({ name, passed: true }); };
@@ -57,7 +57,7 @@ check('Explicit workbench edit button provides a discoverable alternative', () =
 });
 check('Windows table highlights prepared schemes and shares the same editor', () => {
   q('[data-view="windows"]').click(); const el = q('[data-windows-value="User|PATH"]');
-  assert.equal(el.textContent, raw()); assert.equal(el.querySelectorAll('mark').length, 6);
+  assert.equal(el.textContent, raw()); assert.equal(el.querySelectorAll('mark').length, 9);
   dbl(el); assert.ok(q('.element-dialog')); assert.equal(values().join(';'), raw()); cancel();
   q('[data-windows-edit="User|PATH"]').click(); assert.ok(q('.element-dialog')); cancel();
 });

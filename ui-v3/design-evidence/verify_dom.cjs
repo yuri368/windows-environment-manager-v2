@@ -12,7 +12,7 @@ const errors = [], results = [];
 const vc = new VirtualConsole();
 vc.on('jsdomError', e => errors.push(e.message));
 const dom = new JSDOM(html, { runScripts: 'dangerously', pretendToBeVisual: true,
-  virtualConsole: vc, beforeParse(w) { w.confirm = () => true; w.eval(elementScript); } });
+  virtualConsole: vc, beforeParse(w) { w.confirm = () => true; w.eval(fs.readFileSync(path.join(__dirname,'../demo-configs.js'),'utf8')); w.eval(elementScript); } });
 const w = dom.window, doc = w.document;
 const q = s => doc.querySelector(s);
 const all = s => [...doc.querySelectorAll(s)];
@@ -21,8 +21,8 @@ const input = (el, value) => { el.value = value; el.dispatchEvent(new w.Event('i
 const keyboard = (el, key, shiftKey = false) => el.dispatchEvent(new w.KeyboardEvent('keydown', {key, shiftKey, bubbles: true, cancelable: true}));
 function check(name, fn) { fn(); results.push({name, passed: true}); }
 
-check('Startup: seven applications and Maven current scheme', () => {
-  assert.equal(all('[data-app]').length, 7);
+check('Startup: thirteen applications and Maven current scheme', () => {
+  assert.equal(all('[data-app]').length, 13);
   assert.equal(q('.app-title').textContent, 'Maven');
   assert.equal(all('#varRows [data-row]').length, 2);
 });
@@ -60,9 +60,9 @@ check('Preview cancel and keyboard trap preserve mock Windows value', () => {
   assert.equal(doc.activeElement.id, 'previewButton');
 });
 check('Batch preview contains selected app names', () => {
-  q('#selectAll').click(); assert.equal(all('.appcheck:checked').length, 7);
+  q('#selectAll').click(); assert.equal(all('.appcheck:checked').length, 13);
   q('#previewButton').click(); const text = q('.dialogbody').textContent;
-  for (const app of ['Java','Python','Maven','Hadoop','Scala','Git','VSCode']) assert.ok(text.includes(app));
+  for (const app of ['Java','Python','Maven','Hadoop','Scala','Git','VSCode','Node.js','.NET SDK','CUDA Toolkit','中文长路径工具链','列表与空值','共享变量冲突示例']) assert.ok(text.includes(app));
   q('#cancelDialog').click(); q('#selectNone').click();
 });
 check('Editor defaults to one scheme and All view has explicit groups', () => {
