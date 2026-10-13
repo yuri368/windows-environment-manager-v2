@@ -1,3 +1,5 @@
+最新展示契约：[V3.3 三值对照及修订](V3_THREE_VALUE_V3_3.txt)。修订中的删除幽灵元素仅为展示映射，真实结果、预览应用和历史始终使用冻结 plan.after；V3.2 继续约束匹配基线增删。
+
 # V3 Architecture Documents
 
 文档优先级如下：

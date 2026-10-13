@@ -38,16 +38,15 @@ const change = (element, value) => {
 const rows = () => all('#elementList .element-row');
 const values = () => rows().map(row => row.querySelector('.element-input').value);
 const serialized = () => q('#elementSerialized').textContent;
+const paneRaw = selector => Array.from(q(selector).querySelectorAll('.diff-value[data-raw-value]')).filter(node => !node.closest('.comparison-token.is-ghost')).map(node => node.getAttribute('data-raw-value')).join(';');
 const snapshot = () => w.eval('JSON.stringify(windows)');
 const state = () => w.eval('JSON.stringify({apps,windows,history,revision})');
 const cancel = () => q('#cancelDialog').click();
-const rawValues = container => container ? Array.from(container.querySelectorAll('[data-raw-value]')).map(node => node.getAttribute('data-raw-value')) : [];
+const rawValues = container => container ? [...(container.matches('[data-raw-value]') ? [container] : []), ...container.querySelectorAll('[data-raw-value]')].map(node => node.getAttribute('data-raw-value')) : [];
 const candidates = () => rawValues(q('#pendingElements .pending-additions'));
-const inspectorCandidates = () => rawValues(q('#comparePending .pending-additions'));
+const inspectorCandidates = () => all('#compareDesired .pending-add-token').flatMap(token => rawValues(token));
 const actualText = () => {
-  const clone = q('#compareActual').cloneNode(true);
-  clone.querySelectorAll('.pending-additions,.diff-label').forEach(node => node.remove());
-  return clone.textContent;
+  return paneRaw('#compareActual');
 };
 const selection = (raw, selected, whole = false) => plain(w.WindowsElements.selectionInfo(raw, selected, whole));
 const fixture = ({ actual = 'A', desired = 'A;B', mode = '+append', whole = false, scope = 'User', name = 'APPEND_TEST' } = {}) => {
@@ -124,8 +123,9 @@ try {
     reset(); q('#varRows [data-row="1"] .vinput').focus();
     const raw = w.eval("windows['User|PATH']");
     input(q('#varRows [data-row="1"] .vinput'), ' Pathcustom ');
-    assert.deepEqual(rawValues(q('#compareDesired .selection-current')), [' Pathcustom ']);
-    assert.equal(q('#compareDesired .pending-add-token').textContent.includes(' Pathcustom '), true);
+    assert.deepEqual(rawValues(q('#compareDesired')), [' Pathcustom ']);
+    assert.deepEqual(rawValues(q('#compareDesired .pending-add-token')), [' Pathcustom ']);
+    assert.match(q('#compareLabel').textContent, /选定值已修改/);
     assert.deepEqual(inspectorCandidates(), [' Pathcustom ']);
     assert.equal(actualText(), raw); ratio(0, 1);
     openFixture(); assert.deepEqual(candidates(), [' Pathcustom ']); assert.equal(serialized(), raw);
@@ -142,11 +142,14 @@ try {
   for (const mode of ['+append', '-append', 'append']) {
     check(`${mode} marks pending desired slices and displays separate readonly actual candidates`, () => {
       fixture({ actual: 'A;X', desired: 'A; B ', mode }); ratio(1, 2);
-      assert.equal(q('#compareDesired').textContent.includes('A; B '), true);
+      assert.deepEqual(rawValues(q('#compareDesired')), ['A', ' B ']);
       assert.deepEqual(rawValues(q('#compareDesired .pending-add-token')), [' B ']);
       assert.deepEqual(inspectorCandidates(), [' B ']); assert.equal(actualText(), 'A;X');
-      assert.equal(q('#compareActual .pending-additions'), null);
-      assert.equal(q('#comparePending .pending-additions').querySelector('input,textarea,button,[data-element-id]'), null);
+      const expectedAfter = mode === '+append' ? ' B ;A;X' : 'A;X; B ';
+      assert.equal(paneRaw('#compareAfter'), expectedAfter);
+      assert.equal(q('#compareSerialized').textContent, expectedAfter);
+      assert.deepEqual(rawValues(q('#compareActual')), ['A', 'X']);
+      assert.equal(q('#compareDesired .pending-add-token button, #compareDesired .pending-add-token input'), null);
       openFixture(); assert.deepEqual(candidates(), [' B ']); cancel();
     });
   }
@@ -163,7 +166,7 @@ try {
     assert.ok(q('#varRows tr.sel .result').classList.contains('warn'));
     assert.doesNotMatch(q('#compareResult').textContent, /全匹配|完全匹配/);
     assert.equal(q('#compareDesired .pending-add-token'), null); assert.deepEqual(inspectorCandidates(), []);
-    assert.match(q('#compareActual').textContent, /整体待替换/);
+    assert.match(q('#compareAfter').textContent, /整体待替换/);
     openFixture(); assert.deepEqual(candidates(), []); assert.match(q('#elementPreview').textContent, /将替换/); cancel();
   });
   check('Whole editor preserves semicolon string with no pending candidate or misleading 0/0', () => {
@@ -252,7 +255,7 @@ try {
   });
   check('Undefined actual editor starts with no live rows and cannot apply readonly candidates', () => {
     editorOpen(undefined, [' A ;B']); assert.deepEqual(values(), []); assert.deepEqual(candidates(), [' A ', 'B']);
-    assert.equal(serialized(), ''); assert.equal(q('#applyElements').disabled, true);
+    assert.equal(serialized(), '（不存在）'); assert.equal(q('#applyElements').disabled, true);
     assert.match(q('#elementOriginal').textContent, /不存在/); cancel();
     assert.equal(w.eval("windows['User|APPEND_TEST']"), undefined);
   });

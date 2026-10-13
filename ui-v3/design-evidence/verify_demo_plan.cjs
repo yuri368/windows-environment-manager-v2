@@ -234,7 +234,7 @@ check('Absent editor remains absent until an explicit live element is added', ()
   const empty = edit(undefined, '', [element(1, undefined, '', null, 0, { added: true })]);
   assert.equal(empty.after.exists, true); assert.equal(empty.after.raw, ''); assert.equal(empty.operations[0].action, 'ADD');
   const emptied = edit('A', '', [element(1, 'A', undefined, 0, null, { removed: true })]);
-  assert.equal(emptied.after.exists, true); assert.equal(emptied.after.raw, ''); assert.equal(emptied.operations[0].action, 'REMOVE');
+  assert.equal(emptied.after.exists, false); assert.equal(emptied.after.raw, null); assert.equal(emptied.operations[0].action, 'REMOVE');
 });
 check('Editor refuses mismatched snapshots, missing identity and unexplained final changes', () => {
   assert.throws(() => context.DemoPlan.buildElementEdit({ snapshot: snapshot('A'), afterRaw: 'B', audit: { before: 'old', after: 'B', elements: [] } }), /does not describe/);

@@ -54,7 +54,7 @@
       "passed": true
     },
     {
-      "name": "Deleting all elements can be applied as an empty demo string",
+      "name": "Deleting all elements removes the Windows value rather than persisting an empty string",
       "passed": true
     },
     {

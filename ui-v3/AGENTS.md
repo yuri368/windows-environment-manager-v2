@@ -1,6 +1,6 @@
 # Current project boundary
 
-- Current work is limited to the V3 browser demo and UI-only scope in docs/architecture/V3_SELECTION_DIFF_V3_2.txt; this overrides conflicting ordinary-selection edit rules in V3.1.
+- Current work is limited to the V3 browser demo and UI-only scope in docs/architecture/V3_THREE_VALUE_V3_3.txt (including its later unified-token and ghost-view revision); V3.2 still governs matched-selection edits.
 - Before changing behavior, consult the corresponding contract section; use docs/architecture/README.md for document priority.
 - Do not modify main directly, access or modify the real Windows Registry, or migrate V2 code into V3.
 - Check current code and acceptance evidence before describing UI or features as complete. Draft documents are not proof of implementation.

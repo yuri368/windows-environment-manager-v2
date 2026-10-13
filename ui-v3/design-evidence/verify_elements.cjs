@@ -36,8 +36,8 @@ check('Whole-string highlights only exact matches; blanks are not matched as lis
 });
 check('Workbench highlights just the selected Path element, leaving other elements unmarked', () => {
   q('#varRows [data-row="1"]').click();
-  assert.deepEqual(all('#compareActual mark').map(el => el.textContent), ['%MAVEN_HOME%\\bin']);
-  assert.equal(q('#compareActual').textContent, raw());
+  assert.deepEqual(all('#compareActual .diff-token.is-matched .diff-value[data-raw-value]').map(el => el.getAttribute('data-raw-value')), ['%MAVEN_HOME%\\bin']);
+  assert.equal(all('#compareActual .diff-value[data-raw-value]').map(el => el.getAttribute('data-raw-value')).join(';'), raw());
 });
 check('Workbench double click opens shared editor with raw values and demo metadata', () => {
   dbl(q('#compareActual'));
@@ -72,7 +72,7 @@ check('Empty segments, repeated values and whitespace survive the editor unchang
   w.eval("windows['User|PATH']=' A ;;A;B;' ; renderWindows()");
   dbl(q('[data-windows-value="User|PATH"]'));
   assert.deepEqual(values(), [' A ', '', 'A', 'B', '']);
-  assert.equal(q('#elementSerialized').textContent, ' A ;;A;B;');
+  assert.equal(all('#elementPreview .diff-value[data-raw-value]').map(node => node.getAttribute('data-raw-value')).join(';'), ' A ;;A;B;');
   assert.equal(q('#applyElements').disabled, true);
 });
 check('Keyboard ordering retains stable row identity and input focus', () => {
@@ -102,11 +102,11 @@ check('Apply updates only demo snapshot, keeps raw order, and records a demo his
   assert.match(w.eval('history[0].detail'), /仅更新页面数据/);
   assert.equal(doc.activeElement.dataset.windowsEdit, 'User|PATH');
 });
-check('Deleting all elements can be applied as an empty demo string', () => {
+check('Deleting all elements removes the Windows value rather than persisting an empty string', () => {
   dbl(q('[data-windows-value="User|PATH"]'));
   while (q('[data-delete]')) q('[data-delete]').click();
-  assert.equal(values().length, 0); assert.equal(q('#elementSerialized').textContent, '');
-  q('#applyElements').click(); assert.equal(raw(), '');
+  assert.equal(values().length, 0); assert.equal(q('#elementSerialized').textContent, '（不存在）');
+  q('#applyElements').click(); assert.equal(w.eval("Object.hasOwn(windows,'User|PATH')"), false);
 });
 check('Special value stays whole with semicolons and hides element sorting controls', () => {
   w.eval("windows['User|WHOLE']=' A;;B; ' ; openWindowsElements('User','WHOLE',[' A;;B; '],true)");

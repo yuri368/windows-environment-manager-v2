@@ -117,6 +117,7 @@ var DemoPlan = (() => {
     }
     return { parts: position === 'head' ? [...missing, ...actualParts] : [...actualParts, ...missing], operations };
   }
+  const listState=(before,parts)=>({exists:parts.length>0,raw:parts.length?parts.join(';'):null,type:copy(before.type)});
   function build(options) {
     const { target, mode, selectedRaw } = options;
     if (typeof selectedRaw !== 'string') throw new TypeError('selectedRaw must be a string.');
@@ -137,7 +138,7 @@ var DemoPlan = (() => {
       const remaining = actualPartsFor(snapshot).filter((_, index) => !removedIndexes.has(index));
       const additions = appendParts(remaining, parts, mode);
       operations.push(...additions.operations);
-      if (operations.length) after = { exists: true, raw: additions.parts.join(';'), type: copy(before.type) };
+      if (operations.length) after = listState(before,additions.parts);
     }
     return freeze({
       target: copy(target), targetKey: key, mode, special: whole,
@@ -164,7 +165,8 @@ var DemoPlan = (() => {
     }
     const issues = plans.flatMap((plan, index) => plan.issues.map(issue => ({ ...issue, requestId: inputs[index].id })));
     const replacements = plans.filter(plan => plan.kind !== 'append');
-    const conflict = replacements.length && (replacements.length !== plans.length || new Set(inputs.map(request => request.selectedRaw)).size > 1);
+    const mixedSpecial=new Set(plans.map(plan=>plan.special)).size>1;
+    const conflict = mixedSpecial || (replacements.length && (replacements.length !== plans.length || new Set(inputs.map(request => request.selectedRaw)).size > 1));
     if (conflict) issues.push({ reason: 'conflict', value: inputs.map(request => request.selectedRaw), actualIndexes: [], requestIds: inputs.map(request => request.id) });
     const valid = plans.every(plan => plan.valid) && !conflict;
     const whole = replacements.length === plans.length && plans.some(plan => plan.special);
@@ -190,7 +192,7 @@ var DemoPlan = (() => {
         const addition = appendParts(remaining, parts.filter(part => part.requestId === request.id && part.requestSelectedIndex < plans[index].parts.length), request.mode);
         remaining = addition.parts; operations.push(...addition.operations);
       });
-      if (operations.length) after = { exists: true, raw: remaining.join(';'), type: copy(before.type) };
+      if (operations.length) after = listState(before,remaining);
     }
     return freeze({
       target: copy(target), targetKey: key, mode: 'batch', special: whole, kind, source: 'scheme-apply',
@@ -211,8 +213,10 @@ var DemoPlan = (() => {
     if (!audit || audit.before !== legacyRaw(before) || audit.after !== afterRaw) throw new Error('Element audit does not describe this snapshot and serialized result.');
     const whole = !!audit.whole, frozenAudit = copy(audit), operations = [];
     // Opening an absent value with no live rows is not an instruction to create an empty string.
-    const remainsAbsent = !before.exists && afterRaw === '' && !(frozenAudit.elements ?? []).some(element => element.afterIndex !== null && element.afterIndex !== undefined);
-    const changed = !remainsAbsent && (!before.exists || before.raw !== afterRaw);
+    const hasLiveRows=(frozenAudit.elements ?? []).some(element=>element.afterIndex!==null&&element.afterIndex!==undefined);
+    const remainsAbsent = !before.exists && afterRaw === '' && !hasLiveRows;
+    const deleteListValue=!whole&&before.exists&&!hasLiveRows&&(frozenAudit.elements??[]).some(element=>element.removed);
+    const changed = !remainsAbsent && (!before.exists || before.raw !== afterRaw || deleteListValue);
     for (const element of frozenAudit.elements ?? []) {
       if (!(element.added || element.removed || element.replaced || element.moved)) continue;
       if (element.elementId === undefined || element.elementId === null) throw new Error('Explicit element changes require a stable elementId.');
@@ -226,7 +230,7 @@ var DemoPlan = (() => {
       }
     }
     if (changed && !operations.length) throw new Error('A changed serialized result requires explicit element operations.');
-    const after = remainsAbsent ? state(original) : { exists: true, raw: afterRaw, type: copy(before.type) };
+    const after = remainsAbsent ? state(original) : deleteListValue ? listState(before,[]) : { exists: true, raw: afterRaw, type: copy(before.type) };
     const { parts, result: matchResult } = computeMatch(key, before, afterRaw, 'replace', whole);
     return freeze({
       target: copy(target), targetKey: key, mode: 'element-edit', special: whole, kind: whole ? 'whole' : 'element-edit',

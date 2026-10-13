@@ -239,12 +239,12 @@ try {
     assert.equal(serialized(), 'A;;A');
     while (q('#elementList [data-delete]')) q('#elementList [data-delete]').click();
     assert.equal(elementRows().length, 0);
-    assert.equal(serialized(), '');
+    assert.equal(serialized(), '（不存在）');
     assert.equal(tokens('Original').filter(element => element.classList.contains('is-removed')).length, 4);
     assert.equal(tokens('Preview').filter(element => element.classList.contains('is-removed')).length, 4);
     assert.equal(q('#applyElements').disabled, false);
     q('#applyElements').click();
-    assert.equal(w.eval("windows['User|REGRESSION']"), '');
+    assert.equal(w.eval("Object.hasOwn(windows,'User|REGRESSION')"), false);
   });
   check('Diff values escape markup and annotations never contaminate serialized or applied data', () => {
     const original = ' <img src=x> ;& "quoted";tail';
@@ -276,7 +276,7 @@ try {
     assert.equal(w.eval("windows['User|REGRESSION']"), ' X;;Y; ');
     reset();
     w.eval("{ const v=curProfile().vars[0]; v.mode='replace'; v.special=false; v.defaultValue='A;B'; v.source='默认值'; windows[key(v)]=' B;A '; renderRows(); }");
-    assert.equal(q('#compareActual .diff-label').textContent, '整体待替换');
+    assert.equal(q('#compareAfter .diff-label').textContent, '整体待替换');
     q('#editWindowsElements').click();
     assert.equal(serialized(), ' B;A ');
     assert.equal(all('.element-row.is-replaced').length, 0);
@@ -284,11 +284,11 @@ try {
     assert.equal(all('#elementOriginal .is-replaced, #elementPreview .is-replaced').length, 0);
     cancel();
     w.eval('windows[key(curProfile().vars[0])] = value(curProfile().vars[0]); renderRows()');
-    assert.equal(q('#compareActual .diff-label'), null);
+    assert.equal(q('#compareAfter .diff-label'), null);
     w.eval("{ const v=curProfile().vars[0]; v.special=true; windows[key(v)]='A;B;'; renderRows(); }");
-    assert.equal(q('#compareActual .diff-label').textContent, '整体待替换');
+    assert.equal(q('#compareAfter .diff-label').textContent, '整体待替换');
     w.eval("{ const v=curProfile().vars[0]; v.special=false; v.mode='+append'; renderRows(); }");
-    assert.equal(q('#compareActual .diff-label'), null, 'Append intent is not whole-value replacement');
+    assert.equal(q('#compareAfter .diff-label'), null, 'Append intent is not whole-value replacement');
   });
   check('Semantic change-state workflows emit no JSDOM runtime errors', () => assert.deepEqual(errors, []));
   const report = {
