@@ -35,17 +35,17 @@ var WindowsElements = (() => {
     return (plan?.issues||[]).length?`<div class="plan-issues">${plan.issues.map(issue=>`<span class="plan-issue"><code>${escape(issue.value)}</code><span class="diff-label is-retained">${issue.reason==='duplicate'?(editing?'存在重复，需明确选择元素':'存在重复，删除需确认'):issue.reason==='shared'?'共享保留':issue.reason==='stale'?'编辑基线已失效':'目标计划冲突'}</span></span>`).join('')}</div>`:'';
   }
   function editorSuggestionToken(op,kind,modes) {
-    const removing=kind==='remove',index=removing?op.beforeIndex:op.selectedIndex;
+    const removing=kind==='remove',adopted=!removing&&!!op.adopted,index=removing?op.beforeIndex:op.selectedIndex;
     const position=modes[index]==='+append'?'开头':'末尾';
     const actionable=removing||isAppendMode(modes[index]);
-    const action=removing?'采纳建议删除：从本次编辑列表移除':'采纳建议追加：加入本次编辑列表'+position;
-    const button=actionable?`<button type="button" class="pending-${removing?'remove':'add'}-button" data-${removing?'remove':'add'}-pending="${index}" title="${action}" aria-label="${action} ${escape(op.value)}">${removing?'−':'＋'}</button>`:'';
-    return `<span class="pending-${removing?'remove':'add'}-token editor-suggestion-token${button?' is-actionable':''}" ${removing?'data-pending-before-index':'data-selected-index'}="${index}"${removing&&op.elementId!==undefined?` data-element-id="${op.elementId}"`:''}><span class="diff-value" data-raw-value="${escape(op.value)}">${escape(op.value)}</span>${button}</span>`;
+    const action=removing?'采纳建议删除：从本次编辑列表移除':adopted?'撤销本次采纳':'采纳建议追加：加入本次编辑列表'+position;
+    const button=actionable?`<button type="button" class="pending-${removing?'remove':'add'}-button" data-${removing?'remove':'add'}-pending="${index}"${removing?'':` aria-pressed="${adopted}"`} title="${action}" aria-label="${action} ${escape(op.value)}">${removing?'−':adopted?'✓':'＋'}</button>`:'';
+    return `<span class="pending-${removing?'remove':'add'}-token editor-suggestion-token${button?' is-actionable':''}${adopted?' is-adopted':''}" ${removing?'data-pending-before-index':'data-selected-index'}="${index}"${removing&&op.elementId!==undefined?` data-element-id="${op.elementId}"`:''}><span class="diff-value" data-raw-value="${escape(op.value)}">${escape(op.value)}</span>${adopted?'<span class="diff-label is-adopted">已加入本次编辑</span>':''}${button}</span>`;
   }
   function editorSuggestionsMarkup(plan,whole,modes) {
     if(whole&&plan?.valid!==false)return '';
-    const title='<div class="element-suggestions-title">方案建议 · 尚未采纳</div>';
-    const hint='<p class="element-suggestions-hint">以下操作尚未纳入本次编辑，点击加减按钮仅修改编辑列表，不会立即写入 Windows。</p>';
+    const title='<div class="element-suggestions-title">方案建议</div>';
+    const hint='<p class="element-suggestions-hint">点击加减按钮采纳建议；绿色 ✓ 可撤销本次追加采纳。仅修改编辑列表，不会立即写入 Windows。</p>';
     if(plan?.valid===false)return `<section class="element-suggestions" aria-label="方案建议">${title}<p class="element-suggestions-empty invalid-result">方案建议已失效，需要重新检测。</p></section>`;
     const groups=[['remove','建议删除'],['insert','建议追加']].map(([kind,label])=>{
       const operations=(plan?.operations||[]).filter(op=>op.type===kind);
@@ -131,6 +131,19 @@ var WindowsElements = (() => {
   }
   const serialized = () => session.rows.map(row => row.value).join(session.whole ? '' : ';');
   const valid = () => !session.rows.some(row => row.value.includes('\0') || (!session.whole && row.value.includes(';')));
+  function syncRowsToDisplayOrder() {
+    const liveById=new Map(session.rows.map(row=>[row.id,row]));
+    session.rows=session.displayOrder.filter(id=>liveById.has(id)).map(id=>liveById.get(id));
+  }
+  function clearAdoptionForId(id) {
+    for(const [index,adoption] of session.adoptionMap)if(adoption.elementId===id)session.adoptionMap.delete(index);
+  }
+  function removeLiveRow(id) {
+    session.rows=session.rows.filter(row=>row.id!==id);
+    if(!session.originalById.has(id))session.displayOrder=session.displayOrder.filter(item=>item!==id);
+    clearAdoptionForId(id);
+    syncRowsToDisplayOrder();
+  }
   function countsFor(rows) {
     const counts = new Map();
     for (const row of rows) counts.set(row.value, (counts.get(row.value) || 0) + 1);
@@ -179,10 +192,12 @@ var WindowsElements = (() => {
     const root=session.container;
     root.querySelector('#elementOriginal').innerHTML=session.original === undefined ? '<span class="empty-element">（不存在）</span>'
       : session.originalRows.map(original=>{const current=session.rows.find(row=>row.id===original.id);return token(original,current?stateFor(current):{},!current,session.originalCounts.get(original.value));}).join('<span class="element-separator">;</span>');
-    const removed=session.originalRows.filter(original=>!session.rows.some(row=>row.id===original.id));
-    const current=session.rows.map(row=>token(row,stateFor(row),false,session.currentCounts.get(row.value))).join('<span class="element-separator">;</span>');
-    root.querySelector('#elementPreview').innerHTML=(current || `<span class="empty-element">${session.plan.after.exists?'（空字符串）':'（不存在）'}</span>`)
-      +(removed.length?`<span class="removed-elements"><span class="removed-title">已删除 · 不计入结果</span>${removed.map(row=>token(row,{},true,1,true)).join('<span class="element-separator">;</span>')}</span>`:'');
+    const liveById=new Map(session.rows.map(row=>[row.id,row]));
+    const current=session.displayOrder.map(id=>{
+      const row=liveById.get(id);
+      return row?token(row,stateFor(row),false,session.currentCounts.get(row.value)):token(session.originalById.get(id),{},true,1,true);
+    }).join('<span class="element-separator">;</span>');
+    root.querySelector('#elementPreview').innerHTML=current || `<span class="empty-element">${session.plan.after.exists?'（空字符串）':'（不存在）'}</span>`;
     root.querySelector('#elementSerialized').textContent=session.plan.after.exists?serialized():'（不存在）';
     paintRelated();
   }
@@ -254,7 +269,14 @@ var WindowsElements = (() => {
       const original=session.originalRows[op.beforeIndex],row=session.rows.find(row=>row.id===original?.id);
       return row&&row.value===op.value?[{...op,elementId:row.id}]:[];
     });
-    return {...additions,operations:[...removals,...additions.operations],issues:originalPlan?.issues||[]};
+    const adopted=[...session.adoptionMap].flatMap(([selectedIndex,entry])=>{
+      const row=session.rows.find(row=>row.id===entry.elementId);
+      return row&&row.value===entry.adoptedRaw?[{type:'insert',selectedIndex,value:entry.adoptedRaw,adopted:true}]:[];
+    });
+    const adoptedIndexes=new Set(adopted.map(op=>op.selectedIndex));
+    const inserts=[...additions.operations.filter(op=>op.type==='insert'&&!adoptedIndexes.has(op.selectedIndex)),...adopted]
+      .sort((a,b)=>a.selectedIndex-b.selectedIndex);
+    return {...additions,operations:[...removals,...inserts],issues:originalPlan?.issues||[]};
   }
   function update() {
     const root=session.container,raw=serialized();
@@ -266,8 +288,9 @@ var WindowsElements = (() => {
       const kind=String(operation.type||operation.action).toLowerCase(),key=kind==='insert'?'add':kind;
       if(key in operationCounts)operationCounts[key]++;
     }
-    const hasSuggestions=!session.whole&&candidates.valid!==false&&((candidates.operations||[]).length>0||(candidates.issues||[]).length>0);
-    const structureChanged=JSON.stringify(session.rows.map(row=>({id:row.id,value:row.value})))!==JSON.stringify(session.originalRows);
+    const hasSuggestions=!session.whole&&candidates.valid!==false&&((candidates.operations||[]).some(op=>!op.adopted)||(candidates.issues||[]).length>0);
+    const structureChanged=JSON.stringify(session.rows.map(row=>({id:row.id,value:row.value})))!==JSON.stringify(session.originalRows)
+      ||session.displayOrder.some((id,index)=>id!==session.originalRows[index]?.id)||session.displayOrder.length!==session.originalRows.length;
     root.querySelector('#elementTotal').textContent=`${session.rows.length} ${session.whole?'条字符串':'个元素'}`;
     root.querySelector('#elementValidation').textContent=valid()?'':session.whole?'字符串不能包含 NUL。':'一个元素内不能包含分号或 NUL；请将多项内容拆成多个元素。';
     root.querySelector('#applyElements').disabled=!valid()||!session.plan.operations.length;
@@ -277,15 +300,16 @@ var WindowsElements = (() => {
     const pending = root.querySelector('#pendingElements');
     pending.innerHTML = pendingMarkup(raw,session.appendValues,session.whole,true,session.appendModes,candidates);
     pending.hidden = !pending.innerHTML;
+    session.suggestionButtons=new Set(pending.querySelectorAll('[data-add-pending],[data-remove-pending]'));
     const editingSession=session;
     pending.querySelectorAll('[data-add-pending]').forEach(button=>{
       button.onclick=()=>adoptPending(Number(button.dataset.addPending),button,editingSession);
     });
     pending.querySelectorAll('[data-remove-pending]').forEach(button=>button.onclick=()=>{
-      if(session!==editingSession||!button.isConnected)return;
+      if(session!==editingSession||!button.isConnected||!session.suggestionButtons.has(button))return;
       const original=session.originalRows[Number(button.dataset.removePending)],row=session.rows.find(row=>row.id===original?.id);
       if(!row||!suggestedRemoval(row))return;
-      session.rows=session.rows.filter(item=>item.id!==row.id);renderRows(session.rows[0]?.id);
+      removeLiveRow(row.id);renderRows(session.rows[0]?.id);
     });
     renderComparison();
   }
@@ -296,7 +320,7 @@ var WindowsElements = (() => {
     const entries=Array.isArray(options.appendEntries)?options.appendEntries:null;
     const appendValues=entries?entries.map(entry=>entry.value):[...(options.appendValues || [])];
     const appendModes=entries?entries.flatMap(entry=>entry.value.split(';').map(()=>entry.mode)):[];
-    session={...options,appendValues,appendModes,original,originalRows,originalById:new Map(originalRows.map(row=>[row.id,row])),originalCounts:countsFor(originalRows),currentCounts:new Map(),rows:originalRows.map(row=>({...row})),dragging:null,hoveredId:null,focusedId:null};
+    session={...options,appendValues,appendModes,original,originalRows,originalById:new Map(originalRows.map(row=>[row.id,row])),originalCounts:countsFor(originalRows),currentCounts:new Map(),rows:originalRows.map(row=>({...row})),displayOrder:originalRows.map(row=>row.id),adoptionMap:new Map(),dragging:null,hoveredId:null,focusedId:null};
     const container=options.container;
     container.innerHTML=`<div class="dialog element-dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
       <div class="dialoghead"><div><div class="eyebrow">Windows 环境 / ${options.scope==='User'?'用户':'系统'}</div><h3 id="dialogTitle">${escape(options.name)} <span class="element-demo">演示数据</span></h3><p>调整元素顺序或内容，应用后更新本页展示。</p></div><button class="close" id="closeDialog" aria-label="关闭元素编辑器">×</button></div>
@@ -309,65 +333,75 @@ var WindowsElements = (() => {
     container.classList.add('open');
     bindRelated();
     container.querySelector('#closeDialog').onclick=options.close;container.querySelector('#cancelDialog').onclick=options.close;
-    container.querySelector('#addElement').onclick=()=>{session.rows.push({id:++sequence,value:''});renderRows(sequence);};
-    container.querySelector('#restoreElements').onclick=()=>{session.rows=session.originalRows.map(row=>({...row}));session.dragging=null;session.hoveredId=null;session.focusedId=null;renderRows(session.rows[0]?.id);if(!session.rows.length)container.querySelector('#addElement').focus();};
+    container.querySelector('#addElement').onclick=()=>{const row={id:++sequence,value:''};session.rows.push(row);session.displayOrder.push(row.id);renderRows(row.id);};
+    container.querySelector('#restoreElements').onclick=()=>{session.rows=session.originalRows.map(row=>({...row}));session.displayOrder=session.originalRows.map(row=>row.id);session.adoptionMap.clear();session.dragging=null;session.hoveredId=null;session.focusedId=null;renderRows(session.rows[0]?.id);if(!session.rows.length)container.querySelector('#addElement').focus();};
     container.querySelector('#applyElements').onclick=()=>{if(!session||!valid()||container.querySelector('#applyElements').disabled)return;const current=session,plan=session.plan;current.close();current.onApply(plan.afterRaw,plan.audit,plan);};
     renderRows();container.querySelector('#closeDialog').focus();
   }
   function adoptPending(index,button,editingSession) {
-    if(!session||session!==editingSession||session.whole||session.selectionPlan?.valid===false||!button.isConnected||!session.container.querySelector('#pendingElements').contains(button))return;
+    if(!session||session!==editingSession||session.whole||session.selectionPlan?.valid===false||!button.isConnected||!session.suggestionButtons.has(button)||!session.container.querySelector('#pendingElements').contains(button))return;
     const mode=session.appendModes[index];
     if(!isAppendMode(mode))return;
+    const adopted=session.adoptionMap.get(index);
+    if(adopted){
+      const row=session.rows.find(row=>row.id===adopted.elementId);
+      if(row&&row.value===adopted.adoptedRaw){removeLiveRow(row.id);renderRows(session.rows[0]?.id);}
+      return;
+    }
     const candidate=selectionInfo(serialized(),session.appendValues).missing.find(part=>part.index===index);
     if(!candidate)return;
     const row={id:++sequence,value:candidate.value};
-    if(mode==='+append')session.rows.unshift(row);else session.rows.push(row);
+    session.rows.push(row);
+    if(mode==='+append')session.displayOrder.unshift(row.id);else session.displayOrder.push(row.id);
+    session.adoptionMap.set(index,{elementId:row.id,adoptedRaw:row.value,mode});
+    syncRowsToDisplayOrder();
     renderRows(row.id);
   }
   function move(id,offset) {
-    const index=session.rows.findIndex(row=>row.id===id),target=index+offset;
-    if(target<0||target>=session.rows.length)return;
-    const [row]=session.rows.splice(index,1);session.rows.splice(target,0,row);renderRows(id);
+    const index=session.displayOrder.indexOf(id),target=index+offset;
+    if(index<0||target<0||target>=session.displayOrder.length)return;
+    [session.displayOrder[index],session.displayOrder[target]]=[session.displayOrder[target],session.displayOrder[index]];
+    syncRowsToDisplayOrder();renderRows(id);
   }
   function rowDisplayOrder() {
-    const liveIds=new Set(session.rows.map(row=>row.id)),anchored=new Map(),trailing=[];
-    session.originalRows.forEach((row,beforeIndex)=>{
-      if(liveIds.has(row.id))return;
-      const ghost={row,beforeIndex,ghost:true};
-      const anchor=session.originalRows.slice(beforeIndex+1).find(original=>liveIds.has(original.id));
-      if(!anchor){trailing.push(ghost);return;}
-      if(!anchored.has(anchor.id))anchored.set(anchor.id,[]);
-      anchored.get(anchor.id).push(ghost);
+    const liveById=new Map(session.rows.map(row=>[row.id,row]));
+    return session.displayOrder.map((id,displayIndex)=>{
+      const row=liveById.get(id);
+      return row?{row,displayIndex,ghost:false}:{row:session.originalById.get(id),displayIndex,ghost:true};
     });
-    return session.rows.flatMap((row,index)=>[...(anchored.get(row.id)||[]),{row,index,ghost:false}]).concat(trailing);
   }
-  function ghostRowMarkup(row,beforeIndex) {
-    return `<div class="element-ghost-row" data-element-id="${row.id}"><span class="element-order" title="原始顺序">${beforeIndex+1}</span><span class="element-ghost-value" data-raw-value="${escape(row.value)}">${row.value===''?'<span class="empty-element">（空元素）</span>':escape(row.value)}</span><span class="element-ghost-state"><span class="diff-label is-removed">本次编辑已移除</span><span class="element-ghost-note">不计入结果</span></span></div>`;
+  function ghostRowMarkup(row,displayIndex,total) {
+    const beforeIndex=session.originalRows.findIndex(original=>original.id===row.id);
+    return `<div class="element-ghost-row" data-element-id="${row.id}"><span class="element-order" title="原始位置：第 ${beforeIndex+1} 项">${displayIndex+1}</span><span class="element-ghost-value" data-raw-value="${escape(row.value)}">${row.value===''?'<span class="empty-element">（空元素）</span>':escape(row.value)}</span><span class="element-ghost-state"><span class="diff-label is-removed">本次编辑已移除</span></span><div class="element-actions"><button class="actmini" data-move-up="${row.id}" aria-label="上移第 ${displayIndex+1} 个已移除元素，仅调整展示位置" title="仅调整已移除元素的展示位置" ${displayIndex===0?'disabled':''}>↑</button><button class="actmini" data-move-down="${row.id}" aria-label="下移第 ${displayIndex+1} 个已移除元素，仅调整展示位置" title="仅调整已移除元素的展示位置" ${displayIndex===total-1?'disabled':''}>↓</button></div></div>`;
   }
   function renderRows(focusId) {
     const root=session.container;
     session.hoveredId = null;
     session.focusedId = null;
-    root.querySelector('#elementList').innerHTML=rowDisplayOrder().map(({row,index,beforeIndex,ghost})=>ghost?ghostRowMarkup(row,beforeIndex):`<div class="element-row" data-element-id="${row.id}" draggable="${!session.whole}">
-      <span class="element-order" title="当前顺序">${index+1}</span><label class="element-input-wrap"><span class="sr-only">第 ${index+1} ${session.whole?'条字符串':'个元素'}</span>${session.whole?`<textarea class="element-input" rows="3" spellcheck="false" data-element-input="${row.id}">${escape(row.value)}</textarea>`:`<input class="element-input" value="${escape(row.value)}" spellcheck="false" placeholder="（空元素）" data-element-input="${row.id}">`}</label>
-      <span class="element-states"><span class="element-match-state"></span><span class="element-change-state"></span></span><div class="element-actions" ${session.whole?'hidden':''}><button class="actmini" data-move-up="${row.id}" aria-label="上移第 ${index+1} 个元素" ${index===0?'disabled':''}>↑</button><button class="actmini" data-move-down="${row.id}" aria-label="下移第 ${index+1} 个元素" ${index===session.rows.length-1?'disabled':''}>↓</button><button class="actmini element-delete" data-delete="${row.id}" aria-label="删除第 ${index+1} 个元素">删除</button></div></div>`).join('')+(session.rows.length?'':'<div class="empty">列表为空。确认应用将移除变量；保留一个空元素则保存为空值。</div>');
+    const ordered=rowDisplayOrder(),total=ordered.length;
+    root.querySelector('#elementList').innerHTML=ordered.map(({row,displayIndex,ghost})=>ghost?ghostRowMarkup(row,displayIndex,total):`<div class="element-row" data-element-id="${row.id}" draggable="${!session.whole}">
+      <span class="element-order" title="当前顺序">${displayIndex+1}</span><label class="element-input-wrap"><span class="sr-only">第 ${displayIndex+1} ${session.whole?'条字符串':'个元素'}</span>${session.whole?`<textarea class="element-input" rows="3" spellcheck="false" data-element-input="${row.id}">${escape(row.value)}</textarea>`:`<input class="element-input" value="${escape(row.value)}" spellcheck="false" placeholder="（空元素）" data-element-input="${row.id}">`}</label>
+      <span class="element-states"><span class="element-match-state"></span><span class="element-change-state"></span></span><div class="element-actions" ${session.whole?'hidden':''}><button class="actmini" data-move-up="${row.id}" aria-label="上移第 ${displayIndex+1} 个元素" ${displayIndex===0?'disabled':''}>↑</button><button class="actmini" data-move-down="${row.id}" aria-label="下移第 ${displayIndex+1} 个元素" ${displayIndex===total-1?'disabled':''}>↓</button><button class="actmini element-delete" data-delete="${row.id}" aria-label="删除第 ${displayIndex+1} 个元素">删除</button></div></div>`).join('')+(session.rows.length?'':'<div class="empty">结果列表为空。确认应用将移除变量；保留一个空元素则保存为空值。</div>');
     root.querySelectorAll('[data-element-input]').forEach(input=>{
       const id=Number(input.dataset.elementInput),row=session.rows.find(row=>row.id===id);input.value=row.value;
-      input.oninput=()=>{row.value=input.value;update();};
+      input.oninput=()=>{if(input.value!==row.value)clearAdoptionForId(id);row.value=input.value;update();};
       input.onkeydown=e=>{if(e.altKey&&['ArrowUp','ArrowDown'].includes(e.key)&&!session.whole){e.preventDefault();move(id,e.key==='ArrowUp'?-1:1);}};
     });
     root.querySelectorAll('[data-move-up]').forEach(button=>button.onclick=()=>move(Number(button.dataset.moveUp),-1));
     root.querySelectorAll('[data-move-down]').forEach(button=>button.onclick=()=>move(Number(button.dataset.moveDown),1));
-    root.querySelectorAll('[data-delete]').forEach(button=>button.onclick=()=>{const index=session.rows.findIndex(row=>row.id===Number(button.dataset.delete));session.rows.splice(index,1);renderRows(session.rows[Math.min(index,session.rows.length-1)]?.id);if(!session.rows.length)root.querySelector('#addElement').focus();});
+    root.querySelectorAll('[data-delete]').forEach(button=>button.onclick=()=>{const index=session.rows.findIndex(row=>row.id===Number(button.dataset.delete));removeLiveRow(Number(button.dataset.delete));renderRows(session.rows[Math.min(index,session.rows.length-1)]?.id);if(!session.rows.length)root.querySelector('#addElement').focus();});
     root.querySelectorAll('.element-row').forEach(element=>{
       const id=Number(element.dataset.elementId);
       element.ondragstart=e=>{if(session.whole||e.target.matches('input,textarea,button')){e.preventDefault();return;}session.dragging=id;e.dataTransfer.setData('text/plain',String(id));e.dataTransfer.effectAllowed='move';};
-      element.ondragover=e=>{if(session.dragging!==null){e.preventDefault();element.classList.add('drop-target');}};
-      element.ondragleave=()=>element.classList.remove('drop-target');
-      element.ondrop=e=>{if(session.dragging===null)return;e.preventDefault();const from=session.rows.findIndex(row=>row.id===session.dragging),to=session.rows.findIndex(row=>row.id===id);const [row]=session.rows.splice(from,1);session.rows.splice(to,0,row);session.dragging=null;renderRows(row.id);};
       element.ondragend=()=>{if(session)session.dragging=null;root.querySelectorAll('.drop-target').forEach(row=>row.classList.remove('drop-target'));};
     });
-    update();if(focusId)root.querySelector(`[data-element-input="${focusId}"]`)?.focus();
+    root.querySelectorAll('.element-row,.element-ghost-row').forEach(element=>{
+      const id=Number(element.dataset.elementId);
+      element.ondragover=e=>{if(session.dragging!==null){e.preventDefault();element.classList.add('drop-target');}};
+      element.ondragleave=()=>element.classList.remove('drop-target');
+      element.ondrop=e=>{if(session.dragging===null)return;e.preventDefault();const dragged=session.dragging;session.dragging=null;if(dragged===id)return;const from=session.displayOrder.indexOf(dragged);if(from<0)return;session.displayOrder.splice(from,1);const to=session.displayOrder.indexOf(id);if(to<0)return;session.displayOrder.splice(to,0,dragged);syncRowsToDisplayOrder();renderRows(dragged);};
+    });
+    update();if(focusId)(root.querySelector(`[data-element-input="${focusId}"]`)||root.querySelector(`.element-ghost-row[data-element-id="${focusId}"] [data-move-up]:not(:disabled)`)||root.querySelector(`.element-ghost-row[data-element-id="${focusId}"] [data-move-down]:not(:disabled)`))?.focus();
   }
   function dismiss() {
     if (session) {

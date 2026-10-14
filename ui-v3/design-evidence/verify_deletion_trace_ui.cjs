@@ -36,8 +36,10 @@ check('Manual deletion retains a read-only original-ID ghost outside live rows a
   assert.ok(ghost);assert.equal(ghost.classList.contains('element-row'),false);
   assert.equal(ghost.querySelector('.element-order').textContent,'2');
   assert.equal(ghost.querySelector('[data-raw-value]').getAttribute('data-raw-value'),'B');
-  assert.match(ghost.textContent,/本次编辑已移除/);assert.match(ghost.textContent,/不计入结果/);
-  assert.equal(ghost.querySelector('input,textarea,button,[draggable="true"],[tabindex]'),null);
+  assert.match(ghost.textContent,/本次编辑已移除/);
+  assert.equal(ghost.querySelector('input,textarea,[data-delete],[draggable="true"]'),null);
+  assert.equal(ghost.querySelector('[data-move-up]').disabled,false);
+  assert.equal(ghost.querySelector('[data-move-down]').disabled,false);
   assert.deepEqual(ids(),[original[0],original[2]]);assert.deepEqual(values(),['A','C']);
   assert.match(q('#elementTotal').textContent,/^2\b/);assert.equal(serialized(),'A;C');
   assert.equal(snapshot(),before);assert.equal(historyLength(),n);
@@ -62,15 +64,15 @@ check('Deleting duplicate and empty originals preserves exact IDs, values and or
   const shown=all('#elementList > .element-row, #elementList > .element-ghost-row').map(node=>Number(node.dataset.elementId));
   assert.deepEqual(shown,original);
 });
-check('Ghosts use the next surviving original row as anchor without reordering live rows',()=>{
+check('Visible order is explicit and live rows follow it while ghosts retain their identities',()=>{
   openEditor('A;B;C;D');const original=ids();
   rows()[1].querySelector('[data-delete]').click();rows().find(row=>Number(row.dataset.elementId)===original[2]).querySelector('[data-delete]').click();
   const d=rows().find(row=>Number(row.dataset.elementId)===original[3]);
   d.querySelector('[data-move-up]').click();d.querySelector('[data-move-up]').click();
-  assert.deepEqual(ids(),[original[3],original[0]]);
+  assert.deepEqual(ids(),[original[0],original[3]]);
   const shown=all('#elementList > .element-row, #elementList > .element-ghost-row').map(node=>Number(node.dataset.elementId));
-  assert.deepEqual(shown,[original[1],original[2],original[3],original[0]]);
-  assert.equal(serialized(),'D;A');
+  assert.deepEqual(shown,[original[0],original[3],original[1],original[2]]);
+  assert.equal(serialized(),'A;D');
 });
 check('Newly added then removed rows disappear without leaving an original deletion ghost',()=>{
   openEditor('A');q('#addElement').click();const added=rows().at(-1);setInput(added.querySelector('input'),'X');

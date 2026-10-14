@@ -188,6 +188,10 @@ try {
     const added = rowId(elementRows().at(-1));
     input(rowInput(added), 'new');
     row(ids[2]).querySelector('[data-move-up]').click();
+    assert.deepEqual(values(), ['A', 'C', 'new'], 'First move only crosses the deleted B ghost');
+    assert.equal(serialized(), 'A;C;new');
+    assert.equal(all('.element-row.is-moved').length, 0);
+    row(ids[2]).querySelector('[data-move-up]').click();
     assert.deepEqual(values(), ['C', 'A', 'new']);
     assert.equal(serialized(), 'C;A;new');
     assert.equal(snapshot(), before);

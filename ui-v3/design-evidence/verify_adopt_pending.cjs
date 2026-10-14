@@ -28,7 +28,7 @@ const rows = () => all('#elementList .element-row');
 const ids = () => rows().map(row => row.dataset.elementId);
 const values = () => rows().map(row => row.querySelector('.element-input').value);
 const serialized = () => q('#elementSerialized').textContent;
-const pending = () => all('#pendingElements [data-raw-value]').map(node => node.getAttribute('data-raw-value'));
+const pending = () => all('#pendingElements .pending-add-token:not(.is-adopted) [data-raw-value]').map(node => node.getAttribute('data-raw-value'));
 const buttons = () => all('#pendingElements .pending-add-button[data-add-pending]');
 const button = index => q(`#pendingElements .pending-add-button[data-add-pending="${index}"]`);
 const liveRow = id => q(`#elementList [data-element-id="${id}"]`);

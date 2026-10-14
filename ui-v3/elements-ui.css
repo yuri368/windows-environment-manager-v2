@@ -60,7 +60,7 @@
 .element-actions .actmini { padding: 4px 7px; }
 .element-delete { color: var(--sub); }
 .element-delete:hover { color: var(--red); background: var(--red-soft); }
-.element-row.drop-target { box-shadow: inset 0 2px var(--green); }
+.element-row.drop-target, .element-ghost-row.drop-target { box-shadow: inset 0 2px var(--green); }
 .element-validation { font-size: 12px; color: var(--red); margin-top: 8px; }
 .element-raw { margin-top: 16px; }
 .element-raw summary { cursor: pointer; color: var(--sub); font-size: 12px; }
@@ -214,16 +214,30 @@
 .element-dialog .diff-token > .diff-value { min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .element-dialog .diff-token > .diff-label, .element-dialog .diff-token > .element-match-mark { flex: none; margin-left: 0; white-space: nowrap; }
 /* Ghost textures are static display traces, never live editor rows. */
-.element-dialog, .value-comparison { --element-ghost-pattern: repeating-linear-gradient(135deg, transparent 0 4px, color-mix(in srgb, var(--element-removed-border) 15%, transparent) 4px 8px); }
+.element-dialog, .value-comparison { --element-ghost-pattern: repeating-linear-gradient(135deg, transparent 0 4px, color-mix(in srgb, var(--element-removed-border) 38%, transparent) 4px 8px); }
 .element-dialog .diff-token.is-ghost, .value-comparison .diff-token.is-ghost { background-image: var(--element-ghost-pattern); border-style: dashed; }
 .comparison-ghost-hint { display: block; margin-top: 8px; color: var(--sub); font: 11px/1.6 'Microsoft YaHei UI','Segoe UI',sans-serif; }
-.element-ghost-row { display: grid; grid-template-columns: 26px minmax(0,1fr) 220px; align-items: center; gap: 8px; padding: 8px; color: var(--element-removed-ink); background-color: var(--element-removed-bg); background-image: var(--element-ghost-pattern); border: 1px dashed var(--element-removed-border); }
+.element-ghost-row { display: grid; grid-template-columns: 26px minmax(0,1fr) 104px 108px; align-items: center; gap: 8px; padding: 8px; color: var(--element-removed-ink); background-color: var(--element-removed-bg); background-image: var(--element-ghost-pattern); border: 1px dashed var(--element-removed-border); }
 .element-ghost-value { min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; text-decoration: line-through; font: 12.5px/1.6 Consolas,'Microsoft YaHei UI',monospace; }
 .element-ghost-state { display: flex; align-items: center; gap: 8px; }
 .element-ghost-state > .diff-label { flex: none; margin-left: 0; }
-.element-ghost-note { color: var(--sub); font-size: 11px; white-space: nowrap; }
 .element-ghost-row.is-related-highlight { outline: 2px solid var(--element-related-ring); outline-offset: -2px; }
 @media (max-width:620px) {
   .element-ghost-row { grid-template-columns: 20px minmax(0,1fr); }
   .element-ghost-state { grid-column: 2; }
 }
+
+/* A torn frame distinguishes removed traces from pending removals. */
+.element-dialog .diff-token.is-ghost, .value-comparison .diff-token.is-ghost, .element-ghost-row { position: relative; border-style: dashed; border-color: var(--element-removed-ink); box-shadow: inset 0 1px 0 var(--element-removed-border), inset 0 -1px 0 var(--element-removed-border); }
+.element-dialog .diff-token.is-ghost::before, .value-comparison .diff-token.is-ghost::before, .element-ghost-row::before,
+.element-dialog .diff-token.is-ghost::after, .value-comparison .diff-token.is-ghost::after, .element-ghost-row::after { content: ''; position: absolute; width: 12px; height: 6px; background: var(--surface); pointer-events: none; clip-path: polygon(0 0,100% 0,80% 45%,55% 20%,35% 100%,15% 40%,0 70%); }
+.element-dialog .diff-token.is-ghost::before, .value-comparison .diff-token.is-ghost::before, .element-ghost-row::before { top: -1px; left: 8px; }
+.element-dialog .diff-token.is-ghost::after, .value-comparison .diff-token.is-ghost::after, .element-ghost-row::after { bottom: -1px; right: 8px; transform: rotate(180deg); }
+.element-dialog .diff-token.is-ghost > .diff-value, .value-comparison .diff-token.is-ghost > .diff-value, .element-ghost-value { text-decoration-line: line-through; text-decoration-style: double; text-decoration-thickness: 1px; text-decoration-color: var(--element-removed-ink); }
+.element-ghost-row .element-actions { display: flex; justify-content: flex-start; gap: 4px; }
+.element-order { font-variant-numeric: tabular-nums; }
+.element-suggestions .editor-suggestion-token.is-adopted { color: var(--green); background: var(--green-soft); border-style: solid; border-color: var(--green); }
+.element-suggestions .editor-suggestion-token.is-adopted .pending-add-button { color: var(--green); border-left-color: var(--green); }
+.element-suggestions .editor-suggestion-token.is-adopted .pending-add-button:hover { background: color-mix(in srgb,var(--green) 14%,transparent); }
+.element-suggestions .editor-suggestion-token.is-adopted .diff-label { flex: none; margin: 0 4px; white-space: nowrap; }
+@media (max-width:620px) { .element-ghost-row { grid-template-columns: 20px minmax(0,1fr); } .element-ghost-row .element-actions { grid-column: 2; } }

@@ -86,7 +86,7 @@ check('Drag/drop event handlers reorder elements without deduplication', () => {
   const drag = new w.Event('dragstart', { bubbles: true, cancelable: true });
   Object.defineProperty(drag, 'dataTransfer', { value: data }); rows[0].dispatchEvent(drag);
   rows[3].dispatchEvent(new w.Event('drop', { bubbles: true, cancelable: true }));
-  assert.deepEqual(values(), ['A', '', 'B', ' A ', '']);
+  assert.deepEqual(values(), ['A', '', ' A ', 'B', '']);
 });
 check('Separator validation prevents ambiguous element input while retaining typed text', () => {
   edit(q('.element-input'), 'X;Y'); assert.equal(q('.element-input').value, 'X;Y');

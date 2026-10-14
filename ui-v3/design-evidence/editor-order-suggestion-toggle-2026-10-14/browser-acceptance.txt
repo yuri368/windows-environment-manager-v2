@@ -1,0 +1,9 @@
+V3.6 Chrome acceptance, 2026-10-14
+Chrome localhost served from primary H:/Yuri368/环境变量配置V3.
+Verified visible numbering 1..10 with inline removed ghost; ghost down swaps display only, no raw/MOVE change.
+Verified adopted addition remains green pressed card; moving then toggling removes exact adopted ID.
+Manual content edit clears adoption relation and keeps edited value. Restore returns original 9 rows.
+Apply after deletion plus adoption creates history with exactly one addition, one deletion and no display-only move; afterRaw excludes removed value.
+600px viewport long Chinese path: modal body has no horizontal overflow; Preview clientWidth=scrollWidth=322. Override reset; Cancel discards changes.
+Screenshots 01/02/03/04 saved. Automated: 18 scripts, 348 checks passed.
+No real Registry integration; no V2/main/Release changes.
