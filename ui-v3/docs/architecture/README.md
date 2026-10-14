@@ -21,3 +21,7 @@ Claude 改版修复契约：[草稿恢复、原始字符保真与窄屏布局](C
 drafts/V3_UI_DATA_CONTRACT_PARTIAL.txt 是来源页面可取回的部分内容，状态为 partial，原文在中途结束；它不是完整契约，不能作为完整规则使用。
 
 Claude 修复收尾：[本轮缺陷复核与验证记录](CLAUDE_UI_REPAIR_REVIEW.txt)。最终源码 0665e005，原项目/镜像20组395项及最终源码两项CI通过；GPT已确认最后P2解决。
+
+本轮 GUI 一致性契约：[四项负责人反馈统一任务书](GUI_FEEDBACK_CONTRACT.txt)。覆盖 Claude 修复契约中 ghost 展示原始值的旧显示规则；原快照与删除审计、绿色建议撤销规则保持。
+
+- GUI feedback supplemental presentation/counting direction: `GUI_FEEDBACK_SUPPLEMENT.txt`, following the owner feedback and GPT supplemental approval on 2026-10-14.

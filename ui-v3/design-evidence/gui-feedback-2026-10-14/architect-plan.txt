@@ -1,0 +1,930 @@
+- link "跳转到内容":
+  - /url: "#_R_trcuktdbntccgud5hl75_"
+- complementary:
+  - navigation "显示侧边栏":
+    - button "显示侧边栏"
+    - button "显示侧边栏":
+    - button "新聊天":
+      - generic: 新聊天
+    - button "搜索":
+      - generic: 搜索
+    - button "置顶":
+      - generic: 置顶
+    - button "最近":
+      - generic: 最近
+    - button "资料库":
+      - generic: 资料库
+    - button "打开个人资料菜单"
+- main:
+  - button "分享":
+    - text: 分享
+  - button "更多":
+  - region "对话":
+    - status:
+      - generic: 正在加载更早的消息…
+    - heading "你说：" [level=4]
+    - generic: 下一个问题是： 幽灵行的“取消删除“按钮过于突兀，而且下移上移按钮与普通行的下移上移按钮并不对齐，建议：幽灵行继续沿用普通行的下移上移和删除按钮，也就是说删除按钮有2个状态，一个是待删除状态，一个是取消删除状态，2种状态有颜色与特效方面的区分
+    - button "复制消息":
+    - button "共享提示":
+    - button "编辑消息":
+    - button "思考了 52s"
+    - generic: 思考了 52s
+    - heading "ChatGPT 说：" [level=4]
+    - paragraph: 这个建议我赞成。👍 幽灵行和普通行本质上是同一个元素的两种状态，操作按钮就应该保持相同的位置和尺寸，而不是删除后突然冒出一个长条形的“取消删除”按钮。
+    - paragraph: 我检查了当前源码，确实找到了不对齐的原因：
+    - list:
+      - paragraph:
+        - text: 普通行：
+        - code: 上移 ↑
+        - text: 、
+        - code: 下移 ↓
+        - text: 、
+        - code: 删除
+        - text: 。
+      - paragraph:
+        - text: 幽灵行：
+        - code: 取消删除
+        - text: 、
+        - code: 上移 ↑
+        - text: 、
+        - code: 下移 ↓
+        - text: 。
+    - paragraph: 幽灵行不仅改变了按钮顺序，还使用了宽度自适应的长按钮，难怪视觉上会显得突兀。
+    - paragraph: 我的建议是统一为三个操作槽位：↑、↓、删除/恢复。 第三个按钮根据元素状态切换图标、颜色及特效。
+    - paragraph: 普通元素
+    - paragraph: 仍在本次编辑列表
+    - paragraph: 幽灵元素
+    - paragraph: 本次编辑已移除
+    - generic: 仅为操作位置与状态的示意。实际继续使用 Claude 的 30px 紧凑图标按钮和视觉体系。
+    - button "添加到资料库":
+      - generic: 写作
+    - button "复制":
+    - button "打开编辑器":
+    - textbox "开始写作":
+      - heading "V3 后续 GUI 反馈 3：统一普通行与幽灵行的操作按钮" [level=1]
+      - paragraph: 状态：负责人最新需求，待 Codex 恢复后实施
+      - heading "一、问题" [level=2]
+      - paragraph: 当前元素编辑器中：
+      - list:
+        - paragraph: 普通行的按钮顺序为：上移、下移、删除。
+        - paragraph: 幽灵行的按钮顺序为：取消删除、上移、下移。
+        - paragraph: 幽灵行的“取消删除”按钮比普通按钮宽。
+        - paragraph: 上移、下移按钮的位置因而无法对齐。
+      - heading "二、最终设计" [level=2]
+      - paragraph: 普通行和幽灵行使用统一的操作栏：
+      - paragraph:
+        - strong: 上移 / 下移 / 删除状态按钮
+      - paragraph: 三个按钮保持：
+      - list:
+        - paragraph: 相同的顺序。
+        - paragraph: 相同的宽高。
+        - paragraph: 相同的间距。
+        - paragraph: 相同的网格对齐方式。
+        - paragraph: 相同的响应式布局。
+      - paragraph: 第三个按钮具有两种状态。
+      - heading "状态 A：正常元素" [level=3]
+      - list:
+        - paragraph: 图标：垃圾桶。
+        - paragraph: 操作：删除当前元素。
+        - paragraph: 使用现有删除色系。
+        - paragraph: Hover 使用轻微红色背景及边框。
+        - paragraph: 删除时保留 Claude 现有的碎裂、消散动画。
+      - heading "状态 B：已移除的幽灵元素" [level=3]
+      - list:
+        - paragraph: 图标：撤销箭头。
+        - paragraph: 操作：取消本次删除。
+        - paragraph: 使用柔和的绿色或青绿色，与红色删除状态形成区别。
+        - paragraph: Hover 使用轻微绿色背景和边框。
+        - paragraph: 可以增加短暂的恢复反馈，例如边框恢复、纹理消退。
+        - paragraph: 不使用持续动画。
+      - paragraph: 两个状态都只使用图标按钮，不在按钮内显示长文本。
+      - paragraph: 通过 tooltip 和 aria-label 区分：
+      - list:
+        - paragraph: 删除此元素。
+        - paragraph: 取消删除，恢复删除前的编辑内容。
+      - heading "三、按钮与元素状态的关系" [level=2]
+      - paragraph: 普通元素：
+      - list:
+        - paragraph: 点击删除。
+        - paragraph: 若为原始元素，则进入幽灵状态。
+        - paragraph: 若为本次手动新增元素，则直接消失，保持负责人最新确认的规则。
+      - paragraph: 幽灵元素：
+      - list:
+        - paragraph: 点击恢复按钮。
+        - paragraph: 恢复同一个稳定元素 ID。
+        - paragraph: 恢复删除前的最新草稿。
+        - paragraph: 保持 ghost 当前的 displayOrder 位置。
+        - paragraph: 重新计算实际编辑计划。
+      - paragraph: 上移、下移继续使用 displayOrder。
+      - paragraph: 幽灵行移动仅改变展示位置，不产生业务 MOVE。恢复后若真实 live 顺序改变，由既有 Audit 正常判断 MOVE。
+      - heading "四、与前两项反馈共同实施" [level=2]
+      - paragraph: 本轮还有两项已确认需求：
+      - list:
+        - paragraph: 手动创建的新增元素标记为“手动新增”，与方案采纳的“新增”在颜色上细微区分。
+        - paragraph: 所有原始元素修改后再删除，幽灵行应显示删除前最新草稿，而非旧快照；包括空元素和非空元素。
+      - paragraph: 这三项可以组成同一轮轻量 GUI 修正。
+      - heading "五、验收要求" [level=2]
+      - list:
+        - paragraph: 普通行和幽灵行的三个按钮水平位置完全一致。
+        - paragraph: 幽灵行恢复按钮不再使用长条形设计。
+        - paragraph: 删除和恢复按钮具有明确不同的颜色与视觉反馈。
+        - paragraph: 窄窗口下按钮仍保持相同位置及顺序。
+        - paragraph: 键盘 Tab、Enter、Space 可以正常使用。
+        - paragraph: 删除、恢复、移动均维持既有稳定 ID 和数据语义。
+        - paragraph: Ghost 展示草稿值，但不进入实际序列化。
+        - paragraph: Restore、Cancel、Apply、History 不发生回归。
+        - paragraph: 保留 Claude 的动画方向，不重构 DemoPlan。
+      - paragraph: 最终原则：
+      - paragraph:
+        - strong: 一个元素、一套操作布局；通过状态切换删除与恢复，而不是通过不同布局区别两种状态。
+    - paragraph: 另外，我建议保留红色删除和绿色恢复之间的反差，但不要把恢复按钮做成大块纯绿色。平时只显示柔和图标，悬停时再出现背景和边框，既精致又不会抢走元素内容的视觉重心。
+    - paragraph: 目前累计三项反馈已经整理清楚。等 Codex 恢复工作时，直接把这份与前两项一起交给它即可，不需要再从头讨论。
+    - button "复制":
+    - button "评价回复":
+    - button "分享":
+    - button "朗读":
+    - button "重新生成回复":
+    - button "更多操作":
+    - heading "你说：" [level=4]
+    - paragraph:
+      - text: 下一个问题：
+      - text: gui图标问题：
+      - text: "\"采纳建议追加按钮”和\"采纳建议删除按钮”的“返回图标”，\"采纳建议追加按钮”的\"+\"图标，\"采纳建议删除按钮”的“-”图标，以及“"
+      - strong: 编辑后的值 · 含删除标记
+      - text: ”界面下面的使用"采纳建议追加按钮”新生成的元素的“勾”图标，它们的图片都不在圆圈的中间，而是有点漂浮在上面一点点
+    - button "复制消息":
+    - button "共享提示":
+    - button "编辑消息":
+    - button "思考了 2m 46s"
+    - generic: 思考了 2m 46s
+    - heading "ChatGPT 说：" [level=4]
+    - paragraph: 这个问题也值得修，而且我检查了 Claude 版的 CSS 和元素生成代码后，发现了一个很可能同时影响这几种图标的共同原因。
+    - paragraph:
+      - text: 它们虽然分别是
+      - code: ＋
+      - text: 、
+      - code: −
+      - text: 、
+      - code: ↶
+      - text: 、
+      - code: ✓
+      - text: ，但都采用了类似的实现：CSS 绘制图标，同时 HTML 内还保留了一个被隐藏的文字字符。
+    - heading "初步定位" [level=3]
+    - table:
+      - rowgroup:
+        - row "图标 代码位置 表现":
+          - columnheader "图标":
+            - paragraph: 图标
+          - columnheader "代码位置":
+            - paragraph: 代码位置
+          - columnheader "表现":
+            - paragraph: 表现
+        - row "采纳建议追加 ＋ elements-ui.css、fx-ui.css 圆圈内偏上":
+          - cell "采纳建议追加 ＋":
+            - paragraph:
+              - text: 采纳建议追加
+              - code: ＋
+          - cell "elements-ui.css、fx-ui.css":
+            - paragraph:
+              - code: elements-ui.css
+              - text: 、
+              - code: fx-ui.css
+          - cell "圆圈内偏上":
+            - paragraph: 圆圈内偏上
+        - row "采纳建议删除 − 同上 圆圈内偏上":
+          - cell "采纳建议删除 −":
+            - paragraph:
+              - text: 采纳建议删除
+              - code: −
+          - cell "同上":
+            - paragraph: 同上
+          - cell "圆圈内偏上":
+            - paragraph: 圆圈内偏上
+        - row "已采纳后的返回 ↶ fx-ui.css:88 圆圈内偏上":
+          - cell "已采纳后的返回 ↶":
+            - paragraph:
+              - text: 已采纳后的返回
+              - code: ↶
+          - cell "fx-ui.css:88":
+            - paragraph:
+              - code: fx-ui.css:88
+          - cell "圆圈内偏上":
+            - paragraph: 圆圈内偏上
+        - row "编辑后对照中的匹配 ✓ elements-ui.css:102–103 圆圈内偏上":
+          - cell "编辑后对照中的匹配 ✓":
+            - paragraph:
+              - text: 编辑后对照中的匹配
+              - code: ✓
+          - cell "elements-ui.css:102–103":
+            - paragraph:
+              - code: elements-ui.css:102–103
+          - cell "圆圈内偏上":
+            - paragraph: 圆圈内偏上
+    - paragraph:
+      - text: 这里尤其值得注意：按钮虽然使用了
+      - code: "display: grid; place-items: center"
+      - text: ，但其
+      - code: ::before
+      - text: 伪元素负责绘制 SVG，按钮内部还保留着
+      - code: ＋
+      - text: 、
+      - code: −
+      - text: 或
+      - code: ✓
+      - text: 文字，再通过
+      - code: "font-size: 0"
+      - text: 隐藏。
+    - paragraph: 隐藏文字不一定等于从布局中移除。 它可能形成额外的 Grid 子项，使图标虽然使用了居中规则，实际位置却仍然偏上。
+    - paragraph: 这是源码支持的高度可疑原因，还需要 Codex 在浏览器中检查实际布局后最终确认。
+    - button "添加到资料库":
+      - generic: 写作
+    - button "复制":
+    - button "打开编辑器":
+    - textbox "开始写作":
+      - heading "V3 后续 GUI 反馈 4：圆形按钮图标居中问题" [level=1]
+      - paragraph:
+        - text: 状态：待 Codex 恢复后处理
+        - text: 优先级：P3，视觉一致性问题
+      - heading "一、问题描述" [level=2]
+      - paragraph: 以下图标在圆形容器内视觉偏上，没有居中：
+      - list:
+        - paragraph:
+          - text: 采纳建议追加按钮的
+          - code: ＋
+          - text: 。
+        - paragraph:
+          - text: 采纳建议删除按钮的
+          - code: −
+          - text: 。
+        - paragraph:
+          - text: 上述两个按钮采纳后的返回图标
+          - code: ↶
+          - text: 。
+        - paragraph:
+          - text: “编辑后的值 · 含删除标记”区域内，采纳新增元素的绿色圆形匹配
+          - code: ✓
+          - text: 。
+      - heading "二、需要检查的源码" [level=2]
+      - list:
+        - paragraph:
+          - code: elements-ui.css
+          - text: ：
+          - code: .pending-add-button
+          - text: 、
+          - code: .pending-remove-button
+          - text: 、
+          - code: .element-match-mark
+        - paragraph:
+          - code: fx-ui.css
+          - text: ：圆形按钮覆盖规则、已采纳后的返回图标
+        - paragraph:
+          - code: windows-elements.js
+          - text: ：按钮及匹配图标的 HTML 生成
+      - paragraph:
+        - text: 重点排查 CSS Grid 中同时存在
+        - code: ::before
+        - text: 图标和被
+        - code: font-size:0
+        - text: 隐藏的文本节点，是否导致额外布局占位。
+      - heading "三、修复原则" [level=2]
+      - list:
+        - paragraph:
+          - text: 优先消除不必要的布局占位，不使用
+          - code: translateY()
+          - text: 逐个硬调图标位置。
+        - paragraph: 圆圈中心、图标绘制框中心应保持一致。
+        - paragraph: SVG 本身存在视觉重心偏差时，再做极小幅度的光学校正。
+        - paragraph: 保持原有圆圈尺寸、颜色、边框、Hover、Focus 与采纳动画。
+        - paragraph: 不能因为移除视觉文本而丢失按钮的 aria-label 或键盘可访问性。
+        - paragraph: 不改变采纳、撤销、匹配的任何业务状态。
+      - heading "四、验收要求" [level=2]
+      - list:
+        - paragraph:
+          - code: ＋
+          - text: 、
+          - code: −
+          - text: 、
+          - code: ↶
+          - text: 、
+          - code: ✓
+          - text: 在圆形按钮内居中。
+        - paragraph: 普通、Hover、Focus、已采纳状态都没有偏移。
+        - paragraph: 100%、125%、150%、200% 缩放下视觉稳定。
+        - paragraph: 两种建议按钮点击、撤销与键盘操作正常。
+        - paragraph: 编辑后对照中的匹配标记不影响内容及 Audit。
+        - paragraph: 保留 Claude 现有视觉体系和全部交互效果。
+      - paragraph: 本项与之前三项 GUI 反馈一起实施，不修改 DemoPlan、V2、注册表或其他业务模块。
+    - paragraph: 另外，我建议顺便检查一下其他采用 伪元素图标 + 隐藏文字 的圆形控件，但只修复确实偏移的地方。没必要为了四个图标，把整个图标系统推倒重来。
+    - paragraph: 现在累计 4 项 GUI 反馈，都可以等 Codex 额度恢复后集中处理。
+    - button "复制":
+    - button "评价回复":
+    - button "分享":
+    - button "朗读":
+    - button "重新生成回复":
+    - button "更多操作":
+    - heading "你说：" [level=4]
+    - generic: 你写成一个总的，别万一忘记了就糟糕了
+    - button "复制消息":
+    - button "共享提示":
+    - button "编辑消息":
+    - heading "ChatGPT 说：" [level=4]
+    - paragraph: 我把目前全部 4 项 GUI 反馈整理成一份完整的 Codex 开发任务书，包含你后来改变主意的地方，避免 Codex 按旧要求改错。
+    - paragraph: 这份是最终整合版，可以直接替代之前四份零散文档。 等 Codex 额度恢复后，把下面整个写作块交给它即可。📋
+    - button "添加到资料库":
+      - generic: 写作
+    - button "复制":
+    - button "打开编辑器":
+    - textbox "开始写作":
+      - heading "Windows Environment Manager V3" [level=1]
+      - heading "Claude UI 后续优化：GUI 问题统一修复任务书" [level=2]
+      - paragraph:
+        - strong: 任务来源：
+        - text: 项目负责人 GUI 实际体验反馈
+        - strong: 执行者：
+        - text: Codex
+        - strong: 架构审查：
+        - text: ChatGPT
+        - strong: 状态：
+        - text: 待实施，尚未修改源码
+        - strong: 参考基线：
+        - code: 0665e0050c642ba7f7613625f161232431ee865b
+        - strong: 任务性质：
+        - text: 轻量级 UI 与交互一致性修复，不进行架构重构
+      - separator
+      - heading "一、任务总览" [level=2]
+      - paragraph: 本轮共有四项已确认需求：
+      - table:
+        - rowgroup:
+          - row "编号 需求 优先级":
+            - columnheader "编号"
+            - columnheader "需求"
+            - columnheader "优先级"
+          - row "1 手动新增元素与方案采纳新增使用不同标记 P3":
+            - cell "1"
+            - cell "手动新增元素与方案采纳新增使用不同标记"
+            - cell "P3"
+          - row "2 删除幽灵行应显示删除前最后一次编辑的值 P2":
+            - cell "2"
+            - cell "删除幽灵行应显示删除前最后一次编辑的值"
+            - cell "P2"
+          - row "3 幽灵行与普通行的操作按钮统一布局和状态 P3":
+            - cell "3"
+            - cell "幽灵行与普通行的操作按钮统一布局和状态"
+            - cell "P3"
+          - row "4 建议按钮与匹配标记的圆形图标居中 P3":
+            - cell "4"
+            - cell "建议按钮与匹配标记的圆形图标居中"
+            - cell "P3"
+      - paragraph:
+        - strong: 特别注意：负责人已经撤回“手动新增元素删除后生成幽灵行”的要求。
+      - paragraph: 手动新增的元素删除后直接消失是正确行为，必须保留。
+      - separator
+      - heading "二、问题 1：区分“手动新增”与“方案建议新增”" [level=2]
+      - heading "当前问题" [level=3]
+      - paragraph: 用户通过“＋新增元素”按钮创建的新元素，使用普通的“新增”状态标记。
+      - paragraph: 但方案建议中的“＋采纳”同样会新增元素，两种来源在编辑器中缺少明确区分。
+      - heading "最终需求" [level=3]
+      - paragraph:
+        - strong: 来源 A：用户手动创建
+      - list:
+        - paragraph: 标记文字改为“手动新增”。
+        - paragraph: 使用现有新增色系，但颜色与普通“新增”存在细微区别。
+        - paragraph: 可使用略有不同的浅背景、边框或图标。
+        - paragraph: 不使用突兀的大面积强调色。
+        - paragraph: 删除后直接从列表消失，不产生幽灵行。
+      - paragraph:
+        - strong: 来源 B：采纳方案建议
+      - list:
+        - paragraph: 继续显示“新增”。
+        - paragraph: 建议卡片仍显示“已采纳”状态。
+        - paragraph: 继续保留原有绿色采纳反馈。
+        - paragraph: 与手动新增在视觉上能够区分。
+      - heading "技术要求" [level=3]
+      - list:
+        - paragraph: 新增来源属于 UI 会话元数据，不改变 DemoPlan 的 ADD 语义。
+        - paragraph: 手动新增、方案采纳新增均属于真实 live row。
+        - paragraph: 两种来源的 Audit/ChangePlan 操作仍是 ADD。
+        - paragraph: 新增来源必须在后续修改、移动、重绘后保持正确。
+        - paragraph:
+          - text: 注意：
+          - code: adoptionMap
+          - text: 可能在用户手动编辑已采纳元素后清除，因此不能单纯依赖它的当前状态判断元素最初来源。
+        - paragraph: 可以使用最小化的会话级来源记录，不引入新的业务模型。
+        - paragraph: UI 来源标记不得写入 WindowsSnapshot、ChangePlan 或 History。
+      - heading "验收" [level=3]
+      - list:
+        - paragraph: 手动新增显示“手动新增”。
+        - paragraph: 建议采纳新增显示“新增”。
+        - paragraph: 两种标记颜色有细微区别。
+        - paragraph: 元素移动、编辑后来源不混淆。
+        - paragraph: 手动新增后删除直接消失。
+        - paragraph: 新增再删除且没有其他修改时，Apply 禁用。
+        - paragraph: 不出现虚假的 REMOVE 操作。
+      - separator
+      - heading "三、问题 2：幽灵行显示原始值，而不是删除前的最新值" [level=2]
+      - heading "当前问题" [level=3]
+      - paragraph: 无论原始元素是否为空，只要用户修改后再删除，幽灵行仍然显示最初的 Windows 值。
+      - paragraph: 例如：
+      - paragraph:
+        - strong: 普通元素
+      - paragraph:
+        - text: 原始值：
+        - code: ABC
+      - paragraph:
+        - text: 用户修改：
+        - code: ABC123
+      - paragraph: 点击删除后：
+      - list:
+        - paragraph:
+          - text: 当前幽灵行显示：
+          - code: ABC
+        - paragraph:
+          - text: 点击取消删除后恢复：
+          - code: ABC123
+      - paragraph:
+        - strong: 原始空元素
+      - paragraph:
+        - text: 原始值：
+        - code: "\"\""
+      - paragraph:
+        - text: 用户修改：
+        - code: TEST
+      - paragraph: 点击删除后：
+      - list:
+        - paragraph: 当前幽灵行显示：“（空元素）”
+        - paragraph:
+          - text: 点击取消删除后恢复：
+          - code: TEST
+      - paragraph: 此行为会让用户误以为先前的修改已经丢失。
+      - heading "已知原因" [level=3]
+      - paragraph:
+        - text: 当前源码的
+        - code: deletedDrafts
+        - text: 已保存删除前的最新草稿。
+      - paragraph:
+        - text: 但幽灵行的展示仍读取
+        - code: originalById
+        - text: ，没有使用最新草稿。
+      - paragraph: 因此这是一个展示投影问题，不需要改变 ChangePlan。
+      - heading "最终需求" [level=3]
+      - paragraph: 对所有原始元素统一处理：
+      - list:
+        - paragraph: 删除时保存该元素最后一次编辑内容。
+        - paragraph: 幽灵行显示删除瞬间的实际草稿值。
+        - paragraph: 未修改的元素显示原始值。
+        - paragraph: 原始空元素修改后，幽灵行不再错误显示“（空元素）”。
+        - paragraph: “打开时的值”区域始终显示最初 Windows 快照。
+        - paragraph: 点击普通幽灵行“取消删除”，恢复最新草稿。
+        - paragraph: 恢复后保留稳定 ID 和幽灵行当前 displayOrder 位置。
+        - paragraph: 再次修改、删除时显示最新一次删除前的值。
+        - paragraph: 删除幽灵不进入实际序列化、ChangePlan、Audit 或 History。
+      - heading "重要边界" [level=3]
+      - paragraph: 此前 V3.7 中的绿色“建议删除”采纳撤销，仍然遵守原有规则：
+      - paragraph:
+        - strong: 点击绿色 ✓ 撤销建议删除时，恢复原始值。
+      - paragraph: 普通幽灵行的“取消删除”恢复最后编辑草稿。
+      - paragraph: 这两种操作不能混淆。
+      - paragraph: 原始快照和删除前草稿必须继续分开保存。
+      - heading "验收" [level=3]
+      - list:
+        - paragraph: 非空元素：修改 → 删除 → 幽灵显示修改值 → 恢复。
+        - paragraph: 空元素：修改 → 删除 → 幽灵显示修改值 → 恢复。
+        - paragraph: 重复值：只操作指定 stable ID。
+        - paragraph: 修改 → 删除 → 恢复 → 再修改 → 再删除。
+        - paragraph: 删除后移动幽灵位置再恢复。
+        - paragraph: 原始对照不随草稿改变。
+        - paragraph: 特殊字符串和原有换行不被错误清理。
+        - paragraph: Apply/History 仍使用真实 live rows 和既有操作计划。
+      - separator
+      - heading "四、问题 3：统一普通行与幽灵行的操作按钮" [level=2]
+      - heading "当前问题" [level=3]
+      - paragraph: 普通行的按钮顺序是：
+      - paragraph:
+        - code: ↑ ↓ 删除
+      - paragraph: 幽灵行的按钮顺序是：
+      - paragraph:
+        - code: 取消删除 ↑ ↓
+      - paragraph: 幽灵行的“取消删除”按钮过宽，导致上移、下移按钮与普通行不对齐，视觉上显得突兀。
+      - heading "最终需求" [level=3]
+      - paragraph:
+        - strong: 普通行与幽灵行使用完全相同的操作栏布局。
+      - paragraph: 统一为三个操作位置：
+      - paragraph:
+        - code: 上移 下移 删除/恢复
+      - paragraph: 第三个按钮根据元素状态切换。
+      - heading "状态 A：普通元素" [level=3]
+      - list:
+        - paragraph: 图标：现有垃圾桶图标。
+        - paragraph: 功能：删除当前元素。
+        - paragraph: 使用柔和的红色系。
+        - paragraph: Hover 时可以显示浅红色背景或边框。
+        - paragraph: 删除原始元素时，保留 Claude 现有碎裂、消散动画。
+        - paragraph: 本次新增元素删除后直接消失。
+      - heading "状态 B：幽灵元素" [level=3]
+      - list:
+        - paragraph: 图标：撤销、恢复箭头。
+        - paragraph: 功能：取消本次删除。
+        - paragraph: 使用柔和的绿色或青绿色。
+        - paragraph: Hover 时显示浅绿色背景或边框。
+        - paragraph: 可以有短暂的恢复动效，但不持续闪烁。
+        - paragraph: 恢复时保留原始稳定 ID、最新草稿与当前展示位置。
+      - heading "统一布局规范" [level=3]
+      - paragraph: 两种状态必须保持：
+      - list:
+        - paragraph: 相同的按钮宽高。
+        - paragraph: 相同的按钮排列顺序。
+        - paragraph: 相同的间距。
+        - paragraph: 相同的容器对齐方式。
+        - paragraph: 相同的响应式行为。
+      - paragraph: 恢复按钮不再使用长条形文字按钮，只显示图标。
+      - paragraph: 必须通过 title/tooltip、aria-label 提供完整含义。
+      - paragraph: 建议文案：
+      - list:
+        - paragraph: 删除此元素。
+        - paragraph: 取消删除，恢复删除前的编辑内容。
+      - heading "移动行为" [level=3]
+      - list:
+        - paragraph: 幽灵行仍可上移、下移。
+        - paragraph: 幽灵移动只调整 displayOrder，不直接产生业务 MOVE。
+        - paragraph: 恢复后若实际 live 顺序变化，由既有 Audit 判断 MOVE。
+        - paragraph: 不改变原有拖放行为。
+      - heading "验收" [level=3]
+      - list:
+        - paragraph: 普通行与幽灵行的 ↑ ↓ 完全对齐。
+        - paragraph: 删除/恢复图标占用相同位置。
+        - paragraph: 两种状态颜色和交互反馈清晰。
+        - paragraph: 不再出现宽大的“取消删除”按钮。
+        - paragraph: 100%、125%、150%、200% 缩放下保持对齐。
+        - paragraph: Tab、Enter、Space 均可正常使用。
+        - paragraph: 原始元素删除与恢复的业务语义不变。
+        - paragraph: 保留 Claude 现有删除动画。
+      - separator
+      - heading "五、问题 4：建议按钮与匹配图标没有在圆圈内居中" [level=2]
+      - heading "当前问题" [level=3]
+      - paragraph: 负责人发现以下图标在圆圈内明显偏上：
+      - list:
+        - paragraph:
+          - text: “采纳建议追加”的
+          - code: ＋
+          - text: 。
+        - paragraph:
+          - text: “采纳建议删除”的
+          - code: −
+          - text: 。
+        - paragraph:
+          - text: 两种建议按钮采纳后显示的返回图标
+          - code: ↶
+          - text: 。
+        - paragraph:
+          - text: “编辑后的值 · 含删除标记”区域中，通过采纳建议追加生成的元素所显示的绿色
+          - code: ✓
+          - text: 图标。
+      - paragraph: 表现为图标似乎漂浮在圆圈中心上方。
+      - heading "排查位置" [level=3]
+      - paragraph: 重点检查：
+      - list:
+        - paragraph:
+          - code: elements-ui.css
+        - paragraph:
+          - code: fx-ui.css
+        - paragraph:
+          - code: windows-elements.js
+          - text: 中的图标生成结构
+      - paragraph: 相关选择器包括：
+      - list:
+        - paragraph:
+          - code: .pending-add-button
+        - paragraph:
+          - code: .pending-remove-button
+        - paragraph:
+          - code: .element-match-mark
+        - paragraph:
+          - text: 按钮的
+          - code: ::before
+          - text: 及采纳状态样式。
+      - heading "排查方向" [level=3]
+      - paragraph: 此前发现一个需要验证的可能原因：
+      - paragraph:
+        - text: 部分按钮同时包含文字图标与 CSS
+        - code: ::before
+        - text: 绘制的图标，通过
+        - code: "font-size: 0"
+        - text: 隐藏文字。
+      - paragraph: 在 Grid 布局中，这可能产生额外的布局子项，影响伪元素的实际位置。
+      - paragraph:
+        - strong: 此原因尚未通过真实浏览器布局测量最终确认，不能直接视为已证实。
+      - paragraph: Codex 应首先检查：
+      - list:
+        - paragraph: 图标容器实际尺寸。
+        - paragraph:
+          - code: ::before
+          - text: 盒模型。
+        - paragraph: Grid/Flex 对齐。
+        - paragraph: 伪元素是否产生额外网格行。
+        - paragraph: CSS mask 的绘制框是否居中。
+        - paragraph: SVG 图形本身的视觉重心。
+        - paragraph: 不同缩放下是否有像素取整偏差。
+      - heading "修复原则" [level=3]
+      - list:
+        - paragraph: 优先修复共同的布局原因。
+        - paragraph:
+          - text: 不要简单为四个图标分别增加
+          - code: translateY()
+          - text: 。
+        - paragraph: 只有 SVG 自身视觉中心偏移时，才允许少量光学校正。
+        - paragraph: 不改变圆圈整体大小、颜色、Hover、Focus 或采纳动效。
+        - paragraph: 保留 aria-label 与键盘访问能力。
+        - paragraph: 不改变采纳、撤销及匹配逻辑。
+      - heading "验收" [level=3]
+      - list:
+        - paragraph:
+          - code: ＋
+          - text: 、
+          - code: −
+          - text: 、
+          - code: ↶
+          - text: 、
+          - code: ✓
+          - text: 均在圆圈中央。
+        - paragraph: 普通、Hover、Focus、已采纳状态均无明显偏移。
+        - paragraph: 100%、125%、150%、200% 缩放下稳定。
+        - paragraph: 采纳与撤销操作正常。
+        - paragraph: 匹配图标不污染实际值。
+        - paragraph: 其他同类圆形图标若存在相同问题，可做同因修复，但不扩大为整个图标系统重构。
+      - separator
+      - heading "六、实施范围与工程纪律" [level=2]
+      - heading "允许修改" [level=3]
+      - paragraph: 优先限定：
+      - list:
+        - paragraph:
+          - code: windows-elements.js
+        - paragraph:
+          - code: elements-ui.css
+        - paragraph:
+          - code: fx-ui.css
+      - paragraph: 确有必要可修改其他直接相关的 UI 样式，但必须说明原因。
+      - paragraph: 允许补充：
+      - list:
+        - paragraph: 自动化测试。
+        - paragraph: 浏览器验收报告。
+        - paragraph: 变更说明及截图证据。
+      - heading "禁止修改" [level=3]
+      - list:
+        - paragraph:
+          - code: demo-plan.js
+          - text: 核心业务规则。
+        - paragraph: V2 核心源码。
+        - paragraph: Windows Registry 操作。
+        - paragraph: Apply/History 的既有执行契约。
+        - paragraph: Claude 无关的界面布局。
+        - paragraph: 已验收的 FLIP、碎片和拖放动画设计。
+      - paragraph: 未经负责人授权：
+      - list:
+        - paragraph: 不合并 main。
+        - paragraph: 不发布 Release。
+        - paragraph: 不引入新框架。
+        - paragraph: 不进行额外功能开发。
+      - heading "实施流程" [level=3]
+      - list:
+        - paragraph: 确认当前基线和 Git 工作区状态。
+        - paragraph: 修改前提交或建立可追溯备份。
+        - paragraph: 按四项需求执行最小修改。
+        - paragraph: 更新必要的测试。
+        - paragraph: 运行全部既有回归测试。
+        - paragraph: 使用真实浏览器检查视觉与交互。
+        - paragraph: 记录修改的文件、测试结果、截图及提交号。
+        - paragraph: 向 ChatGPT 架构顾问提交审查。
+        - paragraph: 通过审查后再正式归档。
+      - paragraph: 不得因为部分旧测试断言依赖旧 UI 结构，就回退负责人确认的新交互；应区分测试过时与实际功能失败。
+      - separator
+      - heading "七、最终验收标准" [level=2]
+      - paragraph:
+        - strong: 功能正确：
+      - list:
+        - paragraph: 手动新增与方案新增能区分。
+        - paragraph: 手动新增删除后直接消失。
+        - paragraph: 原始元素删除后幽灵显示最后编辑值。
+        - paragraph: 普通取消删除恢复最后草稿。
+        - paragraph: 建议删除撤销保持原值语义。
+        - paragraph: 稳定 ID、顺序、序列化和历史记录正确。
+      - paragraph:
+        - strong: 视觉正确：
+      - list:
+        - paragraph: 普通行与幽灵行按钮完全对齐。
+        - paragraph: 删除与恢复使用同一操作位置。
+        - paragraph: 两种按钮状态有颜色及动效区别。
+        - paragraph: 建议按钮与匹配图标居中。
+        - paragraph: 整体保持 Claude 现有紧凑、优雅的视觉设计。
+      - paragraph:
+        - strong: 工程正确：
+      - list:
+        - paragraph: 核心 DemoPlan 不变。
+        - paragraph: 无真实 Windows 注册表修改。
+        - paragraph: 全部现有及新增回归测试通过。
+        - paragraph: 提供真实浏览器验收证据。
+        - paragraph: 无未经授权的功能扩展。
+      - heading "最终原则" [level=2]
+      - paragraph:
+        - strong: 这轮不是重新设计 UI，而是让现有界面在状态表达、内容展示和交互位置上更加一致。
+      - paragraph: 只处理这四项负责人已确认的需求，禁止借机扩大开发范围。
+    - paragraph: 这份文档已经明确锁定了几个最容易被搞混的决定：手动新增删除后直接消失、普通幽灵恢复最新草稿、绿色建议删除撤销恢复原值、两个新增来源的标记不同。
+    - paragraph: 目前 4 项待修复，0 项已授权实施。这份任务书保留在当前对话里，Codex 恢复后以它为准，之前那些相互冲突的零散版本可以忽略。
+    - button "复制":
+    - button "评价回复":
+    - button "分享":
+    - button "朗读":
+    - button "重新生成回复":
+    - button "更多操作":
+    - heading "你说：" [level=4]
+    - generic: "1"
+    - button "复制消息":
+    - button "共享提示":
+    - button "查看版本":
+    - button "编辑消息":
+    - heading "ChatGPT 说：" [level=4]
+    - paragraph: 你是想先处理任务书中的第 1 项：区分“手动新增”和“方案建议新增”的标记，还是有其他意思？
+    - button "复制":
+    - button "评价回复":
+    - button "分享":
+    - button "朗读":
+    - button "重新生成回复":
+    - button "更多操作":
+    - separator "今天 19:53":
+      - time: 今天 19:53
+    - heading "你说：" [level=4]
+    - generic: 【codex】负责人现在已明确授权开始统一任务书的全部四项，误发的“1”忽略。当前产品基线0665e005，Git归档HEAD5942d02。正在建立v3/gui-feedback修复分支。 拟最小实现：会话manualAddedIds Set只记手动按钮创建ID，编辑/移动不清除，删除/Restore/Cancel清理；label及淡蓝色UI区分，Audit仍ADD，方案采纳编辑后依然“新增”，不依赖会清空的adoptionMap。幽灵list与编辑后的preview使用deletedDrafts最新草稿，Original pane和Audit REMOVE.before继续original。普通与ghost复用同一↑↓第三槽trash/undo图标按钮渲染，无长文字，保持稳定ID/当前位置/原恢复契约与ClaudeFX。 圆形图标先实测baseline Grid/pseudo盒，再将隐藏字符包为display:none span.icon-fallback，CSS图标固定同一cell居中，保留文字textContent/aria/原尺寸颜色动画，不用逐图标translateY。实际100/125/150/200缩放及键盘复核。产品局限windows-elements.js/elements-ui.css/fx-ui.css，demo-plan不改，无Registry/V2/main/Release。请指出明确契约冲突；任务书已有设计确认，按此实现后提交完整回归和browser证据给你最后审查。
+    - button "复制消息":
+    - button "共享提示":
+    - button "编辑消息":
+    - heading "ChatGPT 说：" [level=4]
+    - paragraph: 【架构顾问 → Codex】
+    - paragraph:
+      - generic: 方案审查通过，批准按计划实施全部四项 GUI 修复。
+      - text: ✅
+    - paragraph:
+      - text: 当前实现方向与负责人最新确认的任务书没有实质性冲突。尤其是使用
+      - code: manualAddedIds
+      - text: 区分新增来源、复用
+      - code: deletedDrafts
+      - text: 展示幽灵草稿，以及统一三按钮布局，这些方向都正确。
+    - paragraph:
+      - text: 不过，实施时有
+      - generic: 4 个细节必须明确
+      - text: ，避免修复视觉问题时引入状态回归。
+    - heading "1. manualAddedIds 只记录来源，不参与业务判断" [level=3]:
+      - text: "1."
+      - code: manualAddedIds
+      - text: 只记录来源，不参与业务判断
+    - paragraph:
+      - text: 同意使用
+      - code: Set<ElementId>
+      - text: 。
+    - list:
+      - paragraph: 手动新增时加入 Set。
+      - paragraph: 手动新增元素被删除时，仅移除对应 ID。
+      - paragraph: 编辑、移动、重绘均不得清除来源标记。
+      - paragraph: 方案采纳新增即使后来手动修改，也不能变成“手动新增”。
+      - paragraph: Restore 清空，Cancel 随会话销毁。
+    - paragraph:
+      - generic: 注意：
+      - text: 普通原始元素被删除时，不得顺带清空其他元素的
+      - code: manualAddedIds
+      - text: 。
+    - paragraph: “手动新增”只改变 UI 文字和样式，底层仍为 ADD。
+    - heading "2. 幽灵显示草稿与建议删除撤销必须区分" [level=3]
+    - paragraph: 这是最重要的业务边界。
+    - table:
+      - rowgroup:
+        - row "操作 恢复内容":
+          - columnheader "操作":
+            - paragraph: 操作
+          - columnheader "恢复内容":
+            - paragraph: 恢复内容
+        - row "普通幽灵行点击恢复 删除前最新草稿":
+          - cell "普通幽灵行点击恢复":
+            - paragraph: 普通幽灵行点击恢复
+          - cell "删除前最新草稿":
+            - paragraph: 删除前最新草稿
+        - row "绿色建议删除卡片点击 ✓ 撤销 原始快照值":
+          - cell "绿色建议删除卡片点击 ✓ 撤销":
+            - paragraph: 绿色建议删除卡片点击 ✓ 撤销
+          - cell "原始快照值":
+            - paragraph: 原始快照值
+    - paragraph:
+      - text: 幽灵行可以显示
+      - code: deletedDrafts
+      - text: 中的最新内容，但
+      - code: Audit REMOVE.before
+      - text: 必须继续引用原始值。
+    - paragraph:
+      - text: 另外，普通幽灵直接恢复时，如果存在相关的
+      - code: removalAdoptions
+      - text: ，必须同步清理，避免建议卡片仍错误显示“已采纳删除”。
+    - heading "3. 操作栏统一，但不能统一掉行为差异" [level=3]
+    - paragraph: 三个按钮槽位固定为：
+    - paragraph:
+      - code: ↑ ↓ 删除/恢复
+    - paragraph: 普通行与幽灵行在宽度、顺序、位置上必须完全一致。
+    - paragraph: 但：
+    - list:
+      - paragraph: 普通行删除原始元素，产生幽灵。
+      - paragraph: 普通行删除本次新增元素，直接消失。
+      - paragraph: 幽灵行移动只改变展示顺序。
+      - paragraph: 幽灵恢复后，若 live 顺序变化，仍按原有规则产生 MOVE。
+    - paragraph: 事件处理最好继续使用明确的状态判断，不要单纯根据按钮图标决定执行删除还是恢复。
+    - heading "4. 图标居中优先修布局，不调整视觉重心来掩盖结构问题" [level=3]
+    - paragraph: 同意先检查 Grid、伪元素盒模型，再处理隐藏文字。
+    - paragraph:
+      - code: "span.icon-fallback { display:none }"
+      - text: 可以作为实现方式，但必须确保：
+    - list:
+      - paragraph:
+        - text: 按钮仍有准确的
+        - code: aria-label
+        - text: 。
+      - paragraph: CSS mask 图标拥有唯一、明确的居中位置。
+      - paragraph: 图标在 Hover、Focus 和已采纳状态下不发生布局跳动。
+      - paragraph:
+        - text: 匹配
+        - code: ✓
+        - text: 与采纳按钮
+        - code: ＋/−/↶
+        - text: 分别测试。
+      - paragraph: 保留原尺寸及 Claude 现有动画效果。
+    - paragraph:
+      - text: 不需要逐个使用
+      - code: translateY()
+      - text: 补丁。
+    - heading "最终执行裁定" [level=3]
+    - generic: 批准实施
+    - table:
+      - rowgroup:
+        - row "项目 结论":
+          - columnheader "项目":
+            - paragraph: 项目
+          - columnheader "结论":
+            - paragraph: 结论
+        - row "手动新增来源标记 批准":
+          - cell "手动新增来源标记":
+            - paragraph: 手动新增来源标记
+          - cell "批准":
+            - paragraph: 批准
+        - row "幽灵显示最新草稿 批准":
+          - cell "幽灵显示最新草稿":
+            - paragraph: 幽灵显示最新草稿
+          - cell "批准":
+            - paragraph: 批准
+        - row "普通/幽灵统一操作栏 批准":
+          - cell "普通/幽灵统一操作栏":
+            - paragraph: 普通/幽灵统一操作栏
+          - cell "批准":
+            - paragraph: 批准
+        - row "圆形图标居中修正 批准":
+          - cell "圆形图标居中修正":
+            - paragraph: 圆形图标居中修正
+          - cell "批准":
+            - paragraph: 批准
+        - row "修改 DemoPlan 或核心业务 不批准":
+          - cell "修改 DemoPlan 或核心业务":
+            - paragraph: 修改 DemoPlan 或核心业务
+          - cell "不批准":
+            - paragraph: 不批准
+        - row "扩展其他 UI 功能 不批准":
+          - cell "扩展其他 UI 功能":
+            - paragraph: 扩展其他 UI 功能
+          - cell "不批准":
+            - paragraph: 不批准
+    - paragraph:
+      - text: Codex 可以继续在
+      - code: v3/gui-feedback
+      - text: 分支执行，无需等待第二次方案确认。
+    - paragraph: 完成后提交本轮源码、完整回归结果、浏览器截图与实际交互证据，由我进行最终审查。
+    - paragraph:
+      - generic: 此次以负责人 GUI 体验为验收依据，以原有数据与业务契约为约束。保持小范围修复，不要再把一个按钮对齐问题发展成第四代 UI 架构。
+    - button "复制":
+    - button "评价回复":
+    - button "分享":
+    - button "朗读":
+    - button "重新生成回复":
+    - button "更多操作":
+    - generic: ChatGPT 可能会出错。请核查重要信息。
+    - button "滚动到底部":
+    - heading "最新一条回复" [level=4]
+    - status
+    - button "添加文件等内容":
+    - textbox "询问 ChatGPT":
+      - paragraph: 询问 ChatGPT
+    - button "选择 ChatGPT 模型":
+      - generic: 高
+    - button "听写":
+    - button "开始语音":
+- status
+- status: 回答已完成
+- status
+- status
+- button "⋮⋮"
+- button "⋮⋮"
+- button "⋮⋮"
+- button "⋮⋮"
+- button "⋮⋮"
+- button "⋮⋮"

@@ -5,6 +5,7 @@
 - V3.6 visible ordering and adopted-addition toggles follow docs/architecture/V3_EDITOR_ORDER_V3_6.txt; displayOrder/adoptionMap are editor session UI state only.
 - V3.7 adopted-removal toggles follow docs/architecture/V3_REMOVAL_TOGGLE_V3_7.txt; removalAdoptions is session provenance only and restores the exact original ID at its current display position.
 - Claude UI repair follows docs/architecture/CLAUDE_UI_REPAIR_CONTRACT.txt; deleted drafts are session-only and textarea mapping preserves untouched raw line endings.
+- GUI feedback follows docs/architecture/GUI_FEEDBACK_CONTRACT.txt and its latest GUI_FEEDBACK_SUPPLEMENT.txt; manual addition IDs are UI-only provenance; editor ghosts display deletion-time drafts while Original/Audit preserve original snapshots.
 - Before changing behavior, consult the corresponding contract section; use docs/architecture/README.md for document priority.
 - Do not modify main directly, access or modify the real Windows Registry, or migrate V2 code into V3.
 - Check current code and acceptance evidence before describing UI or features as complete. Draft documents are not proof of implementation.

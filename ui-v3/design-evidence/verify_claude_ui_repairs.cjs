@@ -35,7 +35,7 @@ function direct(raw,whole=false){
 check('Manual delete and undo retain edited value and stable ID, while Apply carries only the result',()=>{
   const [a,b,c]=direct('A;B;C');edit(b,'B1');remove(b);
   assert.ok(ghost(b));assert.equal(row(b),null);assert.deepEqual(ids(live()),[a,c]);
-  assert.equal(ghost(b).querySelector('[data-raw-value]').getAttribute('data-raw-value'),'B');
+  assert.equal(ghost(b).querySelector('[data-raw-value]').getAttribute('data-raw-value'),'B1');
   undo(b);assert.deepEqual(ids(live()),[a,b,c]);assert.deepEqual(values(),['A','B1','C']);
   assert.equal(serialized(),'A;B1;C');q('#applyElements').click();
   assert.equal(applied.length,1);assert.equal(applied[0].value,'A;B1;C');

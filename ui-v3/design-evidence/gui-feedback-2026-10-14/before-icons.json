@@ -1,0 +1,45 @@
+{
+  "initial": [
+    {
+      "childNodes": 1,
+      "display": "grid",
+      "height": 21.9921875,
+      "kind": "pending-remove-button",
+      "pseudoGrid": "auto",
+      "pseudoHeight": "11.9922px",
+      "pseudoWidth": "11.9922px",
+      "rows": "16.3672px 4.375px",
+      "text": "−",
+      "width": 21.9921875
+    },
+    {
+      "childNodes": 1,
+      "display": "grid",
+      "height": 21.9921875,
+      "kind": "pending-add-button",
+      "pseudoGrid": "auto",
+      "pseudoHeight": "11.9922px",
+      "pseudoWidth": "11.9922px",
+      "rows": "16.3672px 4.375px",
+      "text": "＋",
+      "width": 21.9921875
+    }
+  ],
+  "adopted": [
+    {
+      "kind": "pending-remove-button",
+      "pseudoGrid": "auto",
+      "rows": "16.3672px 4.375px"
+    },
+    {
+      "kind": "pending-add-button",
+      "pseudoGrid": "auto",
+      "rows": "16.3672px 4.375px"
+    },
+    {
+      "kind": "element-match-mark",
+      "pseudoGrid": "auto",
+      "rows": "11.7383px 2.75391px"
+    }
+  ]
+}

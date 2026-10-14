@@ -4,12 +4,13 @@ var WindowsElements = (() => {
   let session = null, sequence = 0;
   const normalized = value => value.trim();
   const matches = (raw,values,whole) => DemoPlan.matches(raw,values,whole);
-  // State plates are decorative: icons are drawn by CSS masks, so no text enters element content.
-  const PLATE_ICON={added:'add',replaced:'swap',moved:'move',removed:'cut',empty:'void',pendingAdd:'add',pendingRemove:'minus',adopted:'check'};
-  const plateCells=kinds=>kinds.map(kind=>`<i class="st-cell st-${kind}"><b class="ic ic-${PLATE_ICON[kind]}"></b></i>`).join('');
+  // State icons are decorative; badge text supplies the accessible state name.
+  const PLATE_ICON={added:'add','manual-added':'add',replaced:'swap',moved:'move',removed:'cut',empty:'void',duplicate:'stack',pendingAdd:'add',pendingRemove:'minus',adopted:'check',match:'check'};
+  const plateCells=kinds=>kinds.map(kind=>`<i class="st-cell st-${kind}" aria-hidden="true"><b class="ic ic-${PLATE_ICON[kind]}"></b></i>`).join('');
   const plateMarkup=kinds=>kinds.length?`<span class="st-plate" aria-hidden="true">${plateCells(kinds)}</span>`:'';
+  const statusBadge=(kind,text,iconKind=kind,title='')=>`<span class="diff-label is-${kind} status-badge"${title?` title="${escape(title)}"`:''}>${plateCells([iconKind])}${escape(text)}</span>`;
   const tailMarkup=html=>html?`<span class="st-tail">${html}</span>`:'';
-  const editKinds=(state,removed=false,empty=false)=>removed?['removed']:[...(empty?['empty']:[]),...(state.added?['added']:[]),...(state.replaced?['replaced']:[]),...(state.moved?['moved']:[])];
+  const emptyKinds=empty=>empty?['empty']:[];
   const reducedMotion=()=>typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches;
   const canAnimate=()=>!reducedMotion()&&typeof Element.prototype.animate==='function';
   const fieldSizing=typeof CSS!=='undefined'&&typeof CSS.supports==='function'&&CSS.supports('field-sizing','content');
@@ -21,8 +22,8 @@ var WindowsElements = (() => {
   const isAppendMode = mode => ['+append','-append','append'].includes(mode);
   const pendingToken = (part,mode=null) => {
     const position=mode==='+append'?'开头':'末尾';
-    const button=isAppendMode(mode)?`<button type="button" class="pending-add-button" data-add-pending="${part.index}" title="加入当前编辑列表${position}" aria-label="将 ${escape(part.value)} 加入当前编辑列表${position}">＋</button>`:'';
-    return `<span class="pending-add-token${button?' is-actionable':''}" data-selected-index="${part.index}">${plateMarkup(['pendingAdd'])}<span class="diff-value" data-raw-value="${escape(part.value)}">${escape(part.value)}</span>${tailMarkup('<span class="diff-label is-pending-add">待追加</span>')}${button}</span>`;
+    const button=isAppendMode(mode)?`<button type="button" class="pending-add-button" data-add-pending="${part.index}" title="加入当前编辑列表${position}" aria-label="将 ${escape(part.value)} 加入当前编辑列表${position}">${iconFallback('＋')}</button>`:'';
+    return `<span class="pending-add-token${button?' is-actionable':''}" data-selected-index="${part.index}"><span class="diff-value" data-raw-value="${escape(part.value)}">${escape(part.value)}</span>${tailMarkup(statusBadge('pending-add','待追加','pendingAdd'))}${button}</span>`;
   };
   function selectionMarkup(raw, values = [], whole = false, append = false, plan = null) {
     if (whole || !append) return escape(values.join(';')) || '<span class="empty-element">（空字符串）</span>';
@@ -35,7 +36,8 @@ var WindowsElements = (() => {
       return part.value === '' ? '<span class="empty-element" data-raw-value="">（空元素）</span>' : escape(part.value);
     }).join('<span class="element-separator">;</span>');
   }
-  const removalToken=(op,editing=false)=>`<span class="pending-remove-token" data-pending-before-index="${op.beforeIndex}"${op.elementId===undefined?'':` data-element-id="${op.elementId}"`}>${plateMarkup(['pendingRemove'])}<span class="diff-value" data-raw-value="${escape(op.value)}">${escape(op.value)}</span>${tailMarkup('<span class="diff-label is-removed">待删除</span>')}${editing?`<button type="button" class="pending-remove-button" data-remove-pending="${op.beforeIndex}" aria-label="从本次编辑列表移除 ${escape(op.value)}" title="从本次编辑列表移除">−</button>`:''}</span>`;
+  const iconFallback=symbol=>'<span class="icon-fallback" aria-hidden="true">'+symbol+'</span>';
+  const removalToken=(op,editing=false)=>`<span class="pending-remove-token" data-pending-before-index="${op.beforeIndex}"${op.elementId===undefined?'':` data-element-id="${op.elementId}"`}><span class="diff-value" data-raw-value="${escape(op.value)}">${escape(op.value)}</span>${tailMarkup(statusBadge('removed','待删除','pendingRemove'))}${editing?`<button type="button" class="pending-remove-button" data-remove-pending="${op.beforeIndex}" aria-label="从本次编辑列表移除 ${escape(op.value)}" title="从本次编辑列表移除">${iconFallback('−')}</button>`:''}</span>`;
   function removalMarkup(plan,editing=false){
     const removals=(plan?.operations||[]).filter(op=>op.type==='remove');
     return removals.length?`<div class="pending-removals"><span class="pending-additions-title">方案待删除 · ${editing?'尚未从本次编辑列表移除':'确认应用后移除'}</span><div class="pending-additions-values">${removals.map(op=>removalToken(op,editing)).join('<span class="element-separator">;</span>')}</div></div>`:'';
@@ -49,9 +51,10 @@ var WindowsElements = (() => {
     const actionable=removing||isAppendMode(modes[index]);
     const action=removing?(adopted?'撤销本次建议删除，恢复原始元素':'采纳建议删除：从本次编辑列表移除'):adopted?'撤销本次采纳':'采纳建议追加：加入本次编辑列表'+position;
     const removalIdentity=removing?` data-removal-id="${op.elementId}" data-removal-adopted="${adopted}"`:'';
-    const button=actionable?`<button type="button" class="pending-${removing?'remove':'add'}-button" data-${removing?'remove':'add'}-pending="${index}"${removalIdentity} aria-pressed="${adopted}" title="${action}" aria-label="${action} ${escape(op.value)}">${adopted?'✓':removing?'−':'＋'}</button>`:'';
+    const button=actionable?`<button type="button" class="pending-${removing?'remove':'add'}-button" data-${removing?'remove':'add'}-pending="${index}"${removalIdentity} aria-pressed="${adopted}" title="${action}" aria-label="${action} ${escape(op.value)}">${iconFallback(adopted?'✓':removing?'−':'＋')}</button>`:'';
     const adoptedLabel=removing?'已采纳删除':'已加入本次编辑';
-    return `<span class="pending-${removing?'remove':'add'}-token editor-suggestion-token${button?' is-actionable':''}${adopted?' is-adopted':''}" ${removing?'data-pending-before-index':'data-selected-index'}="${index}"${removing&&op.elementId!==undefined?` data-element-id="${op.elementId}"`:''}>${plateMarkup([adopted?'adopted':removing?'pendingRemove':'pendingAdd'])}<span class="diff-value" data-raw-value="${escape(op.value)}">${escape(op.value)}</span>${tailMarkup(adopted?`<span class="diff-label is-adopted">${adoptedLabel}</span>`:'')}${button}</span>`;
+    const badge=adopted?statusBadge('adopted',adoptedLabel):removing?statusBadge('removed','建议删除','pendingRemove'):statusBadge('pending-add','建议追加','pendingAdd');
+    return `<span class="pending-${removing?'remove':'add'}-token editor-suggestion-token${button?' is-actionable':''}${adopted?' is-adopted':''}" ${removing?'data-pending-before-index':'data-selected-index'}="${index}"${removing&&op.elementId!==undefined?` data-element-id="${op.elementId}"`:''}><span class="diff-value" data-raw-value="${escape(op.value)}">${escape(op.value)}</span>${tailMarkup(badge)}${button}</span>`;
   }
   function editorSuggestionsMarkup(plan,whole,modes) {
     if(whole&&plan?.valid!==false)return '';
@@ -116,8 +119,8 @@ var WindowsElements = (() => {
         const matched=side==='selected'?item.matched:whole?item.value===plan.desiredRaw:matches(item.value,[plan.desiredRaw]);
         const added=(side==='after'||side==='selected')&&item.added;
         const classes=['diff-token','comparison-token',item.ghost?'is-ghost':'',removed?'is-removed':added?'is-added pending-add-token':item.wholeChange?'is-replaced':matched?'is-matched':''].filter(Boolean).join(' ');
-        const label=removed?'<span class="diff-label is-removed">'+(item.ghost?'结果排除':'待删除')+'</span>':added?'<span class="diff-label is-pending-add">待追加</span>':item.wholeChange?'<span class="diff-label is-replaced">整体待替换</span>':issue?'<span class="diff-label is-retained">'+(issue.reason==='shared'?'共享保留':'删除需确认')+'</span>':'';
-        const kinds=removed?['removed']:[...(item.value===''?['empty']:[]),...(added?['pendingAdd']:item.wholeChange?['replaced']:[])];
+        const label=removed?statusBadge('removed',item.ghost?'结果排除':'待删除',item.ghost?'removed':'pendingRemove'):added?statusBadge('pending-add','待追加','pendingAdd'):item.wholeChange?statusBadge('replaced','整体待替换'):issue?'<span class="diff-label is-retained">'+(issue.reason==='shared'?'共享保留':'删除需确认')+'</span>':'';
+        const kinds=emptyKinds(item.value==='');
         const dup=!whole?duplicateLabel(counts.get(item.value)):'';
         return '<span class="'+classes+'" tabindex="0" data-related-key="'+item.key+'"'+(item.value===''?' data-empty="true"':'')+(item.beforeIndex===undefined?'':' data-before-index="'+item.beforeIndex+'"')+'>'+plateMarkup(kinds)+'<span class="diff-value" data-raw-value="'+escape(item.value)+'">'+(item.value===''?'<span class="empty-element">'+(whole?'（空字符串）':'（空元素）')+'</span>':escape(item.value))+'</span>'+tailMarkup(label+dup)+'</span>';
       }).join('<span class="element-separator">;</span>');
@@ -212,6 +215,7 @@ var WindowsElements = (() => {
     session.rows=session.rows.filter(row=>row.id!==id);
     if(!session.originalById.has(id))session.displayOrder=session.displayOrder.filter(item=>item!==id);
     clearAdoptionForId(id);
+    session.manualAddedIds.delete(id);
     syncRowsToDisplayOrder();
   }
   function countsFor(rows) {
@@ -220,7 +224,7 @@ var WindowsElements = (() => {
     return counts;
   }
   const duplicateLabel = count => count > 1
-    ? `<span class="diff-label is-duplicate" title="此栏有 ${count} 个原始文本完全相同的元素；仅提示，不自动去重">重复 ×${count}</span>` : '';
+    ? statusBadge('duplicate',`重复 ×${count}`,'duplicate',`此栏有 ${count} 个原始文本完全相同的元素；仅提示，不自动去重`) : '';
   function editStateFor(row) {
     const original = session.originalById.get(row.id);
     if (!original) return {added:true,replaced:false,moved:false};
@@ -232,11 +236,12 @@ var WindowsElements = (() => {
   function stateFor(row){
     return session.plan?.audit.elements.find(element=>element.elementId===row.id)||editStateFor(row);
   }
-  function labels(state, removed = false) {
+  const manualAddition=(row,state)=>!!state.added&&session.manualAddedIds.has(row.id);
+  function labels(state, removed = false,row) {
     return (removed ? [['removed','删除']] : [
-      ...(state.added ? [['added','新增']] : []), ...(state.replaced ? [['replaced','替换']] : []),
+      ...(state.added ? [[row&&manualAddition(row,state)?'manual-added':'added',row&&manualAddition(row,state)?'手动新增':'新增']] : []), ...(state.replaced ? [['replaced','替换']] : []),
       ...(state.moved ? [['moved','移动']] : [])
-    ]).map(([kind,text]) => `<span class="diff-label is-${kind}">${text}</span>`).join('');
+    ]).map(([kind,text]) => statusBadge(kind,text)).join('');
   }
   function auditSnapshot() {
     const elements=session.rows.map((row,afterIndex)=>{
@@ -255,9 +260,9 @@ var WindowsElements = (() => {
   }
   function token(row, state, removed = false, duplicateCount = 1, ghost = false) {
     const matched = matches(row.value,session.selectedValues || [],session.whole);
-    const classes = [removed?'is-removed':'',ghost?'is-ghost':'',state.added?'is-added':'',state.replaced?'is-replaced':'',state.moved?'is-moved':'',matched?'is-matched':'',duplicateCount>1?'is-duplicate':''].filter(Boolean).join(' ');
-    const kinds=removed&&!ghost?['pendingRemove']:editKinds(state,removed,row.value==='');
-    return `<span class="diff-token ${classes}" data-element-id="${row.id}" data-duplicate-count="${duplicateCount}"${row.value===''?' data-empty="true"':''} tabindex="-1">${plateMarkup(kinds)}<span class="diff-value" data-raw-value="${escape(row.value)}">${row.value === '' ? `<span class="empty-element">${session.whole?'（空字符串）':'（空元素）'}</span>` : escape(row.value)}</span>${tailMarkup(labels(state,removed)+duplicateLabel(duplicateCount)+(matched&&!removed?'<span class="element-match-mark" title="与准备方案匹配" aria-label="匹配">✓</span>':''))}</span>`;
+    const classes = [removed?'is-removed':'',ghost?'is-ghost':'',state.added?'is-added':'',manualAddition(row,state)?'is-manual-added':'',state.replaced?'is-replaced':'',state.moved?'is-moved':'',matched?'is-matched':'',duplicateCount>1?'is-duplicate':''].filter(Boolean).join(' ');
+    const kinds=emptyKinds(row.value==='');
+    return `<span class="diff-token ${classes}" data-element-id="${row.id}" data-duplicate-count="${duplicateCount}"${row.value===''?' data-empty="true"':''} tabindex="-1">${plateMarkup(kinds)}<span class="diff-value" data-raw-value="${escape(row.value)}">${row.value === '' ? `<span class="empty-element">${session.whole?'（空字符串）':'（空元素）'}</span>` : escape(row.value)}</span>${tailMarkup(labels(state,removed,row)+duplicateLabel(duplicateCount)+(matched&&!removed?statusBadge('match','匹配'):''))}</span>`;
   }
   function renderComparison() {
     const root=session.container;
@@ -266,7 +271,7 @@ var WindowsElements = (() => {
     const liveById=new Map(session.rows.map(row=>[row.id,row]));
     const current=session.displayOrder.map(id=>{
       const row=liveById.get(id);
-      return row?token(row,stateFor(row),false,session.currentCounts.get(row.value)):token(session.originalById.get(id),{},true,1,true);
+      return row?token(row,stateFor(row),false,session.currentCounts.get(row.value)):token(session.deletedDrafts.get(id)??session.originalById.get(id),{},true,1,true);
     }).join('<span class="element-separator">;</span>');
     root.querySelector('#elementPreview').innerHTML=current || `<span class="empty-element">${session.plan.after.exists?'（空字符串）':'（不存在）'}</span>`;
     root.querySelector('#elementSerialized').textContent=session.plan.after.exists?serialized():'（不存在）';
@@ -321,14 +326,15 @@ var WindowsElements = (() => {
   function paintRow(element,row) {
     const matched=matches(row.value,session.selectedValues || [],session.whole),state=stateFor(row);
     element.classList.toggle('is-matched',matched);
+    element.classList.toggle('is-manual-added',manualAddition(row,state));
     for(const flag of ['added','replaced','moved'])element.classList.toggle('is-'+flag,!!state[flag]);
     const duplicateCount = session.currentCounts.get(row.value);
     element.classList.toggle('is-duplicate', duplicateCount > 1);
     element.dataset.duplicateCount = duplicateCount;
     element.classList.toggle('is-empty',row.value==='');
-    element.querySelector('.element-match-state').textContent=matched?'✓ 匹配':'';
-    element.querySelector('.element-change-state').innerHTML=labels(state)+duplicateLabel(duplicateCount);
-    element.querySelector('.element-plate').innerHTML=plateCells(editKinds(state,false,row.value===''));
+    element.querySelector('.element-match-state').innerHTML=matched?statusBadge('match','匹配'):'';
+    element.querySelector('.element-change-state').innerHTML=labels(state,false,row)+duplicateLabel(duplicateCount);
+    element.querySelector('.element-plate').innerHTML=plateCells(emptyKinds(row.value===''));
     element.querySelector('.element-input').setAttribute('aria-invalid',String(row.value.includes('\0') || (!session.whole && row.value.includes(';'))));
   }
   function candidatePlan(){
@@ -355,9 +361,15 @@ var WindowsElements = (() => {
     return {...additions,operations:[...removals,...inserts],issues:originalPlan?.issues||[]};
   }
   // Legend chips double as live counters. Counts come from the audit/live rows; they never feed back into the plan.
+  function additionCounts() {
+    const manualAdded=session.plan.audit.elements.filter(element=>element.added&&session.manualAddedIds.has(element.elementId)).length;
+    return {added:session.plan.audit.counts.added-manualAdded,manualAdded};
+  }
   function paintLegend() {
-    const counts=session.plan.audit.counts,rows=session.rows;
+    const counts=session.plan.audit.counts,rows=session.rows,additions=additionCounts();
     const live={
+      added:additions.added,
+      'manual-added':additions.manualAdded,
       duplicate:session.whole?0:rows.filter(row=>session.currentCounts.get(row.value)>1).length,
       empty:session.whole?0:rows.filter(row=>row.value==='').length,
       match:rows.filter(row=>matches(row.value,session.selectedValues||[],session.whole)).length
@@ -442,7 +454,7 @@ var WindowsElements = (() => {
     const root=session.container,raw=serialized();
     session.currentCounts = countsFor(session.rows);
     session.plan=DemoPlan.buildElementEdit({target:{scope:session.scope,name:session.name},snapshot:session.snapshot||{exists:session.original!==undefined,raw:session.original===undefined?null:session.original,type:session.registryType,revision:0},afterRaw:raw,audit:auditSnapshot()});
-    const changed=session.plan.operations.length>0,candidates=candidatePlan();
+    const changed=session.plan.operations.length>0,candidates=candidatePlan(),additions=additionCounts();
     const operationCounts={add:0,remove:0,replace:0,move:0};
     for(const operation of session.plan.operations){
       const kind=String(operation.type||operation.action).toLowerCase(),key=kind==='insert'?'add':kind;
@@ -455,7 +467,7 @@ var WindowsElements = (() => {
     root.querySelector('#elementValidation').textContent=valid()?'':session.whole?'字符串不能包含 NUL。':'一个元素内不能包含分号或 NUL；请将多项内容拆成多个元素。';
     root.querySelector('#applyElements').disabled=!valid()||!session.plan.operations.length;
     root.querySelector('#restoreElements').disabled=!structureChanged;
-    root.querySelector('#elementStatus').textContent=changed?`本次编辑：新增 ${operationCounts.add} · 删除 ${operationCounts.remove} · 替换 ${operationCounts.replace} · 移动 ${operationCounts.move} · 确认后生效`:`本次编辑：0 项变化${hasSuggestions?' · 有尚未采纳的方案建议':''}${structureChanged?' · 结果值未改变':''}`;
+    root.querySelector('#elementStatus').textContent=changed?`本次编辑：新增 ${additions.added} · 手动新增 ${additions.manualAdded} · 删除 ${operationCounts.remove} · 替换 ${operationCounts.replace} · 移动 ${operationCounts.move} · 确认后生效`:`本次编辑：0 项变化${hasSuggestions?' · 有尚未采纳的方案建议':''}${structureChanged?' · 结果值未改变':''}`;
     root.querySelectorAll('[data-element-id]').forEach(el=>{if(!el.classList.contains('element-row'))return;const row=session.rows.find(row=>row.id===Number(el.dataset.elementId));if(row)paintRow(el,row);});
     const pending = root.querySelector('#pendingElements');
     pending.innerHTML = pendingMarkup(raw,session.appendValues,session.whole,true,session.appendModes,candidates);
@@ -486,13 +498,13 @@ var WindowsElements = (() => {
     const entries=Array.isArray(options.appendEntries)?options.appendEntries:null;
     const appendValues=entries?entries.map(entry=>entry.value):[...(options.appendValues || [])];
     const appendModes=entries?entries.flatMap(entry=>entry.value.split(';').map(()=>entry.mode)):[];
-    session={...options,appendValues,appendModes,original,originalRows,originalById:new Map(originalRows.map(row=>[row.id,row])),originalCounts:countsFor(originalRows),currentCounts:new Map(),rows:originalRows.map(row=>({...row})),displayOrder:originalRows.map(row=>row.id),adoptionMap:new Map(),removalAdoptions:new Set(),deletedDrafts:new Map(),dragging:null,hoveredId:null,focusedId:null};
+    session={...options,appendValues,appendModes,original,originalRows,originalById:new Map(originalRows.map(row=>[row.id,row])),originalCounts:countsFor(originalRows),currentCounts:new Map(),rows:originalRows.map(row=>({...row})),displayOrder:originalRows.map(row=>row.id),adoptionMap:new Map(),manualAddedIds:new Set(),removalAdoptions:new Set(),deletedDrafts:new Map(),dragging:null,hoveredId:null,focusedId:null};
     const container=options.container;
     container.innerHTML=`<div class="dialog element-dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
       <div class="dialoghead"><div><div class="eyebrow">Windows 环境 / ${options.scope==='User'?'用户':'系统'}</div><h3 id="dialogTitle">${escape(options.name)} <span class="element-demo">演示数据</span></h3><p>调整元素顺序或内容，应用后更新本页展示。</p></div><button class="close" id="closeDialog" aria-label="关闭元素编辑器">×</button></div>
       <div class="elements-meta"><span>作用域 <strong>${options.scope==='User'?'用户':'系统'}</strong></span><span>类型 <strong>${escape(options.registryType)}（示例）</strong></span><span id="elementTotal"></span></div>
       <div class="dialogbody elements-body"><div class="elements-main"><div class="elements-toolbar"><span>${options.whole?'整体字符串 · 不拆分元素':'按分号排列 · Alt + ↑ / ↓ 调整顺序'}</span><div class="elements-toolbar-actions"><button class="textbtn" id="restoreElements" disabled title="恢复打开弹窗时的值，不改变页面快照">还原本次编辑</button><button class="btn" id="addElement" ${options.whole?'hidden':''}>＋ 新增元素</button></div></div>
-        <div class="change-legend" role="group" aria-label="状态图例与计数"><span class="legend-group"><span class="legend-heading">本次变更</span><span class="lg legend-added"><i class="st-cell st-added"><b class="ic ic-add"></b></i>新增<em data-legend-count="added">0</em></span><span class="lg legend-replaced"><i class="st-cell st-replaced"><b class="ic ic-swap"></b></i>替换<em data-legend-count="replaced">0</em></span><span class="lg legend-moved"><i class="st-cell st-moved"><b class="ic ic-move"></b></i>移动<em data-legend-count="moved">0</em></span><span class="lg legend-removed"><i class="st-cell st-removed"><b class="ic ic-cut"></b></i>删除<em data-legend-count="removed">0</em></span></span><span class="legend-group"><span class="legend-heading">提示</span><span class="lg legend-duplicate"><i class="st-cell st-duplicate"><b class="ic ic-stack"></b></i>重复<em data-legend-count="duplicate">0</em></span><span class="lg legend-empty"><i class="st-cell st-empty"><b class="ic ic-void"></b></i>空元素<em data-legend-count="empty">0</em></span><span class="lg legend-match"><i class="st-cell st-match"><b class="ic ic-check"></b></i>匹配<em data-legend-count="match">0</em></span></span></div>
+        <div class="change-legend" role="group" aria-label="状态图例与计数"><span class="legend-group"><span class="legend-heading">本次变更</span><span class="lg legend-added"><i class="st-cell st-added"><b class="ic ic-add"></b></i>新增<em data-legend-count="added">0</em></span><span class="lg legend-manual-added"><i class="st-cell st-manual-added"><b class="ic ic-add"></b></i>手动新增<em data-legend-count="manual-added">0</em></span><span class="lg legend-replaced"><i class="st-cell st-replaced"><b class="ic ic-swap"></b></i>替换<em data-legend-count="replaced">0</em></span><span class="lg legend-moved"><i class="st-cell st-moved"><b class="ic ic-move"></b></i>移动<em data-legend-count="moved">0</em></span><span class="lg legend-removed"><i class="st-cell st-removed"><b class="ic ic-cut"></b></i>删除<em data-legend-count="removed">0</em></span></span><span class="legend-group"><span class="legend-heading">提示</span><span class="lg legend-duplicate"><i class="st-cell st-duplicate"><b class="ic ic-stack"></b></i>重复<em data-legend-count="duplicate">0</em></span><span class="lg legend-empty"><i class="st-cell st-empty"><b class="ic ic-void"></b></i>空元素<em data-legend-count="empty">0</em></span><span class="lg legend-match"><i class="st-cell st-match"><b class="ic ic-check"></b></i>匹配<em data-legend-count="match">0</em></span></span></div>
         <div class="element-list" id="elementList"></div><div class="element-validation" id="elementValidation" role="status"></div><div id="pendingElements" hidden></div>
       </div><aside class="elements-compare" aria-label="元素变更对照">
         <details class="element-raw" open><summary>元素变更对照</summary><p class="comparison-hint">悬停或聚焦任一元素，三处对应项一起亮起。重复按每栏的原始文本统计，空元素保留；删除项不计入新值。</p><div class="raw-comparison"><div class="raw-pane"><label>打开时的值</label><pre id="elementOriginal"></pre></div><div class="raw-pane"><label>编辑后的值 · 含删除标记</label><pre id="elementPreview"></pre></div></div><details class="serialized-result" open><summary>实际结果字符串（不含标记或删除项）</summary><pre id="elementSerialized"></pre></details></details>
@@ -500,8 +512,8 @@ var WindowsElements = (() => {
     container.classList.add('open');
     bindRelated();
     container.querySelector('#closeDialog').onclick=options.close;container.querySelector('#cancelDialog').onclick=options.close;
-    container.querySelector('#addElement').onclick=()=>{const row={id:++sequence,value:''};session.rows.push(row);session.displayOrder.push(row.id);session.fx={kind:'enter',id:row.id};renderRows(row.id);};
-    container.querySelector('#restoreElements').onclick=()=>{session.rows=session.originalRows.map(row=>({...row}));session.displayOrder=session.originalRows.map(row=>row.id);session.adoptionMap.clear();session.removalAdoptions.clear();session.deletedDrafts.clear();session.dragging=null;session.hoveredId=null;session.focusedId=null;renderRows(session.rows[0]?.id);if(!session.rows.length)container.querySelector('#addElement').focus();};
+    container.querySelector('#addElement').onclick=()=>{const row={id:++sequence,value:''};session.rows.push(row);session.manualAddedIds.add(row.id);session.displayOrder.push(row.id);session.fx={kind:'enter',id:row.id};renderRows(row.id);};
+    container.querySelector('#restoreElements').onclick=()=>{session.rows=session.originalRows.map(row=>({...row}));session.displayOrder=session.originalRows.map(row=>row.id);session.adoptionMap.clear();session.manualAddedIds.clear();session.removalAdoptions.clear();session.deletedDrafts.clear();session.dragging=null;session.hoveredId=null;session.focusedId=null;renderRows(session.rows[0]?.id);if(!session.rows.length)container.querySelector('#addElement').focus();};
     container.querySelector('#applyElements').onclick=()=>{if(!session||!valid()||container.querySelector('#applyElements').disabled)return;const current=session,plan=session.plan;current.close();current.onApply(plan.afterRaw,plan.audit,plan);};
     renderRows();container.querySelector('#closeDialog').focus();
   }
@@ -573,12 +585,17 @@ var WindowsElements = (() => {
     const liveById=new Map(session.rows.map(row=>[row.id,row]));
     return session.displayOrder.map((id,displayIndex)=>{
       const row=liveById.get(id);
-      return row?{row,displayIndex,ghost:false}:{row:session.originalById.get(id),displayIndex,ghost:true};
+      return row?{row,displayIndex,ghost:false}:{row:session.deletedDrafts.get(id)??session.originalById.get(id),displayIndex,ghost:true};
     });
+  }
+  function elementActionsMarkup(id,displayIndex,total,ghost=false) {
+    const position=displayIndex+1,qualifier=ghost?' 个已移除元素，仅调整展示位置':' 个元素';
+    const action=ghost?'<button class="ibtn ibtn-restore" data-restore-ghost="'+id+'" aria-label="取消删除第 '+position+' 个元素，恢复删除前编辑的内容到当前位置" title="取消删除 · 恢复删除前编辑的内容（保持当前位置）"><b class="ic ic-undo" aria-hidden="true"></b></button>':'<button class="ibtn element-delete" data-delete="'+id+'" aria-label="删除第 '+position+' 个元素" title="删除此元素"><b class="ic ic-trash" aria-hidden="true"></b></button>';
+    return '<div class="element-actions"'+(session.whole?' hidden':'')+'><button class="ibtn" data-move-up="'+id+'" aria-label="上移第 '+position+qualifier+'" title="'+(ghost?'上移 · 仅调整已移除元素的展示位置':'上移 (Alt+↑)')+'"'+(displayIndex===0?' disabled':'')+'><b class="ic ic-up" aria-hidden="true"></b></button><button class="ibtn" data-move-down="'+id+'" aria-label="下移第 '+position+qualifier+'" title="'+(ghost?'下移 · 仅调整已移除元素的展示位置':'下移 (Alt+↓)')+'"'+(displayIndex===total-1?' disabled':'')+'><b class="ic ic-down" aria-hidden="true"></b></button>'+action+'</div>';
   }
   function ghostRowMarkup(row,displayIndex,total) {
     const beforeIndex=session.originalRows.findIndex(original=>original.id===row.id);
-    return `<div class="element-ghost-row" data-element-id="${row.id}"><span class="element-order" title="原始位置：第 ${beforeIndex+1} 项">${displayIndex+1}</span><span class="element-ghost-body"><span class="element-ghost-value" data-raw-value="${escape(row.value)}">${row.value===''?'<span class="empty-element">（空元素）</span>':escape(row.value)}</span><span class="element-ghost-state">${plateMarkup(['removed'])}<span class="diff-label is-removed">本次编辑已移除</span><span class="element-ghost-note">仅展示痕迹 · 不写入结果</span></span></span><div class="element-actions"><button class="ibtn ibtn-restore" data-restore-ghost="${row.id}" aria-label="取消删除第 ${displayIndex+1} 个元素，恢复删除前编辑的内容到当前位置" title="取消删除 · 恢复删除前编辑的内容（保持当前位置）"><b class="ic ic-undo"></b><span>取消删除</span></button><button class="ibtn" data-move-up="${row.id}" aria-label="上移第 ${displayIndex+1} 个已移除元素，仅调整展示位置" title="上移 · 仅调整已移除元素的展示位置" ${displayIndex===0?'disabled':''}><b class="ic ic-up"></b>↑</button><button class="ibtn" data-move-down="${row.id}" aria-label="下移第 ${displayIndex+1} 个已移除元素，仅调整展示位置" title="下移 · 仅调整已移除元素的展示位置" ${displayIndex===total-1?'disabled':''}><b class="ic ic-down"></b>↓</button></div></div>`;
+    return `<div class="element-ghost-row" data-element-id="${row.id}"><span class="element-order" title="原始位置：第 ${beforeIndex+1} 项">${displayIndex+1}</span><span class="element-ghost-body"><span class="element-ghost-value" data-raw-value="${escape(row.value)}">${row.value===''?'<span class="empty-element">（空元素）</span>':escape(row.value)}</span><span class="element-ghost-state">${plateMarkup(emptyKinds(row.value===''))}${statusBadge('removed','本次编辑已移除')}<span class="element-ghost-note">仅展示痕迹 · 不写入结果</span></span></span>${elementActionsMarkup(row.id,displayIndex,total,true)}</div>`;
   }
   function renderRows(focusId) {
     const root=session.container;
@@ -591,7 +608,7 @@ var WindowsElements = (() => {
     const ordered=rowDisplayOrder(),total=ordered.length;
     root.querySelector('#elementList').innerHTML=ordered.map(({row,displayIndex,ghost})=>ghost?ghostRowMarkup(row,displayIndex,total):`<div class="element-row" data-element-id="${row.id}" draggable="${!session.whole}">
       <span class="element-order" title="当前顺序">${displayIndex+1}</span><label class="element-input-wrap"><span class="sr-only">第 ${displayIndex+1} ${session.whole?'条字符串':'个元素'}</span>${session.whole?`<textarea class="element-input" rows="3" spellcheck="false" data-element-input="${row.id}">${escape(row.value)}</textarea>`:`<textarea class="element-input is-line" rows="1" wrap="soft" spellcheck="false" placeholder="（空元素）" data-element-input="${row.id}">${escape(row.value)}</textarea>`}</label>
-      <span class="element-states"><span class="st-plate element-plate" aria-hidden="true"></span><span class="element-match-state"></span><span class="element-change-state"></span></span><div class="element-actions" ${session.whole?'hidden':''}><button class="ibtn" data-move-up="${row.id}" aria-label="上移第 ${displayIndex+1} 个元素" title="上移 (Alt+↑)" ${displayIndex===0?'disabled':''}><b class="ic ic-up"></b>↑</button><button class="ibtn" data-move-down="${row.id}" aria-label="下移第 ${displayIndex+1} 个元素" title="下移 (Alt+↓)" ${displayIndex===total-1?'disabled':''}><b class="ic ic-down"></b>↓</button><button class="ibtn element-delete" data-delete="${row.id}" aria-label="删除第 ${displayIndex+1} 个元素" title="删除此元素"><b class="ic ic-trash"></b>删除</button></div></div>`).join('')+(session.whole||!session.rows.length&&!ordered.length?'':'<div class="element-drop-end" aria-hidden="true">放到末尾</div>')+(session.rows.length?'':'<div class="empty">结果列表为空。确认应用将移除变量；保留一个空元素则保存为空值。</div>');
+      <span class="element-states"><span class="st-plate element-plate" aria-hidden="true"></span><span class="element-match-state"></span><span class="element-change-state"></span></span>${elementActionsMarkup(row.id,displayIndex,total)}</div>`).join('')+(session.whole||!session.rows.length&&!ordered.length?'':'<div class="element-drop-end" aria-hidden="true">放到末尾</div>')+(session.rows.length?'':'<div class="empty">结果列表为空。确认应用将移除变量；保留一个空元素则保存为空值。</div>');
     const fit=input=>{if(!input.classList.contains('is-line')||fieldSizing)return;input.style.height='auto';if(input.scrollHeight>0)input.style.height=input.scrollHeight+2+'px';};
     root.querySelectorAll('[data-element-input]').forEach(input=>{
       const id=Number(input.dataset.elementInput),row=session.rows.find(row=>row.id===id);input.value=row.value;

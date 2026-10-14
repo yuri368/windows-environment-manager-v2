@@ -1,0 +1,26 @@
+{
+  "order": [
+    {
+      "id": "1",
+      "value": "C:\\Demo\\Alpha"
+    },
+    {
+      "id": "3",
+      "value": "C:\\Demo\\Alpha"
+    },
+    {
+      "id": "2",
+      "value": "空元素最新草稿"
+    },
+    {
+      "id": "4",
+      "value": "C:\\Demo\\Gamma"
+    },
+    {
+      "id": "5",
+      "value": ""
+    }
+  ],
+  "original": "",
+  "serialized": "C:\\Demo\\Alpha;C:\\Demo\\Alpha;空元素最新草稿;C:\\Demo\\Gamma;"
+}

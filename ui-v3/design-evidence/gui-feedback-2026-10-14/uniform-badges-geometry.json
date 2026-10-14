@@ -1,0 +1,62 @@
+{
+  "legendMatch": {
+    "background": "rgb(255, 255, 255)",
+    "cellWidth": 20.99609375,
+    "font": "11.5px",
+    "height": 21.9921875,
+    "iconWidth": 11.9921875,
+    "radius": "5px",
+    "text": "匹配1",
+    "weight": "400"
+  },
+  "legendMove": {
+    "background": "rgb(255, 255, 255)",
+    "cellWidth": 20.99609375,
+    "font": "11.5px",
+    "height": 21.9921875,
+    "iconWidth": 11.9921875,
+    "radius": "5px",
+    "text": "移动2",
+    "weight": "400"
+  },
+  "originalMatch": {
+    "background": "rgb(255, 255, 255)",
+    "cellWidth": 20.99609375,
+    "font": "11.5px",
+    "height": 21.9921875,
+    "iconWidth": 11.9921875,
+    "radius": "5px",
+    "text": "匹配",
+    "weight": "400"
+  },
+  "previewMove": {
+    "background": "rgb(255, 255, 255)",
+    "cellWidth": 20.99609375,
+    "font": "11.5px",
+    "height": 21.9921875,
+    "iconWidth": 11.9921875,
+    "radius": "5px",
+    "text": "移动",
+    "weight": "400"
+  },
+  "rowMatch": {
+    "background": "rgb(255, 255, 255)",
+    "cellWidth": 20.99609375,
+    "font": "11.5px",
+    "height": 21.9921875,
+    "iconWidth": 11.9921875,
+    "radius": "5px",
+    "text": "匹配",
+    "weight": "400"
+  },
+  "rowMove": {
+    "background": "rgb(255, 255, 255)",
+    "cellWidth": 20.99609375,
+    "font": "11.5px",
+    "height": 21.9921875,
+    "iconWidth": 11.9921875,
+    "radius": "5px",
+    "text": "移动",
+    "weight": "400"
+  }
+}

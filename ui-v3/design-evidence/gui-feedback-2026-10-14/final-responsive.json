@@ -1,0 +1,53 @@
+{
+  "badges": [
+    {
+      "iconInside": true,
+      "nowrap": "nowrap",
+      "text": "匹配"
+    },
+    {
+      "iconInside": true,
+      "nowrap": "nowrap",
+      "text": "移动"
+    },
+    {
+      "iconInside": true,
+      "nowrap": "nowrap",
+      "text": "移动"
+    },
+    {
+      "iconInside": true,
+      "nowrap": "nowrap",
+      "text": "移动"
+    },
+    {
+      "iconInside": true,
+      "nowrap": "nowrap",
+      "text": "移动"
+    },
+    {
+      "iconInside": true,
+      "nowrap": "nowrap",
+      "text": "匹配"
+    },
+    {
+      "iconInside": true,
+      "nowrap": "nowrap",
+      "text": "移动"
+    },
+    {
+      "iconInside": true,
+      "nowrap": "nowrap",
+      "text": "匹配"
+    },
+    {
+      "iconInside": true,
+      "nowrap": "nowrap",
+      "text": "移动"
+    }
+  ],
+  "dialog": 569,
+  "method": "CDP viewport/DPR simulation; not native browser zoom",
+  "scrollWidth": 569,
+  "width": 600
+}

@@ -90,9 +90,7 @@
 .pending-add-button:focus-visible, .pending-remove-button:focus-visible { outline-offset: 2px; }
 
 /* ---------- 删除痕迹行：取消删除 ---------- */
-.ibtn.ibtn-restore { display: inline-flex; align-items: center; width: auto; gap: 5px; margin-right: 4px; padding: 0 11px 0 8px; border-color: #a9cbb8; background: #fff; color: var(--green); }
-.ibtn-restore .ic { width: 14px; height: 14px; }
-.ibtn-restore span { font: 650 12px/1 'Microsoft YaHei UI', sans-serif; white-space: nowrap; }
+.ibtn.ibtn-restore { width: 30px; height: 30px; margin: 0; padding: 0; border-color: transparent; background: transparent; color: #4f8066; }
 .ibtn.ibtn-restore:hover:not(:disabled) { background: #e8f4ed; border-color: var(--green); color: var(--green-dark); }
 
 /* =====================================================================
@@ -116,7 +114,7 @@
 .diff-token.is-ghost.fx-cut-in::before { transform-origin: left center; animation: skinWipe .46s .1s var(--ease-out) backwards; }
 .diff-token.is-ghost.fx-cut-in > .diff-value { position: relative; animation: strikeIn .4s .44s ease-out backwards; }
 .diff-token.is-ghost.fx-cut-in > .diff-value::after { content: ''; position: absolute; left: 3px; right: 3px; top: 50%; height: 2px; margin-top: -1px; border-radius: 1px; background: #b13f3c; transform-origin: left center; animation: slashDraw .26s .14s var(--ease-out) both, slashOut .18s .46s ease-out forwards; }
-.diff-token.fx-cut-in > .st-plate .st-cell { animation: cutStamp .38s .3s var(--ease-out) backwards; }
+.diff-token.fx-cut-in > .st-tail .status-badge .st-cell { animation: cutStamp .38s .3s var(--ease-out) backwards; }
 
 /* 待删除 */
 .diff-token.is-removed:not(.is-ghost).fx-lock-in { animation: pendFlash .7s ease-out; }
@@ -133,7 +131,7 @@
     linear-gradient(var(--st-removed), var(--st-removed)) right bottom / 2px 9px no-repeat;
   animation: lockOn .66s var(--ease-out) both;
 }
-.diff-token.fx-lock-in > .st-plate .st-cell { animation: cutStamp .34s .12s var(--ease-out) backwards; }
+.diff-token.fx-lock-in > .st-tail .status-badge .st-cell { animation: cutStamp .34s .12s var(--ease-out) backwards; }
 
 /* 悬停 / 联动：斜纹漂移 + ✕ 转动（9.9px = 7px 斜纹周期 / cos45°，首尾无缝） */
 @keyframes stripeDrift { to { background-position: 9.9px 0, 0 0; } }

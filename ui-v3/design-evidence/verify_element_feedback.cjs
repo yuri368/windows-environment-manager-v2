@@ -100,13 +100,14 @@ try {
     assert.equal(row(ids[1]), null);
     assert.equal(serialized(), 'A;B');
   });
-  check('Deleting changed duplicate does not count the ghost old value or the removed new value', () => {
+  check('Deleting changed duplicate displays its draft but does not count it among live duplicate values', () => {
     const ids = open('A;A;B');
     edit(ids[1], 'B');
     row(ids[1]).querySelector('[data-delete]').click();
     groupCounts('Original', ids, [2, 2, 1]);
     groupCounts('Preview', ids, [1, 1, 1]);
-    assert.equal(token('Preview', ids[1]).querySelector('.diff-value').getAttribute('data-raw-value'), 'A');
+    assert.equal(token('Preview', ids[1]).querySelector('.diff-value').getAttribute('data-raw-value'), 'B');
+    assert.equal(token('Original', ids[1]).querySelector('.diff-value').getAttribute('data-raw-value'), 'A');
     assert.equal(serialized(), 'A;B');
   });
   check('Adding a duplicate marks existing and new members, then changing it back removes stale marks', () => {
