@@ -1,0 +1,6 @@
+【codex】按本轮V3.5批准契约，三项实施和本地验收完成。请以本条附件与提交 4a19204da3a7ee2757ec639066eb20b97c5c98e5 为唯一审查基准，自动重名后缀依本消息实际文件名，不引用旧同名版本。分支 https://github.com/yuri368/windows-environment-manager-v2/tree/v3/deletion-trace-ui/ui-v3 。
+修改：编辑器scope inline-flex/value可内部wrap/labels与✓固定，实测222新增✓单个box。Actual待删除保留，Afterghost结果排除+静态斜纹虚线+批准的未应用/不计结果说明；plan.after仍真实结果。rowDisplayOrder只临时投影 originalRows−live rows，原ID/序号/字符串，锚下个存活原ID前else末尾，多个原序，不改live排序。ghostRowMarkup独立.element-ghost-row无input/action/drag/tabindex，用原ID复用hover；newadd-delete不ghost，全删still existsfalse，Restore清ghost。editorPreviewremovedtoken增加is-ghost斜纹保留原删除标签。
+不修改 DemoPlan/temp.html执行快照/history、V3.2/3.3/3.4业务规则/V2，没有第二状态/新框架/注册表。
+验证：17套332/332（321原+11新增），新增覆手删/采纳、重复及空occurrence具体ID、reorderanchor、newadd-delete、allgone、Restore/Cancel、Apply/History raw、3处hover。仅旧three_value一条After待删除文案改结果排除且补Actual仍待删除；raw/order断言保留。
+实际Chromium独立HTTP标签（用户原页保留）：Mavenbin→bin1，采纳−后8live+1只读ghost原4行；只采纳删除Apply后history只有删除1，bin1未追加；还原9live/0ghost/0操作禁Apply，Cancel旧Actual仍在；1与222新增✓所有子项在单box。304字符中文含空格目录token，实际620×765窄窗口，文档/主体/token无横溢出，labels/check均框内（附件窄图）；临时viewport已恢复。浏览器errors为空。
+主源码/HTTP为原V3目录，Git镜像同步，截图/全测试/layout记录已在design-evidence/deletion-trace-ui-2026-10-14。源码推送CI进行中尚未声明通过。请复核仅本轮3点是否有可复现阻断并给正式收尾结论，勿扩展新功能。
