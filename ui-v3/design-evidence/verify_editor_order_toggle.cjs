@@ -97,7 +97,7 @@ check('Duplicate originals remain separate stable IDs and inline preview follows
   assert.deepEqual(ids(visible()),[first,third,second]);
   assert.deepEqual(ids(preview()),[first,third,second]);
   assert.deepEqual(ids(original()),[first,second,third]);
-  assert.ok(ghostFor(second));assert.equal(rowFor(first).querySelector('input').value,'A');
+  assert.ok(ghostFor(second));assert.equal(rowFor(first).querySelector('.element-input').value,'A');
   assert.equal(serialized(),'A;B');
 });
 for(const mode of ['+append','-append'])check(mode+' adoption persists as a green pressed card and toggles its exact new ID',()=>{
@@ -110,7 +110,7 @@ for(const mode of ['+append','-append'])check(mode+' adoption persists as a gree
   assert.equal(addButton().textContent.trim(),'✓');assert.ok(card().classList.contains('is-adopted'));
   assert.match(card().textContent,/已加入本次编辑|已采纳/);assert.doesNotMatch(card().textContent,/建议追加/);
   assert.deepEqual(values(),mode==='+append'?['E','A']:['A','E']);
-  q('#addElement').click();setInput(live().at(-1).querySelector('input'),'E');
+  q('#addElement').click();setInput(live().at(-1).querySelector('.element-input'),'E');
   const manualId=Number(live().at(-1).dataset.elementId);
   addButton().click();
   assert.equal(rowFor(adoptedId),null);assert.ok(rowFor(manualId));
@@ -128,11 +128,11 @@ check('Moving an adopted row preserves provenance and ✓ still removes that ID'
 check('Editing an adopted row clears provenance permanently while retaining the edited stable row',()=>{
   setup('A','A','A;E');addButton().click();
   const id=Number(live().find(node=>rowValue(node)==='E').dataset.elementId);
-  setInput(rowFor(id).querySelector('input'),'F');
+  setInput(rowFor(id).querySelector('.element-input'),'F');
   assert.equal(Number(rowFor(id).dataset.elementId),id);assert.equal(addButton().getAttribute('aria-pressed'),'false');
-  setInput(rowFor(id).querySelector('input'),'E');
+  setInput(rowFor(id).querySelector('.element-input'),'E');
   assert.equal(addButton(),null);assert.ok(rowFor(id));assert.deepEqual(values(),['A','E']);
-  setInput(rowFor(id).querySelector('input'),'F');
+  setInput(rowFor(id).querySelector('.element-input'),'F');
   assert.equal(addButton().getAttribute('aria-pressed'),'false');
   addButton().click();
   const second=live().find(node=>rowValue(node)==='E');assert.notEqual(Number(second.dataset.elementId),id);
@@ -145,7 +145,7 @@ check('Deleting an adopted row clears its card state and leaves no original ghos
   assert.equal(serialized(),'A');
 });
 check('A manual row satisfying a suggestion never becomes adopted',()=>{
-  setup('A','A','A;E');q('#addElement').click();setInput(live().at(-1).querySelector('input'),'E');
+  setup('A','A','A;E');q('#addElement').click();setInput(live().at(-1).querySelector('.element-input'),'E');
   assert.equal(addButton(),null);assert.equal(all('#pendingElements .is-adopted').length,0);
   assert.deepEqual(values(),['A','E']);
 });

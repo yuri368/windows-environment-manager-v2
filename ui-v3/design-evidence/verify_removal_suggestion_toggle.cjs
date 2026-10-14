@@ -57,11 +57,11 @@ check('Suggestion deletion switches to green and restores exact original ID and 
   old.click();assertAdopted(removeButton());assert.equal(rowFor(target),null);
   removeButton().click();
   assertPending(removeButton());assert.equal(ghostFor(target),null);
-  assert.equal(rowFor(target).querySelector('input').value,'C');
+  assert.equal(rowFor(target).querySelector('.element-input').value,'C');
   assert.deepEqual(ids(live()),allIds);assert.deepEqual(values(),['X','A','C','Y']);
   assert.deepEqual(ids(preview()),allIds);assert.equal(serialized(),'X;A;C;Y');
   assert.ok(q('#applyElements').disabled);assert.equal(snapshot(),before);assert.equal(historyLength(),n);
-  setInput(rowFor(target).querySelector('input'),'C2');
+  setInput(rowFor(target).querySelector('.element-input'),'C2');
   assert.equal(Number(rowFor(target).dataset.elementId),target);assert.equal(removeButton(),null);
   assert.equal(all('#pendingElements .is-adopted').length,0);
 });
@@ -71,11 +71,11 @@ check('Restoring a moved ghost uses its current display position and keeps unrel
   ghostFor(b).querySelector('[data-move-down]').click();
   assert.deepEqual(ids(visible()),[a,c,b,d]);assert.equal(serialized(),'A;C;D');
   assert.match(summary(),/移动 0/);
-  setInput(rowFor(a).querySelector('input'),'A2');
+  setInput(rowFor(a).querySelector('.element-input'),'A2');
   assertAdopted(removeButton());
   removeButton().click();
   assert.deepEqual(ids(visible()),[a,c,b,d]);assert.deepEqual(ids(live()),[a,c,b,d]);
-  assert.deepEqual(values(),['A2','C','B','D']);assert.equal(rowFor(b).querySelector('input').value,'B');
+  assert.deepEqual(values(),['A2','C','B','D']);assert.equal(rowFor(b).querySelector('.element-input').value,'B');
   assert.equal(ghostFor(b),null);assert.equal(serialized(),'A2;C;B;D');
   assert.deepEqual(ids(original()),[a,b,c,d]);assert.deepEqual(ids(preview()),[a,c,b,d]);
   assert.deepEqual(preview().map(raw),['A2','C','B','D']);
@@ -94,7 +94,7 @@ check('A same-value manual new row does not satisfy or replace adopted original 
   removeButton().click();q('#addElement').click();
   const manual=live().at(-1),manualId=Number(manual.dataset.elementId);
   assert.ok(![a,b,c].includes(manualId));
-  setInput(manual.querySelector('input'),'B');
+  setInput(manual.querySelector('.element-input'),'B');
   assertAdopted(removeButton());assert.ok(ghostFor(b));assert.ok(rowFor(manualId));
   removeButton().click();
   assert.deepEqual(ids(live()),[a,b,c,manualId]);

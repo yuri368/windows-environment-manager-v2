@@ -75,7 +75,7 @@ check('Visible order is explicit and live rows follow it while ghosts retain the
   assert.equal(serialized(),'A;D');
 });
 check('Newly added then removed rows disappear without leaving an original deletion ghost',()=>{
-  openEditor('A');q('#addElement').click();const added=rows().at(-1);setInput(added.querySelector('input'),'X');
+  openEditor('A');q('#addElement').click();const added=rows().at(-1);setInput(added.querySelector('.element-input'),'X');
   added.querySelector('[data-delete]').click();
   assert.deepEqual(values(),['A']);assert.deepEqual(ghosts(),[]);assert.equal(serialized(),'A');
   assert.match(q('#elementStatus').textContent,/0 项变化/);assert.ok(q('#applyElements').disabled);

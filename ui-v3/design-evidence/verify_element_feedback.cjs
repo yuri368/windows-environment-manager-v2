@@ -175,8 +175,8 @@ try {
     assert.ok(token('Preview', added).classList.contains('is-added'));
     assert.equal(serialized(), 'C;Z;N');
     const css = fs.readFileSync(path.join(root, 'elements-ui.css'), 'utf8');
-    assert.match(css, /\.diff-token\s*\{[^}]*display:\s*inline(?:\s|;)/);
-    for (const state of ['moved', 'replaced', 'added', 'removed']) assert.match(css, new RegExp(`\\.diff-token\\.is-${state}\\s*\\{`));
+    assert.match(css, /\.diff-token\b[^{]*\{[^}]*display:\s*inline(?:-flex)?(?:\s|;)/);
+    for (const state of ['moved', 'replaced', 'added', 'removed']) assert.match(css, new RegExp(`\\.diff-token\\.is-${state}\\b[^{]*\\{`));
   });
   check('Original pointer hover distinguishes equal-valued elements by stable ID', () => {
     const ids = open('A;A;B');
