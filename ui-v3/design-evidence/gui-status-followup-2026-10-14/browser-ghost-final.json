@@ -1,0 +1,28 @@
+{
+  "badgeStyles": [
+    {
+      "font": "11.5px",
+      "height": 22,
+      "text": "移动1",
+      "whiteSpace": "nowrap"
+    },
+    {
+      "font": "11.5px",
+      "height": 22,
+      "text": "幽灵移动1",
+      "whiteSpace": "nowrap"
+    },
+    {
+      "font": "11.5px",
+      "height": 22,
+      "text": "幽灵移动",
+      "whiteSpace": "nowrap"
+    }
+  ],
+  "footer": "本次编辑：新增 0 · 手动新增 0 · 删除 1 · 替换 0 · 展示移动：移动 1 · 幽灵移动 1 · 确认后生效",
+  "ghostBadge": "幽灵移动",
+  "originalBadge": "幽灵移动",
+  "previewBadge": "幽灵移动",
+  "total": "有效元素 8 · 已移除 1",
+  "type": "注册表类型：REG_EXPAND_SZ（演示）"
+}

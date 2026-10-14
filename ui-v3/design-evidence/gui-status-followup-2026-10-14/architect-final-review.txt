@@ -1,0 +1,200 @@
+- heading "ChatGPT 说：" [level=4]
+    - paragraph: 【架构顾问 → Codex】
+    - heading "V3 GUI 状态修复最终审查" [level=1]
+    - generic: 审查通过 · 允许归档
+    - paragraph:
+      - text: 最终裁定：未发现阻断项（P0/P1：0），批准将
+      - code: 69f2d0f65b8ae5a449341c5786c139583f35be1c
+      - text: 作为本轮 GUI 修复的归档版本。
+    - paragraph: 本次结论基于实际源码审阅、附件证据、GitHub 提交核验及 CI 状态检查，不仅依据 Codex 的文字汇报。
+    - heading "一、源码审查结果" [level=2]
+    - table:
+      - rowgroup:
+        - row "审查项目 结论 核查说明":
+          - columnheader "审查项目":
+            - paragraph: 审查项目
+          - columnheader "结论":
+            - paragraph: 结论
+          - columnheader "核查说明":
+            - paragraph: 核查说明
+        - row "Ghost 移动标签 通过 列表、Original、Preview 统一为「幽灵移动」；普通元素仍为「移动」":
+          - cell "Ghost 移动标签":
+            - paragraph: Ghost 移动标签
+          - cell "通过":
+            - paragraph:
+              - text: 通过
+          - cell "列表、Original、Preview 统一为「幽灵移动」；普通元素仍为「移动」":
+            - paragraph: 列表、Original、Preview 统一为「幽灵移动」；普通元素仍为「移动」
+        - row "有效元素计数 通过 Live 与 Ghost 分别计数，空元素和重复元素正确保留":
+          - cell "有效元素计数":
+            - paragraph: 有效元素计数
+          - cell "通过":
+            - paragraph:
+              - text: 通过
+          - cell "Live 与 Ghost 分别计数，空元素和重复元素正确保留":
+            - paragraph: Live 与 Ghost 分别计数，空元素和重复元素正确保留
+        - row "Scope/Type 信息 通过 删除重复信息行，Scope 保留在标题，Type 通过 Tooltip 查看":
+          - cell "Scope/Type 信息":
+            - paragraph: Scope/Type 信息
+          - cell "通过":
+            - paragraph:
+              - text: 通过
+          - cell "删除重复信息行，Scope 保留在标题，Type 通过 Tooltip 查看":
+            - paragraph: 删除重复信息行，Scope 保留在标题，Type 通过 Tooltip 查看
+        - row "圆形图标居中 符合要求 使用统一的定位与居中规则，没有逐图标增加垂直偏移补丁":
+          - cell "圆形图标居中":
+            - paragraph: 圆形图标居中
+          - cell "符合要求":
+            - paragraph:
+              - text: 符合要求
+          - cell "使用统一的定位与居中规则，没有逐图标增加垂直偏移补丁":
+            - paragraph: 使用统一的定位与居中规则，没有逐图标增加垂直偏移补丁
+        - row "工作台 Replace 限制 通过 隐藏按钮，解除双击和键盘入口，同时增加函数入口守卫":
+          - cell "工作台 Replace 限制":
+            - paragraph: 工作台 Replace 限制
+          - cell "通过":
+            - paragraph:
+              - text: 通过
+          - cell "隐藏按钮，解除双击和键盘入口，同时增加函数入口守卫":
+            - paragraph: 隐藏按钮，解除双击和键盘入口，同时增加函数入口守卫
+        - row "Replace 整值操作 通过 当前选定值的输入、预览及应用路径保留":
+          - cell "Replace 整值操作":
+            - paragraph: Replace 整值操作
+          - cell "通过":
+            - paragraph:
+              - text: 通过
+          - cell "当前选定值的输入、预览及应用路径保留":
+            - paragraph: 当前选定值的输入、预览及应用路径保留
+        - row "Windows 环境页直接编辑 通过 mode=null 入口不受工作台限制影响":
+          - cell "Windows 环境页直接编辑":
+            - paragraph: Windows 环境页直接编辑
+          - cell "通过":
+            - paragraph:
+              - text: 通过
+          - cell "mode=null 入口不受工作台限制影响":
+            - paragraph:
+              - code: mode=null
+              - text: 入口不受工作台限制影响
+        - row "资源版本控制 通过 修改过的 CSS/JS 添加内容版本参数，降低旧缓存混用风险":
+          - cell "资源版本控制":
+            - paragraph: 资源版本控制
+          - cell "通过":
+            - paragraph:
+              - text: 通过
+          - cell "修改过的 CSS/JS 添加内容版本参数，降低旧缓存混用风险":
+            - paragraph: 修改过的 CSS/JS 添加内容版本参数，降低旧缓存混用风险
+        - row "DemoPlan / V2 / Registry 未发现越界修改 Git 提交变更集中于 V3，DemoPlan 核心未修改":
+          - cell "DemoPlan / V2 / Registry":
+            - paragraph: DemoPlan / V2 / Registry
+          - cell "未发现越界修改":
+            - paragraph:
+              - text: 未发现越界修改
+          - cell "Git 提交变更集中于 V3，DemoPlan 核心未修改":
+            - paragraph: Git 提交变更集中于 V3，DemoPlan 核心未修改
+    - paragraph: 其中最重要的是：
+    - paragraph:
+      - code: replace
+      - text: 的限制位于工作台入口，而不是元素编辑器的底层能力。
+    - paragraph:
+      - text: 源码中的守卫同时考虑当前页面和当前方案模式；这与此前确认的契约一致。
+      - button "review-source.txt":
+        - generic: review-source.txt
+    - paragraph:
+      - text: Ghost 的「幽灵移动」同样只是展示文案调整，没有更改原有业务 MOVE 的判定。
+      - button "review-source.txt":
+        - generic: review-source.txt
+    - heading "二、GitHub 与测试证据" [level=2]
+    - paragraph: 产品提交
+    - paragraph:
+      - link "69f2d0f":
+        - /url: https://github.com/yuri368/windows-environment-manager-v2/commit/69f2d0f65b8ae5a449341c5786c139583f35be1c
+        - generic: 69f2d0f
+    - paragraph: V3 UI CI
+    - link "成功":
+      - /url: https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38592890855
+      - generic: 成功
+    - paragraph: Python CI
+    - link "成功":
+      - /url: https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38592890772
+      - generic: 成功
+    - paragraph: 主目录报告
+    - heading "462 / 462" [level=1]
+    - generic: 24 套脚本，均退出成功
+    - paragraph: Git 镜像报告
+    - heading "462 / 462" [level=1]
+    - generic: 24 套脚本，均退出成功
+    - paragraph:
+      - text: 我核对了
+      - code: full-test-report.json
+      - text: 中两份目录的 24 组退出状态及检查明细，均与
+      - generic: 462 项通过
+      - text: 的报告一致。新增的 19 项专项检查覆盖了入口限制、Ghost 标签、Toolbar 计数和直接编辑。
+    - paragraph:
+      - text: 附件中的完整
+      - code: windows-elements.js
+      - text: 也通过了哈希一致性及独立 JavaScript 语法检查。
+      - code: shell-ui.css
+      - text: 的本地 CRLF 内容哈希与记录一致。
+    - heading "三、浏览器截图检查" [level=2]
+    - generic: 工作台 Replace
+    - generic: 工作台 Replace：元素编辑入口隐藏，整值输入保留
+    - paragraph: Ghost：有效元素 8 · 已移除 1，三处「幽灵移动」一致
+    - paragraph: Windows 环境页：MAVEN_HOME 元素编辑器能够打开
+    - paragraph: 提交的截图与对应浏览器 JSON 能够支持这些视觉和交互结论，但我没有独立重新执行浏览器操作或像素测量。
+    - heading "四、审查限制与阻断判断" [level=2]
+    - paragraph:
+      - text: 本轮审查
+      - generic: 没有
+      - text: 执行以下工作：
+    - list:
+      - paragraph: 在本地独立重跑全部 462 项测试。
+      - paragraph: 独立操作真实浏览器完成全套验收。
+      - paragraph: 进行独立的像素级居中测量。
+      - paragraph: 验证浏览器原生 100%～200% 缩放。
+    - paragraph: 最后一项目前只有 CDP 视口/DPR 模拟，不能表述为原生缩放实测通过。
+    - paragraph:
+      - text: 这些属于已披露的验证范围限制，
+      - generic: 不是本轮发现的产品缺陷，也不构成归档阻断
+      - text: 。
+    - heading "五、最终归档指令" [level=2]
+    - paragraph: 同意 Codex：
+    - list:
+      - paragraph:
+        - text: 冻结本轮产品提交
+        - code: 69f2d0f
+        - text: 。
+      - paragraph:
+        - text: 保留分支
+        - code: v3/gui-status-followup
+        - text: 。
+      - paragraph: 归档现有源码差异、测试报告、CI 和浏览器证据。
+      - paragraph: 向负责人提交最终逐项收尾报告。
+    - paragraph:
+      - text: 不需要再增加功能，也不需要为了归档重新修改产品代码。保持不合并
+      - code: main
+      - text: 、不发布 Release 的既有约束。
+    - paragraph:
+      - generic: 最终审查结论：通过，0 项阻断，允许归档。
+      - text: ✅
+    - paragraph: 这轮 UI 修正可以正式收尾。下次有新反馈再开新任务，别让一个已经通过验收的按钮继续无限加班。
+    - button "复制":
+    - button "评价回复":
+    - button "分享":
+    - button "朗读":
+    - button "重新生成回复":
+    - button "更多操作":
+    - generic: ChatGPT 可能会出错。请核查重要信息。
+    - button:
+    - heading "最新一条回复" [level=4]
+    - status
+    - button "添加文件等内容":
+    - textbox "询问 ChatGPT" [active]:
+      - paragraph: 询问 ChatGPT
+    - button "选择 ChatGPT 模型":
+      - generic: 高
+    - button "听写":
+    - button "开始语音":
+- status
+- status: 回答已完成
+- status
+- status
