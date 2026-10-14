@@ -9,7 +9,7 @@
       "passed": true
     },
     {
-      "name": "+append adopts exactly one raw slice in the expected position with stable existing rows and focused new row",
+      "name": "+append adopts exactly one raw slice in the expected position with stable existing rows and focused suggestion",
       "passed": true
     },
     {
@@ -17,7 +17,7 @@
       "passed": true
     },
     {
-      "name": "-append adopts exactly one raw slice in the expected position with stable existing rows and focused new row",
+      "name": "-append adopts exactly one raw slice in the expected position with stable existing rows and focused suggestion",
       "passed": true
     },
     {
@@ -25,7 +25,7 @@
       "passed": true
     },
     {
-      "name": "append adopts exactly one raw slice in the expected position with stable existing rows and focused new row",
+      "name": "append adopts exactly one raw slice in the expected position with stable existing rows and focused suggestion",
       "passed": true
     },
     {
