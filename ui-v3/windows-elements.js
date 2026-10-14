@@ -105,13 +105,13 @@ var WindowsElements = (() => {
         const matched=side==='selected'?item.matched:whole?item.value===plan.desiredRaw:matches(item.value,[plan.desiredRaw]);
         const added=(side==='after'||side==='selected')&&item.added;
         const classes=['diff-token','comparison-token',item.ghost?'is-ghost':'',removed?'is-removed':added?'is-added pending-add-token':item.wholeChange?'is-replaced':matched?'is-matched':''].filter(Boolean).join(' ');
-        const label=removed?'<span class="diff-label is-removed">待删除</span>':added?'<span class="diff-label is-pending-add">待追加</span>':item.wholeChange?'<span class="diff-label is-replaced">整体待替换</span>':issue?'<span class="diff-label is-retained">'+(issue.reason==='shared'?'共享保留':'删除需确认')+'</span>':'';
+        const label=removed?'<span class="diff-label is-removed">'+(item.ghost?'结果排除':'待删除')+'</span>':added?'<span class="diff-label is-pending-add">待追加</span>':item.wholeChange?'<span class="diff-label is-replaced">整体待替换</span>':issue?'<span class="diff-label is-retained">'+(issue.reason==='shared'?'共享保留':'删除需确认')+'</span>':'';
         return '<span class="'+classes+'" tabindex="0" data-related-key="'+item.key+'"'+(item.beforeIndex===undefined?'':' data-before-index="'+item.beforeIndex+'"')+'><span class="diff-value" data-raw-value="'+escape(item.value)+'">'+(item.value===''?'<span class="empty-element">'+(whole?'（空字符串）':'（空元素）')+'</span>':escape(item.value))+'</span>'+label+(!whole?duplicateLabel(counts.get(item.value)):'')+'</span>';
       }).join('<span class="element-separator">;</span>');
     };
     return {selected:'<span class="selection-current">'+render(selected,'selected')+'</span>',
       actual:plan.before.exists?(render(actual,'actual')||'<span class="empty-element">（空字符串）</span>'):'<span class="empty-element">（不存在）</span>',
-      after:!active?'<span class="invalid-result">计划已失效，需要重新检测并预览</span>':render(after,'after')||'<span class="empty-element">'+(plan.after.exists?'（空字符串）':'（不存在）')+'</span>'};
+      after:!active?'<span class="invalid-result">计划已失效，需要重新检测并预览</span>':(render(after,'after')||'<span class="empty-element">'+(plan.after.exists?'（空字符串）':'（不存在）')+'</span>')+(after.some(item=>item.ghost)?'<span class="comparison-ghost-hint">应用后预览。划线元素不计入最终写入值，当前尚未应用。</span>':'')};
   }
   const comparisonBindings=new WeakMap();
   function bindComparison(root){
@@ -170,9 +170,9 @@ var WindowsElements = (() => {
     return {before:session.original,after:serialized(),whole:session.whole,elements,
       counts:Object.fromEntries(['added','removed','replaced','moved'].map(kind=>[kind,elements.filter(element=>element[kind]).length]))};
   }
-  function token(row, state, removed = false, duplicateCount = 1) {
+  function token(row, state, removed = false, duplicateCount = 1, ghost = false) {
     const matched = matches(row.value,session.selectedValues || [],session.whole);
-    const classes = [removed?'is-removed':'',state.added?'is-added':'',state.replaced?'is-replaced':'',state.moved?'is-moved':'',matched?'is-matched':'',duplicateCount>1?'is-duplicate':''].filter(Boolean).join(' ');
+    const classes = [removed?'is-removed':'',ghost?'is-ghost':'',state.added?'is-added':'',state.replaced?'is-replaced':'',state.moved?'is-moved':'',matched?'is-matched':'',duplicateCount>1?'is-duplicate':''].filter(Boolean).join(' ');
     return `<span class="diff-token ${classes}" data-element-id="${row.id}" data-duplicate-count="${duplicateCount}" tabindex="-1"><span class="diff-value" data-raw-value="${escape(row.value)}">${row.value === '' ? `<span class="empty-element">${session.whole?'（空字符串）':'（空元素）'}</span>` : escape(row.value)}</span>${labels(state,removed)}${duplicateLabel(duplicateCount)}${matched&&!removed?'<span class="element-match-mark" title="与准备方案匹配" aria-label="匹配">✓</span>':''}</span>`;
   }
   function renderComparison() {
@@ -182,7 +182,7 @@ var WindowsElements = (() => {
     const removed=session.originalRows.filter(original=>!session.rows.some(row=>row.id===original.id));
     const current=session.rows.map(row=>token(row,stateFor(row),false,session.currentCounts.get(row.value))).join('<span class="element-separator">;</span>');
     root.querySelector('#elementPreview').innerHTML=(current || `<span class="empty-element">${session.plan.after.exists?'（空字符串）':'（不存在）'}</span>`)
-      +(removed.length?`<span class="removed-elements"><span class="removed-title">已删除 · 不计入结果</span>${removed.map(row=>token(row,{},true)).join('<span class="element-separator">;</span>')}</span>`:'');
+      +(removed.length?`<span class="removed-elements"><span class="removed-title">已删除 · 不计入结果</span>${removed.map(row=>token(row,{},true,1,true)).join('<span class="element-separator">;</span>')}</span>`:'');
     root.querySelector('#elementSerialized').textContent=session.plan.after.exists?serialized():'（不存在）';
     paintRelated();
   }
@@ -329,13 +329,28 @@ var WindowsElements = (() => {
     if(target<0||target>=session.rows.length)return;
     const [row]=session.rows.splice(index,1);session.rows.splice(target,0,row);renderRows(id);
   }
+  function rowDisplayOrder() {
+    const liveIds=new Set(session.rows.map(row=>row.id)),anchored=new Map(),trailing=[];
+    session.originalRows.forEach((row,beforeIndex)=>{
+      if(liveIds.has(row.id))return;
+      const ghost={row,beforeIndex,ghost:true};
+      const anchor=session.originalRows.slice(beforeIndex+1).find(original=>liveIds.has(original.id));
+      if(!anchor){trailing.push(ghost);return;}
+      if(!anchored.has(anchor.id))anchored.set(anchor.id,[]);
+      anchored.get(anchor.id).push(ghost);
+    });
+    return session.rows.flatMap((row,index)=>[...(anchored.get(row.id)||[]),{row,index,ghost:false}]).concat(trailing);
+  }
+  function ghostRowMarkup(row,beforeIndex) {
+    return `<div class="element-ghost-row" data-element-id="${row.id}"><span class="element-order" title="原始顺序">${beforeIndex+1}</span><span class="element-ghost-value" data-raw-value="${escape(row.value)}">${row.value===''?'<span class="empty-element">（空元素）</span>':escape(row.value)}</span><span class="element-ghost-state"><span class="diff-label is-removed">本次编辑已移除</span><span class="element-ghost-note">不计入结果</span></span></div>`;
+  }
   function renderRows(focusId) {
     const root=session.container;
     session.hoveredId = null;
     session.focusedId = null;
-    root.querySelector('#elementList').innerHTML=session.rows.length?session.rows.map((row,index)=>`<div class="element-row" data-element-id="${row.id}" draggable="${!session.whole}">
+    root.querySelector('#elementList').innerHTML=rowDisplayOrder().map(({row,index,beforeIndex,ghost})=>ghost?ghostRowMarkup(row,beforeIndex):`<div class="element-row" data-element-id="${row.id}" draggable="${!session.whole}">
       <span class="element-order" title="当前顺序">${index+1}</span><label class="element-input-wrap"><span class="sr-only">第 ${index+1} ${session.whole?'条字符串':'个元素'}</span>${session.whole?`<textarea class="element-input" rows="3" spellcheck="false" data-element-input="${row.id}">${escape(row.value)}</textarea>`:`<input class="element-input" value="${escape(row.value)}" spellcheck="false" placeholder="（空元素）" data-element-input="${row.id}">`}</label>
-      <span class="element-states"><span class="element-match-state"></span><span class="element-change-state"></span></span><div class="element-actions" ${session.whole?'hidden':''}><button class="actmini" data-move-up="${row.id}" aria-label="上移第 ${index+1} 个元素" ${index===0?'disabled':''}>↑</button><button class="actmini" data-move-down="${row.id}" aria-label="下移第 ${index+1} 个元素" ${index===session.rows.length-1?'disabled':''}>↓</button><button class="actmini element-delete" data-delete="${row.id}" aria-label="删除第 ${index+1} 个元素">删除</button></div></div>`).join(''):'<div class="empty">列表为空。确认应用将移除变量；保留一个空元素则保存为空值。</div>';
+      <span class="element-states"><span class="element-match-state"></span><span class="element-change-state"></span></span><div class="element-actions" ${session.whole?'hidden':''}><button class="actmini" data-move-up="${row.id}" aria-label="上移第 ${index+1} 个元素" ${index===0?'disabled':''}>↑</button><button class="actmini" data-move-down="${row.id}" aria-label="下移第 ${index+1} 个元素" ${index===session.rows.length-1?'disabled':''}>↓</button><button class="actmini element-delete" data-delete="${row.id}" aria-label="删除第 ${index+1} 个元素">删除</button></div></div>`).join('')+(session.rows.length?'':'<div class="empty">列表为空。确认应用将移除变量；保留一个空元素则保存为空值。</div>');
     root.querySelectorAll('[data-element-input]').forEach(input=>{
       const id=Number(input.dataset.elementInput),row=session.rows.find(row=>row.id===id);input.value=row.value;
       input.oninput=()=>{row.value=input.value;update();};

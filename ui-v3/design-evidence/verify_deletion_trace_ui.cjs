@@ -1,0 +1,118 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const {JSDOM,VirtualConsole}=require('jsdom');
+const root=path.resolve(__dirname,'..'),checks=[],errors=[];
+const vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));
+const dom=new JSDOM(fs.readFileSync(path.join(root,'temp.html'),'utf8'),{runScripts:'dangerously',pretendToBeVisual:true,virtualConsole:vc,beforeParse(w){w.confirm=()=>true;for(const f of ['demo-plan.js','demo-configs.js','windows-elements.js'])w.eval(fs.readFileSync(path.join(root,f),'utf8'));}});
+const w=dom.window,q=s=>w.document.querySelector(s),all=s=>[...w.document.querySelectorAll(s)],ev=s=>w.eval(s);
+const rows=()=>all('#elementList .element-row'),ghosts=()=>all('#elementList .element-ghost-row');
+const values=()=>rows().map(row=>row.querySelector('.element-input').value),ids=()=>rows().map(row=>Number(row.dataset.elementId));
+const setInput=(field,raw)=>{field.value=raw;field.dispatchEvent(new w.Event('input',{bubbles:true}));};
+const serialized=()=>q('#elementSerialized').textContent;
+const snapshot=()=>ev('JSON.stringify(windows)'),historyLength=()=>ev('history.length');
+const rawValues=selector=>all(selector+' [data-raw-value]').map(n=>n.getAttribute('data-raw-value'));
+const rawPane=selector=>all(selector+' .diff-value[data-raw-value]').filter(n=>!n.closest('.is-ghost')).map(n=>n.dataset.rawValue).join(';');
+const setup=(raw,old,next,mode='-append')=>{
+  ev('closeModal();reset(true)');
+  ev("selected=1;focusedVariable=1;const v=scheme(1).vars[1];v.defaultValue="+JSON.stringify(old)+";v.baselineValue=v.defaultValue;v.mode="+JSON.stringify(mode)+";windows['User|PATH']="+JSON.stringify(raw)+";render()");
+  if(next!==undefined)setInput(q('#varRows [data-row="1"] .vinput'),next);
+};
+const openEditor=(raw,old=raw,next=old,mode='-append')=>{setup(raw,old,next,mode);q('#editWindowsElements').click();};
+const ghostFor=id=>q('#elementList .element-ghost-row[data-element-id="'+id+'"]');
+const check=(name,run)=>{try{run();checks.push({name,passed:true});}catch(e){checks.push({name,passed:false,error:e.stack});}};
+check('Workbench keeps Actual pending deletion distinct from the excluded After ghost and final raw result',()=>{
+  setup('X;A;B;C;Y','A;B;C;D','A;B;E;F');
+  const actual=q('#compareActual [data-before-index="3"]'),after=q('#compareAfter [data-before-index="3"]');
+  assert.match(actual.textContent,/待删除/);assert.ok(actual.classList.contains('is-removed'));
+  assert.match(after.textContent,/结果排除/);assert.ok(after.classList.contains('is-ghost'));
+  assert.equal(rawPane('#compareAfter'),'X;A;B;Y;E;F');
+  assert.equal(q('#compareSerialized').textContent,'X;A;B;Y;E;F');
+  assert.match(q('#compareAfter').textContent,/应用后预览/);
+});
+check('Manual deletion retains a read-only original-ID ghost outside live rows and serialization',()=>{
+  openEditor('A;B;C');const original=ids(),before=snapshot(),n=historyLength(),id=original[1];
+  rows()[1].querySelector('[data-delete]').click();
+  const ghost=ghostFor(id);
+  assert.ok(ghost);assert.equal(ghost.classList.contains('element-row'),false);
+  assert.equal(ghost.querySelector('.element-order').textContent,'2');
+  assert.equal(ghost.querySelector('[data-raw-value]').getAttribute('data-raw-value'),'B');
+  assert.match(ghost.textContent,/本次编辑已移除/);assert.match(ghost.textContent,/不计入结果/);
+  assert.equal(ghost.querySelector('input,textarea,button,[draggable="true"],[tabindex]'),null);
+  assert.deepEqual(ids(),[original[0],original[2]]);assert.deepEqual(values(),['A','C']);
+  assert.match(q('#elementTotal').textContent,/^2\b/);assert.equal(serialized(),'A;C');
+  assert.equal(snapshot(),before);assert.equal(historyLength(),n);
+});
+check('Adopting a suggested deletion creates the same original-ID read-only ghost',()=>{
+  openEditor('X;A;C;Y','A;C','A;E');
+  const id=Number(rows()[2].dataset.elementId),button=q('[data-remove-pending]');
+  assert.ok(button);button.click();
+  assert.ok(ghostFor(id));assert.deepEqual(values(),['X','A','Y']);
+  assert.equal(serialized(),'X;A;Y');assert.match(ghostFor(id).textContent,/本次编辑已移除/);
+  assert.equal(q('[data-remove-pending]'),null);
+});
+check('Deleting duplicate and empty originals preserves exact IDs, values and original ghost order',()=>{
+  openEditor('A;;A;B');const original=ids();
+  rows()[2].querySelector('[data-delete]').click();
+  assert.equal(ghostFor(original[2]).querySelector('[data-raw-value]').getAttribute('data-raw-value'),'A');
+  assert.equal(serialized(),'A;;B');
+  rows().find(row=>Number(row.dataset.elementId)===original[1]).querySelector('[data-delete]').click();
+  assert.deepEqual(ids(),[original[0],original[3]]);
+  assert.equal(ghostFor(original[1]).querySelector('[data-raw-value]').getAttribute('data-raw-value'),'');
+  assert.equal(serialized(),'A;B');
+  const shown=all('#elementList > .element-row, #elementList > .element-ghost-row').map(node=>Number(node.dataset.elementId));
+  assert.deepEqual(shown,original);
+});
+check('Ghosts use the next surviving original row as anchor without reordering live rows',()=>{
+  openEditor('A;B;C;D');const original=ids();
+  rows()[1].querySelector('[data-delete]').click();rows().find(row=>Number(row.dataset.elementId)===original[2]).querySelector('[data-delete]').click();
+  const d=rows().find(row=>Number(row.dataset.elementId)===original[3]);
+  d.querySelector('[data-move-up]').click();d.querySelector('[data-move-up]').click();
+  assert.deepEqual(ids(),[original[3],original[0]]);
+  const shown=all('#elementList > .element-row, #elementList > .element-ghost-row').map(node=>Number(node.dataset.elementId));
+  assert.deepEqual(shown,[original[1],original[2],original[3],original[0]]);
+  assert.equal(serialized(),'D;A');
+});
+check('Newly added then removed rows disappear without leaving an original deletion ghost',()=>{
+  openEditor('A');q('#addElement').click();const added=rows().at(-1);setInput(added.querySelector('input'),'X');
+  added.querySelector('[data-delete]').click();
+  assert.deepEqual(values(),['A']);assert.deepEqual(ghosts(),[]);assert.equal(serialized(),'A');
+  assert.match(q('#elementStatus').textContent,/0 项变化/);assert.ok(q('#applyElements').disabled);
+});
+check('Deleting all live rows keeps original ghosts while result and Apply retain nonexistent-variable semantics',()=>{
+  openEditor('A;;B');const original=ids();
+  while(rows().length)rows()[0].querySelector('[data-delete]').click();
+  assert.deepEqual(ghosts().map(node=>Number(node.dataset.elementId)),original);
+  assert.deepEqual(values(),[]);assert.match(q('#elementTotal').textContent,/^0\b/);
+  assert.equal(serialized(),'（不存在）');assert.ok(!q('#applyElements').disabled);
+  q('#applyElements').click();assert.equal(ev("Object.hasOwn(windows,'User|PATH')"),false);
+  const plan=ev('history[0].changes[0].plan');
+  assert.equal(plan.after.exists,false);assert.equal(plan.operations.length,3);
+  assert.doesNotMatch(JSON.stringify(ev('history[0]')),/element-ghost-row|本次编辑已移除/);
+});
+check('Restore removes all ghosts and Cancel discards the later deletion exactly',()=>{
+  openEditor('A;B;C');const original=ids(),before=snapshot(),n=historyLength();
+  rows()[1].querySelector('[data-delete]').click();assert.equal(ghostFor(original[1])!==null,true);
+  q('#restoreElements').click();assert.deepEqual(ghosts(),[]);assert.deepEqual(ids(),original);
+  assert.equal(serialized(),'A;B;C');assert.ok(q('#applyElements').disabled);
+  rows()[1].querySelector('[data-delete]').click();q('#cancelDialog').click();
+  assert.equal(snapshot(),before);assert.equal(historyLength(),n);
+});
+check('Apply and History contain only the exact live-result removal operation, not ghost presentation',()=>{
+  openEditor(' A ;;B; ');const id=ids()[2];rows()[2].querySelector('[data-delete]').click();assert.ok(ghostFor(id));
+  assert.equal(serialized(),' A ;; ');q('#applyElements').click();
+  assert.equal(ev("windows['User|PATH']"),' A ;; ');
+  const change=ev('history[0].changes[0]'),plan=change.plan;
+  assert.equal(change.after,' A ;; ');assert.equal(plan.after.raw,' A ;; ');
+  assert.equal(plan.operations.length,1);assert.equal(plan.operations[0].type,'remove');assert.equal(plan.operations[0].before,'B');
+  assert.doesNotMatch(JSON.stringify(ev('history[0]')),/element-ghost-row|本次编辑已移除/);
+});
+check('Hovering an editor ghost highlights only its same-ID Original and Preview counterparts',()=>{
+  openEditor('A;B;C');const id=ids()[1];rows()[1].querySelector('[data-delete]').click();
+  const ghost=ghostFor(id),original=q('#elementOriginal [data-element-id="'+id+'"]'),preview=q('#elementPreview [data-element-id="'+id+'"]');
+  assert.ok(ghost&&original&&preview);ghost.dispatchEvent(new w.MouseEvent('pointerover',{bubbles:true}));
+  assert.ok(ghost.classList.contains('is-related-highlight'));assert.ok(original.classList.contains('is-related-highlight'));assert.ok(preview.classList.contains('is-related-highlight'));
+  assert.equal(all('.is-related-highlight').length,3);
+});
+check('No JSDOM runtime errors in deletion-trace workflows',()=>assert.deepEqual(errors,[]));
+const report={passed:checks.filter(c=>c.passed).length,total:checks.length,checks};
+console.log(JSON.stringify(report,null,2));if(checks.some(c=>!c.passed))process.exitCode=1;dom.window.close();

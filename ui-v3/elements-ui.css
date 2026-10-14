@@ -208,3 +208,22 @@
 #elementStatus { font-variant-numeric: tabular-nums; }
 
 .element-suggestions .pending-additions { margin-top: 8px; padding-top: 0; border-top: 0; }
+
+/* Keep the editor value, change labels and match mark inside one token. */
+.element-dialog .diff-token { display: inline-flex; align-items: center; gap: 4px; max-width: 100%; margin: 4px 0; vertical-align: middle; line-height: 1.6; }
+.element-dialog .diff-token > .diff-value { min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.element-dialog .diff-token > .diff-label, .element-dialog .diff-token > .element-match-mark { flex: none; margin-left: 0; white-space: nowrap; }
+/* Ghost textures are static display traces, never live editor rows. */
+.element-dialog, .value-comparison { --element-ghost-pattern: repeating-linear-gradient(135deg, transparent 0 4px, color-mix(in srgb, var(--element-removed-border) 15%, transparent) 4px 8px); }
+.element-dialog .diff-token.is-ghost, .value-comparison .diff-token.is-ghost { background-image: var(--element-ghost-pattern); border-style: dashed; }
+.comparison-ghost-hint { display: block; margin-top: 8px; color: var(--sub); font: 11px/1.6 'Microsoft YaHei UI','Segoe UI',sans-serif; }
+.element-ghost-row { display: grid; grid-template-columns: 26px minmax(0,1fr) 220px; align-items: center; gap: 8px; padding: 8px; color: var(--element-removed-ink); background-color: var(--element-removed-bg); background-image: var(--element-ghost-pattern); border: 1px dashed var(--element-removed-border); }
+.element-ghost-value { min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; text-decoration: line-through; font: 12.5px/1.6 Consolas,'Microsoft YaHei UI',monospace; }
+.element-ghost-state { display: flex; align-items: center; gap: 8px; }
+.element-ghost-state > .diff-label { flex: none; margin-left: 0; }
+.element-ghost-note { color: var(--sub); font-size: 11px; white-space: nowrap; }
+.element-ghost-row.is-related-highlight { outline: 2px solid var(--element-related-ring); outline-offset: -2px; }
+@media (max-width:620px) {
+  .element-ghost-row { grid-template-columns: 20px minmax(0,1fr); }
+  .element-ghost-state { grid-column: 2; }
+}
