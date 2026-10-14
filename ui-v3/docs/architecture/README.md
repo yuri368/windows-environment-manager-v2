@@ -27,3 +27,5 @@ Claude 修复收尾：[本轮缺陷复核与验证记录](CLAUDE_UI_REPAIR_REVIE
 - GUI feedback supplemental presentation/counting direction: `GUI_FEEDBACK_SUPPLEMENT.txt`, following the owner feedback and GPT supplemental approval on 2026-10-14.
 
 - Display movement labels/counts follow `docs/architecture/GUI_DISPLAY_MOVEMENT.txt`; business movement and Audit retain the live-original ordering contract.
+
+Latest user comments 1–9: `GUI_STATUS_FOLLOWUP.txt` governs ghost movement captions, editor count presentation, status-circle alignment and workbench replace editor entry. Existing business/Audit rules remain.

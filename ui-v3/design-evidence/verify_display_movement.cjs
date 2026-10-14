@@ -64,7 +64,10 @@ function moved(node, expected) {
   assert.ok(node, 'element exists');
   assert.equal(node.classList.contains('is-moved'), expected);
   assert.equal(!!node.querySelector('.diff-label.is-moved'), expected);
-  if (expected) assert.equal(node.querySelector('.diff-label.is-moved').textContent, '移动');
+  if (expected) {
+    const isGhost = original(Number(node.dataset.elementId))?.classList.contains('is-removed');
+    assert.equal(node.querySelector('.diff-label.is-moved').textContent, isGhost ? '幽灵移动' : '移动');
+  }
 }
 function assertMovement(liveIds, ghostIds) {
   const liveSet = new Set(liveIds), ghostSet = new Set(ghostIds);

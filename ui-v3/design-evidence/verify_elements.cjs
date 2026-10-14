@@ -41,7 +41,9 @@ check('Workbench highlights just the selected Path element, leaving other elemen
 });
 check('Workbench double click opens shared editor with raw values and demo metadata', () => {
   dbl(q('#compareActual'));
-  assert.ok(q('.element-dialog')); assert.match(q('.elements-meta').textContent, /用户.*REG_EXPAND_SZ（示例）/);
+  assert.ok(q('.element-dialog')); assert.match(q('.dialoghead .eyebrow').textContent, /Windows 环境.*用户/);
+  assert.match(q('#dialogTitle').title, /REG_EXPAND_SZ/);
+  assert.equal(q('#elementTotal').textContent, `有效元素 ${values().length} · 已移除 0`);
   assert.equal(values().join(';'), raw()); assert.equal(q('#applyElements').disabled, true);
 });
 check('Edit, move, add and delete stay in draft; cancel restores focus and snapshot', () => {
@@ -131,8 +133,8 @@ check('All schemes copy is simple and group headings separate name, count and fl
 check('Shared component and additional stylesheet are local; no UI runtime errors', () => {
   assert.deepEqual(errors, []);
   for (const name of ['windows-elements.js', 'elements-ui.css']) assert.ok(fs.existsSync(path.join(root, name)));
-  assert.match(html, /src="windows-elements\.js"/);
-  assert.match(html, /href="elements-ui\.css"/);
+  assert.match(html, /src="windows-elements\.js(?:\?v=[a-f0-9]{12})?"/);
+  assert.match(html, /href="elements-ui\.css(?:\?v=[a-f0-9]{12})?"/);
 });
 const report = { verification: 'JSDOM UI event checks only; native dragging, visual rendering and Windows integration not verified', checks };
 fs.writeFileSync(path.join(__dirname, 'elements-report.json'), JSON.stringify(report, null, 2) + '\n');

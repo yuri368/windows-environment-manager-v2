@@ -20,8 +20,8 @@
 @media(max-width:860px){.brand{display:none}.sidebar{width:190px}.navtab{padding:0 7px}.appitem{grid-template-columns:15px minmax(0,1fr) 31px;gap:6px}.appicon{display:none}.tag{padding:2px 4px}.overview{align-items:flex-start;flex-wrap:wrap}.plan-side{margin-left:39px}.editor-right{width:240px}.editor-left{width:155px}.toolbar .tool{font-size:11px}}
 </style>
 <link rel="stylesheet" href="ui-polish.css">
-<link rel="stylesheet" href="elements-ui.css">
-<link rel="stylesheet" href="shell-ui.css">
+<link rel="stylesheet" href="elements-ui.css?v=708d27af03c7">
+<link rel="stylesheet" href="shell-ui.css?v=180c0987749f">
 <link rel="stylesheet" href="fx-ui.css">
 </head>
 <body><div id="app">
@@ -32,7 +32,7 @@
 </div><div class="backdrop" id="modal"></div><div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="demo-configs.js"></script>
 <script src="demo-plan.js"></script>
-<script src="windows-elements.js"></script>
+<script src="windows-elements.js?v=8b6a4a3749b2"></script>
 <script>
 'use strict';
 const initialApps=[
@@ -216,6 +216,7 @@ function renderRows() {
 function renderInspector() {
   const v=curProfile().vars[focusedVariable]||curProfile().vars[0];if(!v)return;
   $('inspectTitle').textContent='Windows 值对照 · '+v.name;
+  $('inspect').querySelector('.inspecthead .mini').textContent=v.mode==='replace'?'整值替换 · 离线演示':'元素编辑 · 离线演示';
   const plan=demoPlan(v),view=WindowsElements.comparisonMarkup(plan);
   $('compareDesired').innerHTML=view.selected;$('compareActual').innerHTML=view.actual;$('compareAfter').innerHTML=view.after;$('compareTally').innerHTML=view.tally||'';
   $('compareSerialized').textContent=plan.valid===false?'计划已失效，需要重新检测并预览':plan.after.exists?(plan.after.raw===''?'（空字符串）':plan.after.raw):'（不存在）';
@@ -227,10 +228,15 @@ function renderInspector() {
   const stale=plan.issues?.some(issue=>issue.reason==='stale'),notice=$('compareNotice');
   notice.innerHTML=stale&&v.matchBaseline?'<details class="stale-snapshot-values"><summary>查看原快照与当前快照</summary><span class="sub mini">原快照</span><pre>'+historyValue(v.matchBaseline.snapshot.exists?v.matchBaseline.snapshot.raw:undefined)+'</pre><span class="sub mini">当前快照</span><pre>'+historyValue(plan.beforeRaw)+'</pre></details>':'';
   notice.hidden=!notice.innerHTML;
+  const editable=v.mode!=='replace',actual=$('compareActual'),editButton=$('editWindowsElements');
   const open=()=>openWindowsElements(v.scope,v.name,[value(v)],v.special,v.mode,null,null,plan);
-  $('compareActual').ondblclick=open;
-  $('compareActual').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open()}};
-  $('editWindowsElements').onclick=open;
+  editButton.hidden=!editable;editButton.onclick=editable?open:null;
+  actual.classList.toggle('inspect-editable',editable);
+  for(const [attribute,content] of [['role','button'],['tabindex','0'],['aria-label','打开 Windows 值元素编辑器'],['title','双击打开元素列表（演示）']]){
+    if(editable)actual.setAttribute(attribute,content);else actual.removeAttribute(attribute);
+  }
+  actual.ondblclick=editable?open:null;
+  actual.onkeydown=editable?e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open()}}:null;
   WindowsElements.bindComparison($('inspect').querySelector('.value-comparison'));
   playRemovalFx();
 }
@@ -247,6 +253,7 @@ function historyChangeFromPlan(plan,extra={}){
  return Object.freeze({...plan.audit,...extra,scope:plan.targetKey.scope,name:plan.targetKey.name,before:plan.beforeRaw,after:plan.afterRaw,whole:plan.special,mode:plan.mode,operations:plan.operations,plan,unchanged:!plan.operations.length});
 }
 function openWindowsElements(scope,name,selectedValues=[],whole=false,mode=null,appendValues=null,appendEntries=null,selectionPlan=null) {
+ if(screen==='workbench'&&(mode==='replace'||curProfile().vars[focusedVariable]?.mode==='replace'))return;
  lastDialogFocus=document.activeElement;
  const variable={scope,name},target=key(variable),snapshot=demoSnapshot(variable);
  WindowsElements.open({container:$('modal'),name,scope,raw:windows[target],snapshot,selectionPlan,selectedValues,whole,appendValues:whole?[]:appendValues??(isAppendMode(mode)?selectedValues:[]),appendEntries:whole?null:appendEntries??(isAppendMode(mode)?selectedValues.map(value=>({value,mode})):null),replacementExpected:(whole||mode==='replace')&&selectedValues.length===1&&windows[target]!==undefined&&windows[target]!==selectedValues[0],

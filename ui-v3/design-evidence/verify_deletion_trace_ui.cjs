@@ -41,7 +41,7 @@ check('Manual deletion retains a read-only original-ID ghost outside live rows a
   assert.equal(ghost.querySelector('[data-move-up]').disabled,false);
   assert.equal(ghost.querySelector('[data-move-down]').disabled,false);
   assert.deepEqual(ids(),[original[0],original[2]]);assert.deepEqual(values(),['A','C']);
-  assert.match(q('#elementTotal').textContent,/^2\b/);assert.equal(serialized(),'A;C');
+  assert.equal(q('#elementTotal').textContent,'有效元素 2 · 已移除 1');assert.equal(serialized(),'A;C');
   assert.equal(snapshot(),before);assert.equal(historyLength(),n);
 });
 check('Adopting a suggested deletion creates the same original-ID read-only ghost',()=>{
@@ -84,7 +84,7 @@ check('Deleting all live rows keeps original ghosts while result and Apply retai
   openEditor('A;;B');const original=ids();
   while(rows().length)rows()[0].querySelector('[data-delete]').click();
   assert.deepEqual(ghosts().map(node=>Number(node.dataset.elementId)),original);
-  assert.deepEqual(values(),[]);assert.match(q('#elementTotal').textContent,/^0\b/);
+  assert.deepEqual(values(),[]);assert.equal(q('#elementTotal').textContent,'有效元素 0 · 已移除 3');
   assert.equal(serialized(),'（不存在）');assert.ok(!q('#applyElements').disabled);
   q('#applyElements').click();assert.equal(ev("Object.hasOwn(windows,'User|PATH')"),false);
   const plan=ev('history[0].changes[0].plan');

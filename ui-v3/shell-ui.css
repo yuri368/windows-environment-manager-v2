@@ -29,9 +29,9 @@
 [data-kind="none"]    { --k: var(--st-replaced); --kc: #d9a03e;  --kbg: #fff8ea;  --kline: var(--st-replaced-line); --kink: var(--st-replaced-ink); --gi: var(--i-dash); }
 [data-kind="extra"]   { --k: var(--st-replaced); --kc: #d9a03e;  --kbg: #fff3da;  --kline: var(--st-replaced-line); --kink: var(--st-replaced-ink); --gi: var(--i-neq); }
 
-/* 圆形状态插槽：文字里的 ✓ / ! 被替换成同形状图标（textContent 不变） */
-.rs-glyph { position: relative; display: inline-grid; place-items: center; flex: none; width: 18px; height: 18px; border-radius: 50%; font-size: 0; line-height: 0; color: var(--k, var(--st-match)); background: var(--kbg, #e6f4ec); box-shadow: inset 0 0 0 1.5px var(--kline, var(--st-match-line)); vertical-align: -4px; }
-.rs-glyph::before { content: ''; width: 11px; height: 11px; background: currentColor; -webkit-mask: var(--gi, var(--i-check)) center / contain no-repeat; mask: var(--gi, var(--i-check)) center / contain no-repeat; }
+/* 圆形状态插槽：隐藏原符号的排版尺寸，图标独立居中（textContent 不变） */
+.rs-glyph { position: relative; display: inline-flex; align-items: center; justify-content: center; flex: none; width: 18px; height: 18px; border-radius: 50%; font-size: 0; line-height: 0; color: var(--k, var(--st-match)); background: var(--kbg, #e6f4ec); box-shadow: inset 0 0 0 1.5px var(--kline, var(--st-match-line)); vertical-align: middle; }
+.rs-glyph::before { content: ''; position: absolute; inset: 0; margin: auto; width: 11px; height: 11px; background: currentColor; -webkit-mask: var(--gi, var(--i-check)) center / contain no-repeat; mask: var(--gi, var(--i-check)) center / contain no-repeat; }
 .rs-text { min-width: 0; }
 
 /* ---------- 顶栏：单一指示条在标签间滑动 ---------- */
@@ -62,7 +62,7 @@
 .appselect { gap: 11px; }
 .appstat { display: flex; flex-direction: column; align-items: flex-end; gap: 0; line-height: 1.35; color: var(--kink, var(--st-match-ink)); font-variant-numeric: tabular-nums; }
 .stat-top { display: inline-flex; align-items: center; gap: 4px; font-weight: 650; }
-.appstat .rs-glyph { width: 16px; height: 16px; vertical-align: baseline; }
+.appstat .rs-glyph { width: 16px; height: 16px; }
 .appstat .rs-glyph::before { width: 10px; height: 10px; }
 .appstat small { margin-top: 1px; }
 /* 分段进度：每个变量一格，贴在条目底边，与名称文字左对齐 */
@@ -81,7 +81,7 @@
 .bigicon::after { inset: -5px; border-radius: 13px; padding: 2.5px; }
 .bigicon[data-kind="none"]::after { background: repeating-conic-gradient(var(--kc) 0 8deg, transparent 8deg 20deg); }
 .tag[data-kind] { gap: 6px; padding: 3px 10px 3px 4px; border: 1px solid var(--kline); border-radius: 999px; background: var(--kbg); color: var(--kink); font-weight: 600; }
-.tag[data-kind] .rs-glyph { width: 17px; height: 17px; vertical-align: middle; }
+.tag[data-kind] .rs-glyph { width: 17px; height: 17px; }
 .tag.dirty { padding-left: 8px; border: 1px solid #ecd2a2; border-radius: 999px; }
 .plan-button { background: #fff; border-color: var(--line2); box-shadow: 0 1px 0 #fff inset, 0 1px 2px #203c2910; border-radius: 7px; }
 .plan-button:hover { background: #fff; border-color: #8fb7a0; }
@@ -123,8 +123,7 @@
 .pending-state { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px 2px 6px; border: 1px solid var(--st-replaced-line); border-radius: 999px; background: var(--st-replaced-bg); color: var(--st-replaced-ink); font-size: 11px; font-weight: 600; white-space: nowrap; }
 .pending-state::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--st-replaced); animation: sh-dot .5s var(--ease-out); }
 @keyframes sh-dot { from { transform: scale(2.4); opacity: 0; } }
-.result { display: inline-flex; align-items: flex-start; gap: 0; color: var(--kink, var(--green)); font-weight: 600; font-variant-numeric: tabular-nums; }
-.result .rs-glyph { margin-right: 6px; margin-top: 1px; vertical-align: baseline; }
+.result { display: inline-flex; align-items: center; gap: 6px; color: var(--kink, var(--green)); font-weight: 600; font-variant-numeric: tabular-nums; }
 .result.warn { color: var(--kink, var(--amber)); }
 .actmini { display: inline-flex; align-items: center; gap: 5px; padding: 5px 9px 5px 7px; border: 1px solid transparent; border-radius: 7px; color: #4d6b57; white-space: nowrap; transition: background-color 120ms, border-color 120ms, transform 80ms; }
 .actmini::before { content: ''; flex: none; width: 13px; height: 13px; background: currentColor; -webkit-mask: var(--i-undo) center / contain no-repeat; mask: var(--i-undo) center / contain no-repeat; }

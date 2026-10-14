@@ -60,9 +60,16 @@ const fixture = ({ actual = 'A', desired = 'A;B', mode = '+append', whole = fals
     render();
   }`);
 };
-const openFixture = () => { q('#editWindowsElements').click(); return rows().map(row => row.dataset.elementId); };
+const openFixture = () => {
+  if (w.eval('curProfile().vars[focusedVariable].mode') === 'replace') {
+    q('[data-view="windows"]').click();
+    q('[data-windows-edit="' + w.eval('key(curProfile().vars[focusedVariable])') + '"]').click();
+  } else q('#editWindowsElements').click();
+  return rows().map(row => row.dataset.elementId);
+};
 const editorOpen = (raw, selected = ['A;B'], mode = '+append', whole = false) => {
   reset(); w.__appendRaw = raw; w.__appendSelected = selected; w.__appendMode = mode; w.__appendWhole = whole;
+  q('[data-view="windows"]').click();
   w.eval("windows['User|APPEND_TEST']=__appendRaw; openWindowsElements('User','APPEND_TEST',__appendSelected,__appendWhole,__appendMode)");
   return rows().map(row => row.dataset.elementId);
 };

@@ -1,0 +1,175 @@
+- heading "ChatGPT 说：" [level=4]
+    - paragraph: 【架构顾问 → Codex】
+    - paragraph:
+      - text: 确认新一轮负责人批注，批准在
+      - code: v3/gui-status-followup
+      - text: 分支实施。
+      - text: ✅
+    - paragraph:
+      - text: 本轮需求明确覆盖上一轮的 UI 冻结结论，但不撤销已经验收的业务契约。基线为
+      - code: 67dd311
+      - text: ，保持最小改动。
+    - heading "一、五项需求及实施边界" [level=3]
+    - table:
+      - rowgroup:
+        - row "需求 架构裁定":
+          - columnheader "需求":
+            - paragraph: 需求
+          - columnheader "架构裁定":
+            - paragraph: 架构裁定
+        - row "Ghost 移动标签 元素列表、Original、Preview 三处统一显示「幽灵移动」，保留既有移动图标及 Badge 风格":
+          - cell "Ghost 移动标签":
+            - paragraph: Ghost 移动标签
+          - cell "元素列表、Original、Preview 三处统一显示「幽灵移动」，保留既有移动图标及 Badge 风格":
+            - paragraph: 元素列表、Original、Preview 三处统一显示「幽灵移动」，保留既有移动图标及 Badge 风格
+        - row "移除重复元数据 删除重复的 Scope/Type 信息行，不删除仍有必要的上下文信息":
+          - cell "移除重复元数据":
+            - paragraph: 移除重复元数据
+          - cell "删除重复的 Scope/Type 信息行，不删除仍有必要的上下文信息":
+            - paragraph: 删除重复的 Scope/Type 信息行，不删除仍有必要的上下文信息
+        - row "Toolbar 计数 显示「有效元素 N · 已移除 N」，根据当前编辑会话实时更新":
+          - cell "Toolbar 计数":
+            - paragraph: Toolbar 计数
+          - cell "显示「有效元素 N · 已移除 N」，根据当前编辑会话实时更新":
+            - paragraph: 显示「有效元素 N · 已移除 N」，根据当前编辑会话实时更新
+        - row "圆形图标居中 修复 shell-ui.css 中相关控件的居中问题，不改变按钮尺寸与交互语义":
+          - cell "圆形图标居中":
+            - paragraph: 圆形图标居中
+          - cell "修复 shell-ui.css 中相关控件的居中问题，不改变按钮尺寸与交互语义":
+            - paragraph:
+              - text: 修复
+              - code: shell-ui.css
+              - text: 中相关控件的居中问题，不改变按钮尺寸与交互语义
+        - row "Replace 模式限制 仅限制工作台中的方案编辑入口，不影响 Windows 环境页的直接编辑":
+          - cell "Replace 模式限制":
+            - paragraph: Replace 模式限制
+          - cell "仅限制工作台中的方案编辑入口，不影响 Windows 环境页的直接编辑":
+            - paragraph:
+              - generic: 仅限制工作台中的方案编辑入口，不影响 Windows 环境页的直接编辑
+    - heading "二、重点确认：Replace 的限制范围" [level=3]
+    - paragraph: 这是本轮最重要的约束。
+    - table:
+      - rowgroup:
+        - row "入口场景 元素编辑 整值修改及预览":
+          - columnheader "入口场景":
+            - paragraph: 入口场景
+          - columnheader "元素编辑":
+            - paragraph: 元素编辑
+          - columnheader "整值修改及预览":
+            - paragraph: 整值修改及预览
+        - row "工作台，mode=replace 禁止 保留":
+          - cell "工作台，mode=replace":
+            - paragraph:
+              - text: 工作台，
+              - code: mode=replace
+          - cell "禁止":
+            - paragraph: 禁止
+          - cell "保留":
+            - paragraph: 保留
+        - row "工作台，mode=+append 保留现有行为 保留":
+          - cell "工作台，mode=+append":
+            - paragraph:
+              - text: 工作台，
+              - code: mode=+append
+          - cell "保留现有行为":
+            - paragraph: 保留现有行为
+          - cell "保留":
+            - paragraph: 保留
+        - row "工作台，mode=-append 保留现有行为 保留":
+          - cell "工作台，mode=-append":
+            - paragraph:
+              - text: 工作台，
+              - code: mode=-append
+          - cell "保留现有行为":
+            - paragraph: 保留现有行为
+          - cell "保留":
+            - paragraph: 保留
+        - row "工作台，mode=append 保留现有行为 保留":
+          - cell "工作台，mode=append":
+            - paragraph:
+              - text: 工作台，
+              - code: mode=append
+          - cell "保留现有行为":
+            - paragraph: 保留现有行为
+          - cell "保留":
+            - paragraph: 保留
+        - row "Windows 环境页，mode=null 允许 保留":
+          - cell "Windows 环境页，mode=null":
+            - paragraph:
+              - text: Windows 环境页，
+              - code: mode=null
+          - cell "允许":
+            - paragraph: 允许
+          - cell "保留":
+            - paragraph: 保留
+    - paragraph:
+      - text: 实现限制应同时判断
+      - generic: 入口来源和当前方案模式
+      - text: ，不能使用全局
+      - code: mode === 'replace'
+      - text: 作为禁用条件。
+    - paragraph:
+      - text: 工作台的
+      - code: replace
+      - text: 模式需要做到：
+    - list:
+      - paragraph: 隐藏元素编辑入口，避免用户看到不可用操作。
+      - paragraph: 禁止双击进入元素编辑。
+      - paragraph: 禁止 Enter、Space 等键盘快捷入口进入元素编辑。
+      - paragraph: 在实际打开元素编辑器的入口再次检查来源和模式，防止旧事件、快捷键或其他调用绕过界面限制。
+      - paragraph: 保留「当前选定值」的整值编辑、保存和预览能力。
+    - paragraph:
+      - text: 不要在
+      - code: WindowsElements.open()
+      - text: 内增加全局 replace 禁令。
+      - text: 元素编辑器仍应具备独立工作能力，由工作台入口负责模式限制。
+    - heading "三、其他展示细节" [level=3]
+    - paragraph:
+      - generic: Ghost 标签：
+      - text: 只有已删除原始元素发生展示位移时才使用「幽灵移动」。普通原始元素继续使用「移动」。两者可以共享图标与色系，但展示文案、图例和 Footer 应一致。业务 Audit 继续只计算 live rows。
+    - paragraph:
+      - generic: Toolbar 计数：
+      - text: 有效元素数量取当前 live rows，已移除数量取 ghost 原始元素。原始空元素仍算一个元素；新建后取消的元素直接消失，不计入已移除数量。移动操作不改变计数。
+    - paragraph:
+      - generic: Scope/Type：
+      - text: 移除重复信息后，作用域仍应通过现有标题或其他上下文识别，类型可通过 Tooltip 查看。不要因此新增另一整行元数据。
+    - paragraph:
+      - generic: 图标居中：
+      - text: 优先解决布局原因，避免逐图标叠加偏移补丁。保持现有尺寸、Hover、Focus、动画和键盘可访问性。
+    - heading "四、执行与验收" [level=3]
+    - generic: 批准实施
+    - paragraph: 同意本轮仅修改直接相关的 UI 标记、事件入口、状态展示和 CSS，并补充必要测试。
+    - paragraph:
+      - text: 不得修改
+      - code: demo-plan.js
+      - text: 核心规则、Registry、V2，也不得擅自合并
+      - code: main
+      - text: 或发布 Release。
+    - paragraph:
+      - text: 最终回归特别检查
+      - generic: 工作台 replace 禁止元素编辑，而 Windows 环境页直接编辑仍然可用
+      - text: 。这两项必须同时成立，单独验证其中一项不算通过。
+    - paragraph: 完成后提交分支提交号、源码差异、完整回归结果及浏览器截图，再进行最终审查。
+    - paragraph:
+      - generic: 最终裁定：本轮是入口权限与显示一致性的局部修复，不是修改 replace 的业务含义。
+    - button "复制":
+    - button "评价回复":
+    - button "分享":
+    - button "朗读":
+    - button "重新生成回复":
+    - button "更多操作":
+    - generic: ChatGPT 可能会出错。请核查重要信息。
+    - button "滚动到底部":
+    - heading "最新一条回复" [level=4]
+    - status
+    - button "添加文件等内容":
+    - textbox "询问 ChatGPT":
+      - paragraph: 询问 ChatGPT
+    - button "选择 ChatGPT 模型":
+      - generic: 高
+    - button "听写":
+    - button "开始语音":
+- status
+- status: 回答已完成
+- status
+- status

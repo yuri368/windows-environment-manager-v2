@@ -1,0 +1,9 @@
+GUI status follow-up — user comments 1–9, 2026-10-14
+Supersedes previous display captions and workbench replace editor entry only.
+
+Ghost movement badges use 幽灵移动 in list, Original and Preview; ordinary live movement uses 移动. Movement derivation and Audit are unchanged.
+Editor toolbar counts live rows as 有效元素 N and removed original rows as 已移除 N. Empty and duplicate rows remain individual elements; deleted new rows do not count as ghosts. Whole direct editing uses 有效字符串 N. Scope remains in the header; registry type remains a title tooltip. No standalone metadata row.
+Workbench replace: element editor button is hidden, Actual pane has no editor role/tabindex/title or dblclick/key handlers. openWindowsElements checks workbench source and explicit/current replace mode so stale/null-mode calls cannot bypass. Selected whole-value input, preview and apply remain available. Windows environment page direct editing and independent WindowsElements.open remain available. Append modes retain their prior editor behavior.
+Status circles use one shared centered icon slot and centered result-row layout. No per-icon vertical offsets. Sizes, colors and FX stay unchanged.
+Changed external resources carry content-hash query versions to avoid stale mixed-resource browser views; primary-only pre-existing helper differences may yield different primary/mirror windows-elements query hashes.
+DemoPlan/V2/Registry are unchanged.

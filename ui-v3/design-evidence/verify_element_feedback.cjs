@@ -32,6 +32,7 @@ const open = (raw, whole = false) => {
   w.eval('reset(true)');
   w.__feedbackRaw = raw;
   w.__feedbackWhole = whole;
+  q('[data-view="windows"]').click();
   w.eval("windows['User|FEEDBACK_REGRESSION'] = __feedbackRaw; openWindowsElements('User', 'FEEDBACK_REGRESSION', [], __feedbackWhole)");
   q('.element-raw').open = true;
   return rows().map(idOf);

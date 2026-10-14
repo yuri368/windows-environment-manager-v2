@@ -31,9 +31,9 @@ check('Second candidate and saved value select distinct strings without writing 
 check('Scheme switching keeps each runtime draft in its own scheme',()=>{
   choosePlan('实验版本');assert.equal(q('#varRows .vinput').value,'C:\\Dev Tools\\Node24');
   choosePlan('团队默认');assert.equal(q('#varRows .vinput').value,'D:\\Portable Apps\\Node22');
-  selectVariable('NODE_OPTIONS');q('#editWindowsElements').click();
+  selectVariable('NODE_OPTIONS');q('[data-view="windows"]').click();q('[data-windows-edit="User|NODE_OPTIONS"]').click();
   assert.equal(all('.element-input').length,1);assert.ok(q('.element-input').value.includes(';'));
-  assert.equal(q('#addElement').hidden,true);q('#cancelDialog').click();
+  assert.equal(q('#addElement').hidden,true);q('#cancelDialog').click();q('[data-view="workbench"]').click();
 });
 check('Seeded whole-string flags stay clean initially and restore to their seeded baseline',()=>{
   q('#configBtn').click();q('[data-editapp="7"]').click();
@@ -46,7 +46,8 @@ check('Seeded whole-string flags stay clean initially and restore to their seede
 });
 check('System scope examples expose partial matching and a separate system Path',()=>{
   q('[data-view="workbench"]').click();openApp('CUDA Toolkit');assert.match(q('.titleline .tag').textContent,/部分匹配.*1\/3/);
-  selectVariable('Path');q('#editWindowsElements').click();assert.match(q('.elements-meta').textContent,/系统/);
+  selectVariable('Path');q('#editWindowsElements').click();assert.match(q('.dialoghead .eyebrow').textContent,/Windows 环境.*系统/);
+  assert.match(q('#dialogTitle').title,/REG_EXPAND_SZ/);
   assert.equal(all('.element-input').filter(el=>el.value==='C:\\Windows\\System32').length,2);
   assert.ok(all('.element-input').some(el=>el.value===''));q('#cancelDialog').click();
 });

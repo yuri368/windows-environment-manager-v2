@@ -54,6 +54,7 @@ const open = (raw, selected = [], whole = false) => {
   w.__regressionRaw = raw;
   w.__regressionSelected = selected;
   w.__regressionWhole = whole;
+  q('[data-view="windows"]').click();
   w.eval("windows['User|REGRESSION'] = __regressionRaw; openWindowsElements('User', 'REGRESSION', __regressionSelected, __regressionWhole)");
 };
 const snapshot = () => w.eval('JSON.stringify(windows)');
@@ -282,12 +283,14 @@ try {
     reset();
     w.eval("{ const v=curProfile().vars[0]; v.mode='replace'; v.special=false; v.defaultValue='A;B'; v.source='默认值'; windows[key(v)]=' B;A '; renderRows(); }");
     assert.equal(q('#compareAfter .diff-label').textContent, '整体待替换');
-    q('#editWindowsElements').click();
+    q('[data-view="windows"]').click();
+    w.eval("{ const v=curProfile().vars[0]; openWindowsElements(v.scope,v.name,[value(v)],v.special,null); }");
     assert.equal(serialized(), ' B;A ');
     assert.equal(all('.element-row.is-replaced').length, 0);
     assert.match(q('#elementStatus').textContent, /^本次编辑：0 项变化/); assert.equal(all('.element-change-state .diff-label').length, 0); assert.equal(q('#applyElements').disabled, true);
     assert.equal(all('#elementOriginal .is-replaced, #elementPreview .is-replaced').length, 0);
     cancel();
+    q('[data-view="workbench"]').click();
     w.eval('windows[key(curProfile().vars[0])] = value(curProfile().vars[0]); renderRows()');
     assert.equal(q('#compareAfter .diff-label'), null);
     w.eval("{ const v=curProfile().vars[0]; v.special=true; windows[key(v)]='A;B;'; renderRows(); }");

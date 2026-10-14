@@ -9,7 +9,9 @@ function check(name,run){try{run();checks.push({name,passed:true});}catch(e){che
 const rows=()=>all('#elementList .element-row'),values=()=>rows().map(n=>n.querySelector('.element-input').value);
 function setInput(field,raw){field.value=raw;field.dispatchEvent(new w.Event('input',{bubbles:true}));}
 function setup(raw='X;A;C;Y',old='A;C',next='A;E',mode='-append'){
- ev('closeModal();reset(true)');ev('selected=1;focusedVariable=1;const v=scheme(1).vars[1];v.defaultValue='+JSON.stringify(old)+';v.baselineValue=v.defaultValue;v.mode='+JSON.stringify(mode)+";windows['User|PATH']="+JSON.stringify(raw)+';render()');setInput(q('#varRows [data-row="1"] .vinput'),next);q('#editWindowsElements').click();
+ ev('closeModal();reset(true)');ev('selected=1;focusedVariable=1;const v=scheme(1).vars[1];v.defaultValue='+JSON.stringify(old)+';v.baselineValue=v.defaultValue;v.mode='+JSON.stringify(mode)+";windows['User|PATH']="+JSON.stringify(raw)+';render()');setInput(q('#varRows [data-row="1"] .vinput'),next);
+ if(mode==='replace'){q('[data-view="windows"]').click();ev("openWindowsElements('User','PATH',[value(scheme(1).vars[1])],false,null)");}
+ else q('#editWindowsElements').click();
 }
 const rawValues=selector=>all(selector+' .diff-value[data-raw-value]').map(n=>n.dataset.rawValue);
 const snapshot=()=>ev('JSON.stringify(windows)'),hist=()=>ev('history.length');
@@ -70,7 +72,7 @@ check('Actual replace and move flags count separately from a pending addition su
  setup('A;C;Y','C','E');setInput(rows()[1].querySelector('.element-input'),'EDIT');rows()[1].querySelector('[data-move-up]').click();assert.match(summary(),/替换 1/);assert.match(summary(),/移动 2/);assert.match(summary(),/新增 0/);assert.ok(addButton());
 });
 check('Special whole string has no unadopted replacement label and applies explicit whole edit',()=>{
- setup('A;B','A;B','C;D','replace');q('#cancelDialog').click();ev('scheme(1).vars[1].special=true;render()');q('#editWindowsElements').click();assert.deepEqual(values(),['A;B']);assert.doesNotMatch(q('#elementList').textContent+q('#elementOriginal').textContent+q('#elementPreview').textContent,/将替换/);assert.ok(q('#applyElements').disabled);setInput(q('.element-input'),'C;D');assert.match(summary(),/替换 1/);q('#applyElements').click();assert.equal(ev("windows['User|PATH']"),'C;D');assert.equal(ev('history[0].changes[0].plan.special'),true);
+ setup('A;B','A;B','C;D','replace');q('#cancelDialog').click();ev("scheme(1).vars[1].special=true;render();openWindowsElements('User','PATH',[value(scheme(1).vars[1])],true,null)");assert.deepEqual(values(),['A;B']);assert.doesNotMatch(q('#elementList').textContent+q('#elementOriginal').textContent+q('#elementPreview').textContent,/将替换/);assert.ok(q('#applyElements').disabled);setInput(q('.element-input'),'C;D');assert.match(summary(),/替换 1/);q('#applyElements').click();assert.equal(ev("windows['User|PATH']"),'C;D');assert.equal(ev('history[0].changes[0].plan.special'),true);
 });
 check('No JavaScript errors during suggestion/adoption/restore/cancel/apply workflows',()=>assert.deepEqual(errors,[]));
 const report={passed:checks.filter(c=>c.passed).length,total:checks.length,checks};console.log(JSON.stringify(report,null,2));if(checks.some(c=>!c.passed))process.exitCode=1;dom.window.close();

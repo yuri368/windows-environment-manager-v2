@@ -52,6 +52,10 @@ const confirmPreview = () => {
   assert.equal(q('#confirmDialog').disabled, false, 'Fixture should be confirmable');
   q('#confirmDialog').click();
 };
+const openFixtureEditor = () => {
+  q('[data-view="windows"]').click();
+  q('[data-windows-edit="User|HISTORY_TEST"]').click();
+};
 
 try {
   check('Cancelled preview and cancelled element edit leave history and page state exact', () => {
@@ -59,7 +63,7 @@ try {
     const before = persisted();
     q('#previewButton').click(); q('#cancelDialog').click();
     assert.equal(persisted(), before);
-    q('#editWindowsElements').click();
+    openFixtureEditor();
     input(q('.element-input'), 'draft only');
     q('#cancelDialog').click();
     assert.equal(persisted(), before);
@@ -90,7 +94,7 @@ try {
 
   check('Whole value editor retains semicolons as one audited replacement', () => {
     fixture({ before: ' A;;B; ', after: ' X;;Y; ', whole: true });
-    q('#editWindowsElements').click();
+    openFixtureEditor();
     assert.equal(all('#elementList .element-row').length, 1);
     input(q('.element-input'), ' X;;Y; ');
     q('#applyElements').click();
@@ -183,7 +187,7 @@ try {
     const before = ' A ;;A;B;';
     fixture({ before, after: 'ignored selected value' });
     const oldCount = history().length;
-    q('#editWindowsElements').click();
+    openFixtureEditor();
     const rows = () => all('#elementList .element-row');
     assert.deepEqual(rows().map(row => row.querySelector('.element-input').value), [' A ', '', 'A', 'B', '']);
     input(rows()[2].querySelector('.element-input'), '<img src=x>');
