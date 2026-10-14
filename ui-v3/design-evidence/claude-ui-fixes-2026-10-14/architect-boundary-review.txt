@@ -1,0 +1,699 @@
+- link "跳转到内容":
+  - /url: "#_R_trcuktdbntccgud5hl75_"
+- complementary:
+  - navigation "显示侧边栏":
+    - button "显示侧边栏"
+    - button "显示侧边栏":
+    - button "新聊天":
+      - generic: 新聊天
+    - button "搜索":
+      - generic: 搜索
+    - button "置顶":
+      - generic: 置顶
+    - button "最近":
+      - generic: 最近
+    - button "资料库":
+      - generic: 资料库
+    - button "打开个人资料菜单"
+- main:
+  - button "分享":
+    - text: 分享
+  - button "更多":
+  - region "对话":
+    - status:
+      - generic: 正在加载更早的消息…
+    - separator "今天 14:43":
+      - time: 今天 14:43
+    - heading "你说：" [level=4]
+    - button "windows-elements(20261014-064306).js"
+    - generic "windows-elements(20261014-064306).js"
+    - generic: 代码
+    - button "temp(20261014-064306).html"
+    - generic "temp(20261014-064306).html"
+    - generic: HTML
+    - button "elements-ui(20261014-064306).css"
+    - generic "elements-ui(20261014-064306).css"
+    - generic: 代码
+    - button "fx-ui.css"
+    - generic "fx-ui.css"
+    - generic: 代码
+    - button "shell-ui.css"
+    - generic "shell-ui.css"
+    - generic: 代码
+    - button "test-report(7).json"
+    - generic "test-report(7).json"
+    - generic: 代码
+    - generic: 【codex】负责人让Claude完成UI/交互改版，现在明确要求我们只审查。附件为primary当前Claude源码，Git镜像仍保留V3.7基线235264f/663e9a6，尚未同步/提交/修改Claude源。请独立架构与交互review，指出可确认bug而不是审美偏好，不要求回退特效。 Claude改elements-ui.css/ui-polish.css/temp.html/windows-elements.js，新增shell-ui.css/fx-ui.css；demo-plan.js未变。增加原始ghost直接取消删除、textarea自动换行、采纳后焦点保留建议按钮、FLIP动画/删除碎片/drop提示等。 现有19scripts17pass2fail：verify_interactions因source新增is-custom class严格等号失败；verify_adopt_pending因焦点由新增input改到建议button失败，需要区分新UXvs真实bug；稳定ID/liveorder/精确追加删除toggle/ApplyHistory既有suites通过。 请特别核对新增restoreGhost是否保留原删除前手动编辑、动画异步是否造成旧session操作、同值空元素与快照边界、textarea原始内容是否保持、temp核心差异与展示层是否混入业务。只给具体severity/代码位置/场景/影响；尚无新CI不能声称通过。我们同时做实际浏览器和只读代码review，后续汇总。
+    - button "复制消息":
+    - button "共享提示":
+    - button "编辑消息":
+    - button "思考了 7m 30s"
+    - generic: 思考了 7m 30s
+    - heading "ChatGPT 说：" [level=4]
+    - paragraph: 【架构顾问 → Codex】
+    - heading "Claude UI 改版独立审查" [level=2]
+    - paragraph: 阶段结论：目前确认存在两处会丢失编辑内容的问题。 两条旧测试失败主要由展示类名和键盘焦点策略改变引起，不能直接算作业务回归。
+    - paragraph:
+      - text: 我已用隔离的 Chromium 页面加载本次
+      - code: windows-elements.js
+      - text: ，重现下面两项问题。审查范围仅限 Claude 当前未提交源码，不涉及 V3.7 Git 基线修改。
+    - heading "1. P1 高优先级：取消删除会丢失删除前的手动修改" [level=3]
+    - paragraph:
+      - text: 位置：
+      - code: windows-elements.js:481–489
+      - text: ，
+      - code: restoreGhost()
+      - text: 。
+    - paragraph: 复现步骤：
+    - list:
+      - paragraph:
+        - text: 打开原始值
+        - code: A;B;C
+        - text: 。
+      - paragraph:
+        - text: 把第二个元素
+        - code: B
+        - text: 改成
+        - code: B-custom
+        - text: 。
+      - paragraph: 删除第二个元素，使其变成幽灵行。
+      - paragraph: 点击该幽灵行的“取消删除”。
+    - paragraph: 隔离 Chromium 实测结果
+    - paragraph: 合理预期：恢复删除前草稿
+    - paragraph:
+      - code: A;B-custom;C
+    - paragraph: 实际：恢复最初快照
+    - paragraph:
+      - code: A;B;C
+    - paragraph:
+      - text: 原因是
+      - code: restoreGhost()
+      - text: 使用：
+    - generic: JavaScript
+    - button "启用自动换行":
+    - button "复制代码":
+    - code: "session.rows.push({...original});"
+    - button:
+    - paragraph:
+      - code: original
+      - text: 来自
+      - code: originalById
+      - text: ，而不是该元素被删除瞬间的 live 行内容。
+    - paragraph: 影响： 用户先修改、后误删、再取消删除，会静默丢失先前修改，随后应用可能保存错误的值。
+    - paragraph: 建议只保存必要的会话内“删除前草稿”，恢复时优先使用它；原始 ID、ghost 当前位置以及现有 Audit 规则保持不变。不要因此增加第二套业务计划。
+    - heading "2. P2 中优先级：textarea 会意外删除原始字符串中的换行" [level=3]
+    - paragraph:
+      - text: 位置：
+      - code: windows-elements.js:536–549
+      - text: ，尤其第 543–545 行。
+    - paragraph:
+      - text: 当前
+      - code: valid()
+      - text: 只禁止元素内含分号和 NUL，并没有禁止原始换行。
+    - paragraph: 独立实测：
+    - list:
+      - paragraph:
+        - text: 打开值：
+        - code: A\nB;C
+      - paragraph:
+        - text: 第一项 textarea 正确读取
+        - code: A\nB
+      - paragraph:
+        - text: 编辑第一项并输入
+        - code: A\nB!
+      - paragraph:
+        - text: 最终输入框变为
+        - code: AB!
+    - paragraph: 触发原因：
+    - generic: JavaScript
+    - button "启用自动换行":
+    - button "复制代码":
+    - code: input.value = input.value.replace(/[\r\n]+/g, '');
+    - button:
+    - paragraph: 这会删除整个 textarea 中的换行，包括原本就存在的合法字符，而不仅是本次输入新增的换行。
+    - paragraph: 影响： 编辑已有包含换行的变量值时，可能无提示地改变原始内容。
+    - paragraph: 建议将“防止用户新增换行”和“保留既有原始换行”分开处理。不能用全局删除来模拟旧单行输入框。
+    - heading "3. 两套失败测试的裁定" [level=3]
+    - table:
+      - rowgroup:
+        - row "失败测试 原因 裁定":
+          - columnheader "失败测试":
+            - paragraph: 失败测试
+          - columnheader "原因":
+            - paragraph: 原因
+          - columnheader "裁定":
+            - paragraph: 裁定
+        - row "verify_interactions.cjs CSS 类从 source 变为 source is-custom，旧测试要求字符串完全相等 旧断言过时，不是功能 Bug":
+          - cell "verify_interactions.cjs":
+            - paragraph:
+              - code: verify_interactions.cjs
+          - cell "CSS 类从 source 变为 source is-custom，旧测试要求字符串完全相等":
+            - paragraph:
+              - text: CSS 类从
+              - code: source
+              - text: 变为
+              - code: source is-custom
+              - text: ，旧测试要求字符串完全相等
+          - cell "旧断言过时，不是功能 Bug":
+            - paragraph: 旧断言过时，不是功能 Bug
+        - row "verify_adopt_pending.cjs 采纳建议后焦点从新增输入框改为建议按钮 预期交互改变，不是功能 Bug":
+          - cell "verify_adopt_pending.cjs":
+            - paragraph:
+              - code: verify_adopt_pending.cjs
+          - cell "采纳建议后焦点从新增输入框改为建议按钮":
+            - paragraph: 采纳建议后焦点从新增输入框改为建议按钮
+          - cell "预期交互改变，不是功能 Bug":
+            - paragraph: 预期交互改变，不是功能 Bug
+    - paragraph: 第二项的失败涉及多条断言，但目前看到的错误都指向同一个焦点预期差异，没有显示追加结果、stable ID 或序列化错误。
+    - paragraph: 建议更新测试，使其验证实际交互契约：
+    - list:
+      - paragraph:
+        - text: 值来源控件仍具备
+        - code: source
+        - text: 类，选中自定义值时具有
+        - code: is-custom
+        - text: 。
+      - paragraph: 点击建议按钮后，焦点停留在重绘后的对应建议按钮。
+      - paragraph: Enter、方向键及 Home/End 可继续操作建议。
+      - paragraph: 追加的 live row、序列化结果、Apply 和 History 保持正确。
+    - paragraph: 不能为了让旧断言通过，强行回退 Claude 的焦点设计。
+    - heading "4. 动画与会话安全" [level=3]
+    - paragraph: 我重点检查了以下代码：
+    - table:
+      - rowgroup:
+        - row "位置 检查内容 结论":
+          - columnheader "位置":
+            - paragraph: 位置
+          - columnheader "检查内容":
+            - paragraph: 检查内容
+          - columnheader "结论":
+            - paragraph: 结论
+        - row "windows-elements.js:319–327 建议卡片动画定时清理 未发现业务状态写入":
+          - cell "windows-elements.js:319–327":
+            - paragraph:
+              - code: windows-elements.js:319–327
+          - cell "建议卡片动画定时清理":
+            - paragraph: 建议卡片动画定时清理
+          - cell "未发现业务状态写入":
+            - paragraph: 未发现业务状态写入
+        - row "330–386 FLIP、断裂碎片、异步动画 未发现旧会话修改新会话数据的路径":
+          - cell "330–386":
+            - paragraph:
+              - code: 330–386
+          - cell "FLIP、断裂碎片、异步动画":
+            - paragraph: FLIP、断裂碎片、异步动画
+          - cell "未发现旧会话修改新会话数据的路径":
+            - paragraph: 未发现旧会话修改新会话数据的路径
+        - row "527–614 编辑器重绘、拖拽和焦点恢复 未发现确定性的执行结果污染":
+          - cell "527–614":
+            - paragraph:
+              - code: 527–614
+          - cell "编辑器重绘、拖拽和焦点恢复":
+            - paragraph: 编辑器重绘、拖拽和焦点恢复
+          - cell "未发现确定性的执行结果污染":
+            - paragraph: 未发现确定性的执行结果污染
+        - row "temp.html:128–134 三值对照动画与导航效果 未发现 ChangePlan 规则被动画修改":
+          - cell "temp.html:128–134":
+            - paragraph:
+              - code: temp.html:128–134
+          - cell "三值对照动画与导航效果":
+            - paragraph: 三值对照动画与导航效果
+          - cell "未发现 ChangePlan 规则被动画修改":
+            - paragraph: 未发现 ChangePlan 规则被动画修改
+    - paragraph: 我还用隔离 Chromium 页面验证了删除后立即打开新编辑会话，并等待旧动画清理。新会话的 live rows 保持不变，也没有 JavaScript 异常。
+    - paragraph: 因此，不建议回退 FLIP、碎片效果或新的拖放提示。 已检查路径中的定时回调主要操作 DOM、CSS 类及一次性动画节点，而不是 Windows 快照或 ChangePlan。
+    - heading "5. 重复、空元素与实际结果" [level=3]
+    - paragraph:
+      - text: 独立检查了
+      - code: A;;A
+      - text: ，删除中间的空元素再取消删除，结果仍是
+      - code: "['A', '', 'A']"
+      - text: ，没有自动合并重复项或丢失空元素。
+    - paragraph:
+      - code: temp.html
+      - text: 的演示应用仍通过
+      - code: applyDemoPlan(plan)
+      - text: ，历史仍保存冻结计划和 audit；确认前仍有
+      - code: sameSnapshot()
+      - text: 校验。没有证据表明 Claude 把动画或纯展示状态接入了核心计划计算。
+    - paragraph: 但第 1 项涉及原始元素恢复，第 2 项涉及合法原始字符被清理，因此不能据此认定所有数据保真边界都已通过。
+    - heading "6. 最终审查意见" [level=3]
+    - generic: 暂不批准正式收尾
+    - table:
+      - rowgroup:
+        - row "优先级 问题 处理要求":
+          - columnheader "优先级":
+            - paragraph: 优先级
+          - columnheader "问题":
+            - paragraph: 问题
+          - columnheader "处理要求":
+            - paragraph: 处理要求
+        - row "P1 取消删除丢失删除前手动编辑 必须修复":
+          - cell "P1":
+            - paragraph: P1
+          - cell "取消删除丢失删除前手动编辑":
+            - paragraph: 取消删除丢失删除前手动编辑
+          - cell "必须修复":
+            - paragraph: 必须修复
+        - row "P2 textarea 编辑时清除原有换行 必须处理数据保真":
+          - cell "P2":
+            - paragraph: P2
+          - cell "textarea 编辑时清除原有换行":
+            - paragraph: textarea 编辑时清除原有换行
+          - cell "必须处理数据保真":
+            - paragraph: 必须处理数据保真
+        - row "测试维护 两套测试断言不再符合新 UX 更新断言并重新执行":
+          - cell "测试维护":
+            - paragraph: 测试维护
+          - cell "两套测试断言不再符合新 UX":
+            - paragraph: 两套测试断言不再符合新 UX
+          - cell "更新断言并重新执行":
+            - paragraph: 更新断言并重新执行
+    - paragraph: 当前报告为 17/19 套脚本通过，尚无 Claude 新版对应的 CI 结果，因此不能宣称完整回归通过。
+    - paragraph: 给 Codex 的建议是：只修复上述两个确认的数据问题，更新两套过时测试；保留 Claude 的新 UI、动画和交互方向。 修复后重点补测“编辑→删除→取消删除”和“带原始换行的元素编辑”，再汇总浏览器验收。
+    - paragraph: 本次是只读审查，没有修改 Claude 源码或同步 Git 镜像。
+    - button "复制":
+    - button "评价回复":
+    - button "分享":
+    - button "朗读":
+    - button "重新生成回复":
+    - button "更多操作":
+    - heading "你说：" [level=4]
+    - generic: 【codex】只读审查完成，已归档你的审查。取消删除丢失草稿也由实际IAB和子agentJSDOM复现，将列高优先修复。补充归因核实：我用Git镜像V3.7与Claude版相同raw A B;C对比，V3.7 input初始就显示AB，编辑!后同样AB!;C；Claude textarea初始A B，编辑后AB!;C。因此换行丢失属遗留数据保真问题，在本轮仍需处理，但不将其称为Claude新引入回归。另外CSS600px实测shell-ui.css:51 display:flex覆盖ui-polish.css:226移动grid两列，150px仅完整见2app，作为低优先布局回归。两处旧test断言只在内存适配classList/focus建议button后13+26全部通过，测试磁盘未改。保留UI动画方向，完整报告交负责人/Claude，未改源码、未同步Git、未提交。此条为审查归档与补充证据通知，不要求开始修复或新审查。
+    - button "复制消息":
+    - button "共享提示":
+    - button "编辑消息":
+    - heading "ChatGPT 说：" [level=4]
+    - paragraph: 【架构顾问 → Codex】
+    - paragraph: 收到，确认本轮只读审查及补充证据已归档。 ✅
+    - paragraph: 你补充的对照证据很重要，特别是换行问题的归因需要修正。
+    - table:
+      - rowgroup:
+        - row "问题 最终归类 处理优先级":
+          - columnheader "问题":
+            - paragraph: 问题
+          - columnheader "最终归类":
+            - paragraph: 最终归类
+          - columnheader "处理优先级":
+            - paragraph: 处理优先级
+        - row "取消删除丢失手动编辑草稿 已复现的数据丢失缺陷 高":
+          - cell "取消删除丢失手动编辑草稿":
+            - paragraph: 取消删除丢失手动编辑草稿
+          - cell "已复现的数据丢失缺陷":
+            - paragraph: 已复现的数据丢失缺陷
+          - cell "高":
+            - paragraph: 高
+        - row "原始换行在编辑后丢失 V3.7 已存在的遗留数据保真问题，并非 Claude 新引入 中":
+          - cell "原始换行在编辑后丢失":
+            - paragraph: 原始换行在编辑后丢失
+          - cell "V3.7 已存在的遗留数据保真问题，并非 Claude 新引入":
+            - paragraph: V3.7 已存在的遗留数据保真问题，并非 Claude 新引入
+          - cell "中":
+            - paragraph: 中
+        - row "600px 下布局规则冲突 新版 CSS 布局回归 低":
+          - cell "600px 下布局规则冲突":
+            - paragraph: 600px 下布局规则冲突
+          - cell "新版 CSS 布局回归":
+            - paragraph: 新版 CSS 布局回归
+          - cell "低":
+            - paragraph: 低
+        - row "两条旧测试断言失败 与新版 UI 交互契约不一致 测试维护":
+          - cell "两条旧测试断言失败":
+            - paragraph: 两条旧测试断言失败
+          - cell "与新版 UI 交互契约不一致":
+            - paragraph: 与新版 UI 交互契约不一致
+          - cell "测试维护":
+            - paragraph: 测试维护
+    - paragraph: 修正此前审查结论： Claude 的 textarea 并未引入原始换行丢失问题。相反，它改善了初始展示，但编辑后的数据保真问题仍然存在，需要后续解决。
+    - paragraph: 对新 UI 的整体判断保持不变：目前没有证据要求撤销 Claude 的动画、视觉系统或交互改版。
+    - paragraph: 本轮只读审查正式结束，不启动修复、不修改源码、不同步 Git，也不要求新一轮审查。后续由负责人和 Claude 决定修复安排及验收顺序。
+    - button "复制":
+    - button "评价回复":
+    - button "分享":
+    - button "朗读":
+    - button "重新生成回复":
+    - button "更多操作":
+    - heading "你说：" [level=4]
+    - generic: "【codex】负责人现在明确授权我们修复审查发现的问题。已创建v3/claude-ui-fixes，并把Claude原设计逐字节保存为基线5b05e99894abc412f611f7482352649afe0dcaf4，源尚未修。拟最小修复： 1删除前草稿：会话deletedDrafts Map<originalID,{id,value}>；removeLiveRow删除原始live时保存当前行浅拷贝，newID删后仍不保留ghost；普通restoreGhost恢复该草稿同ID/值到当前displayOrder位置并清cache/removal来源。建议删除撤销仍按V3.7原值规则，清cache；Restore清cache，Cancel丢session，UIcache不进plan/audit/history。每次删覆写最新草稿。 2换行：普通textarea允许显式换行，去掉全局CR/LF删除和Enter拦截，core已经只禁分号/NUL。为保持原始CRLF/CR，不直接把DOM归一化LF覆盖raw：小纯helper对比normalize(oldRaw)与newDOM值，用公共prefix/suffix映射回oldRaw字符边界，仅替换编辑区，未编辑的原始换行bytes保留；无变化input事件不改raw。新输入行结束符使用textarea提供的LF，展示折行不进入raw。只用于普通元素textarea，不改DemoPlan/temp业务。 3后加载shell-ui.css补@max620 .applist display:grid两列；维护原150px滚动高度。 4更新两处旧测试断言，补手改→删→移ghost→取消、二次删除、空重复同ID、建议/Restore/Cancel/ApplyHistory、LF/CRLF/CR原字符且插入删除编辑、移动端cascade和实际浏览器布局。 保留Claude视觉/FLIP/碎片/拖放/键盘focus，无新框架/Registry/V2/main/Release。请确认最小状态与字符边界方向，批准后实现。"
+    - generic: …
+    - button "显示更多":
+      - generic: 显示更多
+    - button "复制消息":
+    - button "共享提示":
+    - button "编辑消息":
+    - button "思考了 2m 6s"
+    - generic: 思考了 2m 6s
+    - heading "ChatGPT 说：" [level=4]
+    - paragraph: 【架构顾问 → Codex】
+    - paragraph:
+      - text: 原则上批准修复方案，但第 2 项需要补充一条约束：原始换行保真必须同时覆盖普通元素和
+      - code: special=true
+      - text: 的整体字符串。
+    - paragraph:
+      - text: 我已经对照 Claude 基线中的
+      - code: removeLiveRow()
+      - text: 、
+      - code: restoreGhost()
+      - text: 、textarea 输入处理和 CSS 加载顺序。整体方案足够轻量，不需要回退 Claude 的视觉设计，也不需要修改
+      - code: DemoPlan
+      - text: 。
+    - button "添加到资料库":
+      - generic: 写作
+    - button "复制":
+    - button "打开编辑器":
+    - textbox "开始写作":
+      - heading "Claude UI 审查问题最小修复契约" [level=1]
+      - paragraph:
+        - text: 状态：批准实施
+        - text: 基线：5b05e998
+        - text: 分支：v3/claude-ui-fixes
+      - heading "1. 删除前草稿恢复" [level=2]
+      - paragraph: 同意增加会话级：
+      - paragraph:
+        - code: "deletedDrafts: Map<ElementId, {id, value}>"
+      - paragraph: 规则：
+      - list:
+        - paragraph: 删除原始 live row 前，保存删除瞬间的当前内容。
+        - paragraph: 再次删除同一原始 ID 时覆盖旧草稿。
+        - paragraph: 删除本次新增的 ID，不创建删除草稿或 ghost。
+        - paragraph: 普通 ghost“取消删除”优先恢复 deletedDrafts 中的内容。
+        - paragraph: 保持原始稳定 ID 和 ghost 当前 displayOrder 位置。
+        - paragraph: 恢复成功后清理该 ID 的缓存和删除采纳来源。
+        - paragraph: “建议删除”绿色 ✓ 撤销仍恢复 OriginalRaw，不恢复手动编辑草稿。
+        - paragraph: Restore 清空 deletedDrafts；Cancel 销毁整个会话。
+        - paragraph: Apply、Audit、History 不保存 deletedDrafts。
+      - paragraph: 注意：ghost 可继续显示原始 Windows 元素，以保持删除痕迹语义；其“取消删除”按钮提示应说明会恢复删除前的编辑内容。
+      - heading "2. textarea 原始字符保真" [level=2]
+      - paragraph: 同意移除普通元素 textarea 的 Enter 拦截和全局 CR/LF 删除。
+      - paragraph: 允许显式输入换行；自动视觉折行不进入真实 raw。
+      - paragraph: 同意使用最小差异映射：
+      - list:
+        - paragraph: 将旧 raw 的 CRLF、CR 归一化为 LF，得到比较视图。
+        - paragraph: 与新的 textarea.value 比较。
+        - paragraph: 当归一化结果完全相等时，保留原始 raw。
+        - paragraph: 否则计算不重叠的最长公共前缀和后缀。
+        - paragraph: 将两端位置映射回旧 raw 的原始 UTF-16 索引。
+        - paragraph: 保留未修改区间的原始 CRLF / CR / LF。
+        - paragraph: 仅使用 textarea.value 中的内容替换实际编辑区。
+      - paragraph: 新输入的换行使用 LF，不尝试猜测用户期望 CRLF 还是 CR。
+      - paragraph:
+        - strong: 补充要求：该保真处理也必须适用于 special=true 的整体字符串 textarea。
+      - paragraph:
+        - text: 原因：Special 也是 textarea，其
+        - code: .value
+        - text: 同样存在浏览器换行归一化行为。只修普通元素会留下同类数据丢失缺陷。
+      - paragraph: 保留原有分号、NUL 验证规则，不将普通元素的分号限制施加到 Special 上。
+      - heading "3. 删除草稿与字符保真的组合测试" [level=2]
+      - paragraph: 必须验证：
+      - list:
+        - paragraph: 修改 B→B1，删除 B1，再取消删除，仍为 B1。
+        - paragraph: 修改后删除，移动 ghost，再恢复，ID、内容和位置均正确。
+        - paragraph: 恢复后再次编辑、再次删除，保存最新草稿。
+        - paragraph: 重复元素仅恢复明确 ID。
+        - paragraph: 原始空元素与显式空字符串不混淆。
+        - paragraph: 建议删除的撤销仍恢复原始值。
+        - paragraph: Restore、Cancel、Apply/History 不包含缓存状态。
+        - paragraph: LF、CRLF、CR 及混合换行保真。
+        - paragraph: 在换行前后插入、删除字符，不意外修改其他换行。
+        - paragraph: 普通元素及 Special 均通过原始字符串测试。
+        - paragraph: 仅视觉自动折行不会改变 raw。
+      - heading "4. 600px 布局冲突" [level=2]
+      - paragraph:
+        - text: 同意在后加载的 shell-ui.css 中增加
+        - code: max-width:620px
+        - text: 规则，恢复
+        - code: .applist
+        - text: 的两列 Grid。
+      - paragraph: 要求：
+      - list:
+        - paragraph: 继续使用原有 150px 最大高度及滚动。
+        - paragraph: 子项不得出现横向溢出。
+        - paragraph: 在真实 CSS viewport 为 600px 的情况下测试，而不只设置外层窗口物理尺寸。
+        - paragraph: 不扩大为全页面响应式重构。
+      - heading "5. 测试维护" [level=2]
+      - paragraph: 更新两处过时断言：
+      - list:
+        - paragraph:
+          - code: source is-custom
+          - text: 使用 classList 或包含关系检查。
+        - paragraph: 采纳建议后焦点应留在重新创建的建议按钮。
+      - paragraph: 不得仅为了通过旧测试而回退新 UI。
+      - paragraph: 必须重新执行全部现有脚本，并针对本轮数据保真和交互增加回归测试。
+      - heading "6. 实施边界" [level=2]
+      - paragraph: 允许：
+      - list:
+        - paragraph: 最小会话缓存。
+        - paragraph: textarea 纯字符串映射 helper。
+        - paragraph: 局部 CSS 修复。
+        - paragraph: 对应测试及证据更新。
+      - paragraph: 禁止：
+      - list:
+        - paragraph: 修改 DemoPlan 核心业务。
+        - paragraph: 重建编辑状态系统。
+        - paragraph: 回退 Claude 的视觉和动画方向。
+        - paragraph: 接入真实 Windows 注册表。
+        - paragraph: 修改 V2、合并 main 或发布 Release。
+      - paragraph:
+        - strong: 最终原则：撤销删除恢复用户当时的草稿；编辑字符串保留未触碰的原始字符；视觉变化不能意外修改业务数据。
+    - heading "两个特别容易漏掉的地方" [level=3]
+    - paragraph: 第一，删除草稿缓存必须在移除 live row 之前写入。 否则保存到的可能已经是原始快照，问题只是换了个地方存在。
+    - paragraph: 第二，字符映射不能直接拿归一化后的索引切割原始字符串。 一个 CRLF 在比较视图中占 1 个字符，在原始字符串中占 2 个 UTF-16 码元，必须显式建立边界映射。同时要避免公共前后缀重叠。
+    - paragraph: 最终裁定：批准 Codex 开始实施。 修复完成后提交源码、完整回归报告及实际浏览器测试结果。本轮只针对已经确认的问题验收，不再扩展新的 UI 功能。
+    - button "复制":
+    - button "评价回复":
+    - button "分享":
+    - button "朗读":
+    - button "重新生成回复":
+    - button "更多操作":
+    - heading "你说：" [level=4]
+    - button "用户附件":
+      - img "用户附件"
+    - button "用户附件":
+      - img "用户附件"
+    - button "windows-elements(20261014-071329).js"
+    - generic "windows-elements(20261014-071329).js"
+    - generic: 代码
+    - button "shell-ui(1).css"
+    - generic "shell-ui(1).css"
+    - generic: 代码
+    - button "verify_claude_ui_repairs.cjs"
+    - generic "verify_claude_ui_repairs.cjs"
+    - generic: 文件
+    - button "test-report(8).json"
+    - generic "test-report(8).json"
+    - generic: 代码
+    - button "newline-browser-report.json"
+    - generic "newline-browser-report.json"
+    - generic: 代码
+    - generic: "【codex】Claude 审查问题已按批准契约修复，请核对源码、测试与浏览器证据并给最终收尾裁定，不扩展 UI 功能。 Claude 基线5b05e998；产品修复cfd83f7；补交测试同步49805386d11b2cf91a5756ea2745aee4fd4d4e4c，已push v3/claude-ui-fixes，Git干净。产品只改windows-elements.js/shell-ui.css；DemoPlan/temp/fx/elements-ui/ui-polish保留Claude基线。 删除前保存latest deletedDrafts，仅会话cache。普通ghost撤销恢复删除前草稿同ID/ghost当前位置；绿色建议撤销仍original，Restore/Cancel清cache，cache不进plan/audit/history。普通和Special textarea都用显式UTF16边界映射，normalize旧raw为LF比较，prefix/suffix不重叠，映射回原始索引保留未触CRLF/CR/LF，新换行LF，无全局去换行/Enter拦截，semicolon/NUL规则不改。 原项目和Git目录都20脚本372/372通过；新15场景包括draft/二次删/空重复/restorecancel/cache隔离/normalSpecial换行及插删/noop/softwrap/Enter/validation。初次CI失败由我遗漏同步5份已适配textarea/inline-flex旧测试引起，4980538已补齐。现GitHub UI #33 Success https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38527604847 ，Python #79 Success https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38527604882 ，均是4980538。 实际IAB：原ID4改完整三行，删除、ghost下移、取消，恢复ID4三行第五位；Apply历史REPLACE1 MOVE2且三行保留。浏览器fixture普通和whole原raw甲CRLF乙CR丙LF丁，末尾!后仍保留三种原换行。实际CSS innerWidth600，两列Grid/max150/无横溢；source/test/package与Git目录逐字节一致。 附件产品源码和20组报告即本次版本。Claude视觉、FLIP、碎片、拖放、焦点设计保留；无V2/真实Registry/main/Release。请只指出本轮可确认阻断，若无则批准归档。此前两次页面Unknown error，负责人已完成人机验证后重发此条，未把失败发送当批准。"
+    - generic: …
+    - button "显示更多":
+      - generic: 显示更多
+    - button "复制消息":
+    - button "共享提示":
+    - button "编辑消息":
+    - button "思考了 3m 9s"
+    - generic: 思考了 3m 9s
+    - heading "ChatGPT 说：" [level=4]
+    - paragraph: 【架构顾问 → Codex】
+    - heading "Claude UI 修复复核结果" [level=2]
+    - paragraph: 两项此前确认的问题已经得到针对性修复：
+    - list:
+      - paragraph:
+        - generic: 删除草稿丢失：
+        - code: deletedDrafts
+        - text: 在删除原始 live row 前保存当前值；普通幽灵行恢复时使用该草稿，保留原 ID 和当前展示位置。
+      - paragraph:
+        - generic: 移动端布局：
+        - code: shell-ui.css
+        - text: 最后的
+        - code: "max-width: 620px"
+        - text: 规则已恢复两列应用布局。上传的 600 CSS px 截图与该修复相符。
+    - paragraph:
+      - text: 旧测试也已按 Claude 的新交互契约调整。附件报告显示
+      - generic: 20 套脚本、372/372 项检查通过
+      - text: 。
+    - paragraph:
+      - text: GitHub 上两个工作流均已确认成功，且对应同一提交
+      - code: "4980538"
+      - text: ：
+    - paragraph:
+      - link "UI CI 成功":
+        - /url: https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38527604847
+        - generic: UI CI 成功
+      - text: ·
+      - link "Python CI 成功":
+        - /url: https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38527604882
+        - generic: Python CI 成功
+    - paragraph:
+      - generic: 不过，进一步检查 textarea 原始换行保真时，我发现一个测试尚未覆盖的确定性边界问题。
+      - text: 它不涉及 Claude 的视觉效果，而是原始 CRLF 与新输入 LF 相邻时的字符来源识别。
+    - heading "唯一剩余阻断：相邻换行的原始字节归属错误" [level=2]
+    - generic: P2 · 数据保真
+    - paragraph:
+      - text: 位置：
+      - code: windows-elements.js:150–168
+      - text: ，
+      - code: preserveRawLineEndings()
+      - text: 。
+      - button "windows-elements.js":
+        - generic: windows-elements.js
+    - heading "复现一：删除两个连续换行中的第一个" [level=3]
+    - paragraph: 原始 raw：
+    - generic: JavaScript
+    - button "启用自动换行":
+    - button "复制代码":
+    - code: "\"A\\r\\n\\nB\""
+    - button:
+    - paragraph:
+      - text: textarea 显示两个换行。把光标放在
+      - code: A
+      - text: 后，按 Delete 删除第一个换行。
+    - table:
+      - rowgroup:
+        - row "结果":
+          - columnheader
+          - columnheader "结果":
+            - paragraph: 结果
+        - row "textarea 新值 \"A\\nB\"":
+          - cell "textarea 新值":
+            - paragraph: textarea 新值
+          - cell "\"A\\nB\"":
+            - paragraph:
+              - code: "\"A\\nB\""
+        - row "预期 raw \"A\\nB\"":
+          - cell "预期 raw":
+            - paragraph: 预期 raw
+          - cell "\"A\\nB\"":
+            - paragraph:
+              - code: "\"A\\nB\""
+        - row "实际 raw \"A\\r\\nB\"":
+          - cell "实际 raw":
+            - paragraph: 实际 raw
+          - cell "\"A\\r\\nB\"":
+            - paragraph:
+              - code: "\"A\\r\\nB\""
+    - paragraph: 用户删除的是原来的 CRLF，剩余的是 LF；当前算法却保留了 CRLF。
+    - heading "复现二：在原始 CRLF 前插入新换行" [level=3]
+    - paragraph: 原始 raw：
+    - generic: JavaScript
+    - button "启用自动换行":
+    - button "复制代码":
+    - code: "\"A\\r\\nB\""
+    - button:
+    - paragraph: 将光标放在原始换行之前，按 Enter。
+    - table:
+      - rowgroup:
+        - row "结果":
+          - columnheader
+          - columnheader "结果":
+            - paragraph: 结果
+        - row "textarea 新值 \"A\\n\\nB\"":
+          - cell "textarea 新值":
+            - paragraph: textarea 新值
+          - cell "\"A\\n\\nB\"":
+            - paragraph:
+              - code: "\"A\\n\\nB\""
+        - row "预期 raw \"A\\n\\r\\nB\"":
+          - cell "预期 raw":
+            - paragraph: 预期 raw
+          - cell "\"A\\n\\r\\nB\"":
+            - paragraph:
+              - code: "\"A\\n\\r\\nB\""
+        - row "实际 raw \"A\\r\\n\\nB\"":
+          - cell "实际 raw":
+            - paragraph: 实际 raw
+          - cell "\"A\\r\\n\\nB\"":
+            - paragraph:
+              - code: "\"A\\r\\n\\nB\""
+    - paragraph: 新插入的 LF 被排到了原始 CRLF 后面。
+    - heading "原因" [level=3]
+    - paragraph: 当前算法使用最长公共前缀和后缀定位编辑区。
+    - paragraph:
+      - text: 但相邻换行归一化后都是
+      - code: \n
+      - text: ，仅凭修改前后的字符串，无法判断用户操作的是哪一个换行。
+    - paragraph:
+      - generic: 这两个结果已使用本次附件中的实际 helper 独立执行验证，均能稳定复现。
+      - text: 它们违反了此次修复要求中的“未编辑原始换行保持不变，新输入换行使用 LF”。
+    - heading "最小修复要求" [level=3]
+    - paragraph: 不需要重写整个字符串编辑器。
+    - paragraph:
+      - text: 建议利用
+      - code: beforeinput
+      - text: 记录编辑前的选择范围和输入类型，结合已有 UTF-16 边界映射，明确此次编辑发生的位置。普通元素和 Special 共用修复后的 helper。
+    - paragraph: 新增两组对应回归，并验证 textarea 编辑、Apply 和 History 均保存正确 raw。
+    - heading "最终裁定" [level=2]
+    - table:
+      - rowgroup:
+        - row "项目 裁定":
+          - columnheader "项目":
+            - paragraph: 项目
+          - columnheader "裁定":
+            - paragraph: 裁定
+        - row "删除前草稿恢复 通过":
+          - cell "删除前草稿恢复":
+            - paragraph: 删除前草稿恢复
+          - cell "通过":
+            - paragraph: 通过
+        - row "原始重复、空元素及稳定 ID 通过":
+          - cell "原始重复、空元素及稳定 ID":
+            - paragraph: 原始重复、空元素及稳定 ID
+          - cell "通过":
+            - paragraph: 通过
+        - row "600px 双列布局 通过":
+          - cell "600px 双列布局":
+            - paragraph: 600px 双列布局
+          - cell "通过":
+            - paragraph: 通过
+        - row "旧测试适配 通过":
+          - cell "旧测试适配":
+            - paragraph: 旧测试适配
+          - cell "通过":
+            - paragraph: 通过
+        - row "两项 CI 通过":
+          - cell "两项 CI":
+            - paragraph: 两项 CI
+          - cell "通过":
+            - paragraph: 通过
+        - row "普通及 Special 的常规换行编辑 通过":
+          - cell "普通及 Special 的常规换行编辑":
+            - paragraph: 普通及 Special 的常规换行编辑
+          - cell "通过":
+            - paragraph: 通过
+        - row "相邻换行的原始字符保真 需补修":
+          - cell "相邻换行的原始字符保真":
+            - paragraph: 相邻换行的原始字符保真
+          - cell "需补修":
+            - paragraph:
+              - generic: 需补修
+    - paragraph:
+      - generic: 暂不批准正式收尾，剩余仅这一项 P2 数据保真问题。
+    - paragraph:
+      - text: 无需回退 Claude 的新界面或动画，不修改
+      - code: DemoPlan
+      - text: 、V2、注册表和执行链路。针对这两个相邻换行场景做最小修复并通过回归后，即可重新申请收尾。
+    - paragraph: 比起让三个 AI 再造一份架构文档，把这两个字符边界修准更有价值。
+    - button "复制":
+    - button "评价回复":
+    - button "分享":
+    - button "朗读":
+    - button "重新生成回复":
+    - button "更多操作":
+    - generic: ChatGPT 可能会出错。请核查重要信息。
+    - button:
+    - heading "最新一条回复" [level=4]
+    - status
+    - button "添加文件等内容":
+    - textbox "询问 ChatGPT":
+      - paragraph: 询问 ChatGPT
+    - button "选择 ChatGPT 模型":
+      - generic: 高
+    - button "听写":
+    - button "开始语音":
+- status
+- status: 回答已完成
+- status
+- status
+- button "⋮⋮"
+- button "⋮⋮"

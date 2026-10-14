@@ -147,7 +147,7 @@ var WindowsElements = (() => {
   }
   const serialized = () => session.rows.map(row => row.value).join(session.whole ? '' : ';');
   const valid = () => !session.rows.some(row => row.value.includes('\0') || (!session.whole && row.value.includes(';')));
-  function preserveRawLineEndings(raw,textareaValue) {
+  function preserveRawLineEndings(raw,textareaValue,edit) {
     const boundaries=[0];
     let normalizedRaw='';
     for(let offset=0;offset<raw.length;){
@@ -160,12 +160,36 @@ var WindowsElements = (() => {
       boundaries.push(offset);
     }
     const next=textareaValue.replace(/\r\n?/g,'\n');
+    // beforeinput identifies which occurrence changed when normalized characters repeat.
+    if(edit&&edit.raw===raw&&edit.value===normalizedRaw){
+      const {start,end}=edit,insertedLength=next.length-normalizedRaw.length+(end-start);
+      if(insertedLength>=0&&next.slice(0,start)===normalizedRaw.slice(0,start)&&
+          next.slice(start+insertedLength)===normalizedRaw.slice(end)){
+        return raw.slice(0,boundaries[start])+next.slice(start,start+insertedLength)+raw.slice(boundaries[end]);
+      }
+    }
     if(normalizedRaw===next)return raw;
     let prefix=0;
     while(prefix<normalizedRaw.length&&prefix<next.length&&normalizedRaw[prefix]===next[prefix])prefix++;
     let suffix=0;
     while(suffix<normalizedRaw.length-prefix&&suffix<next.length-prefix&&normalizedRaw[normalizedRaw.length-1-suffix]===next[next.length-1-suffix])suffix++;
     return raw.slice(0,boundaries[prefix])+next.slice(prefix,next.length-suffix)+raw.slice(boundaries[normalizedRaw.length-suffix]);
+  }
+  function textareaEditRange(input,event,raw) {
+    if(event.isComposing)return null;
+    const value=input.value,type=event.inputType;
+    let start=input.selectionStart,end=input.selectionEnd;
+    if(!Number.isInteger(start)||!Number.isInteger(end))return null;
+    if(type==='deleteContentBackward'&&start===end){
+      if(start===0)return null;
+      start-=1;
+      if(start>0&&/[\uDC00-\uDFFF]/.test(value[start])&&/[\uD800-\uDBFF]/.test(value[start-1]))start-=1;
+    }else if(type==='deleteContentForward'&&start===end){
+      if(end===value.length)return null;
+      end+=1;
+      if(end<value.length&&/[\uD800-\uDBFF]/.test(value[end-1])&&/[\uDC00-\uDFFF]/.test(value[end]))end+=1;
+    }else if(!['insertText','insertLineBreak','insertParagraph','insertFromPaste','insertFromDrop','insertReplacementText','deleteContentBackward','deleteContentForward','deleteByCut','deleteByDrag'].includes(type))return null;
+    return {raw,value,start,end};
   }
   function syncRowsToDisplayOrder() {
     const liveById=new Map(session.rows.map(row=>[row.id,row]));
@@ -563,8 +587,12 @@ var WindowsElements = (() => {
     const fit=input=>{if(!input.classList.contains('is-line')||fieldSizing)return;input.style.height='auto';if(input.scrollHeight>0)input.style.height=input.scrollHeight+2+'px';};
     root.querySelectorAll('[data-element-input]').forEach(input=>{
       const id=Number(input.dataset.elementInput),row=session.rows.find(row=>row.id===id);input.value=row.value;
+      let pendingEdit=null;
+      input.onbeforeinput=event=>{pendingEdit=textareaEditRange(input,event,row.value);};
+      input.addEventListener('blur',()=>{pendingEdit=null;});
       input.oninput=()=>{
-        const value=preserveRawLineEndings(row.value,input.value);
+        const edit=pendingEdit;pendingEdit=null;
+        const value=preserveRawLineEndings(row.value,input.value,edit);
         if(value!==row.value)clearAdoptionForId(id);row.value=value;fit(input);update();};
       input.onkeydown=e=>{
         if(e.altKey&&['ArrowUp','ArrowDown'].includes(e.key)&&!session.whole){e.preventDefault();move(id,e.key==='ArrowUp'?-1:1);}

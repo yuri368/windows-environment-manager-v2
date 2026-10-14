@@ -114,6 +114,51 @@ check('Validation keeps plain semicolon and NUL invalid, while Special accepts s
   edit(id,'A;B\0C');assert.equal(q('#applyElements').disabled,true);
   assert.match(q('#elementValidation').textContent,/NUL/);
 });
+
+function nativeEdit(field,start,end,inputType,next){
+  field.setSelectionRange(start,end);
+  field.dispatchEvent(new w.InputEvent('beforeinput',{bubbles:true,inputType,cancelable:true}));
+  field.value=next;
+  field.dispatchEvent(new w.InputEvent('input',{bubbles:true,inputType}));
+}
+for(const whole of [false,true]){
+  const mode=whole?'Special':'Ordinary';
+  for(const [label,raw,start,end,type,next,expected] of [
+    ['Delete first adjacent newline','A\r\n\nB',1,1,'deleteContentForward','A\nB','A\nB'],
+    ['Backspace second adjacent newline','A\r\n\nB',3,3,'deleteContentBackward','A\nB','A\r\nB'],
+    ['Insert LF before CRLF','A\r\nB',1,1,'insertLineBreak','A\n\nB','A\n\r\nB'],
+    ['Insert LF after CRLF','A\r\nB',2,2,'insertLineBreak','A\n\nB','A\r\n\nB'],
+    ['Replace selected CRLF with LF despite unchanged visible value','A\r\nB',1,2,'insertLineBreak','A\nB','A\nB'],
+    ['Backspace supplementary character preserves adjacent CRLF','A😀\r\nB',3,3,'deleteContentBackward','A\nB','A\r\nB']
+  ])check(mode+': '+label+' persists exact Apply raw',()=>{
+    const [id]=direct(raw,whole),field=row(id).querySelector('.element-input');
+    nativeEdit(field,start,end,type,next);assert.equal(serialized(),expected);
+    q('#applyElements').click();assert.equal(applied.length,1);
+    assert.equal(applied[0].value,expected);assert.equal(applied[0].plan.afterRaw,expected);
+  });
+}
+check('Input range is consumed once and unsupported beforeinput replaces stale metadata',()=>{
+  const [id]=direct('A\r\nB'),field=row(id).querySelector('.element-input');
+  nativeEdit(field,1,1,'insertLineBreak','A\n\nB');assert.equal(serialized(),'A\n\r\nB');
+  edit(id,'A\n\nBX');assert.equal(serialized(),'A\n\r\nBX');
+  field.setSelectionRange(1,1);
+  field.dispatchEvent(new w.InputEvent('beforeinput',{bubbles:true,inputType:'insertLineBreak'}));
+  field.dispatchEvent(new w.InputEvent('beforeinput',{bubbles:true,inputType:'historyUndo'}));
+  edit(id,'A\n\nBXY');assert.equal(serialized(),'A\n\r\nBXY');
+});
+for(const [label,raw,type,next,expected] of [
+  ['Delete first','A\r\n\nB','deleteContentForward','A\nB','A\nB'],
+  ['Insert before','A\r\nB','insertLineBreak','A\n\nB','A\n\r\nB']
+])check(label+' adjacent newline persists in workbench Apply and History',()=>{
+  w.eval('closeModal();reset(true);selected=1;focusedVariable=1');
+  w.eval("windows['User|PATH']="+JSON.stringify(raw)+";render()");
+  q('#editWindowsElements').click();
+  nativeEdit(live()[0].querySelector('.element-input'),1,1,type,next);
+  q('#applyElements').click();
+  assert.equal(w.eval("windows['User|PATH']"),expected);
+  assert.equal(w.eval('history[0].changes[0].plan.afterRaw'),expected);
+});
+
 check('No JSDOM runtime errors',()=>assert.deepEqual(errors,[]));
 const failed=checks.filter(item=>!item.passed);
 for(const item of checks)console.log((item.passed?'PASS ':'FAIL ')+item.name+(item.passed?'':'\n'+item.error));
