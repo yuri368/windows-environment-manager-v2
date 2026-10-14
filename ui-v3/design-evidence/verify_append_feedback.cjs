@@ -198,7 +198,7 @@ try {
     assert.deepEqual(values(), ['A', 'A', '', '']); assert.deepEqual(candidates(), ['B']);
     assert.equal(serialized(), 'A;A;;');
     assert.ok(q('#pendingElements')); assert.match(q('#pendingElements').textContent, /方案建议/);
-    assert.match(q('#pendingElements').textContent, /建议追加/); assert.match(q('#pendingElements').textContent, /仅修改编辑列表/);
+    assert.match(q('#pendingElements').textContent, /建议追加/); assert.match(q('#pendingElements').textContent, /仅作用于本次编辑，确认应用前不会写入 Windows/);
     assert.equal(q('#pendingElements').querySelector('[data-element-id],input,textarea,[data-move-up],[data-move-down],[data-delete],.is-duplicate,.element-row'), null);
     for (const button of q('#pendingElements').querySelectorAll('button')) {
       assert.ok(button.matches('.pending-add-button[data-add-pending]'));

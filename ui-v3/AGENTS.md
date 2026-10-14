@@ -3,6 +3,7 @@
 - Current work is limited to the V3 browser demo and UI-only scope in docs/architecture/V3_THREE_VALUE_V3_3.txt (including its later unified-token and ghost-view revision); V3.2 still governs matched-selection edits.
 - Editor suggestion/adoption display follows docs/architecture/V3_EDITOR_STATES_V3_4.txt; suggestions do not determine an editor apply result.
 - V3.6 visible ordering and adopted-addition toggles follow docs/architecture/V3_EDITOR_ORDER_V3_6.txt; displayOrder/adoptionMap are editor session UI state only.
+- V3.7 adopted-removal toggles follow docs/architecture/V3_REMOVAL_TOGGLE_V3_7.txt; removalAdoptions is session provenance only and restores the exact original ID at its current display position.
 - Before changing behavior, consult the corresponding contract section; use docs/architecture/README.md for document priority.
 - Do not modify main directly, access or modify the real Windows Registry, or migrate V2 code into V3.
 - Check current code and acceptance evidence before describing UI or features as complete. Draft documents are not proof of implementation.

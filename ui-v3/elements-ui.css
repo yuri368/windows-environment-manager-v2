@@ -237,7 +237,7 @@
 .element-ghost-row .element-actions { display: flex; justify-content: flex-start; gap: 4px; }
 .element-order { font-variant-numeric: tabular-nums; }
 .element-suggestions .editor-suggestion-token.is-adopted { color: var(--green); background: var(--green-soft); border-style: solid; border-color: var(--green); }
-.element-suggestions .editor-suggestion-token.is-adopted .pending-add-button { color: var(--green); border-left-color: var(--green); }
-.element-suggestions .editor-suggestion-token.is-adopted .pending-add-button:hover { background: color-mix(in srgb,var(--green) 14%,transparent); }
+.element-suggestions .editor-suggestion-token.is-adopted :is(.pending-add-button, .pending-remove-button) { color: var(--green); border-left-color: var(--green); }
+.element-suggestions .editor-suggestion-token.is-adopted :is(.pending-add-button, .pending-remove-button):hover { background: color-mix(in srgb,var(--green) 14%,transparent); }
 .element-suggestions .editor-suggestion-token.is-adopted .diff-label { flex: none; margin: 0 4px; white-space: nowrap; }
 @media (max-width:620px) { .element-ghost-row { grid-template-columns: 20px minmax(0,1fr); } .element-ghost-row .element-actions { grid-column: 2; } }

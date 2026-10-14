@@ -50,7 +50,7 @@ check('Adopting a suggested deletion creates the same original-ID read-only ghos
   assert.ok(button);button.click();
   assert.ok(ghostFor(id));assert.deepEqual(values(),['X','A','Y']);
   assert.equal(serialized(),'X;A;Y');assert.match(ghostFor(id).textContent,/本次编辑已移除/);
-  assert.equal(q('[data-remove-pending]'),null);
+  const adopted=q('[data-remove-pending]');assert.ok(adopted);assert.equal(adopted.getAttribute('aria-pressed'),'true');assert.equal(adopted.textContent.trim(),'✓');
 });
 check('Deleting duplicate and empty originals preserves exact IDs, values and original ghost order',()=>{
   openEditor('A;;A;B');const original=ids();

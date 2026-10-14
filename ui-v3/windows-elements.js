@@ -35,17 +35,19 @@ var WindowsElements = (() => {
     return (plan?.issues||[]).length?`<div class="plan-issues">${plan.issues.map(issue=>`<span class="plan-issue"><code>${escape(issue.value)}</code><span class="diff-label is-retained">${issue.reason==='duplicate'?(editing?'存在重复，需明确选择元素':'存在重复，删除需确认'):issue.reason==='shared'?'共享保留':issue.reason==='stale'?'编辑基线已失效':'目标计划冲突'}</span></span>`).join('')}</div>`:'';
   }
   function editorSuggestionToken(op,kind,modes) {
-    const removing=kind==='remove',adopted=!removing&&!!op.adopted,index=removing?op.beforeIndex:op.selectedIndex;
+    const removing=kind==='remove',adopted=!!op.adopted,index=removing?op.beforeIndex:op.selectedIndex;
     const position=modes[index]==='+append'?'开头':'末尾';
     const actionable=removing||isAppendMode(modes[index]);
-    const action=removing?'采纳建议删除：从本次编辑列表移除':adopted?'撤销本次采纳':'采纳建议追加：加入本次编辑列表'+position;
-    const button=actionable?`<button type="button" class="pending-${removing?'remove':'add'}-button" data-${removing?'remove':'add'}-pending="${index}"${removing?'':` aria-pressed="${adopted}"`} title="${action}" aria-label="${action} ${escape(op.value)}">${removing?'−':adopted?'✓':'＋'}</button>`:'';
-    return `<span class="pending-${removing?'remove':'add'}-token editor-suggestion-token${button?' is-actionable':''}${adopted?' is-adopted':''}" ${removing?'data-pending-before-index':'data-selected-index'}="${index}"${removing&&op.elementId!==undefined?` data-element-id="${op.elementId}"`:''}><span class="diff-value" data-raw-value="${escape(op.value)}">${escape(op.value)}</span>${adopted?'<span class="diff-label is-adopted">已加入本次编辑</span>':''}${button}</span>`;
+    const action=removing?(adopted?'撤销本次建议删除，恢复原始元素':'采纳建议删除：从本次编辑列表移除'):adopted?'撤销本次采纳':'采纳建议追加：加入本次编辑列表'+position;
+    const removalIdentity=removing?` data-removal-id="${op.elementId}" data-removal-adopted="${adopted}"`:'';
+    const button=actionable?`<button type="button" class="pending-${removing?'remove':'add'}-button" data-${removing?'remove':'add'}-pending="${index}"${removalIdentity} aria-pressed="${adopted}" title="${action}" aria-label="${action} ${escape(op.value)}">${adopted?'✓':removing?'−':'＋'}</button>`:'';
+    const adoptedLabel=removing?'已采纳删除':'已加入本次编辑';
+    return `<span class="pending-${removing?'remove':'add'}-token editor-suggestion-token${button?' is-actionable':''}${adopted?' is-adopted':''}" ${removing?'data-pending-before-index':'data-selected-index'}="${index}"${removing&&op.elementId!==undefined?` data-element-id="${op.elementId}"`:''}><span class="diff-value" data-raw-value="${escape(op.value)}">${escape(op.value)}</span>${adopted?`<span class="diff-label is-adopted">${adoptedLabel}</span>`:''}${button}</span>`;
   }
   function editorSuggestionsMarkup(plan,whole,modes) {
     if(whole&&plan?.valid!==false)return '';
     const title='<div class="element-suggestions-title">方案建议</div>';
-    const hint='<p class="element-suggestions-hint">点击加减按钮采纳建议；绿色 ✓ 可撤销本次追加采纳。仅修改编辑列表，不会立即写入 Windows。</p>';
+    const hint='<p class="element-suggestions-hint">点击 − 或 ＋ 采纳方案建议；绿色 ✓ 可以撤销对应采纳。所有变化仅作用于本次编辑，确认应用前不会写入 Windows。</p>';
     if(plan?.valid===false)return `<section class="element-suggestions" aria-label="方案建议">${title}<p class="element-suggestions-empty invalid-result">方案建议已失效，需要重新检测。</p></section>`;
     const groups=[['remove','建议删除'],['insert','建议追加']].map(([kind,label])=>{
       const operations=(plan?.operations||[]).filter(op=>op.type===kind);
@@ -257,18 +259,20 @@ var WindowsElements = (() => {
     element.querySelector('.element-change-state').innerHTML=labels(state)+duplicateLabel(duplicateCount);
     element.querySelector('.element-input').setAttribute('aria-invalid',String(row.value.includes('\0') || (!session.whole && row.value.includes(';'))));
   }
-  function suggestedRemoval(row){
-    if(session.selectionPlan?.valid===false)return null;
-    return (session.selectionPlan?.operations||[]).find(op=>op.type==='remove'&&session.originalRows[op.beforeIndex]?.id===row.id&&session.originalRows[op.beforeIndex].value===row.value);
-  }
   function candidatePlan(){
     const values=session.appendValues,additions=DemoPlan.build({mode:'-append',actualRaw:serialized(),selectedRaw:values.join(';')});
     const originalPlan=session.selectionPlan;
     if(originalPlan?.valid===false)return {...originalPlan,operations:[]};
+    const seenRemovalIds=new Set();
     const removals=(originalPlan?.operations||[]).filter(op=>op.type==='remove').flatMap(op=>{
-      const original=session.originalRows[op.beforeIndex],row=session.rows.find(row=>row.id===original?.id);
-      return row&&row.value===op.value?[{...op,elementId:row.id}]:[];
-    });
+      const original=session.originalRows[op.beforeIndex];
+      if(!original||original.value!==op.value||seenRemovalIds.has(original.id))return [];
+      seenRemovalIds.add(original.id);
+      const row=session.rows.find(row=>row.id===original.id);
+      const adopted=session.removalAdoptions.has(original.id);
+      if(adopted)return !row&&session.displayOrder.includes(original.id)?[{...op,elementId:original.id,adopted:true}]:[];
+      return row&&row.value===op.value?[{...op,elementId:original.id}]:[];
+    }).sort((a,b)=>a.beforeIndex-b.beforeIndex);
     const adopted=[...session.adoptionMap].flatMap(([selectedIndex,entry])=>{
       const row=session.rows.find(row=>row.id===entry.elementId);
       return row&&row.value===entry.adoptedRaw?[{type:'insert',selectedIndex,value:entry.adoptedRaw,adopted:true}]:[];
@@ -305,12 +309,7 @@ var WindowsElements = (() => {
     pending.querySelectorAll('[data-add-pending]').forEach(button=>{
       button.onclick=()=>adoptPending(Number(button.dataset.addPending),button,editingSession);
     });
-    pending.querySelectorAll('[data-remove-pending]').forEach(button=>button.onclick=()=>{
-      if(session!==editingSession||!button.isConnected||!session.suggestionButtons.has(button))return;
-      const original=session.originalRows[Number(button.dataset.removePending)],row=session.rows.find(row=>row.id===original?.id);
-      if(!row||!suggestedRemoval(row))return;
-      removeLiveRow(row.id);renderRows(session.rows[0]?.id);
-    });
+    pending.querySelectorAll('[data-remove-pending]').forEach(button=>button.onclick=()=>toggleRemoval(button,editingSession));
     renderComparison();
   }
   function open(options) {
@@ -320,7 +319,7 @@ var WindowsElements = (() => {
     const entries=Array.isArray(options.appendEntries)?options.appendEntries:null;
     const appendValues=entries?entries.map(entry=>entry.value):[...(options.appendValues || [])];
     const appendModes=entries?entries.flatMap(entry=>entry.value.split(';').map(()=>entry.mode)):[];
-    session={...options,appendValues,appendModes,original,originalRows,originalById:new Map(originalRows.map(row=>[row.id,row])),originalCounts:countsFor(originalRows),currentCounts:new Map(),rows:originalRows.map(row=>({...row})),displayOrder:originalRows.map(row=>row.id),adoptionMap:new Map(),dragging:null,hoveredId:null,focusedId:null};
+    session={...options,appendValues,appendModes,original,originalRows,originalById:new Map(originalRows.map(row=>[row.id,row])),originalCounts:countsFor(originalRows),currentCounts:new Map(),rows:originalRows.map(row=>({...row})),displayOrder:originalRows.map(row=>row.id),adoptionMap:new Map(),removalAdoptions:new Set(),dragging:null,hoveredId:null,focusedId:null};
     const container=options.container;
     container.innerHTML=`<div class="dialog element-dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
       <div class="dialoghead"><div><div class="eyebrow">Windows 环境 / ${options.scope==='User'?'用户':'系统'}</div><h3 id="dialogTitle">${escape(options.name)} <span class="element-demo">演示数据</span></h3><p>调整元素顺序或内容，应用后更新本页展示。</p></div><button class="close" id="closeDialog" aria-label="关闭元素编辑器">×</button></div>
@@ -334,9 +333,33 @@ var WindowsElements = (() => {
     bindRelated();
     container.querySelector('#closeDialog').onclick=options.close;container.querySelector('#cancelDialog').onclick=options.close;
     container.querySelector('#addElement').onclick=()=>{const row={id:++sequence,value:''};session.rows.push(row);session.displayOrder.push(row.id);renderRows(row.id);};
-    container.querySelector('#restoreElements').onclick=()=>{session.rows=session.originalRows.map(row=>({...row}));session.displayOrder=session.originalRows.map(row=>row.id);session.adoptionMap.clear();session.dragging=null;session.hoveredId=null;session.focusedId=null;renderRows(session.rows[0]?.id);if(!session.rows.length)container.querySelector('#addElement').focus();};
+    container.querySelector('#restoreElements').onclick=()=>{session.rows=session.originalRows.map(row=>({...row}));session.displayOrder=session.originalRows.map(row=>row.id);session.adoptionMap.clear();session.removalAdoptions.clear();session.dragging=null;session.hoveredId=null;session.focusedId=null;renderRows(session.rows[0]?.id);if(!session.rows.length)container.querySelector('#addElement').focus();};
     container.querySelector('#applyElements').onclick=()=>{if(!session||!valid()||container.querySelector('#applyElements').disabled)return;const current=session,plan=session.plan;current.close();current.onApply(plan.afterRaw,plan.audit,plan);};
     renderRows();container.querySelector('#closeDialog').focus();
+  }
+  function toggleRemoval(button,editingSession) {
+    if(!session||session!==editingSession||session.whole||session.selectionPlan?.valid===false||!button.isConnected||!session.suggestionButtons.has(button)||!session.container.querySelector('#pendingElements').contains(button))return;
+    const beforeIndex=Number(button.dataset.removePending);
+    if(!Number.isInteger(beforeIndex)||beforeIndex<0)return;
+    const original=session.originalRows[beforeIndex];
+    if(!original||button.dataset.removalId!==String(original.id))return;
+    const adopted=session.removalAdoptions.has(original.id);
+    if(button.dataset.removalAdopted!==String(adopted)||button.getAttribute('aria-pressed')!==String(adopted))return;
+    const candidate=candidatePlan();
+    if(candidate.valid===false||!candidate.operations.some(op=>op.type==='remove'&&op.beforeIndex===beforeIndex&&op.elementId===original.id&&!!op.adopted===adopted&&op.value===original.value))return;
+    const row=session.rows.find(row=>row.id===original.id);
+    if(adopted){
+      if(row||session.displayOrder.filter(id=>id===original.id).length!==1)return;
+      session.rows.push({...original});
+      syncRowsToDisplayOrder();
+      session.removalAdoptions.delete(original.id);
+      renderRows(original.id);
+      return;
+    }
+    if(!row||row.value!==original.value||session.displayOrder.filter(id=>id===original.id).length!==1)return;
+    session.removalAdoptions.add(original.id);
+    removeLiveRow(original.id);
+    renderRows(session.rows[0]?.id);
   }
   function adoptPending(index,button,editingSession) {
     if(!session||session!==editingSession||session.whole||session.selectionPlan?.valid===false||!button.isConnected||!session.suggestionButtons.has(button)||!session.container.querySelector('#pendingElements').contains(button))return;

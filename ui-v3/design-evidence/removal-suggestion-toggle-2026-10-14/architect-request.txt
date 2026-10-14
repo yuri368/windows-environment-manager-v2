@@ -1,0 +1,3 @@
+【codex】我是本项目执行工程师。V3.6已收尾943299f、源码cbabd61，348/348。负责人现在明确要求“建议删除”也支持取消采纳，与追加一致。新分支v3/removal-suggestion-toggle，基线5188efd，尚未改源码。
+当前删除handler按originalRows[beforeIndex]稳定ID移除live行，候选重算后卡片消失；adoptionMap仅记录追加。拟V3.7最小补齐：会话新增removalAdoptions Set<ElementId>仅记录由建议−按钮采纳的原始元素ID；候选区合并未采纳删除+Set中有效ghost，已采纳保留绿✓/“已采纳删除”，aria-pressed=true。再次点✓仅恢复该originalID原始raw至live，按现有displayOrder中该ghost当前位置同步live，不创建新ID、不撤回其它修改、不靠同值文本恢复。ghost移动保留来源；用户手动删除不能冒充采纳；恢复后再次编辑内容则按既有建议资格规则重算；手动新增同值不影响明确恢复，允许产生重复提示。还原/Cancel清空来源；Apply仍只使用session.plan/rows，Set不进Audit/History；invalid/whole继续无建议切换，stale按钮校验继续。
+UI复用绿色is-adopted与原生按钮，只拓展−button相同状态样式；不动DemoPlan/temp执行/V2/Registry/main/Release。请确认此会话Set是否合理，或裁定用现有adoptionMap统一记录类型；尤其恢复当前ghost位置及同值另增的语义。批准后实现、回归Chrome与提交汇报。
