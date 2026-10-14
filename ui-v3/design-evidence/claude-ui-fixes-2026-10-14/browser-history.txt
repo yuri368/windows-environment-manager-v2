@@ -1,0 +1,26 @@
+时间	操作	描述与详情
+
+2026/10/14 15:07:57	编辑演示变量
+用户 / Path · 替换 1 · 移动 2 · 仅更新页面数据查看详情
+用户 / Path
+元素列表 · 元素编辑
+
+替换 1 · 移动 2 同一元素可同时计入替换与移动
+
+修改前
+%JAVA_HOME%\bin;%PYTHON_HOME%;%PYTHON_HOME%\Scripts;%MAVEN_HOME%\bin;H:\ProgramFiles\PortableGit\cmd;H:\ProgramFiles\VSCode\bin;%NODE_HOME%\bin;%DOTNET_ROOT%;%TEAM_TOOLS_HOME%\bin
+修改后
+%JAVA_HOME%\bin;%PYTHON_HOME%;%PYTHON_HOME%\Scripts;H:\ProgramFiles\PortableGit\cmd;草稿第一行
+草稿第二行
+新增第三行;H:\ProgramFiles\VSCode\bin;%NODE_HOME%\bin;%DOTNET_ROOT%;%TEAM_TOOLS_HOME%\bin
+位置（原 → 新）	状态	原元素	新元素
+5 → 4	移动	H:\ProgramFiles\PortableGit\cmd	H:\ProgramFiles\PortableGit\cmd
+4 → 5	替换移动	%MAVEN_HOME%\bin	草稿第一行
+草稿第二行
+新增第三行
+
+仅更新本页演示数据；此记录不提供真实环境恢复。
+
+
+
+演示初始快照	打开演示环境	模拟 Windows 数据已载入

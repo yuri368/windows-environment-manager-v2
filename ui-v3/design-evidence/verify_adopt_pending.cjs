@@ -61,12 +61,13 @@ function fixture({ actual = 'A;X', desired = 'A; B ;C', mode = '+append', whole 
   }`);
 }
 const openFixture = () => { q('#editWindowsElements').click(); return ids(); };
-function assertFocusedAdded(originalIds, value) {
+function assertFocusedAdded(originalIds, value, candidateIndex) {
   const fresh = adopted(originalIds);
   assert.equal(fresh.length, 1, 'One new live row');
   assert.ok(fresh[0].classList.contains('is-added'));
   assert.equal(fresh[0].querySelector('.element-input').value, value);
-  assert.equal(doc.activeElement, fresh[0].querySelector('.element-input'));
+  assert.equal(doc.activeElement, button(candidateIndex), 'Focus stays on the re-created suggestion button');
+  assert.equal(doc.activeElement.getAttribute('aria-pressed'), 'true');
   assert.ok(q(`#elementPreview .is-added[data-element-id="${fresh[0].dataset.elementId}"]`));
   return fresh[0].dataset.elementId;
 }
@@ -89,11 +90,11 @@ try {
     cancel();
   });
   for (const mode of ['+append','-append','append']) {
-    check(`${mode} adopts exactly one raw slice in the expected position with stable existing rows and focused new row`, () => {
+    check(`${mode} adopts exactly one raw slice in the expected position with stable existing rows and focused suggestion`, () => {
       const originalIds = direct(' A ;;A;X; ', entries('A; B ;C',mode));
       const before = persisted(), originalMarkup = q('#elementOriginal').innerHTML;
       button(1).focus(); button(1).click();
-      const newId = assertFocusedAdded(originalIds, ' B ');
+      const newId = assertFocusedAdded(originalIds, ' B ', 1);
       assert.deepEqual(values(), mode === '+append' ? [' B ',' A ','','A','X',' '] : [' A ','','A','X',' ',' B ']);
       assert.deepEqual(ids().filter(id => id !== newId), originalIds, 'Existing stable IDs keep their order');
       assert.deepEqual(pending(), ['C']); assert.equal(q('#applyElements').disabled, false);
@@ -104,7 +105,7 @@ try {
     });
     check(`Workbench ${mode} passes current mode into editor without writing page state before apply`, () => {
       fixture({mode}); const before = persisted(); const originalIds = openFixture();
-      button(1).click(); assertFocusedAdded(originalIds, ' B ');
+      button(1).click(); assertFocusedAdded(originalIds, ' B ', 1);
       const expected = mode === '+append' ? ' B ;A;X' : 'A;X; B ';
       assert.equal(serialized(), expected); assert.equal(persisted(), before);
       assert.deepEqual(pending(), ['C']); q('#applyElements').click();
@@ -135,7 +136,7 @@ try {
     button(1).click(); const firstId = adopted(originalIds)[0].dataset.elementId;
     liveRow(firstId).querySelector('[data-delete]').click();
     assert.deepEqual(values(), ['A','X']); assert.deepEqual(pending(), ['B','C']);
-    button(1).click(); const secondId = assertFocusedAdded(originalIds,'B');
+    button(1).click(); const secondId = assertFocusedAdded(originalIds,'B',1);
     assert.notEqual(secondId, firstId); assert.deepEqual(values(), ['B','A','X']); cancel();
   });
   check('Repeated front adoptions insert at the current head in click order while original duplicate and empty rows retain order', () => {
@@ -189,7 +190,7 @@ try {
     check(`Adoption with ${raw===undefined?'undefined':'empty-string'} original distinguishes no rows from one preserved empty row`, () => {
       const originalIds = direct(raw,entries(' A ;B','-append'));
       assert.deepEqual(values(),raw===undefined?[]:['']); button(0).click();
-      assertFocusedAdded(originalIds,' A ');
+      assertFocusedAdded(originalIds,' A ',0);
       assert.deepEqual(values(),raw===undefined?[' A ']:['',' A ']);
       assert.equal(serialized(),raw===undefined?' A ':'; A ');
       q('#restoreElements').click(); assert.deepEqual(ids(),originalIds);

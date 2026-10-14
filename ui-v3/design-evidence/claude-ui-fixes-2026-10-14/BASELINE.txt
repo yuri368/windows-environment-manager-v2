@@ -1,0 +1,4 @@
+Claude repair baseline 5b05e99894abc412f611f7482352649afe0dcaf4
+Previous verified V3.7:235264f
+Branch:v3/claude-ui-fixes
+Scope:deleted draft restoration,newline fidelity,mobile grid,test expectations.

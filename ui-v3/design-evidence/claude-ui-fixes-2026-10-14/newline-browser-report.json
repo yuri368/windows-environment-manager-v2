@@ -1,0 +1,32 @@
+{
+  "normal": {
+    "raw": "甲\r\n乙\r丙\n丁!",
+    "after": "甲\r\n乙\r丙\n丁!",
+    "operations": [
+      {
+        "type": "replace",
+        "action": "REPLACE",
+        "elementId": 1,
+        "before": "甲\r\n乙\r丙\n丁",
+        "after": "甲\r\n乙\r丙\n丁!",
+        "beforeIndex": 0,
+        "afterIndex": 0
+      }
+    ]
+  },
+  "whole": {
+    "raw": "甲\r\n乙\r丙\n丁!",
+    "after": "甲\r\n乙\r丙\n丁!",
+    "operations": [
+      {
+        "type": "replace",
+        "action": "REPLACE",
+        "elementId": 2,
+        "before": "甲\r\n乙\r丙\n丁",
+        "after": "甲\r\n乙\r丙\n丁!",
+        "beforeIndex": 0,
+        "afterIndex": 0
+      }
+    ]
+  }
+}

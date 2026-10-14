@@ -217,3 +217,8 @@
 .act-chip { display: inline-block; padding: 2px 9px; border: 1px solid var(--line2); border-radius: 999px; background: #f7faf8; font-size: 12px; font-weight: 600; color: var(--body); white-space: nowrap; }
 .history-details summary { border-radius: 4px; }
 .history-details[open] > summary { margin-bottom: 4px; }
+
+/* Preserve the compact two-column application picker at the existing mobile breakpoint. */
+@media (max-width: 620px) {
+  .applist { display: grid; grid-template-columns: 1fr 1fr; }
+}

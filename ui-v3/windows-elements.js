@@ -147,6 +147,26 @@ var WindowsElements = (() => {
   }
   const serialized = () => session.rows.map(row => row.value).join(session.whole ? '' : ';');
   const valid = () => !session.rows.some(row => row.value.includes('\0') || (!session.whole && row.value.includes(';')));
+  function preserveRawLineEndings(raw,textareaValue) {
+    const boundaries=[0];
+    let normalizedRaw='';
+    for(let offset=0;offset<raw.length;){
+      if(raw[offset]==='\r'){
+        offset+=raw[offset+1]==='\n'?2:1;
+        normalizedRaw+='\n';
+      }else{
+        normalizedRaw+=raw[offset++];
+      }
+      boundaries.push(offset);
+    }
+    const next=textareaValue.replace(/\r\n?/g,'\n');
+    if(normalizedRaw===next)return raw;
+    let prefix=0;
+    while(prefix<normalizedRaw.length&&prefix<next.length&&normalizedRaw[prefix]===next[prefix])prefix++;
+    let suffix=0;
+    while(suffix<normalizedRaw.length-prefix&&suffix<next.length-prefix&&normalizedRaw[normalizedRaw.length-1-suffix]===next[next.length-1-suffix])suffix++;
+    return raw.slice(0,boundaries[prefix])+next.slice(prefix,next.length-suffix)+raw.slice(boundaries[normalizedRaw.length-suffix]);
+  }
   function syncRowsToDisplayOrder() {
     const liveById=new Map(session.rows.map(row=>[row.id,row]));
     session.rows=session.displayOrder.filter(id=>liveById.has(id)).map(id=>liveById.get(id));
@@ -155,6 +175,8 @@ var WindowsElements = (() => {
     for(const [index,adoption] of session.adoptionMap)if(adoption.elementId===id)session.adoptionMap.delete(index);
   }
   function removeLiveRow(id) {
+    const row=session.rows.find(item=>item.id===id);
+    if(row&&session.originalById.has(id))session.deletedDrafts.set(id,{id:row.id,value:row.value});
     session.rows=session.rows.filter(row=>row.id!==id);
     if(!session.originalById.has(id))session.displayOrder=session.displayOrder.filter(item=>item!==id);
     clearAdoptionForId(id);
@@ -432,7 +454,7 @@ var WindowsElements = (() => {
     const entries=Array.isArray(options.appendEntries)?options.appendEntries:null;
     const appendValues=entries?entries.map(entry=>entry.value):[...(options.appendValues || [])];
     const appendModes=entries?entries.flatMap(entry=>entry.value.split(';').map(()=>entry.mode)):[];
-    session={...options,appendValues,appendModes,original,originalRows,originalById:new Map(originalRows.map(row=>[row.id,row])),originalCounts:countsFor(originalRows),currentCounts:new Map(),rows:originalRows.map(row=>({...row})),displayOrder:originalRows.map(row=>row.id),adoptionMap:new Map(),removalAdoptions:new Set(),dragging:null,hoveredId:null,focusedId:null};
+    session={...options,appendValues,appendModes,original,originalRows,originalById:new Map(originalRows.map(row=>[row.id,row])),originalCounts:countsFor(originalRows),currentCounts:new Map(),rows:originalRows.map(row=>({...row})),displayOrder:originalRows.map(row=>row.id),adoptionMap:new Map(),removalAdoptions:new Set(),deletedDrafts:new Map(),dragging:null,hoveredId:null,focusedId:null};
     const container=options.container;
     container.innerHTML=`<div class="dialog element-dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
       <div class="dialoghead"><div><div class="eyebrow">Windows 环境 / ${options.scope==='User'?'用户':'系统'}</div><h3 id="dialogTitle">${escape(options.name)} <span class="element-demo">演示数据</span></h3><p>调整元素顺序或内容，应用后更新本页展示。</p></div><button class="close" id="closeDialog" aria-label="关闭元素编辑器">×</button></div>
@@ -447,7 +469,7 @@ var WindowsElements = (() => {
     bindRelated();
     container.querySelector('#closeDialog').onclick=options.close;container.querySelector('#cancelDialog').onclick=options.close;
     container.querySelector('#addElement').onclick=()=>{const row={id:++sequence,value:''};session.rows.push(row);session.displayOrder.push(row.id);session.fx={kind:'enter',id:row.id};renderRows(row.id);};
-    container.querySelector('#restoreElements').onclick=()=>{session.rows=session.originalRows.map(row=>({...row}));session.displayOrder=session.originalRows.map(row=>row.id);session.adoptionMap.clear();session.removalAdoptions.clear();session.dragging=null;session.hoveredId=null;session.focusedId=null;renderRows(session.rows[0]?.id);if(!session.rows.length)container.querySelector('#addElement').focus();};
+    container.querySelector('#restoreElements').onclick=()=>{session.rows=session.originalRows.map(row=>({...row}));session.displayOrder=session.originalRows.map(row=>row.id);session.adoptionMap.clear();session.removalAdoptions.clear();session.deletedDrafts.clear();session.dragging=null;session.hoveredId=null;session.focusedId=null;renderRows(session.rows[0]?.id);if(!session.rows.length)container.querySelector('#addElement').focus();};
     container.querySelector('#applyElements').onclick=()=>{if(!session||!valid()||container.querySelector('#applyElements').disabled)return;const current=session,plan=session.plan;current.close();current.onApply(plan.afterRaw,plan.audit,plan);};
     renderRows();container.querySelector('#closeDialog').focus();
   }
@@ -467,6 +489,7 @@ var WindowsElements = (() => {
       session.rows.push({...original});
       syncRowsToDisplayOrder();
       session.removalAdoptions.delete(original.id);
+      session.deletedDrafts.delete(original.id);
       session.fx={kind:'restore',id:original.id};session.suggestFx={type:'remove',index:beforeIndex,adopt:false};
       renderRows(original.id);
       return;
@@ -477,12 +500,13 @@ var WindowsElements = (() => {
     session.fx={kind:'remove',id:original.id};session.suggestFx={type:'remove',index:beforeIndex,adopt:true};
     renderRows(session.rows[0]?.id);
   }
-  // Cancel a deletion from the trace row itself: the original element comes back live at its current display position.
+  // Cancel a deletion from the trace row itself: restore its last live draft at the current display position.
   function restoreGhost(id) {
     const original=session.originalById.get(id);
     if(!original||session.rows.some(row=>row.id===id)||session.displayOrder.filter(item=>item===id).length!==1)return;
-    session.rows.push({...original});
+    session.rows.push({...(session.deletedDrafts.get(id)??original)});
     syncRowsToDisplayOrder();
+    session.deletedDrafts.delete(id);
     session.removalAdoptions.delete(id);
     session.fx={kind:'restore',id};
     renderRows(id);
@@ -522,7 +546,7 @@ var WindowsElements = (() => {
   }
   function ghostRowMarkup(row,displayIndex,total) {
     const beforeIndex=session.originalRows.findIndex(original=>original.id===row.id);
-    return `<div class="element-ghost-row" data-element-id="${row.id}"><span class="element-order" title="原始位置：第 ${beforeIndex+1} 项">${displayIndex+1}</span><span class="element-ghost-body"><span class="element-ghost-value" data-raw-value="${escape(row.value)}">${row.value===''?'<span class="empty-element">（空元素）</span>':escape(row.value)}</span><span class="element-ghost-state">${plateMarkup(['removed'])}<span class="diff-label is-removed">本次编辑已移除</span><span class="element-ghost-note">仅展示痕迹 · 不写入结果</span></span></span><div class="element-actions"><button class="ibtn ibtn-restore" data-restore-ghost="${row.id}" aria-label="取消删除第 ${displayIndex+1} 个元素，恢复到当前位置" title="取消删除 · 恢复为可编辑元素（保持当前位置）"><b class="ic ic-undo"></b><span>取消删除</span></button><button class="ibtn" data-move-up="${row.id}" aria-label="上移第 ${displayIndex+1} 个已移除元素，仅调整展示位置" title="上移 · 仅调整已移除元素的展示位置" ${displayIndex===0?'disabled':''}><b class="ic ic-up"></b>↑</button><button class="ibtn" data-move-down="${row.id}" aria-label="下移第 ${displayIndex+1} 个已移除元素，仅调整展示位置" title="下移 · 仅调整已移除元素的展示位置" ${displayIndex===total-1?'disabled':''}><b class="ic ic-down"></b>↓</button></div></div>`;
+    return `<div class="element-ghost-row" data-element-id="${row.id}"><span class="element-order" title="原始位置：第 ${beforeIndex+1} 项">${displayIndex+1}</span><span class="element-ghost-body"><span class="element-ghost-value" data-raw-value="${escape(row.value)}">${row.value===''?'<span class="empty-element">（空元素）</span>':escape(row.value)}</span><span class="element-ghost-state">${plateMarkup(['removed'])}<span class="diff-label is-removed">本次编辑已移除</span><span class="element-ghost-note">仅展示痕迹 · 不写入结果</span></span></span><div class="element-actions"><button class="ibtn ibtn-restore" data-restore-ghost="${row.id}" aria-label="取消删除第 ${displayIndex+1} 个元素，恢复删除前编辑的内容到当前位置" title="取消删除 · 恢复删除前编辑的内容（保持当前位置）"><b class="ic ic-undo"></b><span>取消删除</span></button><button class="ibtn" data-move-up="${row.id}" aria-label="上移第 ${displayIndex+1} 个已移除元素，仅调整展示位置" title="上移 · 仅调整已移除元素的展示位置" ${displayIndex===0?'disabled':''}><b class="ic ic-up"></b>↑</button><button class="ibtn" data-move-down="${row.id}" aria-label="下移第 ${displayIndex+1} 个已移除元素，仅调整展示位置" title="下移 · 仅调整已移除元素的展示位置" ${displayIndex===total-1?'disabled':''}><b class="ic ic-down"></b>↓</button></div></div>`;
   }
   function renderRows(focusId) {
     const root=session.container;
@@ -540,11 +564,9 @@ var WindowsElements = (() => {
     root.querySelectorAll('[data-element-input]').forEach(input=>{
       const id=Number(input.dataset.elementInput),row=session.rows.find(row=>row.id===id);input.value=row.value;
       input.oninput=()=>{
-        // A line editor never holds a line break; pasted breaks are dropped like <input> would.
-        if(input.classList.contains('is-line')&&/[\r\n]/.test(input.value)){const caret=input.selectionStart;input.value=input.value.replace(/[\r\n]+/g,'');input.setSelectionRange(Math.min(caret,input.value.length),Math.min(caret,input.value.length));}
-        if(input.value!==row.value)clearAdoptionForId(id);row.value=input.value;fit(input);update();};
+        const value=preserveRawLineEndings(row.value,input.value);
+        if(value!==row.value)clearAdoptionForId(id);row.value=value;fit(input);update();};
       input.onkeydown=e=>{
-        if(e.key==='Enter'&&input.classList.contains('is-line')&&!e.isComposing){e.preventDefault();return;}
         if(e.altKey&&['ArrowUp','ArrowDown'].includes(e.key)&&!session.whole){e.preventDefault();move(id,e.key==='ArrowUp'?-1:1);}
       };
       fit(input);

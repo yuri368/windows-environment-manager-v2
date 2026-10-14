@@ -28,7 +28,7 @@ check('Batch checkbox refresh returns focus to that checkbox', () => {
   assert.equal(doc.activeElement.dataset.check,'0');assert.equal(doc.activeElement.checked,true);
 });
 check('Running source selector refresh retains focus and original input draft', () => {
-  change(q('#varRows .source'),'自定义值'); assert.equal(doc.activeElement.className,'source');
+  change(q('#varRows .source'),'自定义值'); assert.ok(doc.activeElement.classList.contains('source'));
   input(q('#varRows .vinput'),'  literal runtime draft  ');
 });
 check('Element restore preserves original whitespace, empty and duplicate rows without applying', () => {

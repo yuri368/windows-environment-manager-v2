@@ -1,0 +1,7 @@
+Browser acceptance, 2026-10-14
+Independent IAB QA tabs, served primary original project.
+CSS600px viewport verified grid two columns, 150px height, no app-list horizontal overflow.
+Original ID4 edited to custom draft, deleted, ghost moved to fifth visible position, then cancelled deletion: ID4 and draft restored at fifth position.
+Three-line Chinese draft follows same workflow; Apply history contains exact three lines, REPLACE1 and MOVE2, no phantom deletion.
+Real browser fixture raw 甲 CRLF 乙 CR 丙 LF 丁: ordinary and whole editor append !, both afterRaw exactly retain original three line-ending forms. New Enter input accepted; original core semicolon/NUL validation covered by tests.
+20 scripts372checks passed; no real Registry operations.
