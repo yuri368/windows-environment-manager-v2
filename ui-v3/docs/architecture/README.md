@@ -25,3 +25,5 @@ Claude 修复收尾：[本轮缺陷复核与验证记录](CLAUDE_UI_REPAIR_REVIE
 本轮 GUI 一致性契约：[四项负责人反馈统一任务书](GUI_FEEDBACK_CONTRACT.txt)。覆盖 Claude 修复契约中 ghost 展示原始值的旧显示规则；原快照与删除审计、绿色建议撤销规则保持。
 
 - GUI feedback supplemental presentation/counting direction: `GUI_FEEDBACK_SUPPLEMENT.txt`, following the owner feedback and GPT supplemental approval on 2026-10-14.
+
+- Display movement labels/counts follow `docs/architecture/GUI_DISPLAY_MOVEMENT.txt`; business movement and Audit retain the live-original ordering contract.

@@ -70,7 +70,7 @@ check('Restoring a moved ghost uses its current display position and keeps unrel
   removeButton().click();
   ghostFor(b).querySelector('[data-move-down]').click();
   assert.deepEqual(ids(visible()),[a,c,b,d]);assert.equal(serialized(),'A;C;D');
-  assert.match(summary(),/移动 0/);
+  assert.match(summary(),/展示移动：移动 1 · 幽灵移动 1/);
   setInput(rowFor(a).querySelector('.element-input'),'A2');
   assertAdopted(removeButton());
   removeButton().click();

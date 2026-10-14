@@ -232,12 +232,27 @@ var WindowsElements = (() => {
     return {added:false,replaced:row.value !== original.value,
       moved:existing.findIndex(item => item.id === row.id) !== remaining.findIndex(item => item.id === row.id)};
   }
+  // Presentation compares every original stable ID, including ghosts; Audit still compares live originals.
+  function displayMoved(id){
+    if(!session.originalById.has(id))return false;
+    const originalIndex=session.originalRows.findIndex(row=>row.id===id);
+    const displayIndex=session.displayOrder.filter(item=>session.originalById.has(item)).indexOf(id);
+    return displayIndex>=0&&displayIndex!==originalIndex;
+  }
+  function displayMovementCounts(){
+    const liveIds=new Set(session.rows.map(row=>row.id));
+    return session.originalRows.reduce((counts,row)=>{
+      if(displayMoved(row.id))counts[liveIds.has(row.id)?'moved':'ghost-moved']++;
+      return counts;
+    },{moved:0,'ghost-moved':0});
+  }
   function stateFor(row){
-    return session.plan?.audit.elements.find(element=>element.elementId===row.id)||editStateFor(row);
+    const business=session.plan?.audit.elements.find(element=>element.elementId===row.id)||editStateFor(row);
+    return {...business,moved:displayMoved(row.id)};
   }
   const manualAddition=(row,state)=>!!state.added&&session.manualAddedIds.has(row.id);
   function labels(state, removed = false,row) {
-    return (row?valueHint(row.value,session.whole):'')+(removed ? [['removed','删除']] : [
+    return (row?valueHint(row.value,session.whole):'')+(removed ? [['removed','删除'],...(state.moved?[['moved','移动']]:[])] : [
       ...(state.added ? [[row&&manualAddition(row,state)?'manual-added':'added',row&&manualAddition(row,state)?'手动新增':'新增']] : []), ...(state.replaced ? [['replaced','替换']] : []),
       ...(state.moved ? [['moved','移动']] : [])
     ]).map(([kind,text]) => statusBadge(kind,text)).join('');
@@ -265,11 +280,11 @@ var WindowsElements = (() => {
   function renderComparison() {
     const root=session.container;
     root.querySelector('#elementOriginal').innerHTML=session.original === undefined ? '<span class="empty-element">（不存在）</span>'
-      : session.originalRows.map(original=>{const current=session.rows.find(row=>row.id===original.id);return token(original,current?stateFor(current):{},!current,session.originalCounts.get(original.value));}).join('<span class="element-separator">;</span>');
+      : session.originalRows.map(original=>{const current=session.rows.find(row=>row.id===original.id);return token(original,stateFor(current??original),!current,session.originalCounts.get(original.value));}).join('<span class="element-separator">;</span>');
     const liveById=new Map(session.rows.map(row=>[row.id,row]));
     const current=session.displayOrder.map(id=>{
       const row=liveById.get(id);
-      return row?token(row,stateFor(row),false,session.currentCounts.get(row.value)):token(session.deletedDrafts.get(id)??session.originalById.get(id),{},true,1,true);
+      return row?token(row,stateFor(row),false,session.currentCounts.get(row.value)):token(session.deletedDrafts.get(id)??session.originalById.get(id),stateFor(session.originalById.get(id)),true,1,true);
     }).join('<span class="element-separator">;</span>');
     root.querySelector('#elementPreview').innerHTML=current || `<span class="empty-element">${session.plan.after.exists?'（空字符串）':'（不存在）'}</span>`;
     root.querySelector('#elementSerialized').textContent=session.plan.after.exists?serialized():'（不存在）';
@@ -366,6 +381,7 @@ var WindowsElements = (() => {
   function paintLegend() {
     const counts=session.plan.audit.counts,rows=session.rows,additions=additionCounts();
     const live={
+      ...displayMovementCounts(),
       added:additions.added,
       'manual-added':additions.manualAdded,
       duplicate:session.whole?0:rows.filter(row=>session.currentCounts.get(row.value)>1).length,
@@ -452,7 +468,7 @@ var WindowsElements = (() => {
     const root=session.container,raw=serialized();
     session.currentCounts = countsFor(session.rows);
     session.plan=DemoPlan.buildElementEdit({target:{scope:session.scope,name:session.name},snapshot:session.snapshot||{exists:session.original!==undefined,raw:session.original===undefined?null:session.original,type:session.registryType,revision:0},afterRaw:raw,audit:auditSnapshot()});
-    const changed=session.plan.operations.length>0,candidates=candidatePlan(),additions=additionCounts();
+    const changed=session.plan.operations.length>0,candidates=candidatePlan(),additions=additionCounts(),movement=displayMovementCounts();
     const operationCounts={add:0,remove:0,replace:0,move:0};
     for(const operation of session.plan.operations){
       const kind=String(operation.type||operation.action).toLowerCase(),key=kind==='insert'?'add':kind;
@@ -465,7 +481,7 @@ var WindowsElements = (() => {
     root.querySelector('#elementValidation').textContent=valid()?'':session.whole?'字符串不能包含 NUL。':'一个元素内不能包含分号或 NUL；请将多项内容拆成多个元素。';
     root.querySelector('#applyElements').disabled=!valid()||!session.plan.operations.length;
     root.querySelector('#restoreElements').disabled=!structureChanged;
-    root.querySelector('#elementStatus').textContent=changed?`本次编辑：新增 ${additions.added} · 手动新增 ${additions.manualAdded} · 删除 ${operationCounts.remove} · 替换 ${operationCounts.replace} · 移动 ${operationCounts.move} · 确认后生效`:`本次编辑：0 项变化${hasSuggestions?' · 有尚未采纳的方案建议':''}${structureChanged?' · 结果值未改变':''}`;
+    root.querySelector('#elementStatus').textContent=changed?`本次编辑：新增 ${additions.added} · 手动新增 ${additions.manualAdded} · 删除 ${operationCounts.remove} · 替换 ${operationCounts.replace} · 展示移动：移动 ${movement.moved} · 幽灵移动 ${movement['ghost-moved']} · 确认后生效`:`本次编辑：0 项变化${hasSuggestions?' · 有尚未采纳的方案建议':''}${structureChanged?' · 结果值未改变':''} · 展示移动：移动 ${movement.moved} · 幽灵移动 ${movement['ghost-moved']}`;
     root.querySelectorAll('[data-element-id]').forEach(el=>{if(!el.classList.contains('element-row'))return;const row=session.rows.find(row=>row.id===Number(el.dataset.elementId));if(row)paintRow(el,row);});
     const pending = root.querySelector('#pendingElements');
     pending.innerHTML = pendingMarkup(raw,session.appendValues,session.whole,true,session.appendModes,candidates);
@@ -502,7 +518,7 @@ var WindowsElements = (() => {
       <div class="dialoghead"><div><div class="eyebrow">Windows 环境 / ${options.scope==='User'?'用户':'系统'}</div><h3 id="dialogTitle">${escape(options.name)} <span class="element-demo">演示数据</span></h3><p>调整元素顺序或内容，应用后更新本页展示。</p></div><button class="close" id="closeDialog" aria-label="关闭元素编辑器">×</button></div>
       <div class="elements-meta"><span>作用域 <strong>${options.scope==='User'?'用户':'系统'}</strong></span><span>类型 <strong>${escape(options.registryType)}（示例）</strong></span><span id="elementTotal"></span></div>
       <div class="dialogbody elements-body"><div class="elements-main"><div class="elements-toolbar"><span>${options.whole?'整体字符串 · 不拆分元素':'按分号排列 · Alt + ↑ / ↓ 调整顺序'}</span><div class="elements-toolbar-actions"><button class="textbtn" id="restoreElements" disabled title="恢复打开弹窗时的值，不改变页面快照">还原本次编辑</button><button class="btn" id="addElement" ${options.whole?'hidden':''}>＋ 新增元素</button></div></div>
-        <div class="change-legend" role="group" aria-label="状态图例与计数"><span class="legend-group"><span class="legend-heading">本次变更</span><span class="lg legend-added"><i class="st-cell st-added"><b class="ic ic-add"></b></i>新增<em data-legend-count="added">0</em></span><span class="lg legend-manual-added"><i class="st-cell st-manual-added"><b class="ic ic-add"></b></i>手动新增<em data-legend-count="manual-added">0</em></span><span class="lg legend-replaced"><i class="st-cell st-replaced"><b class="ic ic-swap"></b></i>替换<em data-legend-count="replaced">0</em></span><span class="lg legend-moved"><i class="st-cell st-moved"><b class="ic ic-move"></b></i>移动<em data-legend-count="moved">0</em></span><span class="lg legend-removed"><i class="st-cell st-removed"><b class="ic ic-cut"></b></i>删除<em data-legend-count="removed">0</em></span></span><span class="legend-group"><span class="legend-heading">提示</span><span class="lg legend-duplicate"><i class="st-cell st-duplicate"><b class="ic ic-stack"></b></i>重复<em data-legend-count="duplicate">0</em></span><span class="lg legend-empty"><i class="st-cell st-empty"><b class="ic ic-void"></b></i>空元素<em data-legend-count="empty">0</em></span><span class="lg legend-match"><i class="st-cell st-match"><b class="ic ic-check"></b></i>匹配<em data-legend-count="match">0</em></span></span></div>
+        <div class="change-legend" role="group" aria-label="状态图例与计数"><span class="legend-group"><span class="legend-heading">本次变更</span><span class="lg legend-added"><i class="st-cell st-added"><b class="ic ic-add"></b></i>新增<em data-legend-count="added">0</em></span><span class="lg legend-manual-added"><i class="st-cell st-manual-added"><b class="ic ic-add"></b></i>手动新增<em data-legend-count="manual-added">0</em></span><span class="lg legend-replaced"><i class="st-cell st-replaced"><b class="ic ic-swap"></b></i>替换<em data-legend-count="replaced">0</em></span><span class="lg legend-moved" title="普通原始元素的展示位置变化；实际应用仍依据有效元素顺序"><i class="st-cell st-moved"><b class="ic ic-move"></b></i>移动<em data-legend-count="moved">0</em></span><span class="lg legend-moved" title="已移除原始元素的展示位置变化，不写入结果"><i class="st-cell st-moved"><b class="ic ic-move"></b></i>幽灵移动<em data-legend-count="ghost-moved">0</em></span><span class="lg legend-removed"><i class="st-cell st-removed"><b class="ic ic-cut"></b></i>删除<em data-legend-count="removed">0</em></span></span><span class="legend-group"><span class="legend-heading">提示</span><span class="lg legend-duplicate"><i class="st-cell st-duplicate"><b class="ic ic-stack"></b></i>重复<em data-legend-count="duplicate">0</em></span><span class="lg legend-empty"><i class="st-cell st-empty"><b class="ic ic-void"></b></i>空元素<em data-legend-count="empty">0</em></span><span class="lg legend-match"><i class="st-cell st-match"><b class="ic ic-check"></b></i>匹配<em data-legend-count="match">0</em></span></span></div>
         <div class="element-list" id="elementList"></div><div class="element-validation" id="elementValidation" role="status"></div><div id="pendingElements" hidden></div>
       </div><aside class="elements-compare" aria-label="元素变更对照">
         <details class="element-raw" open><summary>元素变更对照</summary><p class="comparison-hint">悬停或聚焦任一元素，三处对应项一起亮起。重复按每栏的原始文本统计，空元素保留；删除项不计入新值。</p><div class="raw-comparison"><div class="raw-pane"><label>打开时的值</label><pre id="elementOriginal"></pre></div><div class="raw-pane"><label>编辑后的值 · 含删除标记</label><pre id="elementPreview"></pre></div></div><details class="serialized-result" open><summary>实际结果字符串（不含标记或删除项）</summary><pre id="elementSerialized"></pre></details></details>
@@ -593,7 +609,7 @@ var WindowsElements = (() => {
   }
   function ghostRowMarkup(row,displayIndex,total) {
     const beforeIndex=session.originalRows.findIndex(original=>original.id===row.id);
-    return `<div class="element-ghost-row" data-element-id="${row.id}"><span class="element-order" title="原始位置：第 ${beforeIndex+1} 项">${displayIndex+1}</span><span class="element-ghost-body"><span class="element-ghost-value" data-raw-value="${escape(row.value)}">${row.value===''?'<span class="empty-element">（空元素）</span>':escape(row.value)}</span><span class="element-ghost-state">${valueHint(row.value,session.whole)}${statusBadge('removed','本次编辑已移除')}<span class="element-ghost-note">仅展示痕迹 · 不写入结果</span></span></span>${elementActionsMarkup(row.id,displayIndex,total,true)}</div>`;
+    return `<div class="element-ghost-row${displayMoved(row.id)?' is-moved':''}" data-element-id="${row.id}"><span class="element-order" title="原始位置：第 ${beforeIndex+1} 项">${displayIndex+1}</span><span class="element-ghost-body"><span class="element-ghost-value" data-raw-value="${escape(row.value)}">${row.value===''?'<span class="empty-element">（空元素）</span>':escape(row.value)}</span><span class="element-ghost-state">${valueHint(row.value,session.whole)}${statusBadge('removed','本次编辑已移除')}${displayMoved(row.id)?statusBadge('moved','移动'):''}<span class="element-ghost-note">仅展示痕迹 · 不写入结果</span></span></span>${elementActionsMarkup(row.id,displayIndex,total,true)}</div>`;
   }
   function renderRows(focusId) {
     const root=session.container;

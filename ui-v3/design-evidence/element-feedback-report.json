@@ -17,7 +17,7 @@
       "passed": true
     },
     {
-      "name": "Deleting changed duplicate does not count the ghost old value or the removed new value",
+      "name": "Deleting changed duplicate displays its draft but does not count it among live duplicate values",
       "passed": true
     },
     {

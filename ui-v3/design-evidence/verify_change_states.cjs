@@ -190,7 +190,8 @@ try {
     row(ids[2]).querySelector('[data-move-up]').click();
     assert.deepEqual(values(), ['A', 'C', 'new'], 'First move only crosses the deleted B ghost');
     assert.equal(serialized(), 'A;C;new');
-    assert.equal(all('.element-row.is-moved').length, 0);
+    assert.equal(all('.element-row.is-moved').length, 1);
+    assert.equal(all('.element-ghost-row.is-moved').length, 1);
     row(ids[2]).querySelector('[data-move-up]').click();
     assert.deepEqual(values(), ['C', 'A', 'new']);
     assert.equal(serialized(), 'C;A;new');
@@ -292,7 +293,8 @@ try {
     w.eval("{ const v=curProfile().vars[0]; v.special=true; windows[key(v)]='A;B;'; renderRows(); }");
     assert.equal(q('#compareAfter .diff-label').textContent, '整体待替换');
     w.eval("{ const v=curProfile().vars[0]; v.special=false; v.mode='+append'; renderRows(); }");
-    assert.equal(q('#compareAfter .diff-label'), null, 'Append intent is not whole-value replacement');
+    assert.equal(q('#compareAfter .replacement-label'), null, 'Append intent is not whole-value replacement');
+    assert.equal(q('#compareAfter .status-badge.is-empty').textContent,'空元素');
   });
   check('Semantic change-state workflows emit no JSDOM runtime errors', () => assert.deepEqual(errors, []));
   const report = {

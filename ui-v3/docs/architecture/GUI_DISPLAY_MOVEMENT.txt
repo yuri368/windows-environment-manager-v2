@@ -1,0 +1,9 @@
+Display movement presentation contract - 2026-10-14
+
+Original stable IDs in originalRows form the session baseline. Compare their current positions in displayOrder filtered to original IDs, including ghosts. Exclude new IDs. Use this display movement flag in live rows, ghost rows, Original, Preview, legend and footer only. Deleting a moved original preserves its display movement flag. Moving back clears it. Both passive and active displacements count.
+
+Show independent removed and moved badges on ghosts. Legend/footer moved counts live originals; ghost-moved counts ghosts. Footer explicitly labels these as 展示移动. UI counts never enable Apply.
+
+Keep editStateFor/auditSnapshot business movement comparing live original IDs only; no display movement flag in Audit/History/plan and no ghost in serialized output. Restoration keeps stable ID/current display position and then existing Audit recalculates true MOVE. New sessions and Restore calculate from their own originalRows. No demo-plan/Registry/V2 changes.
+
+Owner plan explicitly authorized; GPT approval captured in design-evidence/gui-closure-2026-10-14/architect-movement-plan.txt. This supersedes V3.6 only for display labels/counts; business ordering is unchanged.

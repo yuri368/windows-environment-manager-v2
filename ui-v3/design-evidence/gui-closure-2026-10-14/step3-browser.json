@@ -1,0 +1,32 @@
+{
+  "legend": "本次变更新增0手动新增0替换0移动1幽灵移动1删除1提示重复0空元素0匹配0",
+  "originalMoved": true,
+  "previewMoved": true,
+  "raw": "%JAVA_HOME%\\bin;%PYTHON_HOME%;%PYTHON_HOME%\\Scripts;H:\\ProgramFiles\\PortableGit\\cmd;H:\\ProgramFiles\\VSCode\\bin;%NODE_HOME%\\bin;%DOTNET_ROOT%;%TEAM_TOOLS_HOME%\\bin",
+  "rows": [
+    {
+      "ghost": false,
+      "id": "5",
+      "labels": [
+        "移动"
+      ],
+      "moved": true
+    },
+    {
+      "ghost": true,
+      "id": "4",
+      "labels": [
+        "本次编辑已移除",
+        "移动"
+      ],
+      "moved": true
+    },
+    {
+      "ghost": false,
+      "id": "6",
+      "labels": [],
+      "moved": false
+    }
+  ],
+  "status": "本次编辑：新增 0 · 手动新增 0 · 删除 1 · 替换 0 · 展示移动：移动 1 · 幽灵移动 1 · 确认后生效"
+}

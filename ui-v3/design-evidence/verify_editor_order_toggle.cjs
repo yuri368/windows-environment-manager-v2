@@ -62,7 +62,9 @@ check('Ghost buttons move adjacent visible positions without changing plan, raw 
   move(originalIds[1],'down');assertVisibleOrder(['A','C','D','B']);
   move(originalIds[1],'up');assertVisibleOrder(['A','C','B','D']);
   assert.deepEqual(original().map(raw),['A','B','C','D']);
-  assert.equal(serialized(),result);assert.equal(q('#elementStatus').textContent,status);
+  assert.equal(serialized(),result);
+  assert.equal(q('#elementStatus').textContent.split(' · 展示移动：')[0],status.split(' · 展示移动：')[0]);
+  assert.match(q('#elementStatus').textContent,/展示移动：移动 1 · 幽灵移动 1/);
   assert.deepEqual(values(),['A','C','D']);assert.equal(historyLength(),count);assert.equal(windowsSnapshot(),before);
 });
 check('Two ghosts can pass each other without changing live order or the serialized result',()=>{
@@ -77,7 +79,7 @@ check('Live movement crosses a ghost visually; MOVE appears only after live rela
   setup('A;B;C');const [a,b,c]=ids(live());
   rowFor(b).querySelector('[data-delete]').click();
   move(a,'down');assertVisibleOrder(['B','A','C']);
-  assert.deepEqual(values(),['A','C']);assert.equal(serialized(),'A;C');assert.match(q('#elementStatus').textContent,/移动 0/);
+  assert.deepEqual(values(),['A','C']);assert.equal(serialized(),'A;C');assert.match(q('#elementStatus').textContent,/展示移动：移动 1 · 幽灵移动 1/);
   move(a,'down');assertVisibleOrder(['B','C','A']);
   assert.deepEqual(values(),['C','A']);assert.equal(serialized(),'C;A');assert.match(q('#elementStatus').textContent,/移动 [1-9]/);
   assert.equal(Number(ghostFor(b).dataset.elementId),b);assert.equal(Number(rowFor(c).dataset.elementId),c);

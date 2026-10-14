@@ -1,0 +1,255 @@
+ext: 和现有业务状态模型不变，仅收敛状态展示与计数呈现。
+    - paragraph: 完成后一次性提交源码、测试、截图和提交号，我再进行最终审查。此前报告的 21 脚本、422 项通过目前属于 Codex 提供的验证结果，最终仍以提交对应的证据为准。
+    - paragraph: 这轮目标很明确：统一视觉语言，而不是重新发明状态系统。
+    - button "复制":
+    - button "评价回复":
+    - button "分享":
+    - button "朗读":
+    - button "重新生成回复":
+    - button "更多操作":
+    - heading "你说：" [level=4]
+    - generic: 【codex】负责人刚明确补充：匹配也完全采用汇总栏“绿色图标格+匹配文字”风格，不再保留独立圆圈勾；这覆盖列表、Original、Preview三处。已复用同一CSS规则，浏览器实测三处和汇总均22px高、11.5px字号、400字重、5px圆角、21px图标格、12pxcheck；既有+/-/↶动作圆圈保留。另负责人要求“无变化”等compareTally移到应用后值的标题同行，已仅调相关temp.html markup/CSS。核心不改。正跑最终完整回归，之后给你对应Git提交/CI/源码/真实截图做最后审查。匹配圆圈保留的旧约束按负责人此次最新反馈废止。
+    - button "复制消息":
+    - button "共享提示":
+    - button "编辑消息":
+    - heading "ChatGPT 说：" [level=4]
+    - paragraph: 【架构顾问 → Codex】
+    - paragraph: 收到。确认负责人最新要求覆盖此前的视觉约束，批准继续按新版方案完成收尾。 ✅
+    - heading "一、匹配状态统一" [level=3]
+    - paragraph: 此前“保留独立绿色圆圈勾”的要求正式废止。
+    - paragraph: 新的统一规范为：
+    - list:
+      - paragraph: 匹配：绿色图标格 +「匹配」文字，整体 Badge。
+      - paragraph: 新增、手动新增、替换、移动、删除、重复：继续使用各自的完整状态 Badge。
+      - paragraph: ＋ / − / ↶：属于操作按钮，继续保留圆形设计，不受此次修改影响。
+    - paragraph: 匹配 Badge 应在元素列表、Original、Preview 和汇总栏中保持一致。注意不要同时留下旧圆圈勾和新 Badge，造成重复提示。
+    - paragraph: 你报告的 22px 高度、11.5px 字号、400 字重等参数，可以作为本轮视觉验收基准。
+    - heading "二、CompareTally 位置调整" [level=3]
+    - paragraph: 批准将“无变化”等统计信息移动至**「应用后值」标题同行**。
+    - paragraph: 只改变展示位置，不改变统计来源、ChangePlan、匹配计算或执行结果。
+    - paragraph: 特别注意窄窗口下的换行与布局，不得遮挡标题或统计内容。
+    - heading "三、最终审查安排" [level=3]
+    - paragraph: 目前不提出新开发要求，也不提前宣称验收通过。
+    - paragraph: 待你完成后，一次提交：
+    - list:
+      - paragraph: 最终 Git 提交号和修改文件。
+      - paragraph: 完整测试结果及对应 CI 状态。
+      - paragraph: 元素列表、Original、Preview、汇总栏的真实浏览器截图。
+      - paragraph: 「应用后值」标题同行的统计展示证据。
+    - paragraph: 本轮最新两项要求已经确认，无需再次询问负责人。
+    - paragraph: 继续完成现有工作即可。最终审查只检查本轮已确认的 GUI 修复及业务回归，不再扩大需求范围。
+    - button "复制":
+    - button "评价回复":
+    - button "分享":
+    - button "朗读":
+    - button "重新生成回复":
+    - button "更多操作":
+    - heading "你说：" [level=4]
+    - generic: 【codex】负责人授权按遗留清单逐项收尾。基线1f1cdb6，空元素组合badge修复已提交6261fde，primary/mirror针对30checks通过，浏览器空删除恢复正确。建议组合操作10/10+真实浏览器通过：采纳新增B(id10)，原A(id4)手工改B出现两副本，撤销新增只移除id10，留下id4且无旧删除建议，无产品漏洞。 现在请确认第三项展示契约调整：负责人选定全部原始元素打开时的相对顺序作为统一展示移动基线。从displayOrder过滤originalById（排除新增），和originalRows稳定ID序列比较位置；普通/ghost同用displayMoved(id)。删除后移动标签保留，ghost跨普通互换也显示完整移动badge，回原相对顺序消失。原始栏、编辑后栏、list用相同UI moved flag；Audit.editStateFor仍仅有效原始rows相对顺序，不能拿displayMoved生成业务MOVE。图例/footer“移动”统计live展示移位，“幽灵移动”统计ghost展示移位，明确展示统计，confirm/history仍业务Audit。不加manual移动元数据，不改demo-plan.js/Registry/V2。新增元素不改变原始元素标签。请确认该最小展示方案及必要约束；获确认后实现+回归+CI+源码截图最后审查。
+    - button "复制消息":
+    - button "共享提示":
+    - button "编辑消息":
+    - heading "ChatGPT 说：" [level=4]
+    - paragraph: 【架构顾问 → Codex】
+    - paragraph:
+      - generic: 确认：第三项展示契约调整通过，批准实施。
+      - text: ✅
+    - paragraph: 负责人选择“全部原始元素打开时的相对顺序”作为统一展示移动基线，这个方案合理，而且不需要增加新的状态模型。
+    - paragraph:
+      - text: 关键是严格区分
+      - generic: 展示位置变化
+      - text: 与
+      - generic: 实际业务 MOVE
+      - text: 。
+    - heading "一、确认最终契约" [level=2]
+    - table:
+      - rowgroup:
+        - row "项目 最终规则":
+          - columnheader "项目":
+            - paragraph: 项目
+          - columnheader "最终规则":
+            - paragraph: 最终规则
+        - row "展示基线 打开编辑器时 originalRows 的稳定 ID 顺序":
+          - cell "展示基线":
+            - paragraph: 展示基线
+          - cell "打开编辑器时 originalRows 的稳定 ID 顺序":
+            - paragraph:
+              - text: 打开编辑器时
+              - code: originalRows
+              - text: 的稳定 ID 顺序
+        - row "当前展示顺序 displayOrder 中过滤出全部原始 ID，包括 ghost":
+          - cell "当前展示顺序":
+            - paragraph: 当前展示顺序
+          - cell "displayOrder 中过滤出全部原始 ID，包括 ghost":
+            - paragraph:
+              - code: displayOrder
+              - text: 中过滤出全部原始 ID，包括 ghost
+        - row "移动判定 同一 ID 的当前展示位置与原始位置不同":
+          - cell "移动判定":
+            - paragraph: 移动判定
+          - cell "同一 ID 的当前展示位置与原始位置不同":
+            - paragraph: 同一 ID 的当前展示位置与原始位置不同
+        - row "普通原始元素 使用 displayMoved(id)":
+          - cell "普通原始元素":
+            - paragraph: 普通原始元素
+          - cell "使用 displayMoved(id)":
+            - paragraph:
+              - text: 使用
+              - code: displayMoved(id)
+        - row "Ghost 原始元素 同样使用 displayMoved(id)":
+          - cell "Ghost 原始元素":
+            - paragraph: Ghost 原始元素
+          - cell "同样使用 displayMoved(id)":
+            - paragraph:
+              - text: 同样使用
+              - code: displayMoved(id)
+        - row "本次新增元素 不参与原始顺序比较":
+          - cell "本次新增元素":
+            - paragraph: 本次新增元素
+          - cell "不参与原始顺序比较":
+            - paragraph: 不参与原始顺序比较
+        - row "Audit MOVE 继续使用原有 editStateFor() 业务判断":
+          - cell "Audit MOVE":
+            - paragraph: Audit MOVE
+          - cell "继续使用原有 editStateFor() 业务判断":
+            - paragraph:
+              - text: 继续使用原有
+              - code: editStateFor()
+              - text: 业务判断
+        - row "History / ChangePlan 不受展示移动标签影响":
+          - cell "History / ChangePlan":
+            - paragraph: History / ChangePlan
+          - cell "不受展示移动标签影响":
+            - paragraph: 不受展示移动标签影响
+    - paragraph:
+      - generic: 这里的移动是位置比较，不是操作记录。
+    - paragraph: 因此，即使某个元素没有直接点击过移动按钮，只要其他原始元素移动导致它的展示位置发生变化，也应显示“移动”。
+    - heading "二、必须遵守的五项约束" [level=2]
+    - paragraph:
+      - text: "1."
+      - generic: 所有原始 ID 都要参与比较。
+      - text: Ghost 虽然不属于 live rows，但仍保留在
+      - code: displayOrder
+      - text: 中。不能因为删除就从展示移动基线中排除。
+    - paragraph:
+      - text: "2."
+      - generic: 稳定 ID 是唯一比较依据。
+      - text: 相同文本、重复元素、空元素都必须独立判断，禁止通过值匹配推断移动。
+    - paragraph:
+      - text: "3."
+      - generic: 展示状态与业务状态必须彻底隔离。
+      - code: displayMoved(id)
+      - text: 只能用于元素列表、Original、Preview、图例和 Footer，不得进入
+      - code: DemoPlan
+      - text: 、
+      - code: auditSnapshot()
+      - text: 或 History 的业务统计。
+    - paragraph:
+      - text: "4."
+      - generic: Ghost 移动后仍保留删除状态。
+      - text: 可以同时显示完整的「删除」和「移动」Badge。恢复时保留当前
+      - code: displayOrder
+      - text: 位置，随后由现有业务规则判断是否真正产生 MOVE。
+    - paragraph:
+      - text: "5."
+      - generic: 计数必须明确是展示统计。
+      - text: Footer 中“移动”统计发生展示位移的 live 原始元素，“幽灵移动”统计发生展示位移的 ghost。若展示移动数量不为零，但业务 MOVE 为零，不能因此启用 Apply。
+    - heading "三、必须验证的关键场景" [level=2]
+    - paragraph:
+      - text: 以原始顺序
+      - code: A、B、C
+      - text: 为例：
+    - table:
+      - rowgroup:
+        - row "当前展示顺序 展示移动标记 业务 MOVE":
+          - columnheader "当前展示顺序":
+            - paragraph: 当前展示顺序
+          - columnheader "展示移动标记":
+            - paragraph: 展示移动标记
+          - columnheader "业务 MOVE":
+            - paragraph: 业务 MOVE
+        - row "A、B、C 无 0":
+          - cell "A、B、C":
+            - paragraph: A、B、C
+          - cell "无":
+            - paragraph: 无
+          - cell "0":
+            - paragraph: "0"
+        - row "B、A、C A、B 按 live 顺序计算":
+          - cell "B、A、C":
+            - paragraph: B、A、C
+          - cell "A、B":
+            - paragraph: A、B
+          - cell "按 live 顺序计算":
+            - paragraph: 按 live 顺序计算
+        - row "A、B(ghost)、C 无 0":
+          - cell "A、B(ghost)、C":
+            - paragraph: A、B(ghost)、C
+          - cell "无":
+            - paragraph: 无
+          - cell "0":
+            - paragraph: "0"
+        - row "A、C、B(ghost) C、B(ghost) 0":
+          - cell "A、C、B(ghost)":
+            - paragraph: A、C、B(ghost)
+          - cell "C、B(ghost)":
+            - paragraph: C、B(ghost)
+          - cell "0":
+            - paragraph: "0"
+        - row "A、B(ghost)、C（移动回原位） 无 0":
+          - cell "A、B(ghost)、C（移动回原位）":
+            - paragraph: A、B(ghost)、C（移动回原位）
+          - cell "无":
+            - paragraph: 无
+          - cell "0":
+            - paragraph: "0"
+    - paragraph: 第四行尤其重要。
+    - paragraph:
+      - generic: B 已删除后，单纯将其幽灵行移动到 C 后面：
+    - list:
+      - paragraph: B 和 C 都显示移动 Badge。
+      - paragraph: Footer 分别统计 live 展示移动和 ghost 展示移动。
+      - paragraph: 原始 live 元素的相对顺序没有改变。
+      - paragraph: 业务 Audit 不得凭借展示位移产生 MOVE。
+    - paragraph: 这正是新契约与旧业务计划必须保持的边界。
+    - paragraph: 另外，点击 Restore、Cancel 或重新打开编辑器时，应重新以对应会话的原始顺序计算，不能遗留上一轮标签。
+    - heading "四、实施与验收裁定" [level=2]
+    - generic: 批准实施
+    - paragraph:
+      - text: 同意采用纯派生的
+      - code: displayMoved(id)
+      - text: ，不新增手动移动元数据，不修改
+      - code: demo-plan.js
+      - text: 。
+    - paragraph: 原始栏、编辑后栏和元素列表统一使用展示移动标记；图例与 Footer 使用展示统计；Apply、Audit、History 继续遵守原有业务定义。
+    - paragraph:
+      - text: 你报告的
+      - code: 6261fde
+      - text: 空元素 Badge 修复及建议组合操作验证暂按已报告结果记录，本次批准属于
+      - generic: 设计契约确认，不代表最终源码验收
+      - text: 。
+    - paragraph: 完成后提交新源码、回归测试、对应 CI 与实际浏览器截图，我再做最终审查。
+    - paragraph:
+      - generic: 不增加其他功能，也不重新设计移动算法。
+      - text: 这一项只解决视觉状态与展示位置的一致性。
+    - button "复制":
+    - button "评价回复":
+    - button "分享":
+    - button "朗读":
+    - button "重新生成回复":
+    - button "更多操作":
+    - generic: ChatGPT 可能会出错。请核查重要信息。
+    - button "滚动到底部":
+    - heading "最新一条回复" [level=4]
+    - status
+    - button "添加文件等内容":
+    - textbox "询问 ChatGPT":
+      - paragraph: 询问 ChatGPT
+    - button "选择 ChatGPT 模型":
+      - generic: 高
+    - button "听写":
+    - button "开始语音":
+- status
+- status: 回答已完成
+- status
+- status

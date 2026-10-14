@@ -53,7 +53,7 @@ check('System scope examples expose partial matching and a separate system Path'
 check('List example retains duplicates and blanks; empty and missing values display differently',()=>{
   openApp('列表与空值');q('#editWindowsElements').click();
   assert.deepEqual(all('.element-input').map(el=>el.value),['C:\\Demo\\Alpha','','C:\\Demo\\Alpha','C:\\Demo\\Gamma','']);
-  q('#cancelDialog').click();selectVariable('DEMO_EMPTY_VALUE');assert.equal(q('#compareActual').textContent,'（空字符串）');
+  q('#cancelDialog').click();selectVariable('DEMO_EMPTY_VALUE');assert.equal(q('#compareActual .diff-value').dataset.rawValue,'');assert.equal(q('#compareActual .status-badge').textContent,'空字符串');
   selectVariable('DEMO_UNSET_VALUE');assert.equal(q('#compareActual').textContent,'（不存在）');
   choosePlan('自定义排序预览');q('#previewButton').click();assert.equal(q('#confirmDialog').disabled,true);
   assert.match(q('.dialogbody').textContent,/自定义排序/);q('#cancelDialog').click();
