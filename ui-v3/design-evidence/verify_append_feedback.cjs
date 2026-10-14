@@ -43,7 +43,7 @@ const snapshot = () => w.eval('JSON.stringify(windows)');
 const state = () => w.eval('JSON.stringify({apps,windows,history,revision})');
 const cancel = () => q('#cancelDialog').click();
 const rawValues = container => container ? [...(container.matches('[data-raw-value]') ? [container] : []), ...container.querySelectorAll('[data-raw-value]')].map(node => node.getAttribute('data-raw-value')) : [];
-const candidates = () => rawValues(q('#pendingElements .pending-additions'));
+const candidates = () => all('#pendingElements .element-suggestions-group .pending-add-token').flatMap(rawValues);
 const inspectorCandidates = () => all('#compareDesired .pending-add-token').flatMap(token => rawValues(token));
 const actualText = () => {
   return paneRaw('#compareActual');
@@ -167,7 +167,7 @@ try {
     assert.doesNotMatch(q('#compareResult').textContent, /全匹配|完全匹配/);
     assert.equal(q('#compareDesired .pending-add-token'), null); assert.deepEqual(inspectorCandidates(), []);
     assert.match(q('#compareAfter').textContent, /整体待替换/);
-    openFixture(); assert.deepEqual(candidates(), []); assert.match(q('#elementPreview').textContent, /将替换/); cancel();
+    openFixture(); assert.deepEqual(candidates(), []); assert.match(q('#elementStatus').textContent, /0 项变化/); assert.doesNotMatch(q('#elementPreview').textContent, /待删除|将替换/); assert.equal(all('#elementList .element-change-state .diff-label').length, 0); assert.equal(q('#applyElements').disabled, true); cancel();
   });
   check('Whole editor preserves semicolon string with no pending candidate or misleading 0/0', () => {
     fixture({ actual: 'A;B', desired: 'A;C', mode: '+append', whole: true });
@@ -197,8 +197,8 @@ try {
     editorOpen('A;A;;', ['A;B;B']);
     assert.deepEqual(values(), ['A', 'A', '', '']); assert.deepEqual(candidates(), ['B']);
     assert.equal(serialized(), 'A;A;;');
-    assert.ok(q('#pendingElements')); assert.match(q('#pendingElements').textContent, /待追加/);
-    assert.match(q('#pendingElements').textContent, /未加入|不计入|未计入/);
+    assert.ok(q('#pendingElements')); assert.match(q('#pendingElements').textContent, /方案建议.*尚未采纳/);
+    assert.match(q('#pendingElements').textContent, /建议追加/); assert.match(q('#pendingElements').textContent, /尚未纳入本次编辑/);
     assert.equal(q('#pendingElements').querySelector('[data-element-id],input,textarea,[data-move-up],[data-move-down],[data-delete],.is-duplicate,.element-row'), null);
     for (const button of q('#pendingElements').querySelectorAll('button')) {
       assert.ok(button.matches('.pending-add-button[data-add-pending]'));

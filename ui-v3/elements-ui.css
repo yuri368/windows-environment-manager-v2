@@ -48,7 +48,6 @@
 .element-row.is-moved .element-input { background: var(--element-moved-bg); border-color: var(--element-moved-border); }
 .element-row.is-replaced .element-input { background: var(--element-replaced-bg); border-color: var(--element-replaced-border); }
 .element-row.is-added .element-input { background: var(--element-added-bg); border-color: var(--element-added-border); }
-.element-row.will-be-replaced .element-input { border-style: dashed; border-color: #d8b878; }
 .element-states, .element-change-state { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
 .element-row[draggable="true"] .element-order { cursor: grab; }
 .element-order { font-size: 12px; color: var(--sub); font-variant-numeric: tabular-nums; text-align: center; }
@@ -81,7 +80,7 @@
 .diff-label + .diff-label { margin-left: 4px; }
 .element-change-state > .diff-label { margin-left: 0; }
 .diff-label.is-replaced { color: var(--element-replaced-ink); background: var(--element-replaced-label-bg); border-color: var(--element-replaced-border); }
-.diff-label.is-planned, .replacement-label { color: #815c20; background: #ffda9b; border-color: #bf862b; }
+.replacement-label { color: #815c20; background: #ffda9b; border-color: #bf862b; }
 .diff-label.is-added { color: var(--element-added-ink); background: var(--element-added-label-bg); border-color: var(--element-added-border); }
 .diff-label.is-moved { color: var(--element-moved-ink); background: var(--element-moved-label-bg); border-color: var(--element-moved-border); }
 .diff-label.is-removed { color: var(--element-removed-ink); background: var(--element-removed-label-bg); border-color: var(--element-removed-border); }
@@ -154,8 +153,6 @@
 .plan-issue code { overflow-wrap: anywhere; }
 .diff-label.is-retained { color: var(--element-duplicate-ink); border-color: var(--element-duplicate-border); background: var(--element-duplicate-label-bg); }
 .retained-element { border-bottom: 1px dotted var(--element-duplicate-border); }
-.element-row.is-pending-remove { background: var(--element-removed-bg); }
-.diff-token.is-pending-remove { border-style: dashed; border-color: var(--element-removed-border); background: var(--element-removed-bg); }
 .selection-current { margin-top: 4px; white-space: pre-wrap; overflow-wrap: anywhere; }
 
 .stale-snapshot-values { margin-top: 8px; min-width: 0; }
@@ -191,3 +188,23 @@
 .value-comparison .comparison-token{display:inline-flex;align-items:center;gap:4px;max-width:100%;margin:3px 0;vertical-align:middle;line-height:1.55}
 .value-comparison .comparison-token>.diff-value{min-width:0;white-space:pre-wrap;overflow-wrap:anywhere}
 .value-comparison .comparison-token>.diff-label{flex:none;margin-left:0}
+
+/* Editor suggestions remain separate from the actual edit palette. */
+.element-suggestions { padding-top: 12px; border-top: 1px dashed var(--line2); }
+.element-suggestions-title { color: var(--body); font-size: 12px; font-weight: 600; }
+.element-suggestions-hint, .element-suggestions-empty { margin: 4px 0 0; color: var(--sub); font-size: 11px; line-height: 1.6; }
+.element-suggestions-empty.invalid-result { color: var(--amber); }
+.element-suggestions-group { display: grid; grid-template-columns: 56px minmax(0,1fr); align-items: baseline; gap: 8px; margin-top: 8px; }
+.element-suggestions-label { color: var(--sub); font-size: 11px; white-space: nowrap; }
+.element-suggestions .pending-additions-values { line-height: 1.6; }
+.element-suggestions .editor-suggestion-token { min-height: 28px; margin: 4px 0; padding: 0 0 0 8px; background: var(--surface); border-color: var(--line2); color: var(--body); line-height: 1.6; }
+.element-suggestions .editor-suggestion-token > .diff-value { padding: 4px 0; text-decoration: none; }
+.element-suggestions .editor-suggestion-token:not(.is-actionable) { padding-right: 8px; }
+.element-suggestions .pending-add-button, .element-suggestions .pending-remove-button { border-left-color: var(--line2); color: var(--body); }
+.element-suggestions .pending-add-button:hover, .element-suggestions .pending-remove-button:hover { background: var(--rail); }
+.element-suggestions .pending-add-button:active, .element-suggestions .pending-remove-button:active { background: var(--line); }
+.element-suggestions .pending-add-button:focus-visible, .element-suggestions .pending-remove-button:focus-visible { outline: 2px solid var(--element-related-ring); outline-offset: -3px; background: var(--rail); }
+.element-suggestions .plan-issues { gap: 4px 8px; margin-top: 8px; }
+#elementStatus { font-variant-numeric: tabular-nums; }
+
+.element-suggestions .pending-additions { margin-top: 8px; padding-top: 0; border-top: 0; }

@@ -31,12 +31,33 @@ var WindowsElements = (() => {
     const removals=(plan?.operations||[]).filter(op=>op.type==='remove');
     return removals.length?`<div class="pending-removals"><span class="pending-additions-title">方案待删除 · ${editing?'尚未从本次编辑列表移除':'确认应用后移除'}</span><div class="pending-additions-values">${removals.map(op=>removalToken(op,editing)).join('<span class="element-separator">;</span>')}</div></div>`:'';
   }
-  function issuesMarkup(plan){
-    return (plan?.issues||[]).length?`<div class="plan-issues">${plan.issues.map(issue=>`<span class="plan-issue"><code>${escape(issue.value)}</code><span class="diff-label is-retained">${issue.reason==='duplicate'?'存在重复，删除需确认':issue.reason==='shared'?'共享保留':issue.reason==='stale'?'编辑基线已失效':'目标计划冲突'}</span></span>`).join('')}</div>`:'';
+  function issuesMarkup(plan,editing=false){
+    return (plan?.issues||[]).length?`<div class="plan-issues">${plan.issues.map(issue=>`<span class="plan-issue"><code>${escape(issue.value)}</code><span class="diff-label is-retained">${issue.reason==='duplicate'?(editing?'存在重复，需明确选择元素':'存在重复，删除需确认'):issue.reason==='shared'?'共享保留':issue.reason==='stale'?'编辑基线已失效':'目标计划冲突'}</span></span>`).join('')}</div>`:'';
+  }
+  function editorSuggestionToken(op,kind,modes) {
+    const removing=kind==='remove',index=removing?op.beforeIndex:op.selectedIndex;
+    const position=modes[index]==='+append'?'开头':'末尾';
+    const actionable=removing||isAppendMode(modes[index]);
+    const action=removing?'采纳建议删除：从本次编辑列表移除':'采纳建议追加：加入本次编辑列表'+position;
+    const button=actionable?`<button type="button" class="pending-${removing?'remove':'add'}-button" data-${removing?'remove':'add'}-pending="${index}" title="${action}" aria-label="${action} ${escape(op.value)}">${removing?'−':'＋'}</button>`:'';
+    return `<span class="pending-${removing?'remove':'add'}-token editor-suggestion-token${button?' is-actionable':''}" ${removing?'data-pending-before-index':'data-selected-index'}="${index}"${removing&&op.elementId!==undefined?` data-element-id="${op.elementId}"`:''}><span class="diff-value" data-raw-value="${escape(op.value)}">${escape(op.value)}</span>${button}</span>`;
+  }
+  function editorSuggestionsMarkup(plan,whole,modes) {
+    if(whole&&plan?.valid!==false)return '';
+    const title='<div class="element-suggestions-title">方案建议 · 尚未采纳</div>';
+    const hint='<p class="element-suggestions-hint">以下操作尚未纳入本次编辑，点击加减按钮仅修改编辑列表，不会立即写入 Windows。</p>';
+    if(plan?.valid===false)return `<section class="element-suggestions" aria-label="方案建议">${title}<p class="element-suggestions-empty invalid-result">方案建议已失效，需要重新检测。</p></section>`;
+    const groups=[['remove','建议删除'],['insert','建议追加']].map(([kind,label])=>{
+      const operations=(plan?.operations||[]).filter(op=>op.type===kind);
+      return operations.length?`<div class="element-suggestions-group ${kind==='remove'?'pending-removals':'pending-additions'}"><span class="element-suggestions-label">${label}</span><div class="pending-additions-values">${operations.map(op=>editorSuggestionToken(op,kind,modes)).join('<span class="element-separator">;</span>')}</div></div>`:'';
+    }).join('');
+    const issues=issuesMarkup(plan,true);
+    return `<section class="element-suggestions" aria-label="方案建议">${title}${hint}${groups}${issues}${groups?'':'<p class="element-suggestions-empty">没有尚待采纳的方案建议。</p>'}</section>`;
   }
   function pendingMarkup(raw, values = [], whole = false, editing = false, modes = [], plan = null) {
-    if (whole) return '';
+    if (whole && !editing) return '';
     const pendingPlan=plan||DemoPlan.build({mode:'-append',whole,actualRaw:raw,selectedRaw:values.join(';')});
+    if(editing)return editorSuggestionsMarkup(pendingPlan,whole,modes);
     const missing=pendingPlan.operations.filter(op=>op.type==='insert').map(op=>({value:op.value,index:op.selectedIndex,mode:op.position==='head'?'+append':'-append'}));
     const additions=missing.length?`<div class="pending-additions"><span class="pending-additions-title">方案待追加 · ${editing?'尚未加入本次编辑结果':'尚未加入当前值'}</span><div class="pending-additions-values">${missing.map(part=>pendingToken(part,editing?modes[part.index]:null)).join('<span class="element-separator">;</span>')}</div></div>`:'';
     return removalMarkup(pendingPlan,editing)+additions+issuesMarkup(pendingPlan);
@@ -128,10 +149,10 @@ var WindowsElements = (() => {
   function stateFor(row){
     return session.plan?.audit.elements.find(element=>element.elementId===row.id)||editStateFor(row);
   }
-  function labels(state, removed = false, planned = false) {
+  function labels(state, removed = false) {
     return (removed ? [['removed','删除']] : [
       ...(state.added ? [['added','新增']] : []), ...(state.replaced ? [['replaced','替换']] : []),
-      ...(state.moved ? [['moved','移动']] : []), ...(planned && !state.added && !state.replaced ? [['planned','将替换']] : [])
+      ...(state.moved ? [['moved','移动']] : [])
     ]).map(([kind,text]) => `<span class="diff-label is-${kind}">${text}</span>`).join('');
   }
   function auditSnapshot() {
@@ -151,8 +172,8 @@ var WindowsElements = (() => {
   }
   function token(row, state, removed = false, duplicateCount = 1) {
     const matched = matches(row.value,session.selectedValues || [],session.whole);
-    const classes = [removed?'is-removed':'',state.added?'is-added':'',state.replaced?'is-replaced':'',state.moved?'is-moved':'',!removed&&plannedRemoval(row)?'is-pending-remove':'',matched?'is-matched':'',duplicateCount>1?'is-duplicate':''].filter(Boolean).join(' ');
-    return `<span class="diff-token ${classes}" data-element-id="${row.id}" data-duplicate-count="${duplicateCount}" tabindex="-1"><span class="diff-value" data-raw-value="${escape(row.value)}">${row.value === '' ? `<span class="empty-element">${session.whole?'（空字符串）':'（空元素）'}</span>` : escape(row.value)}</span>${labels(state,removed,session.replacementExpected)}${!removed&&plannedRemoval(row)?'<span class="diff-label is-removed">待删除</span>':''}${duplicateLabel(duplicateCount)}${matched&&!removed?'<span class="element-match-mark" title="与准备方案匹配" aria-label="匹配">✓</span>':''}</span>`;
+    const classes = [removed?'is-removed':'',state.added?'is-added':'',state.replaced?'is-replaced':'',state.moved?'is-moved':'',matched?'is-matched':'',duplicateCount>1?'is-duplicate':''].filter(Boolean).join(' ');
+    return `<span class="diff-token ${classes}" data-element-id="${row.id}" data-duplicate-count="${duplicateCount}" tabindex="-1"><span class="diff-value" data-raw-value="${escape(row.value)}">${row.value === '' ? `<span class="empty-element">${session.whole?'（空字符串）':'（空元素）'}</span>` : escape(row.value)}</span>${labels(state,removed)}${duplicateLabel(duplicateCount)}${matched&&!removed?'<span class="element-match-mark" title="与准备方案匹配" aria-label="匹配">✓</span>':''}</span>`;
   }
   function renderComparison() {
     const root=session.container;
@@ -217,13 +238,11 @@ var WindowsElements = (() => {
     const duplicateCount = session.currentCounts.get(row.value);
     element.classList.toggle('is-duplicate', duplicateCount > 1);
     element.dataset.duplicateCount = duplicateCount;
-    element.classList.toggle('will-be-replaced',!!session.replacementExpected&&!state.added&&!state.replaced);
     element.querySelector('.element-match-state').textContent=matched?'✓ 匹配':'';
-    const removal=plannedRemoval(row);element.classList.toggle('is-pending-remove',!!removal);
-    element.querySelector('.element-change-state').innerHTML=labels(state,false,session.replacementExpected)+duplicateLabel(duplicateCount)+(removal?'<span class="diff-label is-removed">待删除</span>':'');
+    element.querySelector('.element-change-state').innerHTML=labels(state)+duplicateLabel(duplicateCount);
     element.querySelector('.element-input').setAttribute('aria-invalid',String(row.value.includes('\0') || (!session.whole && row.value.includes(';'))));
   }
-  function plannedRemoval(row){
+  function suggestedRemoval(row){
     if(session.selectionPlan?.valid===false)return null;
     return (session.selectionPlan?.operations||[]).find(op=>op.type==='remove'&&session.originalRows[op.beforeIndex]?.id===row.id&&session.originalRows[op.beforeIndex].value===row.value);
   }
@@ -241,16 +260,22 @@ var WindowsElements = (() => {
     const root=session.container,raw=serialized();
     session.currentCounts = countsFor(session.rows);
     session.plan=DemoPlan.buildElementEdit({target:{scope:session.scope,name:session.name},snapshot:session.snapshot||{exists:session.original!==undefined,raw:session.original===undefined?null:session.original,type:session.registryType,revision:0},afterRaw:raw,audit:auditSnapshot()});
-    const changed=session.plan.operations.length>0;
+    const changed=session.plan.operations.length>0,candidates=candidatePlan();
+    const operationCounts={add:0,remove:0,replace:0,move:0};
+    for(const operation of session.plan.operations){
+      const kind=String(operation.type||operation.action).toLowerCase(),key=kind==='insert'?'add':kind;
+      if(key in operationCounts)operationCounts[key]++;
+    }
+    const hasSuggestions=!session.whole&&candidates.valid!==false&&((candidates.operations||[]).length>0||(candidates.issues||[]).length>0);
     const structureChanged=JSON.stringify(session.rows.map(row=>({id:row.id,value:row.value})))!==JSON.stringify(session.originalRows);
     root.querySelector('#elementTotal').textContent=`${session.rows.length} ${session.whole?'条字符串':'个元素'}`;
     root.querySelector('#elementValidation').textContent=valid()?'':session.whole?'字符串不能包含 NUL。':'一个元素内不能包含分号或 NUL；请将多项内容拆成多个元素。';
     root.querySelector('#applyElements').disabled=!valid()||!session.plan.operations.length;
     root.querySelector('#restoreElements').disabled=!structureChanged;
-    root.querySelector('#elementStatus').textContent=changed?'有待应用修改 · 仅更新演示数据':structureChanged?'顺序或结构已调整 · 结果值未变化':'未修改 · 仅更新演示数据';
+    root.querySelector('#elementStatus').textContent=changed?`本次编辑：新增 ${operationCounts.add} · 删除 ${operationCounts.remove} · 替换 ${operationCounts.replace} · 移动 ${operationCounts.move} · 确认后生效`:`本次编辑：0 项变化${hasSuggestions?' · 有尚未采纳的方案建议':''}${structureChanged?' · 结果值未改变':''}`;
     root.querySelectorAll('[data-element-id]').forEach(el=>{if(!el.classList.contains('element-row'))return;const row=session.rows.find(row=>row.id===Number(el.dataset.elementId));if(row)paintRow(el,row);});
     const pending = root.querySelector('#pendingElements');
-    pending.innerHTML = pendingMarkup(raw,session.appendValues,session.whole,true,session.appendModes,candidatePlan());
+    pending.innerHTML = pendingMarkup(raw,session.appendValues,session.whole,true,session.appendModes,candidates);
     pending.hidden = !pending.innerHTML;
     const editingSession=session;
     pending.querySelectorAll('[data-add-pending]').forEach(button=>{
@@ -259,7 +284,7 @@ var WindowsElements = (() => {
     pending.querySelectorAll('[data-remove-pending]').forEach(button=>button.onclick=()=>{
       if(session!==editingSession||!button.isConnected)return;
       const original=session.originalRows[Number(button.dataset.removePending)],row=session.rows.find(row=>row.id===original?.id);
-      if(!row||!plannedRemoval(row))return;
+      if(!row||!suggestedRemoval(row))return;
       session.rows=session.rows.filter(item=>item.id!==row.id);renderRows(session.rows[0]?.id);
     });
     renderComparison();
@@ -290,7 +315,7 @@ var WindowsElements = (() => {
     renderRows();container.querySelector('#closeDialog').focus();
   }
   function adoptPending(index,button,editingSession) {
-    if(!session||session!==editingSession||session.whole||!button.isConnected||!session.container.querySelector('#pendingElements').contains(button))return;
+    if(!session||session!==editingSession||session.whole||session.selectionPlan?.valid===false||!button.isConnected||!session.container.querySelector('#pendingElements').contains(button))return;
     const mode=session.appendModes[index];
     if(!isAppendMode(mode))return;
     const candidate=selectionInfo(serialized(),session.appendValues).missing.find(part=>part.index===index);

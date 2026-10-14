@@ -280,7 +280,7 @@ try {
     q('#editWindowsElements').click();
     assert.equal(serialized(), ' B;A ');
     assert.equal(all('.element-row.is-replaced').length, 0);
-    assert.deepEqual(all('.element-change-state .diff-label').map(element => element.textContent), ['将替换', '将替换']);
+    assert.match(q('#elementStatus').textContent, /^本次编辑：0 项变化/); assert.equal(all('.element-change-state .diff-label').length, 0); assert.equal(q('#applyElements').disabled, true);
     assert.equal(all('#elementOriginal .is-replaced, #elementPreview .is-replaced').length, 0);
     cancel();
     w.eval('windows[key(curProfile().vars[0])] = value(curProfile().vars[0]); renderRows()');
