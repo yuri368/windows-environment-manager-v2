@@ -182,7 +182,14 @@ body { padding: 12px; font-size: 13px; line-height: 1.55; }
 .diffrow .pair { font-size: 12px; }
 .toast { font-size: 13px; }
 [hidden] { display: none !important; }
-button, input, select, textarea { transition: background-color 100ms, border-color 100ms; }
+button, input, select, textarea { transition: background-color 100ms, border-color 100ms, transform 80ms; }
+/* Shared button feedback: hover -> pressed -> keyboard focus -> disabled */
+.btn:hover:not(:disabled) { box-shadow: 0 1px 2px #203c2914; }
+.btn:active:not(:disabled) { transform: translateY(1px); box-shadow: none; background: #f0f5f1; }
+.btn.primary:active:not(:disabled) { background: var(--green-dark); filter: brightness(.94); }
+.btn:disabled { box-shadow: none; }
+.textbtn:active:not(:disabled) { opacity: .7; }
+.actmini:active:not(:disabled) { transform: scale(.93); }
 button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible,
 [tabindex]:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
 @media (max-width: 1100px) {
