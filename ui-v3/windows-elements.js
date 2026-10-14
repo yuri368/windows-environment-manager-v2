@@ -160,12 +160,20 @@ var WindowsElements = (() => {
       boundaries.push(offset);
     }
     const next=textareaValue.replace(/\r\n?/g,'\n');
+    const spliceRaw=(start,end,inserted)=>{
+      let before=raw.slice(0,boundaries[start]);
+      const after=raw.slice(boundaries[end]);
+      // A formerly standalone CR must not absorb the LF made adjacent by this edit.
+      if(before.endsWith('\r')&&(inserted+after).startsWith('\n'))before=before.slice(0,-1)+'\n';
+      const result=before+inserted+after;
+      return result.replace(/\r\n?/g,'\n')===next?result:next;
+    };
     // beforeinput identifies which occurrence changed when normalized characters repeat.
     if(edit&&edit.raw===raw&&edit.value===normalizedRaw){
       const {start,end}=edit,insertedLength=next.length-normalizedRaw.length+(end-start);
       if(insertedLength>=0&&next.slice(0,start)===normalizedRaw.slice(0,start)&&
           next.slice(start+insertedLength)===normalizedRaw.slice(end)){
-        return raw.slice(0,boundaries[start])+next.slice(start,start+insertedLength)+raw.slice(boundaries[end]);
+        return spliceRaw(start,end,next.slice(start,start+insertedLength));
       }
     }
     if(normalizedRaw===next)return raw;
@@ -173,7 +181,7 @@ var WindowsElements = (() => {
     while(prefix<normalizedRaw.length&&prefix<next.length&&normalizedRaw[prefix]===next[prefix])prefix++;
     let suffix=0;
     while(suffix<normalizedRaw.length-prefix&&suffix<next.length-prefix&&normalizedRaw[normalizedRaw.length-1-suffix]===next[next.length-1-suffix])suffix++;
-    return raw.slice(0,boundaries[prefix])+next.slice(prefix,next.length-suffix)+raw.slice(boundaries[normalizedRaw.length-suffix]);
+    return spliceRaw(prefix,normalizedRaw.length-suffix,next.slice(prefix,next.length-suffix));
   }
   function textareaEditRange(input,event,raw) {
     if(event.isComposing)return null;

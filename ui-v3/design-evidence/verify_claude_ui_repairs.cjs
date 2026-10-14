@@ -124,6 +124,8 @@ function nativeEdit(field,start,end,inputType,next){
 for(const whole of [false,true]){
   const mode=whole?'Special':'Ordinary';
   for(const [label,raw,start,end,type,next,expected] of [
+    ['Enter after standalone CR preserves two visible newlines','A\rB',2,2,'insertLineBreak','A\n\nB','A\n\nB'],
+    ['Removing text between CR and LF preserves two visible newlines','A\rX\nB',2,2,'deleteContentForward','A\n\nB','A\n\nB'],
     ['Delete first adjacent newline','A\r\n\nB',1,1,'deleteContentForward','A\nB','A\nB'],
     ['Backspace second adjacent newline','A\r\n\nB',3,3,'deleteContentBackward','A\nB','A\r\nB'],
     ['Insert LF before CRLF','A\r\nB',1,1,'insertLineBreak','A\n\nB','A\n\r\nB'],
@@ -137,6 +139,17 @@ for(const whole of [false,true]){
     assert.equal(applied[0].value,expected);assert.equal(applied[0].plan.afterRaw,expected);
   });
 }
+check('Seam correction is local and saved raw reopens to the exact edited visible text',()=>{
+  const raw='Z\r\nA\rX\nB\rC',expected='Z\r\nA\n\nB\rC';
+  let [id]=direct(raw),field=row(id).querySelector('.element-input');
+  nativeEdit(field,4,4,'deleteContentForward','Z\nA\n\nB\nC');
+  assert.equal(serialized(),expected);q('#applyElements').click();
+  assert.equal(applied[0].value,expected);
+  [id]=direct(expected);assert.equal(row(id).querySelector('.element-input').value,'Z\nA\n\nB\nC');
+});
+check('Synthetic input fallback also prevents CR and LF merging at a new seam',()=>{
+  const [id]=direct('A\rX\nB');edit(id,'A\n\nB');assert.equal(serialized(),'A\n\nB');
+});
 check('Input range is consumed once and unsupported beforeinput replaces stale metadata',()=>{
   const [id]=direct('A\r\nB'),field=row(id).querySelector('.element-input');
   nativeEdit(field,1,1,'insertLineBreak','A\n\nB');assert.equal(serialized(),'A\n\r\nB');
@@ -146,14 +159,16 @@ check('Input range is consumed once and unsupported beforeinput replaces stale m
   field.dispatchEvent(new w.InputEvent('beforeinput',{bubbles:true,inputType:'historyUndo'}));
   edit(id,'A\n\nBXY');assert.equal(serialized(),'A\n\r\nBXY');
 });
-for(const [label,raw,type,next,expected] of [
+for(const [label,raw,type,next,expected,position=1] of [
+  ['Enter at standalone CR seam','A\rB','insertLineBreak','A\n\nB','A\n\nB',2],
+  ['Delete text at CR/LF seam','A\rX\nB','deleteContentForward','A\n\nB','A\n\nB',2],
   ['Delete first','A\r\n\nB','deleteContentForward','A\nB','A\nB'],
   ['Insert before','A\r\nB','insertLineBreak','A\n\nB','A\n\r\nB']
 ])check(label+' adjacent newline persists in workbench Apply and History',()=>{
   w.eval('closeModal();reset(true);selected=1;focusedVariable=1');
   w.eval("windows['User|PATH']="+JSON.stringify(raw)+";render()");
   q('#editWindowsElements').click();
-  nativeEdit(live()[0].querySelector('.element-input'),1,1,type,next);
+  nativeEdit(live()[0].querySelector('.element-input'),position,position,type,next);
   q('#applyElements').click();
   assert.equal(w.eval("windows['User|PATH']"),expected);
   assert.equal(w.eval('history[0].changes[0].plan.afterRaw'),expected);
