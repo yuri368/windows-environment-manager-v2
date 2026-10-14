@@ -10,7 +10,7 @@ var WindowsElements = (() => {
   const plateMarkup=kinds=>kinds.length?`<span class="st-plate" aria-hidden="true">${plateCells(kinds)}</span>`:'';
   const statusBadge=(kind,text,iconKind=kind,title='')=>`<span class="diff-label is-${kind} status-badge"${title?` title="${escape(title)}"`:''}>${plateCells([iconKind])}${escape(text)}</span>`;
   const tailMarkup=html=>html?`<span class="st-tail">${html}</span>`:'';
-  const emptyKinds=empty=>empty?['empty']:[];
+  const valueHint=(value,whole=false)=>value===''?statusBadge('empty',whole?'空字符串':'空元素'):'';
   const reducedMotion=()=>typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches;
   const canAnimate=()=>!reducedMotion()&&typeof Element.prototype.animate==='function';
   const fieldSizing=typeof CSS!=='undefined'&&typeof CSS.supports==='function'&&CSS.supports('field-sizing','content');
@@ -120,9 +120,8 @@ var WindowsElements = (() => {
         const added=(side==='after'||side==='selected')&&item.added;
         const classes=['diff-token','comparison-token',item.ghost?'is-ghost':'',removed?'is-removed':added?'is-added pending-add-token':item.wholeChange?'is-replaced':matched?'is-matched':''].filter(Boolean).join(' ');
         const label=removed?statusBadge('removed',item.ghost?'结果排除':'待删除',item.ghost?'removed':'pendingRemove'):added?statusBadge('pending-add','待追加','pendingAdd'):item.wholeChange?statusBadge('replaced','整体待替换'):issue?'<span class="diff-label is-retained">'+(issue.reason==='shared'?'共享保留':'删除需确认')+'</span>':'';
-        const kinds=emptyKinds(item.value==='');
         const dup=!whole?duplicateLabel(counts.get(item.value)):'';
-        return '<span class="'+classes+'" tabindex="0" data-related-key="'+item.key+'"'+(item.value===''?' data-empty="true"':'')+(item.beforeIndex===undefined?'':' data-before-index="'+item.beforeIndex+'"')+'>'+plateMarkup(kinds)+'<span class="diff-value" data-raw-value="'+escape(item.value)+'">'+(item.value===''?'<span class="empty-element">'+(whole?'（空字符串）':'（空元素）')+'</span>':escape(item.value))+'</span>'+tailMarkup(label+dup)+'</span>';
+        return '<span class="'+classes+'" tabindex="0" data-related-key="'+item.key+'"'+(item.value===''?' data-empty="true"':'')+(item.beforeIndex===undefined?'':' data-before-index="'+item.beforeIndex+'"')+'>'+'<span class="diff-value" data-raw-value="'+escape(item.value)+'">'+(item.value===''?'<span class="empty-element">'+(whole?'（空字符串）':'（空元素）')+'</span>':escape(item.value))+'</span>'+tailMarkup(valueHint(item.value,whole)+label+dup)+'</span>';
       }).join('<span class="element-separator">;</span>');
     };
     const tally=!active?'':whole?'<span class="tally tally-'+(after.some(item=>item.wholeChange)?'replace">整体替换':'keep">无变化')+'</span>'
@@ -238,7 +237,7 @@ var WindowsElements = (() => {
   }
   const manualAddition=(row,state)=>!!state.added&&session.manualAddedIds.has(row.id);
   function labels(state, removed = false,row) {
-    return (removed ? [['removed','删除']] : [
+    return (row?valueHint(row.value,session.whole):'')+(removed ? [['removed','删除']] : [
       ...(state.added ? [[row&&manualAddition(row,state)?'manual-added':'added',row&&manualAddition(row,state)?'手动新增':'新增']] : []), ...(state.replaced ? [['replaced','替换']] : []),
       ...(state.moved ? [['moved','移动']] : [])
     ]).map(([kind,text]) => statusBadge(kind,text)).join('');
@@ -261,8 +260,7 @@ var WindowsElements = (() => {
   function token(row, state, removed = false, duplicateCount = 1, ghost = false) {
     const matched = matches(row.value,session.selectedValues || [],session.whole);
     const classes = [removed?'is-removed':'',ghost?'is-ghost':'',state.added?'is-added':'',manualAddition(row,state)?'is-manual-added':'',state.replaced?'is-replaced':'',state.moved?'is-moved':'',matched?'is-matched':'',duplicateCount>1?'is-duplicate':''].filter(Boolean).join(' ');
-    const kinds=emptyKinds(row.value==='');
-    return `<span class="diff-token ${classes}" data-element-id="${row.id}" data-duplicate-count="${duplicateCount}"${row.value===''?' data-empty="true"':''} tabindex="-1">${plateMarkup(kinds)}<span class="diff-value" data-raw-value="${escape(row.value)}">${row.value === '' ? `<span class="empty-element">${session.whole?'（空字符串）':'（空元素）'}</span>` : escape(row.value)}</span>${tailMarkup(labels(state,removed,row)+duplicateLabel(duplicateCount)+(matched&&!removed?statusBadge('match','匹配'):''))}</span>`;
+    return `<span class="diff-token ${classes}" data-element-id="${row.id}" data-duplicate-count="${duplicateCount}"${row.value===''?' data-empty="true"':''} tabindex="-1"><span class="diff-value" data-raw-value="${escape(row.value)}">${row.value === '' ? `<span class="empty-element">${session.whole?'（空字符串）':'（空元素）'}</span>` : escape(row.value)}</span>${tailMarkup(labels(state,removed,row)+duplicateLabel(duplicateCount)+(matched&&!removed?statusBadge('match','匹配'):''))}</span>`;
   }
   function renderComparison() {
     const root=session.container;
@@ -334,7 +332,7 @@ var WindowsElements = (() => {
     element.classList.toggle('is-empty',row.value==='');
     element.querySelector('.element-match-state').innerHTML=matched?statusBadge('match','匹配'):'';
     element.querySelector('.element-change-state').innerHTML=labels(state,false,row)+duplicateLabel(duplicateCount);
-    element.querySelector('.element-plate').innerHTML=plateCells(emptyKinds(row.value===''));
+    element.querySelector('.element-plate').innerHTML='';
     element.querySelector('.element-input').setAttribute('aria-invalid',String(row.value.includes('\0') || (!session.whole && row.value.includes(';'))));
   }
   function candidatePlan(){
@@ -595,7 +593,7 @@ var WindowsElements = (() => {
   }
   function ghostRowMarkup(row,displayIndex,total) {
     const beforeIndex=session.originalRows.findIndex(original=>original.id===row.id);
-    return `<div class="element-ghost-row" data-element-id="${row.id}"><span class="element-order" title="原始位置：第 ${beforeIndex+1} 项">${displayIndex+1}</span><span class="element-ghost-body"><span class="element-ghost-value" data-raw-value="${escape(row.value)}">${row.value===''?'<span class="empty-element">（空元素）</span>':escape(row.value)}</span><span class="element-ghost-state">${plateMarkup(emptyKinds(row.value===''))}${statusBadge('removed','本次编辑已移除')}<span class="element-ghost-note">仅展示痕迹 · 不写入结果</span></span></span>${elementActionsMarkup(row.id,displayIndex,total,true)}</div>`;
+    return `<div class="element-ghost-row" data-element-id="${row.id}"><span class="element-order" title="原始位置：第 ${beforeIndex+1} 项">${displayIndex+1}</span><span class="element-ghost-body"><span class="element-ghost-value" data-raw-value="${escape(row.value)}">${row.value===''?'<span class="empty-element">（空元素）</span>':escape(row.value)}</span><span class="element-ghost-state">${valueHint(row.value,session.whole)}${statusBadge('removed','本次编辑已移除')}<span class="element-ghost-note">仅展示痕迹 · 不写入结果</span></span></span>${elementActionsMarkup(row.id,displayIndex,total,true)}</div>`;
   }
   function renderRows(focusId) {
     const root=session.container;

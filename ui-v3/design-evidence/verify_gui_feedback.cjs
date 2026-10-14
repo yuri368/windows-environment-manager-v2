@@ -113,7 +113,8 @@ check('State icons stay inside their text badges across editor rows and comparis
   pair(row(third), 'moved', 'moved', '移动');
   const manual = add();
   pair(row(manual), 'manual-added', 'manual-added', '手动新增');
-  assert.ok(row(manual).querySelector('.element-plate .st-empty'), 'empty-only indicator remains');
+  pair(row(manual), 'empty', 'empty', '空元素');
+  assert.equal(row(manual).querySelector('.element-plate .st-cell'), null);
   remove(second);
   pair(ghost(second), 'removed', 'removed', '本次编辑已移除');
   pair(pane('#elementOriginal', second), 'removed', 'removed', '删除');
@@ -315,6 +316,17 @@ check('Result tally belongs to its heading rather than a separate value row', ()
   assert.ok(tally.closest('.inspect-value-heading'));
   assert.equal(tally.parentElement.querySelector('.k').textContent, '应用后的值');
   assert.equal(tally.closest('.result-pane').querySelectorAll('#compareTally').length, 1);
+});
+check('Empty hints use a paired badge through replacement, deletion and restore', () => {
+  const [id] = direct('A'); edit(id, '');
+  for(const node of [row(id), pane('#elementPreview',id)]) {
+    const badge=node.querySelector('.status-badge.is-empty');
+    assert.equal(badge.textContent,'空元素'); assert.ok(badge.querySelector('.st-empty .ic-void'));
+    assert.equal(node.querySelector('.st-plate .st-cell'),null);
+  }
+  remove(id); assert.equal(ghost(id).querySelector('.is-empty.status-badge').textContent,'空元素');
+  undo(id); assert.equal(row(id).querySelector('textarea').value,'');
+  assert.equal(row(id).querySelector('.status-badge.is-empty').textContent,'空元素');
 });
 check('No JSDOM runtime errors in GUI feedback workflows', () => assert.deepEqual(errors, []));
 const report = {passed: checks.filter(item => item.passed).length, total: checks.length, checks};

@@ -188,8 +188,8 @@
 .diff-label.status-badge.is-pending-add { border-color: var(--st-added-line); }
 .diff-label.status-badge.is-adopted { border-color: var(--st-adopted-line); }
 .lg:not(.is-zero).legend-match, .diff-label.status-badge.is-match { border-color: var(--st-match-line); }
-.lg:not(.is-zero).legend-duplicate, .lg:not(.is-zero).legend-empty, .diff-label.status-badge.is-duplicate { border-color: var(--st-dup-line); }
-.legend-empty { border-style: dashed; }
+.lg:not(.is-zero).legend-duplicate, .lg:not(.is-zero).legend-empty, .diff-label.status-badge.is-duplicate, .diff-label.status-badge.is-empty { border-color: var(--st-dup-line); }
+.legend-empty, .diff-label.status-badge.is-empty { border-style: dashed; }
 
 .element-list { position: relative; border: 1px solid var(--line2); border-radius: 8px; overflow: hidden; background: #fff; }
 
