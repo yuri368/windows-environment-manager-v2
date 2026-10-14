@@ -1,0 +1,7 @@
+V3.6 closed, 2026-10-14
+Source: cbabd618ccc395343f9da140f4a84c2a70105a3f
+Branch: v3/editor-order-suggestion-toggle
+Local 18/18 suites, 348/348 checks. Chrome acceptance archived. Source UI #28 and Python #74 CI successful.
+GPT architect final approval archived; no blocking findings.
+Primary remains H:/Yuri368/环境变量配置V3. Git mirror ui-v3 is byte-identical for current source.
+No V2/core/real Registry/main merge/Release. Further active changes stopped; ready for user GUI feedback.

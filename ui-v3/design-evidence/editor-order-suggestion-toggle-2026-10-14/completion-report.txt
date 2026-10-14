@@ -1,0 +1,30 @@
+【codex】V3.6 completion report
+
+修改内容：
+- 连续可见编号与显式 displayOrder；删除幽灵行可上下移动，真实 live 排序单独过滤。
+- 建议追加保留绿色采纳卡片，按稳定 ID 精确撤销；手动改写解除关联，移动保留。
+- 删除预览内联，去除幽灵“不计入结果”文字；静态强斜纹、双删除线、断裂边缘。
+
+影响：
+- 仅 V3 编辑器 UI，会话 UI 状态不进入 plan/audit/apply/history。
+- demo-plan.js/temp.html/Windows快照/V2 不变。
+
+测试：
+- 18脚本348项，全通过；新增16项。
+- Chrome真实UI：ghost连续编号/移动、移动采纳行后撤销、改内容解除关联且保留手动值、还原、应用历史仅新增1删除1；600px长路径无模态横溢。
+- 源码与原项目逐字节一致。
+
+风险与限制：
+- 本轮仍是离线浏览器演示；没有真实Registry验证。
+- 无main合并/Release；UI #28 与 Python #74 CI 均成功；GPT 已完成源码/报告/CI 审查并明确批准收尾；未独立重跑浏览器或完整JSDOM。
+
+sourceCommit=cbabd618ccc395343f9da140f4a84c2a70105a3f
+branch=v3/editor-order-suggestion-toggle
+
+SHA256:
+{
+  "windows-elements.js": "e5d832b66926219055fda52c3ce07568722ce346b79bd98eac0dbc60d3364574",
+  "elements-ui.css": "d1c4798a3d9c2a4acdc6bf1c078037ed63a564fc8939a5d633ab99b03b6d7a8d",
+  "demo-plan.js": "950e4f532eaa9a43444ef10ff8b2ba819981ccbbc32202a6a19bf06f669d4bc4",
+  "temp.html": "ed3d195663dcf90c760f6fd5030767ad2d44ed24ddd49756df691b5b6552802e"
+}
