@@ -1,0 +1,29 @@
+【codex】V3.7 completion report
+
+修改内容：
+- 建议删除−采纳后保留绿色已采纳删除✓，再次点击按原ID/raw恢复当前ghost位置。
+- removalAdoptions只记会话来源，独立于追加adoptionMap。
+- 复用两类建议原生按钮绿色样式与辅助文案，清理不再调用的旧helper。
+
+影响：
+- 仅WindowsElements UI；真实计划、Apply、History仍由live rows。
+- 不修改demo-plan.js/temp.html/V2/真实Registry/main/Release。
+
+测试：
+- 19脚本357项全通过；原追加回归保持。
+- Chrome：原ID4移位恢复、其它编辑保留、samevalue原ID4/新ID10独立重复、零变化Apply禁用、manualremove不冒充来源、删除onlyhistory=REMOVE1、两类green✓同时保留。
+- 窄窗口布局报告归档，样式未溢出。
+- primary与Git镜像当前source逐字节一致。
+
+风险与限制：
+- 仍为离线演示，没有真实Registry验证。
+- GPT源码/报告/截图/CI审查正式通过，无确认阻断；UI #30 与Python #76成功。GPT未独立重跑完整JSDOM或Chrome。
+
+Source=663e9a603894686babd79103f620afb6c2b695dc
+Branch=v3/removal-suggestion-toggle
+SHA256={
+  "windows-elements.js": "fdaa079078341065f8c26f755d723ff7e15ecb715797d665cb3e60c05a06dcc2",
+  "elements-ui.css": "fc96c42d8da8262c109b93e53d040466fcd3ab7d309a3f3fde3b826c7687e304",
+  "demo-plan.js": "950e4f532eaa9a43444ef10ff8b2ba819981ccbbc32202a6a19bf06f669d4bc4",
+  "temp.html": "ed3d195663dcf90c760f6fd5030767ad2d44ed24ddd49756df691b5b6552802e"
+}

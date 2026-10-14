@@ -1,0 +1,8 @@
+V3.7 closed, 2026-10-14
+Source: 663e9a603894686babd79103f620afb6c2b695dc
+Branch: v3/removal-suggestion-toggle
+19 scripts, 357 checks passed; Chrome acceptance and two successful source CI runs archived.
+GPT final approval archived, no confirmed blocking findings.
+Primary H:/Yuri368/环境变量配置V3 remains authoritative served page. Current source byte-identical with Git ui-v3 mirror.
+No core/demo-plan/temp execution changes, no V2/Registry/main merge/Release.
+Source work stopped, ready for user GUI feedback.
