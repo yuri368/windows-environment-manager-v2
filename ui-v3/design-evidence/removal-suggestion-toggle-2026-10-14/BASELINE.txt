@@ -1,0 +1,5 @@
+V3.7 baseline: 943299f68a3d00b06a8e5f1d01a293ea597f77e9
+Task: reversible adopted deletion suggestions only.
+Primary: H:/Yuri368/环境变量配置V3
+Git mirror: H:/Yuri368/环境变量配置V3-git/ui-v3
+No core/temp/V2/Registry/main/Release changes.
