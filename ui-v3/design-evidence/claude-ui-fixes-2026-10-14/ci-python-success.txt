@@ -1,0 +1,194 @@
+- link "Skip to content":
+  - /url: "#start-of-content"
+- banner:
+  - heading "Navigation Menu" [level=2]
+  - link "Homepage":
+    - /url: /
+  - navigation "Global":
+    - list:
+      - button "Platform":
+        - text: Platform
+      - button "Solutions":
+        - text: Solutions
+      - button "Resources":
+        - text: Resources
+      - button "Open Source":
+        - text: Open Source
+      - button "Enterprise":
+        - text: Enterprise
+      - link "Pricing":
+        - /url: https://github.com/pricing
+  - button "Search or jump to, type / to search":
+  - link "Sign in":
+    - /url: /login?return_to=https%3A%2F%2Fgithub.com%2Fyuri368%2Fwindows-environment-manager-v2%2Factions%2Fruns%2F38527604882
+    - generic: Sign in
+  - link "Sign up":
+    - /url: /signup?ref_cta=Sign+up&ref_loc=header+logged+out&ref_page=%2F%3Cuser-name%3E%2F%3Crepo-name%3E%2Factions%2Fworkflow_runs%2Fshow&source=header-repo&source_repo=yuri368%2Fwindows-environment-manager-v2
+    - generic: Sign up
+  - button "Appearance settings":
+- main:
+  - generic "Global navigation menu":
+    - navigation "Breadcrumbs":
+      - list:
+        - link "yuri368":
+          - /url: /yuri368
+          - generic: yuri368
+        - link "windows-environment-manager-v2":
+          - /url: /yuri368/windows-environment-manager-v2
+          - generic: windows-environment-manager-v2
+    - heading "Repository navigation" [level=2]
+    - navigation "Repository":
+      - list:
+        - link "Code":
+          - /url: /yuri368/windows-environment-manager-v2
+          - generic: Code
+        - link "Issues":
+          - /url: /yuri368/windows-environment-manager-v2/issues
+          - generic: Issues
+        - link "Pull requests":
+          - /url: /yuri368/windows-environment-manager-v2/pulls
+          - generic: Pull requests
+        - link "Actions":
+          - /url: /yuri368/windows-environment-manager-v2/actions
+          - generic: Actions
+        - link "Projects":
+          - /url: /yuri368/windows-environment-manager-v2/projects
+          - generic: Projects
+        - link "Security and quality":
+          - /url: /yuri368/windows-environment-manager-v2/security
+          - generic: Security and quality
+        - link "Insights":
+          - /url: /yuri368/windows-environment-manager-v2/pulse
+          - generic: Insights
+  - link "Python tests":
+    - /url: /yuri368/windows-environment-manager-v2/actions/workflows/tests.yml
+    - generic: Python tests
+  - img "completed successfully:"
+  - 'heading "test(ui-v3): sync Claude textarea and token assertions to CI #79" [level=1]':
+    - generic: "test(ui-v3): sync Claude textarea and token assertions to CI #79"
+  - link "Sign in to view logs":
+    - /url: /login?return_to=https%3A%2F%2Fgithub.com%2Fyuri368%2Fwindows-environment-manager-v2%2Factions%2Fruns%2F38527604882
+  - navigation "Workflow run":
+    - list:
+      - link "Summary":
+        - /url: /yuri368/windows-environment-manager-v2/actions/runs/38527604882
+        - generic: Summary
+      - heading "All jobs" [level=4]
+      - button "Filter by job status":
+      - list:
+        - link "Tests (ubuntu-latest, Python 3.13)":
+          - /url: /yuri368/windows-environment-manager-v2/actions/runs/38527604882/job/115731562987
+          - generic: Tests (ubuntu-latest, Python 3.13)
+        - link "Tests (windows-latest, Python 3.13)":
+          - /url: /yuri368/windows-environment-manager-v2/actions/runs/38527604882/job/115731563459
+          - generic: Tests (windows-latest, Python 3.13)
+      - heading "Run details" [level=3]
+      - list "Run details":
+        - link "Usage":
+          - /url: /yuri368/windows-environment-manager-v2/actions/runs/38527604882/usage
+          - generic: Usage
+        - link "Workflow file":
+          - /url: /yuri368/windows-environment-manager-v2/actions/runs/38527604882/workflow
+          - generic: Workflow file
+        - link "Lockfile":
+          - /url: /yuri368/windows-environment-manager-v2/actions/runs/38527604882/lockfile
+          - generic: Lockfile
+  - region "Workflow run summary":
+    - generic: Triggered via push October 14, 2026 07:196 minutes ago
+    - link "@yuri368 yuri368":
+      - /url: /yuri368
+      - img "@yuri368"
+      - text: yuri368
+    - generic: pushed
+    - link "4980538":
+      - /url: /yuri368/windows-environment-manager-v2/commit/49805386d11b2cf91a5756ea2745aee4fd4d4e4c
+      - text: "4980538"
+    - link "v3/claude-ui-fixes":
+      - /url: /yuri368/windows-environment-manager-v2/tree/refs/heads/v3/claude-ui-fixes
+    - generic: Status
+    - text: Success
+    - generic: Total duration
+    - link "2m 12s":
+      - /url: /yuri368/windows-environment-manager-v2/actions/runs/38527604882/usage
+    - generic: Artifacts
+    - link "2":
+      - /url: "#artifacts"
+  - region "Workflow run graph":
+    - heading "tests.yml" [level=2]:
+      - link "tests.yml":
+        - /url: /yuri368/windows-environment-manager-v2/actions/runs/38527604882/workflow
+    - generic: "on: push"
+    - generic: "Matrix: tests"
+    - 'button "completed successfully: 2 jobs completed Show all jobs"':
+      - img "completed successfully:"
+      - generic: 2 jobs completed
+      - generic: Show all jobs
+    - paragraph: Oh hello! Nice to see you.
+    - paragraph:
+      - text: Made with ❤️ by
+      - link:
+        - /url: https://actions.github.io/humans.txt
+        - text: humans.txt
+    - button "Fit to window" [disabled]:
+    - button "Zoom out" [disabled]:
+    - button "Zoom in" [disabled]:
+  - region "Annotations":
+    - heading "Annotations" [level=2]
+    - generic: 2 warnings and 1 notice
+    - table:
+      - rowgroup:
+        - 'row "Tests (ubuntu-latest, Python 3.13) Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/ Show more"':
+          - 'cell "Tests (ubuntu-latest, Python 3.13) Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/ Show more"':
+            - link "Tests (ubuntu-latest, Python 3.13)":
+              - /url: /yuri368/windows-environment-manager-v2/actions/runs/38527604882/job/115731562987#step:19:2
+              - strong: Tests (ubuntu-latest, Python 3.13)
+            - text: "Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/upload-artifact@v4. For more information see:"
+            - link "https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/":
+              - /url: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+            - button "Show more"
+        - 'row "Tests (windows-latest, Python 3.13) Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/ Show more"':
+          - 'cell "Tests (windows-latest, Python 3.13) Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/ Show more"':
+            - link "Tests (windows-latest, Python 3.13)":
+              - /url: /yuri368/windows-environment-manager-v2/actions/runs/38527604882/job/115731563459#step:19:2
+              - strong: Tests (windows-latest, Python 3.13)
+            - text: "Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/upload-artifact@v4. For more information see:"
+            - link "https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/":
+              - /url: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+            - button "Show more"
+        - row "Tests (ubuntu-latest, Python 3.13) \"The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748\" Show more":
+          - cell "Tests (ubuntu-latest, Python 3.13) \"The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748\" Show more":
+            - link "Tests (ubuntu-latest, Python 3.13)":
+              - /url: /yuri368/windows-environment-manager-v2/actions/runs/38527604882/job/115731562987
+              - strong: Tests (ubuntu-latest, Python 3.13)
+            - text: "\"The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see"
+            - link "https://github.com/actions/runner-images/issues/14748":
+              - /url: https://github.com/actions/runner-images/issues/14748
+            - text: "\""
+            - button "Show more"
+  - region "Artifacts":
+    - heading "Artifacts" [level=2]
+    - generic: Produced during runtime
+    - table:
+      - rowgroup:
+        - row "Name Size Digest":
+          - columnheader "Name"
+          - columnheader "Size"
+          - columnheader "Digest"
+          - cell
+      - rowgroup:
+        - row "test-results-ubuntu-latest-python-3.13 18.6 KB sha256:f4916325cc1ba75bbf1f6ce4d2c9686f888b4c5f528ac746120d7ea086fe5243 Copy artifact digest":
+          - cell "test-results-ubuntu-latest-python-3.13":
+            - generic: test-results-ubuntu-latest-python-3.13
+          - cell "18.6 KB"
+          - cell "sha256:f4916325cc1ba75bbf1f6ce4d2c9686f888b4c5f528ac746120d7ea086fe5243 Copy artifact digest":
+            - code: sha256:f4916325cc1ba75bbf1f6ce4d2c9686f888b4c5f528ac746120d7ea086fe5243
+            - button "Copy artifact digest":
+          - cell
+        - row "test-results-windows-latest-python-3.13 17.5 KB sha256:e93d3254148e7749eb37919309b211eb1c6f58af9c40798f01add1ba38a9d8c6 Copy artifact digest":
+          - cell "test-results-windows-latest-python-3.13":
+            - generic: test-results-windows-latest-python-3.13
+          - cell "17.5 KB"
+          - cell "sha256:e93d3254148e7749eb37919309b211eb1c6f58af9c40798f01add1ba38a9d8c6 Copy artifact digest":
+            - code: sha256:e93d3254148e7749eb37919309b211eb1c6f58af9c40798f01add1ba38a9d8c6
+            - button "Copy artifact digest":
+          - cell

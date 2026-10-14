@@ -1,0 +1,568 @@
+- link "Skip to content":
+  - /url: "#start-of-content"
+- banner:
+  - heading "Navigation Menu" [level=2]
+  - link "Homepage":
+    - /url: /
+  - navigation "Global":
+    - list:
+      - button "Platform":
+        - text: Platform
+      - button "Solutions":
+        - text: Solutions
+      - button "Resources":
+        - text: Resources
+      - button "Open Source":
+        - text: Open Source
+      - button "Enterprise":
+        - text: Enterprise
+      - link "Pricing":
+        - /url: https://github.com/pricing
+  - button "Search or jump to, type / to search":
+  - link "Sign in":
+    - /url: /login?return_to=https%3A%2F%2Fgithub.com%2Fyuri368%2Fwindows-environment-manager-v2%2Factions
+    - generic: Sign in
+  - link "Sign up":
+    - /url: /signup?ref_cta=Sign+up&ref_loc=header+logged+out&ref_page=%2F%3Cuser-name%3E%2F%3Crepo-name%3E%2Factions%2Findex&source=header-repo&source_repo=yuri368%2Fwindows-environment-manager-v2
+    - generic: Sign up
+  - button "Appearance settings":
+- main:
+  - generic "Global navigation menu":
+    - navigation "Breadcrumbs":
+      - list:
+        - link "yuri368":
+          - /url: /yuri368
+          - generic: yuri368
+        - link "windows-environment-manager-v2":
+          - /url: /yuri368/windows-environment-manager-v2
+          - generic: windows-environment-manager-v2
+    - heading "Repository navigation" [level=2]
+    - navigation "Repository":
+      - list:
+        - link "Code":
+          - /url: /yuri368/windows-environment-manager-v2
+          - generic: Code
+        - link "Issues":
+          - /url: /yuri368/windows-environment-manager-v2/issues
+          - generic: Issues
+        - link "Pull requests":
+          - /url: /yuri368/windows-environment-manager-v2/pulls
+          - generic: Pull requests
+        - link "Actions":
+          - /url: /yuri368/windows-environment-manager-v2/actions
+          - generic: Actions
+        - link "Projects":
+          - /url: /yuri368/windows-environment-manager-v2/projects
+          - generic: Projects
+        - link "Security and quality":
+          - /url: /yuri368/windows-environment-manager-v2/security
+          - generic: Security and quality
+        - link "Insights":
+          - /url: /yuri368/windows-environment-manager-v2/pulse
+          - generic: Insights
+  - 'heading "Actions: yuri368/windows-environment-manager-v2" [level=1]'
+  - heading "Actions" [level=2]
+  - navigation "Actions Workflows":
+    - list:
+      - link "All workflows":
+        - /url: /yuri368/windows-environment-manager-v2/actions
+        - generic: All workflows
+      - list "Workflows":
+        - link "Python tests":
+          - /url: /yuri368/windows-environment-manager-v2/actions/workflows/tests.yml
+          - generic: Python tests
+        - link "V3 UI prototype checks":
+          - /url: /yuri368/windows-environment-manager-v2/actions/workflows/ui-prototype.yml
+          - generic: V3 UI prototype checks
+      - heading "Management" [level=3]
+      - list "Management":
+        - link "Caches":
+          - /url: /yuri368/windows-environment-manager-v2/actions/caches
+          - generic: Caches
+        - link "Lockfile":
+          - /url: /yuri368/windows-environment-manager-v2/blob/41744c66c17e1a0352aac31055f736442a876f86/.github/workflows/actions.lock
+          - generic: Lockfile
+  - heading "All workflows" [level=2]:
+    - generic: All workflows
+  - search:
+    - combobox "Filter workflow runs"
+  - generic: Showing runs from all workflows
+  - strong: 114 workflow runs
+  - button "Workflow":
+    - generic: Workflow
+  - button "Event":
+    - generic: Event
+  - button "Status":
+    - generic: Status
+  - button "Branch":
+    - generic: Branch
+  - button "Actor":
+    - generic: Actor
+  - 'link "completed successfully: Run 80 of Python tests. fix(ui-v3): preserve adjacent newline provenance from beforeinput"':
+    - /url: /yuri368/windows-environment-manager-v2/actions/runs/38530269811
+    - img "completed successfully:"
+    - generic: "fix(ui-v3): preserve adjacent newline provenance from beforeinput"
+  - text: "Python tests #80:"
+  - text: Commit
+  - link "e8d90e6":
+    - /url: /yuri368/windows-environment-manager-v2/commit/e8d90e69ea6ff22f04cfaa24580a2ea1937d5310
+  - text: pushed by
+  - link "yuri368":
+    - /url: /yuri368
+  - link "v3/claude-ui-fixes":
+    - /url: /yuri368/windows-environment-manager-v2/tree/refs/heads/v3/claude-ui-fixes
+  - generic "Oct 14, 2026, 15:44 GMT+8": 2 minutes ago
+  - img "Run duration"
+  - text: 1m 54s
+  - generic "Show options":
+    - img "Show options"
+  - 'link "completed successfully: Run 34 of V3 UI prototype checks. fix(ui-v3): preserve adjacent newline provenance from beforeinput"':
+    - /url: /yuri368/windows-environment-manager-v2/actions/runs/38530269779
+    - img "completed successfully:"
+    - generic: "fix(ui-v3): preserve adjacent newline provenance from beforeinput"
+  - text: "V3 UI prototype checks #34:"
+  - text: Commit
+  - link "e8d90e6":
+    - /url: /yuri368/windows-environment-manager-v2/commit/e8d90e69ea6ff22f04cfaa24580a2ea1937d5310
+  - text: pushed by
+  - link "yuri368":
+    - /url: /yuri368
+  - link "v3/claude-ui-fixes":
+    - /url: /yuri368/windows-environment-manager-v2/tree/refs/heads/v3/claude-ui-fixes
+  - generic "Oct 14, 2026, 15:44 GMT+8": 2 minutes ago
+  - img "Run duration"
+  - text: 45s
+  - generic "Show options":
+    - img "Show options"
+  - 'link "completed successfully: Run 79 of Python tests. test(ui-v3): sync Claude textarea and token assertions to CI"':
+    - /url: /yuri368/windows-environment-manager-v2/actions/runs/38527604882
+    - img "completed successfully:"
+    - generic: "test(ui-v3): sync Claude textarea and token assertions to CI"
+  - text: "Python tests #79:"
+  - text: Commit
+  - link "4980538":
+    - /url: /yuri368/windows-environment-manager-v2/commit/49805386d11b2cf91a5756ea2745aee4fd4d4e4c
+  - text: pushed by
+  - link "yuri368":
+    - /url: /yuri368
+  - link "v3/claude-ui-fixes":
+    - /url: /yuri368/windows-environment-manager-v2/tree/refs/heads/v3/claude-ui-fixes
+  - generic "Oct 14, 2026, 15:19 GMT+8": 26 minutes ago
+  - img "Run duration"
+  - text: 2m 12s
+  - generic "Show options":
+    - img "Show options"
+  - 'link "completed successfully: Run 33 of V3 UI prototype checks. test(ui-v3): sync Claude textarea and token assertions to CI"':
+    - /url: /yuri368/windows-environment-manager-v2/actions/runs/38527604847
+    - img "completed successfully:"
+    - generic: "test(ui-v3): sync Claude textarea and token assertions to CI"
+  - text: "V3 UI prototype checks #33:"
+  - text: Commit
+  - link "4980538":
+    - /url: /yuri368/windows-environment-manager-v2/commit/49805386d11b2cf91a5756ea2745aee4fd4d4e4c
+  - text: pushed by
+  - link "yuri368":
+    - /url: /yuri368
+  - link "v3/claude-ui-fixes":
+    - /url: /yuri368/windows-environment-manager-v2/tree/refs/heads/v3/claude-ui-fixes
+  - generic "Oct 14, 2026, 15:19 GMT+8": 26 minutes ago
+  - img "Run duration"
+  - text: 49s
+  - generic "Show options":
+    - img "Show options"
+  - 'link "failed: Run 32 of V3 UI prototype checks. fix(ui-v3): restore edited deletion drafts and preserve raw line endings"':
+    - /url: /yuri368/windows-environment-manager-v2/actions/runs/38526856929
+    - img "failed:"
+    - generic: "fix(ui-v3): restore edited deletion drafts and preserve raw line endings"
+  - text: "V3 UI prototype checks #32:"
+  - text: Commit
+  - link "cfd83f7":
+    - /url: /yuri368/windows-environment-manager-v2/commit/cfd83f71570aaea0dc81d5b1e3efb5037add4e8e
+  - text: pushed by
+  - link "yuri368":
+    - /url: /yuri368
+  - link "v3/claude-ui-fixes":
+    - /url: /yuri368/windows-environment-manager-v2/tree/refs/heads/v3/claude-ui-fixes
+  - generic "Oct 14, 2026, 15:12 GMT+8": 33 minutes ago
+  - img "Run duration"
+  - text: 22s
+  - generic "Show options":
+    - img "Show options"
+  - 'link "completed successfully: Run 78 of Python tests. fix(ui-v3): restore edited deletion drafts and preserve raw line endings"':
+    - /url: /yuri368/windows-environment-manager-v2/actions/runs/38526856905
+    - img "completed successfully:"
+    - generic: "fix(ui-v3): restore edited deletion drafts and preserve raw line endings"
+  - text: "Python tests #78:"
+  - text: Commit
+  - link "cfd83f7":
+    - /url: /yuri368/windows-environment-manager-v2/commit/cfd83f71570aaea0dc81d5b1e3efb5037add4e8e
+  - text: pushed by
+  - link "yuri368":
+    - /url: /yuri368
+  - link "v3/claude-ui-fixes":
+    - /url: /yuri368/windows-environment-manager-v2/tree/refs/heads/v3/claude-ui-fixes
+  - generic "Oct 14, 2026, 15:12 GMT+8": 33 minutes ago
+  - img "Run duration"
+  - text: 2m 28s
+  - generic "Show options":
+    - img "Show options"
+  - 'link "completed successfully: Run 31 of V3 UI prototype checks. docs(v3): close reversible deletion suggestions with architect approval"':
+    - /url: /yuri368/windows-environment-manager-v2/actions/runs/38506361383
+    - img "completed successfully:"
+    - generic: "docs(v3): close reversible deletion suggestions with architect approval"
+  - text: "V3 UI prototype checks #31:"
+  - text: Commit
+  - link "235264f":
+    - /url: /yuri368/windows-environment-manager-v2/commit/235264f288802f43ceed18b9938df7112391b625
+  - text: pushed by
+  - link "yuri368":
+    - /url: /yuri368
+  - link "v3/removal-suggestion-toggle":
+    - /url: /yuri368/windows-environment-manager-v2/tree/refs/heads/v3/removal-suggestion-toggle
+  - generic "Oct 14, 2026, 11:27 GMT+8": Today at 11:27
+  - img "Run duration"
+  - text: 48s
+  - generic "Show options":
+    - img "Show options"
+  - 'link "completed successfully: Run 77 of Python tests. docs(v3): close reversible deletion suggestions with architect approval"':
+    - /url: /yuri368/windows-environment-manager-v2/actions/runs/38506361379
+    - img "completed successfully:"
+    - generic: "docs(v3): close reversible deletion suggestions with architect approval"
+  - text: "Python tests #77:"
+  - text: Commit
+  - link "235264f":
+    - /url: /yuri368/windows-environment-manager-v2/commit/235264f288802f43ceed18b9938df7112391b625
+  - text: pushed by
+  - link "yuri368":
+    - /url: /yuri368
+  - link "v3/removal-suggestion-toggle":
+    - /url: /yuri368/windows-environment-manager-v2/tree/refs/heads/v3/removal-suggestion-toggle
+  - generic "Oct 14, 2026, 11:27 GMT+8": Today at 11:27
+  - img "Run duration"
+  - text: 2m 9s
+  - generic "Show options":
+    - img "Show options"
+  - 'link "completed successfully: Run 76 of Python tests. feat(ui-v3): allow exact undo of adopted deletion suggestions"':
+    - /url: /yuri368/windows-environment-manager-v2/actions/runs/38506037589
+    - img "completed successfully:"
+    - generic: "feat(ui-v3): allow exact undo of adopted deletion suggestions"
+  - text: "Python tests #76:"
+  - text: Commit
+  - link "663e9a6":
+    - /url: /yuri368/windows-environment-manager-v2/commit/663e9a603894686babd79103f620afb6c2b695dc
+  - text: pushed by
+  - link "yuri368":
+    - /url: /yuri368
+  - link "v3/removal-suggestion-toggle":
+    - /url: /yuri368/windows-environment-manager-v2/tree/refs/heads/v3/removal-suggestion-toggle
+  - generic "Oct 14, 2026, 11:23 GMT+8": Today at 11:23
+  - img "Run duration"
+  - text: 2m 29s
+  - generic "Show options":
+    - img "Show options"
+  - 'link "completed successfully: Run 30 of V3 UI prototype checks. feat(ui-v3): allow exact undo of adopted deletion suggestions"':
+    - /url: /yuri368/windows-environment-manager-v2/actions/runs/38506037085
+    - img "completed successfully:"
+    - generic: "feat(ui-v3): allow exact undo of adopted deletion suggestions"
+  - text: "V3 UI prototype checks #30:"
+  - text: Commit
+  - link "663e9a6":
+    - /url: /yuri368/windows-environment-manager-v2/commit/663e9a603894686babd79103f620afb6c2b695dc
+  - text: pushed by
+  - link "yuri368":
+    - /url: /yuri368
+  - link "v3/removal-suggestion-toggle":
+    - /url: /yuri368/windows-environment-manager-v2/tree/refs/heads/v3/removal-suggestion-toggle
+  - generic "Oct 14, 2026, 11:23 GMT+8": Today at 11:23
+  - img "Run duration"
+  - text: 42s
+  - generic "Show options":
+    - img "Show options"
+  - 'link "completed successfully: Run 75 of Python tests. docs(v3): close editor order and suggestion toggles with architect ap…"':
+    - /url: /yuri368/windows-environment-manager-v2/actions/runs/38504554603
+    - img "completed successfully:"
+    - generic: "docs(v3): close editor order and suggestion toggles with architect ap…"
+  - text: "Python tests #75:"
+  - text: Commit
+  - link "943299f":
+    - /url: /yuri368/windows-environment-manager-v2/commit/943299f68a3d00b06a8e5f1d01a293ea597f77e9
+  - text: pushed by
+  - link "yuri368":
+    - /url: /yuri368
+  - link "v3/editor-order-suggestion-toggle":
+    - /url: /yuri368/windows-environment-manager-v2/tree/refs/heads/v3/editor-order-suggestion-toggle
+  - generic "Oct 14, 2026, 11:06 GMT+8": Today at 11:06
+  - img "Run duration"
+  - text: 2m 43s
+  - generic "Show options":
+    - img "Show options"
+  - 'link "completed successfully: Run 29 of V3 UI prototype checks. docs(v3): close editor order and suggestion toggles with architect ap…"':
+    - /url: /yuri368/windows-environment-manager-v2/actions/runs/38504554518
+    - img "completed successfully:"
+    - generic: "docs(v3): close editor order and suggestion toggles with architect ap…"
+  - text: "V3 UI prototype checks #29:"
+  - text: Commit
+  - link "943299f":
+    - /url: /yuri368/windows-environment-manager-v2/commit/943299f68a3d00b06a8e5f1d01a293ea597f77e9
+  - text: pushed by
+  - link "yuri368":
+    - /url: /yuri368
+  - link "v3/editor-order-suggestion-toggle":
+    - /url: /yuri368/windows-environment-manager-v2/tree/refs/heads/v3/editor-order-suggestion-toggle
+  - generic "Oct 14, 2026, 11:06 GMT+8": Today at 11:06
+  - img "Run duration"
+  - text: 36s
+  - generic "Show options":
+    - img "Show options"
+  - 'link "completed successfully: Run 74 of Python tests. feat(ui-v3): unify visible element order and toggle adopted suggestions"':
+    - /url: /yuri368/windows-environment-manager-v2/actions/runs/38504100200
+    - img "completed successfully:"
+    - generic: "feat(ui-v3): unify visible element order and toggle adopted suggestions"
+  - text: "Python tests #74:"
+  - text: Commit
+  - link "cbabd61":
+    - /url: /yuri368/windows-environment-manager-v2/commit/cbabd618ccc395343f9da140f4a84c2a70105a3f
+  - text: pushed by
+  - link "yuri368":
+    - /url: /yuri368
+  - link "v3/editor-order-suggestion-toggle":
+    - /url: /yuri368/windows-environment-manager-v2/tree/refs/heads/v3/editor-order-suggestion-toggle
+  - generic "Oct 14, 2026, 11:01 GMT+8": Today at 11:01
+  - img "Run duration"
+  - text: 2m 23s
+  - generic "Show options":
+    - img "Show options"
+  - 'link "completed successfully: Run 28 of V3 UI prototype checks. feat(ui-v3): unify visible element order and toggle adopted suggestions"':
+    - /url: /yuri368/windows-environment-manager-v2/actions/runs/38504100192
+    - img "completed successfully:"
+    - generic: "feat(ui-v3): unify visible element order and toggle adopted suggestions"
+  - text: "V3 UI prototype checks #28:"
+  - text: Commit
+  - link "cbabd61":
+    - /url: /yuri368/windows-environment-manager-v2/commit/cbabd618ccc395343f9da140f4a84c2a70105a3f
+  - text: pushed by
+  - link "yuri368":
+    - /url: /yuri368
+  - link "v3/editor-order-suggestion-toggle":
+    - /url: /yuri368/windows-environment-manager-v2/tree/refs/heads/v3/editor-order-suggestion-toggle
+  - generic "Oct 14, 2026, 11:01 GMT+8": Today at 11:01
+  - img "Run duration"
+  - text: 41s
+  - generic "Show options":
+    - img "Show options"
+  - 'link "completed successfully: Run 27 of V3 UI prototype checks. docs(v3): close deletion trace UI with architect approval"':
+    - /url: /yuri368/windows-environment-manager-v2/actions/runs/38499958979
+    - img "completed successfully:"
+    - generic: "docs(v3): close deletion trace UI with architect approval"
+  - text: "V3 UI prototype checks #27:"
+  - text: Commit
+  - link "6d66c60":
+    - /url: /yuri368/windows-environment-manager-v2/commit/6d66c60835198dc19a21c9e68b804c85061ad41b
+  - text: pushed by
+  - link "yuri368":
+    - /url: /yuri368
+  - link "v3/deletion-trace-ui":
+    - /url: /yuri368/windows-environment-manager-v2/tree/refs/heads/v3/deletion-trace-ui
+  - generic "Oct 14, 2026, 10:14 GMT+8": Today at 10:14
+  - img "Run duration"
+  - text: 37s
+  - generic "Show options":
+    - img "Show options"
+  - 'link "completed successfully: Run 73 of Python tests. docs(v3): close deletion trace UI with architect approval"':
+    - /url: /yuri368/windows-environment-manager-v2/actions/runs/38499958845
+    - img "completed successfully:"
+    - generic: "docs(v3): close deletion trace UI with architect approval"
+  - text: "Python tests #73:"
+  - text: Commit
+  - link "6d66c60":
+    - /url: /yuri368/windows-environment-manager-v2/commit/6d66c60835198dc19a21c9e68b804c85061ad41b
+  - text: pushed by
+  - link "yuri368":
+    - /url: /yuri368
+  - link "v3/deletion-trace-ui":
+    - /url: /yuri368/windows-environment-manager-v2/tree/refs/heads/v3/deletion-trace-ui
+  - generic "Oct 14, 2026, 10:14 GMT+8": Today at 10:14
+  - img "Run duration"
+  - text: 1m 47s
+  - generic "Show options":
+    - img "Show options"
+  - 'link "completed successfully: Run 72 of Python tests. fix(v3): retain deletion traces and keep token badges together"':
+    - /url: /yuri368/windows-environment-manager-v2/actions/runs/38499426284
+    - img "completed successfully:"
+    - generic: "fix(v3): retain deletion traces and keep token badges together"
+  - text: "Python tests #72:"
+  - text: Commit
+  - link "4a19204":
+    - /url: /yuri368/windows-environment-manager-v2/commit/4a19204da3a7ee2757ec639066eb20b97c5c98e5
+  - text: pushed by
+  - link "yuri368":
+    - /url: /yuri368
+  - link "v3/deletion-trace-ui":
+    - /url: /yuri368/windows-environment-manager-v2/tree/refs/heads/v3/deletion-trace-ui
+  - generic "Oct 14, 2026, 10:08 GMT+8": Today at 10:08
+  - img "Run duration"
+  - text: 2m 1s
+  - generic "Show options":
+    - img "Show options"
+  - 'link "completed successfully: Run 26 of V3 UI prototype checks. fix(v3): retain deletion traces and keep token badges together"':
+    - /url: /yuri368/windows-environment-manager-v2/actions/runs/38499426280
+    - img "completed successfully:"
+    - generic: "fix(v3): retain deletion traces and keep token badges together"
+  - text: "V3 UI prototype checks #26:"
+  - text: Commit
+  - link "4a19204":
+    - /url: /yuri368/windows-environment-manager-v2/commit/4a19204da3a7ee2757ec639066eb20b97c5c98e5
+  - text: pushed by
+  - link "yuri368":
+    - /url: /yuri368
+  - link "v3/deletion-trace-ui":
+    - /url: /yuri368/windows-environment-manager-v2/tree/refs/heads/v3/deletion-trace-ui
+  - generic "Oct 14, 2026, 10:08 GMT+8": Today at 10:08
+  - img "Run duration"
+  - text: 40s
+  - generic "Show options":
+    - img "Show options"
+  - 'link "completed successfully: Run 25 of V3 UI prototype checks. docs(v3): close editor suggestion states with architect approval"':
+    - /url: /yuri368/windows-environment-manager-v2/actions/runs/38495420387
+    - img "completed successfully:"
+    - generic: "docs(v3): close editor suggestion states with architect approval"
+  - text: "V3 UI prototype checks #25:"
+  - text: Commit
+  - link "18636d2":
+    - /url: /yuri368/windows-environment-manager-v2/commit/18636d288795df96174c97debf682810d3d37bb6
+  - text: pushed by
+  - link "yuri368":
+    - /url: /yuri368
+  - link "v3/editor-suggestion-states":
+    - /url: /yuri368/windows-environment-manager-v2/tree/refs/heads/v3/editor-suggestion-states
+  - generic "Oct 14, 2026, 09:23 GMT+8": Today at 09:23
+  - img "Run duration"
+  - text: 40s
+  - generic "Show options":
+    - img "Show options"
+  - 'link "completed successfully: Run 71 of Python tests. docs(v3): close editor suggestion states with architect approval"':
+    - /url: /yuri368/windows-environment-manager-v2/actions/runs/38495420378
+    - img "completed successfully:"
+    - generic: "docs(v3): close editor suggestion states with architect approval"
+  - text: "Python tests #71:"
+  - text: Commit
+  - link "18636d2":
+    - /url: /yuri368/windows-environment-manager-v2/commit/18636d288795df96174c97debf682810d3d37bb6
+  - text: pushed by
+  - link "yuri368":
+    - /url: /yuri368
+  - link "v3/editor-suggestion-states":
+    - /url: /yuri368/windows-environment-manager-v2/tree/refs/heads/v3/editor-suggestion-states
+  - generic "Oct 14, 2026, 09:23 GMT+8": Today at 09:23
+  - img "Run duration"
+  - text: 2m 26s
+  - generic "Show options":
+    - img "Show options"
+  - 'link "completed successfully: Run 70 of Python tests. fix(v3): separate unadopted suggestions from actual editor changes"':
+    - /url: /yuri368/windows-environment-manager-v2/actions/runs/38495041709
+    - img "completed successfully:"
+    - generic: "fix(v3): separate unadopted suggestions from actual editor changes"
+  - text: "Python tests #70:"
+  - text: Commit
+  - link "2c3d604":
+    - /url: /yuri368/windows-environment-manager-v2/commit/2c3d604954a878d7195b33f462b7d101e9b2b218
+  - text: pushed by
+  - link "yuri368":
+    - /url: /yuri368
+  - link "v3/editor-suggestion-states":
+    - /url: /yuri368/windows-environment-manager-v2/tree/refs/heads/v3/editor-suggestion-states
+  - generic "Oct 14, 2026, 09:18 GMT+8": Today at 09:18
+  - img "Run duration"
+  - text: 2m 33s
+  - generic "Show options":
+    - img "Show options"
+  - 'link "completed successfully: Run 24 of V3 UI prototype checks. fix(v3): separate unadopted suggestions from actual editor changes"':
+    - /url: /yuri368/windows-environment-manager-v2/actions/runs/38495041674
+    - img "completed successfully:"
+    - generic: "fix(v3): separate unadopted suggestions from actual editor changes"
+  - text: "V3 UI prototype checks #24:"
+  - text: Commit
+  - link "2c3d604":
+    - /url: /yuri368/windows-environment-manager-v2/commit/2c3d604954a878d7195b33f462b7d101e9b2b218
+  - text: pushed by
+  - link "yuri368":
+    - /url: /yuri368
+  - link "v3/editor-suggestion-states":
+    - /url: /yuri368/windows-environment-manager-v2/tree/refs/heads/v3/editor-suggestion-states
+  - generic "Oct 14, 2026, 09:18 GMT+8": Today at 09:18
+  - img "Run duration"
+  - text: 38s
+  - generic "Show options":
+    - img "Show options"
+  - 'link "completed successfully: Run 69 of Python tests. docs(v3): close three-value comparison with architect approval"':
+    - /url: /yuri368/windows-environment-manager-v2/actions/runs/38492561421
+    - img "completed successfully:"
+    - generic: "docs(v3): close three-value comparison with architect approval"
+  - text: "Python tests #69:"
+  - text: Commit
+  - link "a7d001f":
+    - /url: /yuri368/windows-environment-manager-v2/commit/a7d001fa98ef98420433a76676f2c7b64bdddd02
+  - text: pushed by
+  - link "yuri368":
+    - /url: /yuri368
+  - link "v3/three-value-compare":
+    - /url: /yuri368/windows-environment-manager-v2/tree/refs/heads/v3/three-value-compare
+  - generic "Oct 14, 2026, 08:52 GMT+8": Today at 08:52
+  - img "Run duration"
+  - text: 2m 32s
+  - generic "Show options":
+    - img "Show options"
+  - 'link "completed successfully: Run 23 of V3 UI prototype checks. docs(v3): close three-value comparison with architect approval"':
+    - /url: /yuri368/windows-environment-manager-v2/actions/runs/38492561400
+    - img "completed successfully:"
+    - generic: "docs(v3): close three-value comparison with architect approval"
+  - text: "V3 UI prototype checks #23:"
+  - text: Commit
+  - link "a7d001f":
+    - /url: /yuri368/windows-environment-manager-v2/commit/a7d001fa98ef98420433a76676f2c7b64bdddd02
+  - text: pushed by
+  - link "yuri368":
+    - /url: /yuri368
+  - link "v3/three-value-compare":
+    - /url: /yuri368/windows-environment-manager-v2/tree/refs/heads/v3/three-value-compare
+  - generic "Oct 14, 2026, 08:52 GMT+8": Today at 08:52
+  - img "Run duration"
+  - text: 34s
+  - generic "Show options":
+    - img "Show options"
+  - 'link "completed successfully: Run 68 of Python tests. docs(v3): record successful CI and architect completion report"':
+    - /url: /yuri368/windows-environment-manager-v2/actions/runs/38433619889
+    - img "completed successfully:"
+    - generic: "docs(v3): record successful CI and architect completion report"
+  - text: "Python tests #68:"
+  - text: Commit
+  - link "4c9069d":
+    - /url: /yuri368/windows-environment-manager-v2/commit/4c9069d9091e2bd79e1ba584889d4c95c5ee0f21
+  - text: pushed by
+  - link "yuri368":
+    - /url: /yuri368
+  - link "v3/three-value-compare":
+    - /url: /yuri368/windows-environment-manager-v2/tree/refs/heads/v3/three-value-compare
+  - generic "Oct 14, 2026, 00:49 GMT+8": Oct 14, 00:49 GMT+8
+  - img "Run duration"
+  - text: 2m 35s
+  - generic "Show options":
+    - img "Show options"
+  - navigation "Pagination":
+    - generic "Previous page": Previous
+    - emphasis: "1"
+    - link "Page 2":
+      - /url: /yuri368/windows-environment-manager-v2/actions?page=2
+      - text: "2"
+    - link "Page 3":
+      - /url: /yuri368/windows-environment-manager-v2/actions?page=3
+      - text: "3"
+    - link "Page 4":
+      - /url: /yuri368/windows-environment-manager-v2/actions?page=4
+      - text: "4"
+    - link "Page 5":
+      - /url: /yuri368/windows-environment-manager-v2/actions?page=5
+      - text: "5"
+    - link "Next page":
+      - /url: /yuri368/windows-environment-manager-v2/actions?page=2
+      - text: Next

@@ -19,3 +19,5 @@ Claude 改版修复契约：[草稿恢复、原始字符保真与窄屏布局](C
 5. drafts/ 中的旧架构草案，仅供参考；冲突时不覆盖上位文档，也不代表已实现事实。
 
 drafts/V3_UI_DATA_CONTRACT_PARTIAL.txt 是来源页面可取回的部分内容，状态为 partial，原文在中途结束；它不是完整契约，不能作为完整规则使用。
+
+Claude 修复收尾：[本轮缺陷复核与验证记录](CLAUDE_UI_REPAIR_REVIEW.txt)。最终源码 0665e005，原项目/镜像20组395项及最终源码两项CI通过；GPT已确认最后P2解决。
