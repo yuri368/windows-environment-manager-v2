@@ -13,6 +13,7 @@ const setInput=(field,raw)=>{assert.ok(field,'input must exist');field.value=raw
 const rows=()=>all('#elementList .element-row'),values=()=>rows().map(n=>n.querySelector('.element-input').value);
 const serialized=()=>q('#elementSerialized').textContent,historyLength=()=>ev('history.length');
 const state=()=>ev('JSON.stringify({apps,selected,profileChoice,checked:[...checked]})');
+const draftState=()=>JSON.stringify(JSON.parse(state()),(name,value)=>name==='removalState'?undefined:value);
 const windowsState=()=>ev('JSON.stringify(windows)');
 const visible=node=>!!node&&!node.closest('[hidden]')&&w.getComputedStyle(node).display!=='none';
 const targetNode=(selector,target)=>all(selector).find(n=>(n.dataset.windowsValue??n.dataset.windowsEdit)===target);
@@ -130,8 +131,8 @@ check('Undeclared snapshot variable remains editable as individual elements',()=
  setup();ev('windows["User|UNDECLARED"]="A;;A;";render()');const o=enter('User|UNDECLARED');assertIndependentOptions(o,'User|UNDECLARED');assert.equal(o.whole,false);assert.deepEqual(values(),['A','','A','']);noSchemeContext();
 });
 check('Untouched raw CRLF, tabs, repeated elements and empty slices survive add and Apply exactly',()=>{
- const raw=' \tA\r\nB ;;A;A;\t;';setup(raw);const before=state(),n=historyLength();enter();assert.equal(serialized(),raw);q('#addElement').click();setInput(rows().at(-1).querySelector('.element-input'),'TAIL');assert.equal(serialized(),raw+';TAIL');noSchemeContext();
- q('#applyElements').click();assert.equal(ev('windows["User|PATH"]'),raw+';TAIL');assert.equal(state(),before);assert.equal(historyLength(),n+1);
+ const raw=' \tA\r\nB ;;A;A;\t;';setup(raw);const before=draftState(),n=historyLength();enter();assert.equal(serialized(),raw);q('#addElement').click();setInput(rows().at(-1).querySelector('.element-input'),'TAIL');assert.equal(serialized(),raw+';TAIL');noSchemeContext();
+ q('#applyElements').click();assert.equal(ev('windows["User|PATH"]'),raw+';TAIL');assert.equal(draftState(),before);assert.equal(historyLength(),n+1);
  const c=ev('history[0].changes[0]');assert.equal(c.before,raw);assert.equal(c.after,raw+';TAIL');assert.equal(c.plan.before.raw,raw);assert.equal(c.plan.after.raw,raw+';TAIL');
 });
 check('Manual replacement, move, delete, per-row recovery and reset remain local until Apply',()=>{
@@ -146,9 +147,9 @@ check('Cancel discards direct edits and leaves workbench drafts and history unch
  enter();assert.equal(serialized(),'X;A;C;Y');assert.ok(q('#applyElements').disabled);
 });
 check('Direct Apply records only manual operations and factual History while preserving workbench drafts',()=>{
- setup();const draft=state(),n=historyLength();enter();setInput(rows()[2].querySelector('.element-input'),'MANUAL');q('#applyElements').click();assert.equal(ev('windows["User|PATH"]'),'X;A;MANUAL;Y');assert.equal(state(),draft);assert.equal(historyLength(),n+1);
+ setup();const draft=draftState(),n=historyLength();enter();setInput(rows()[2].querySelector('.element-input'),'MANUAL');q('#applyElements').click();assert.equal(ev('windows["User|PATH"]'),'X;A;MANUAL;Y');assert.equal(draftState(),draft);assert.equal(historyLength(),n+1);
  const c=ev('history[0].changes[0]');assert.equal(c.before,'X;A;C;Y');assert.equal(c.after,'X;A;MANUAL;Y');assert.deepEqual(Array.from(c.plan.operations,o=>o.action),['REPLACE']);assert.ok(Object.isFrozen(c));
- q('[data-view="history"]').click();assert.ok(q('.history-details'));assert.equal(q('.history-before').textContent,'X;A;C;Y');assert.equal(q('.history-after').textContent,'X;A;MANUAL;Y');assert.equal(state(),draft);
+ q('[data-view="history"]').click();assert.ok(q('.history-details'));assert.equal(q('.history-before').textContent,'X;A;C;Y');assert.equal(q('.history-after').textContent,'X;A;MANUAL;Y');assert.equal(draftState(),draft);
 });
 check('Direct empty-element editing preserves empty-variable state and explicit last-row deletion removes it',()=>{
  setup('A;');enter();rows()[0].querySelector('[data-delete]').click();assert.equal(serialized(),'');q('#applyElements').click();assert.equal(ev('Object.hasOwn(windows,"User|PATH")'),true);assert.equal(ev('windows["User|PATH"]'),'');

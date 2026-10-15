@@ -28,6 +28,8 @@ var DemoPlan = (() => {
     return { exists: !!exists, raw, type: copy(snapshot?.type ?? snapshot?.registryType ?? null), revision: copy(snapshot?.revision ?? null) };
   }
   const state = snapshot => ({ exists: snapshot.exists, raw: snapshot.raw, type: copy(snapshot.type) });
+  const same = (left, right) => JSON.stringify(left) === JSON.stringify(right);
+  const sameSnapshot = (left, right) => ['exists', 'raw', 'type', 'revision'].every(field => same(left?.[field], right?.[field]));
   const legacyRaw = snapshot => snapshot.exists ? snapshot.raw : undefined;
   const normalizedParts = raw => raw.split(';').map(value => value.trim()).filter(Boolean);
   const actualPartsFor = snapshot => snapshot.exists ? snapshot.raw.split(';') : [];
@@ -74,32 +76,157 @@ var DemoPlan = (() => {
       snapshot, parts, matched, ...(options.owner === undefined ? {} : { owner: copy(options.owner) })
     });
   }
-  function baselineIssues(baseline, key, mode, whole, snapshot) {
+  function baselineIssues(baseline, key, mode, whole) {
     if (!baseline) return [];
     const changed = [];
     if (baseline.targetKey?.scope !== key.scope || baseline.targetKey?.canonicalName !== key.canonicalName) changed.push('target');
     if (baseline.mode !== mode) changed.push('mode');
     if (baseline.special !== whole) changed.push('special');
-    for (const field of ['exists', 'raw', 'type', 'revision']) {
-      if (JSON.stringify(baseline.snapshot?.[field]) !== JSON.stringify(snapshot[field])) changed.push(field);
-    }
     return changed.length ? [{
-      reason: 'stale', value: baseline.selectedRaw, actualIndexes: [], fields: changed,
-      originalSnapshot: copy(baseline.snapshot), currentSnapshot: copy(snapshot)
+      reason: 'stale', value: baseline.selectedRaw, actualIndexes: [], fields: changed
     }] : [];
   }
-  function removalCandidates(baseline, selectedRaw, protectedValues) {
+  function createRemovalState(baseline) {
+    if (!baseline?.snapshot || !Array.isArray(baseline.matched)) throw new TypeError('A captured baseline is required.');
+    return freeze({
+      targetKey: copy(baseline.targetKey), baselineSnapshot: copy(baseline.snapshot), snapshot: copy(baseline.snapshot),
+      baselineSelectedRaw: baseline.selectedRaw, baselineMode: baseline.mode, baselineSpecial: baseline.special,
+      entries: baseline.matched.map(matched => ({
+        normalized: matched.normalized, initialCount: matched.occurrenceCount,
+        currentIndex: matched.occurrenceCount === 1 ? matched.actualIndexes[0] : null,
+        eligible: matched.occurrenceCount === 1, reason: matched.occurrenceCount === 1 ? null : 'duplicate'
+      }))
+    });
+  }
+  function revokeRemovalState(baseline, snapshot) {
+    const original = createRemovalState(baseline);
+    return freeze({ ...original, snapshot: copy(snapshot), entries: original.entries.map(entry => ({
+      ...entry, currentIndex: null, eligible: false, reason: entry.reason || 'continuity'
+    })) });
+  }
+  function validRemovalState(baseline, removalState) {
+    return baseline && removalState && same(removalState.targetKey, baseline.targetKey)
+      && sameSnapshot(removalState.baselineSnapshot, baseline.snapshot)
+      && removalState.baselineSelectedRaw === baseline.selectedRaw
+      && removalState.baselineMode === baseline.mode && removalState.baselineSpecial === baseline.special
+      && Array.isArray(removalState.entries)
+      && removalState.entries.length === baseline.matched.length
+      && baseline.matched.every((matched, index) => removalState.entries[index]?.normalized === matched.normalized
+        && removalState.entries[index]?.initialCount === matched.occurrenceCount);
+  }
+  function syncRemovalState({ baseline, state: removalState, snapshot }) {
+    if (!baseline) return null;
+    const current = snapshotFor({ snapshot });
+    if (!removalState) return sameSnapshot(baseline.snapshot, current)
+      ? createRemovalState(baseline) : revokeRemovalState(baseline, current);
+    if (!validRemovalState(baseline, removalState)) return revokeRemovalState(baseline, current);
+    if (sameSnapshot(removalState.snapshot, current)) return removalState;
+    return freeze({ ...copy(removalState), snapshot: current, entries: removalState.entries.map(entry => ({
+      ...copy(entry), currentIndex: null, eligible: false, reason: entry.reason || 'continuity'
+    })) });
+  }
+  function schemeIndexMap(plan, before, after) {
+    if (plan.kind !== 'append' || plan.source !== 'scheme-apply') return null;
+    const original = actualPartsFor(before), removed = new Set(), inserts = [];
+    for (const operation of plan.operations) {
+      if (operation.type === 'remove') {
+        if (!Number.isInteger(operation.beforeIndex) || operation.beforeIndex < 0 || operation.beforeIndex >= original.length
+          || removed.has(operation.beforeIndex) || original[operation.beforeIndex] !== operation.value) return null;
+        removed.add(operation.beforeIndex);
+      } else if (operation.type === 'insert' && ['head', 'tail'].includes(operation.position)) inserts.push(operation);
+      else return null;
+    }
+    const retained = original.map((value, index) => ({ value, index })).filter(row => !removed.has(row.index));
+    const groups = [];
+    for (const operation of inserts) {
+      const last = groups.at(-1);
+      if (last && last.position === operation.position && last.requestId === operation.requestId) last.rows.push({ value: operation.value });
+      else groups.push({ position: operation.position, requestId: operation.requestId, rows: [{ value: operation.value }] });
+    }
+    let rows = retained;
+    for (const group of groups) rows = group.position === 'head' ? [...group.rows, ...rows] : [...rows, ...group.rows];
+    if (!same(state(after), plan.after) || !same(state(after), listState(before, rows.map(row => row.value))) && plan.operations.length) return null;
+    const map = new Map(rows.flatMap((row, position) => row.index === undefined ? [] : [[row.index, position]]));
+    return map;
+  }
+  function elementIndexMap(plan, before, after) {
+    if (plan.source !== 'windows-element-edit' || plan.special || !Array.isArray(plan.audit?.elements)) return null;
+    if (plan.audit.before !== legacyRaw(before) || plan.audit.after !== plan.desiredRaw) return null;
+    const oldParts = actualPartsFor(before), newParts = actualPartsFor(after), rows = plan.audit.elements;
+    const oldIndexes = new Set(), newIndexes = new Set(), elementIds = new Set(), map = new Map();
+    for (const row of rows) {
+      const hasBefore = row.beforeIndex !== null && row.beforeIndex !== undefined;
+      const hasAfter = row.afterIndex !== null && row.afterIndex !== undefined;
+      if (row.elementId === undefined || row.elementId === null || elementIds.has(row.elementId)
+        || !hasBefore && !hasAfter || row.added !== !hasBefore || row.removed !== !hasAfter
+        || hasBefore && hasAfter && row.replaced !== (row.before !== row.after)) return null;
+      elementIds.add(row.elementId);
+      if (hasBefore) {
+        if (!Number.isInteger(row.beforeIndex) || row.beforeIndex < 0 || row.beforeIndex >= oldParts.length
+          || oldIndexes.has(row.beforeIndex) || oldParts[row.beforeIndex] !== row.before) return null;
+        oldIndexes.add(row.beforeIndex);
+      }
+      if (hasAfter) {
+        if (!Number.isInteger(row.afterIndex) || row.afterIndex < 0 || row.afterIndex >= newParts.length
+          || newIndexes.has(row.afterIndex) || newParts[row.afterIndex] !== row.after) return null;
+        newIndexes.add(row.afterIndex);
+      }
+      if (hasBefore && hasAfter && !row.replaced
+        && row.before === row.after) map.set(row.beforeIndex, row.afterIndex);
+    }
+    if (oldIndexes.size !== oldParts.length || newIndexes.size !== newParts.length || !same(state(after), plan.after)) return null;
+    return map;
+  }
+  function advanceRemovalState({ baseline, state: removalState, plan, snapshot }) {
+    if (!baseline) return null;
+    const current = snapshotFor({ snapshot });
+    if (!removalState) removalState = createRemovalState(baseline);
+    if (!validRemovalState(baseline, removalState) || !plan?.valid || !sameSnapshot(removalState.snapshot, {
+      ...plan.before, revision: plan.baseRevision
+    }) || plan.targetKey?.scope !== baseline.targetKey?.scope
+      || plan.targetKey?.canonicalName !== baseline.targetKey?.canonicalName || !same(state(current), plan.after)
+      || (plan.operations.length
+        ? !Number.isInteger(removalState.snapshot.revision) || current.revision !== removalState.snapshot.revision + 1
+        : !sameSnapshot(current, removalState.snapshot))) {
+      return syncRemovalState({ baseline, state: removalState, snapshot: current });
+    }
+    const map = schemeIndexMap(plan, removalState.snapshot, current) ?? elementIndexMap(plan, removalState.snapshot, current);
+    if (!map) return syncRemovalState({ baseline, state: removalState, snapshot: current });
+    return freeze({ ...copy(removalState), snapshot: current, entries: removalState.entries.map(entry => {
+      if (!entry.eligible) return copy(entry);
+      const nextIndex = map.get(entry.currentIndex);
+      return nextIndex === undefined ? { ...copy(entry), eligible: false, currentIndex: null, reason: 'continuity' }
+        : { ...copy(entry), currentIndex: nextIndex };
+    }) });
+  }
+  function removalCandidates(baseline, removalState, snapshot, selectedRaw, protectedValues) {
     const desired = new Set(normalizedParts(selectedRaw));
     const protectedSet = new Set(protectedValues.flatMap(normalizedParts));
+    const current = actualPartsFor(snapshot), occurrences = new Map();
+    current.forEach((value, index) => {
+      const normalized = value.trim();
+      if (normalized) occurrences.set(normalized, [...(occurrences.get(normalized) || []), index]);
+    });
+    const trusted = validRemovalState(baseline, removalState) && sameSnapshot(removalState.snapshot, snapshot);
+    const originalSnapshot = baseline && sameSnapshot(baseline.snapshot, snapshot);
     const operations = [], issues = [];
-    for (const matched of baseline?.matched || []) {
+    for (const [position, matched] of (baseline?.matched || []).entries()) {
       if (desired.has(matched.normalized)) continue;
+      const indexes = occurrences.get(matched.normalized) || [];
+      if (!indexes.length) continue;
+      const entry = trusted ? removalState.entries[position] : null;
+      const currentIndex = entry ? entry.currentIndex : originalSnapshot ? matched.actualIndexes[0] : null;
       if (matched.actualIndexes.length !== 1) {
-        issues.push({ reason: 'duplicate', value: matched.normalized, actualIndexes: [...matched.actualIndexes] });
+        issues.push({ reason: 'duplicate', value: matched.normalized, actualIndexes: indexes });
+      } else if (indexes.length > 1) {
+        issues.push({ reason: 'duplicate', value: matched.normalized, actualIndexes: indexes });
+      } else if (entry && !entry.eligible || currentIndex === null || currentIndex === undefined
+        || indexes[0] !== currentIndex) {
+        issues.push({ reason: 'continuity', value: matched.normalized, actualIndexes: indexes });
       } else if (protectedSet.has(matched.normalized)) {
-        issues.push({ reason: 'shared', value: matched.normalized, actualIndexes: [...matched.actualIndexes] });
+        issues.push({ reason: 'shared', value: matched.normalized, actualIndexes: indexes });
       } else {
-        operations.push({ type: 'remove', action: 'REMOVE', value: matched.actualValues[0], beforeIndex: matched.actualIndexes[0] });
+        operations.push({ type: 'remove', action: 'REMOVE', value: current[currentIndex], beforeIndex: currentIndex });
       }
     }
     return { operations, issues };
@@ -125,14 +252,14 @@ var DemoPlan = (() => {
     const snapshot = snapshotFor(options), before = state(snapshot), key = targetKey(target ?? options.snapshot?.targetKey);
     const replace = whole || mode === 'replace';
     const { parts, result: matchResult } = computeMatch(key, before, selectedRaw, mode, whole);
-    const issues = baselineIssues(options.baseline, key, mode, whole, snapshot), valid = issues.length === 0;
+    const issues = baselineIssues(options.baseline, key, mode, whole), valid = issues.length === 0;
     const operations = [];
     let after = state(snapshot);
     if (valid && replace) {
       after = { exists: true, raw: selectedRaw, type: copy(before.type) };
       if (!before.exists || before.raw !== after.raw) operations.push({ type: 'replace', action: 'REPLACE', whole: true, before: legacyRaw(before), after: selectedRaw });
     } else if (valid) {
-      const removals = removalCandidates(options.baseline, selectedRaw, options.protectedValues || []);
+      const removals = removalCandidates(options.baseline, options.removalState, snapshot, selectedRaw, options.protectedValues || []);
       issues.push(...removals.issues); operations.push(...removals.operations);
       const removedIndexes = new Set(removals.operations.map(operation => operation.beforeIndex));
       const remaining = actualPartsFor(snapshot).filter((_, index) => !removedIndexes.has(index));
@@ -145,7 +272,9 @@ var DemoPlan = (() => {
       kind: whole ? 'whole' : replace ? 'replace' : 'append', source: 'scheme-apply',
       baseRevision: snapshot.revision, before, desiredRaw: selectedRaw, after,
       beforeRaw: legacyRaw(before), afterRaw: legacyRaw(after), operations, parts, matchResult, valid, issues,
-      ...(options.baseline ? { baseline: copy(options.baseline) } : {})
+      ...(options.baseline ? { baseline: copy(options.baseline), refresh: {
+        snapshotChanged: !sameSnapshot(options.baseline.snapshot, snapshot)
+      } } : {})
     });
   }
   function buildBatch({ target, snapshot, requests, protectedValues = [] }) {
@@ -238,5 +367,6 @@ var DemoPlan = (() => {
       beforeRaw: legacyRaw(before), afterRaw: legacyRaw(after), operations, parts, matchResult, audit: frozenAudit, valid: true, issues: []
     });
   }
-  return Object.freeze({ build, buildBatch, captureBaseline, buildElementEdit, matches, selectionChange });
+  return Object.freeze({ build, buildBatch, captureBaseline, createRemovalState, syncRemovalState,
+    advanceRemovalState, buildElementEdit, matches, selectionChange });
 })();

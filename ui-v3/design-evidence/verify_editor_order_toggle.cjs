@@ -162,14 +162,14 @@ check('Restore resets UI order and adoption provenance, and Cancel discards both
   q('#editWindowsElements').click();assert.deepEqual(values(),['A','B','C']);assert.equal(ghosts().length,0);
   assert.equal(addButton().getAttribute('aria-pressed'),'false');
 });
-check('Invalid suggestion and whole or special editors expose no actionable adoption toggle',()=>{
+check('Refreshed safe additions remain actionable while whole or special editors omit adoption toggles',()=>{
   setup('A','A','A;E');q('#cancelDialog').click();
   ev("windows['User|PATH']='A;EXTERNAL';targetRevisions['User|PATH']=1;render()");
-  q('#editWindowsElements').click();assert.equal(addButton(),null);assert.match(q('#pendingElements').textContent,/方案建议已失效/);
+  q('#editWindowsElements').click();assert.ok(addButton());assert.equal(ev('demoPlan(scheme(1).vars[1]).valid'),true);assert.equal(serialized(),'A;EXTERNAL');
   q('#cancelDialog').click();setup('A;B','A;B','C;D','replace');
-  assert.equal(addButton(),null);assert.equal(ghosts().length,0);
+  assert.equal(q('#modal').classList.contains('open'),false);
   q('#cancelDialog').click();ev('scheme(1).vars[1].special=true;render()');q('#editWindowsElements').click();
-  assert.equal(addButton(),null);assert.equal(ghosts().length,0);
+  assert.equal(q('#modal').classList.contains('open'),false);
 });
 check('Apply and History serialize only live order; UI order and adoption metadata stay out of plan',()=>{
   setup('A;B;C','A','A;E');const [a,b,c]=ids(live());

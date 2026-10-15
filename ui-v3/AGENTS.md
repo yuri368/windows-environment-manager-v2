@@ -21,3 +21,5 @@
 - Display movement labels/counts follow `docs/architecture/GUI_DISPLAY_MOVEMENT.txt`; business movement and Audit retain the live-original ordering contract.
 
 - Windows environment snapshot/direct-edit isolation follows `docs/architecture/WINDOWS_SNAPSHOT_BOUNDARY.txt`; scheme analysis remains in workbench and preview.
+
+- Seamless refresh follows `docs/architecture/SEAMLESS_REFRESH.txt`, superseding manual rebase requirements only; preserve original intent, deletion eligibility, draft state and version-bound confirmation.

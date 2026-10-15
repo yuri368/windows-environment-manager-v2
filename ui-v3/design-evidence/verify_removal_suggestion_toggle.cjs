@@ -151,7 +151,7 @@ check('Invalid plans, old buttons, whole mode, duplicate uncertainty and shared 
   q('#cancelDialog').click();
   ev("windows['User|PATH']+=';EXTERNAL';targetRevisions['User|PATH']=1;render()");
   q('#editWindowsElements').click();
-  assert.match(q('#pendingElements').textContent,/方案建议已失效.*重新检测/);
+  assert.match(q('#pendingElements').textContent,/原元素已变更或无法确认，已保留/);assert.ok(addButton());
   assert.equal(removeButton(),null);
   const result=serialized(),shown=ids(visible());
   stale.click();staleGreen.click();

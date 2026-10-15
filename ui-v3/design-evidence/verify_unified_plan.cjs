@@ -181,7 +181,7 @@ try {
     ['selected scope changes', "scheme(1).vars[1].scope='System'"],
     ['selected special flag changes', "scheme(1).vars[1].special=true"]
   ];
-  for (const [name, mutation] of staleCases) check(`Stale preview rejects ${name}, preserving intervening state and history`, () => {
+  for (const [name, mutation] of staleCases) check(`Stale preview refreshes ${name} before any write and requires review`, () => {
     editPython(); previewPath();
     const count = historySize();
     evaluate(mutation);
@@ -189,8 +189,23 @@ try {
     q('#confirmDialog').click();
     assert.equal(actual(), afterExternalChange);
     assert.equal(historySize(), count);
-    assert.match(q('#toast').textContent, /预览已失效/);
-    assert.equal(q('#modal').classList.contains('open'), false);
+    assert.ok(q('#modal').classList.contains('open'));
+    assert.equal(evaluate('modalAction.version'), 2);
+    assert.equal(evaluate('modalAction.reviewedVersion'), 0);
+    assert.strictEqual(evaluate('modalAction.rows[0].baseSnapshot.raw'),evaluate('demoSnapshot(modalAction.rows[0].v).raw'));
+    if (!q('#confirmDialog').disabled) {
+      q('#confirmDialog').click();
+      assert.equal(actual(), afterExternalChange);
+      assert.equal(historySize(), count);
+      assert.equal(evaluate('modalAction.reviewedVersion'), 2);
+      q('#confirmDialog').click();
+      assert.equal(q('#modal').classList.contains('open'), false);
+    } else {
+      assert.equal(evaluate('modalAction.rows[0].plan.valid'), false);
+      q('#cancelDialog').click();
+      assert.equal(actual(), afterExternalChange);
+      assert.equal(historySize(), count);
+    }
   });
   check('Unrelated target/global revision changes do not invalidate a target-specific preview', () => {
     editPython(); const before = pathRaw(), count = historySize(); previewPath();

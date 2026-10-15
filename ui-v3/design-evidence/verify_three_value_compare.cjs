@@ -58,16 +58,14 @@ check('Preview arrows retain frozen plan and linked counterpart while Cancel res
 check('Rebinding keeps the active occurrence and removes previous key handlers',()=>{
  setup();const root=q('.value-comparison'),tokens=all('#compareActual .comparison-token');tokens[1].focus();w.WindowsElements.bindComparison(root);w.WindowsElements.bindComparison(root);assert.equal(tokens[1].tabIndex,0);assert.equal(tokens[0].tabIndex,-1);assert.ok(tokens[1].classList.contains('is-related-highlight'));press(tokens[1],'ArrowRight');assert.equal(w.document.activeElement,tokens[2]);
 });
-check('Invalid plans preserve input and current snapshot but expose no definite result or operation badges',()=>{
- setup();input('A;E');ev("windows['User|PATH']+=';EXTERNAL';targetRevisions['User|PATH']=1;render()");assert.equal(plan().valid,false);assert.equal(rawPane('compareDesired'),'A;E');assert.equal(rawPane('compareActual'),'X;A;B;C;Y;EXTERNAL');assert.match(q('#compareAfter').textContent,/计划已失效/);assert.equal(q('#compareSerialized').textContent,'');assert.equal(q('.comparison-serialized').hidden,true);assert.ok(q('.comparison-pair').classList.contains('is-plan-stale'));assert.equal(all('.value-comparison .is-added,.value-comparison .is-removed').length,0);preview();assert.ok(q('#confirmDialog').disabled);q('#cancelDialog').click();
+check('Unknown snapshot refresh displays safe addition and unresolved original removals without losing input',()=>{
+ setup();input('A;E');const baseline=ev('scheme(1).vars[1].matchBaseline');ev("windows['User|PATH']+=';EXTERNAL';targetRevisions['User|PATH']=1;refreshVisibleState()");assert.equal(plan().valid,true);assert.equal(rawPane('compareDesired'),'A;E');assert.equal(rawPane('compareActual'),'X;A;B;C;Y;EXTERNAL');assert.equal(rawPane('compareAfter'),'X;A;B;C;Y;EXTERNAL;E');assert.ok(plan().issues.some(issue=>issue.reason==='continuity'));assert.equal(plan().operations.some(operation=>operation.type==='remove'),false);assert.strictEqual(ev('scheme(1).vars[1].matchBaseline'),baseline);preview();assert.equal(q('#confirmDialog').disabled,false);q('#cancelDialog').click();
 });
-check('Explicit Windows element edit expires the selected-value baseline until user confirms a new detection',()=>{
+check('Known Windows element edit refreshes the selected-value plan and preserves the original baseline',()=>{
  setup();input('A;E');const baseline=ev('scheme(1).vars[1].matchBaseline');
  q('#editWindowsElements').click();const field=q('#elementList .element-row .element-input');field.value='EXTERNAL';field.dispatchEvent(new w.Event('input',{bubbles:true}));q('#applyElements').click();
- assert.equal(plan().valid,false);assert.strictEqual(ev('scheme(1).vars[1].matchBaseline'),baseline);assert.equal(ev('value(scheme(1).vars[1])'),'A;E');
- assert.equal(all('#rebaseSelectedEdit').length,1);assert.match(q('#compareAfter').textContent,/Windows 当前值.*发生变化/);assert.equal(q('#compareSummary').textContent,'');
- q('#rebaseSelectedEdit').click();assert.ok(q('#confirmRebase'));assert.strictEqual(ev('scheme(1).vars[1].matchBaseline'),baseline);
- q('#confirmRebase').click();assert.equal(plan().valid,true);assert.notStrictEqual(ev('scheme(1).vars[1].matchBaseline'),baseline);assert.equal(ev('value(scheme(1).vars[1])'),'A;E');
+ assert.equal(plan().valid,true);assert.strictEqual(ev('scheme(1).vars[1].matchBaseline'),baseline);assert.equal(ev('value(scheme(1).vars[1])'),'A;E');
+ assert.equal(all('#rebaseSelectedEdit').length,0);assert.equal(plan().afterRaw,'EXTERNAL;A;Y;E');assert.equal(plan().operations.filter(operation=>operation.type==='remove').length,2);
  preview();assert.equal(q('#confirmDialog').disabled,false);q('#cancelDialog').click();
 });
 check('Whole replacement preserves complete semicolon raw without fake element mapping',()=>{

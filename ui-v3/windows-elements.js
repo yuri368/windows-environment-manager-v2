@@ -44,7 +44,7 @@ var WindowsElements = (() => {
     return removals.length?`<div class="pending-removals"><span class="pending-additions-title">方案待删除 · ${editing?'尚未从本次编辑列表移除':'确认应用后移除'}</span><div class="pending-additions-values">${removals.map(op=>removalToken(op,editing)).join('<span class="element-separator">;</span>')}</div></div>`:'';
   }
   function issuesMarkup(plan,editing=false){
-    return (plan?.issues||[]).length?`<div class="plan-issues">${plan.issues.map(issue=>`<span class="plan-issue"><code>${escape(issue.value)}</code><span class="diff-label is-retained">${issue.reason==='duplicate'?(editing?'存在重复，需明确选择元素':'存在重复，删除需确认'):issue.reason==='shared'?'共享保留':issue.reason==='stale'?'编辑基线已失效':'目标计划冲突'}</span></span>`).join('')}</div>`:'';
+    return (plan?.issues||[]).length?`<div class="plan-issues">${plan.issues.map(issue=>`<span class="plan-issue"><code>${escape(issue.value)}</code><span class="diff-label is-retained">${issue.reason==='duplicate'?(editing?'存在重复，需明确选择元素':'存在重复，删除需确认'):issue.reason==='shared'?'共享保留':issue.reason==='continuity'?'原元素已变更或无法确认，已保留':issue.reason==='stale'?'编辑上下文已变化':'目标计划冲突'}</span></span>`).join('')}</div>`:'';
   }
   function editorSuggestionToken(op,kind,modes) {
     const removing=kind==='remove',adopted=!!op.adopted,index=removing?op.beforeIndex:op.selectedIndex;
@@ -61,7 +61,7 @@ var WindowsElements = (() => {
     if(whole&&plan?.valid!==false)return '';
     const title='<div class="element-suggestions-title">方案建议</div>';
     const hint='<p class="element-suggestions-hint">点击 − 或 ＋ 采纳方案建议；已采纳的卡片可点 ↶ 撤销。所有变化仅作用于本次编辑，确认应用前不会写入 Windows。</p>';
-    if(plan?.valid===false)return `<section class="element-suggestions" aria-label="方案建议">${title}<p class="element-suggestions-empty invalid-result">方案建议已失效，需要重新检测。</p></section>`;
+    if(plan?.valid===false)return `<section class="element-suggestions" aria-label="方案建议">${title}<p class="element-suggestions-empty invalid-result">编辑上下文或目标值存在冲突，请检查作用域、模式和方案。</p></section>`;
     const groups=[['remove','建议删除'],['insert','建议追加']].map(([kind,label])=>{
       const operations=(plan?.operations||[]).filter(op=>op.type===kind);
       return operations.length?`<div class="element-suggestions-group ${kind==='remove'?'pending-removals':'pending-additions'}"><span class="element-suggestions-label">${label}</span><div class="pending-additions-values">${operations.map(op=>editorSuggestionToken(op,kind,modes)).join('<span class="element-separator">;</span>')}</div></div>`:'';
@@ -157,7 +157,7 @@ var WindowsElements = (() => {
         .map(([kind,text,count])=>'<span class="tally tally-'+kind+(count?'':' is-zero')+'"><i class="tally-dot"></i>'+text+' <b>'+count+'</b></span>').join('');
     return {tally,selected:'<span class="selection-current">'+render(selected,'selected')+'</span>',
       actual:plan.before.exists?(render(actual,'actual')||'<span class="empty-element">（空字符串）</span>'):'<span class="empty-element">（不存在）</span>',
-      after:!active?'<span class="invalid-result">计划已失效，需要重新检测并预览</span>':(render(after,'after')||'<span class="empty-element">'+(plan.after.exists?'（空字符串）':'（不存在）')+'</span>')+(after.some(item=>item.ghost)?'<span class="comparison-ghost-hint">应用后预览。划线元素不计入最终写入值，当前尚未应用。</span>':'')};
+      after:!active?'<span class="invalid-result">编辑上下文或目标值存在冲突</span>':(render(after,'after')||'<span class="empty-element">'+(plan.after.exists?'（空字符串）':'（不存在）')+'</span>')+(after.some(item=>item.ghost)?'<span class="comparison-ghost-hint">应用后预览。划线元素不计入最终写入值，当前尚未应用。</span>':'')};
   }
   const comparisonBindings=new WeakMap();
   const linkLegendMarkup=()=>'<span class="link-legend"><span class="link-key key-source">当前触碰</span><span class="link-key key-identity">同项前后</span><span class="link-key key-duplicate">重复同值</span></span>';
@@ -587,7 +587,19 @@ var WindowsElements = (() => {
     container.querySelector('#closeDialog').onclick=options.close;container.querySelector('#cancelDialog').onclick=options.close;
     container.querySelector('#addElement').onclick=()=>{const row={id:++sequence,value:''};session.rows.push(row);session.manualAddedIds.add(row.id);session.displayOrder.push(row.id);session.fx={kind:'enter',id:row.id};renderRows(row.id);};
     container.querySelector('#restoreElements').onclick=()=>{session.rows=session.originalRows.map(row=>({...row}));session.displayOrder=session.originalRows.map(row=>row.id);session.adoptionMap.clear();session.manualAddedIds.clear();session.removalAdoptions.clear();session.deletedDrafts.clear();session.dragging=null;session.hoveredId=null;session.focusedId=null;renderRows(session.rows[0]?.id);if(!session.rows.length)container.querySelector('#addElement').focus();};
-    container.querySelector('#applyElements').onclick=()=>{if(!session||!valid()||container.querySelector('#applyElements').disabled)return;const current=session,plan=session.plan;current.close();current.onApply(plan.afterRaw,plan.audit,plan);};
+    container.querySelector('#applyElements').onclick=()=>{
+      if(!session||!valid()||container.querySelector('#applyElements').disabled)return;
+      const current=session,plan=session.plan;
+      if(current.beforeApply&&current.beforeApply(plan)===false){
+        container.querySelector('#elementValidation').textContent='当前值已变化，草稿仍保留。为避免覆盖新值，本次未应用。可复制下方草稿，取消后按最新值重新编辑。';
+        const latest=current.currentSnapshot?.();
+        if(latest){let notice=container.querySelector('#editorLatestSnapshot');if(!notice){notice=document.createElement('pre');notice.id='editorLatestSnapshot';notice.className='codevalue';container.querySelector('#elementValidation').after(notice);}notice.textContent='最新当前值：\n'+(latest.exists?latest.raw:'（不存在）');}
+        return;
+      }
+      const result=current.onApply(plan.afterRaw,plan.audit,plan);
+      if(result===false||result?.status==='stale')return;
+      current.close();current.onApplied?.(plan);
+    };
     renderRows();container.querySelector('#closeDialog').focus();
   }
   function toggleRemoval(button,editingSession) {

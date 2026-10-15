@@ -56,8 +56,8 @@ check('Existing duplicate actual occurrence never receives automatic deletion su
 check('Shared protected actual remains visible as shared retention, not executable suggestion deletion',()=>{
  setup('A;C;Y','C','E');q('#cancelDialog').click();ev("scheme(0).vars[1].defaultValue='C';render()");q('#editWindowsElements').click();assert.equal(removeButton(),null);assert.match(q('#pendingElements').textContent,/共享保留/);assert.match(summary(),/0 项变化/);
 });
-check('Invalid suggestion baseline exposes no adoption buttons but permits independent manual editing',()=>{
- setup();q('#cancelDialog').click();ev("windows['User|PATH']+=';EXTERNAL';targetRevisions['User|PATH']=1;render()");q('#editWindowsElements').click();assert.match(q('#pendingElements').textContent,/方案建议已失效.*重新检测/);assert.equal(removeButton(),null);assert.equal(addButton(),null);const f=rows()[0].querySelector('.element-input');setInput(f,'MANUAL');assert.ok(!q('#applyElements').disabled);q('#applyElements').click();assert.equal(ev("windows['User|PATH']"),'MANUAL;A;C;Y;EXTERNAL');
+check('Refreshed suggestion plan retains uncertain removals while allowing safe additions and independent editing',()=>{
+ setup();q('#cancelDialog').click();ev("windows['User|PATH']+=';EXTERNAL';targetRevisions['User|PATH']=1;render()");q('#editWindowsElements').click();assert.match(q('#pendingElements').textContent,/原元素已变更或无法确认，已保留/);assert.equal(removeButton(),null);assert.ok(addButton());assert.equal(ev('demoPlan(scheme(1).vars[1]).valid'),true);const f=rows()[0].querySelector('.element-input');setInput(f,'MANUAL');assert.ok(!q('#applyElements').disabled);q('#applyElements').click();assert.equal(ev("windows['User|PATH']"),'MANUAL;A;C;Y;EXTERNAL');
 });
 check('An actual snapshot change rejects adopted edit at Apply and creates no successful history',()=>{
  setup();const n=hist();addButton().click();ev("windows['User|PATH']='EXTERNAL';targetRevisions['User|PATH']=1");q('#applyElements').click();assert.equal(ev("windows['User|PATH']"),'EXTERNAL');assert.equal(hist(),n);assert.match(q('#toast').textContent,/失效/);

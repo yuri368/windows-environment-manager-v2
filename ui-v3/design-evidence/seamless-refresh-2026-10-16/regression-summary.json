@@ -1,0 +1,188 @@
+[
+  {
+    "file": "design-evidence/verify_demo_plan.cjs",
+    "exitCode": 0,
+    "passed": 28,
+    "failed": 0
+  },
+  {
+    "file": "design-evidence/verify_dom.cjs",
+    "exitCode": 0,
+    "passed": 11,
+    "failed": 0
+  },
+  {
+    "file": "design-evidence/verify_elements.cjs",
+    "exitCode": 0,
+    "passed": 17,
+    "failed": 0
+  },
+  {
+    "file": "design-evidence/verify_interactions.cjs",
+    "exitCode": 0,
+    "passed": 13,
+    "failed": 0
+  },
+  {
+    "file": "design-evidence/verify_examples.cjs",
+    "exitCode": 0,
+    "passed": 9,
+    "failed": 0
+  },
+  {
+    "file": "design-evidence/verify_change_states.cjs",
+    "exitCode": 0,
+    "passed": 15,
+    "failed": 0
+  },
+  {
+    "file": "design-evidence/verify_element_feedback.cjs",
+    "exitCode": 0,
+    "passed": 21,
+    "failed": 0
+  },
+  {
+    "file": "design-evidence/verify_append_feedback.cjs",
+    "exitCode": 0,
+    "passed": 33,
+    "failed": 0
+  },
+  {
+    "file": "design-evidence/verify_adopt_pending.cjs",
+    "exitCode": 0,
+    "passed": 26,
+    "failed": 0
+  },
+  {
+    "file": "design-evidence/verify_history_sidebar.cjs",
+    "exitCode": 0,
+    "passed": 14,
+    "failed": 0
+  },
+  {
+    "file": "design-evidence/verify_overall_audit.cjs",
+    "exitCode": 0,
+    "passed": 25,
+    "failed": 0
+  },
+  {
+    "file": "design-evidence/verify_unified_plan.cjs",
+    "exitCode": 0,
+    "passed": 23,
+    "failed": 0
+  },
+  {
+    "file": "design-evidence/verify_matched_baseline.cjs",
+    "exitCode": 0,
+    "passed": 28,
+    "failed": 0
+  },
+  {
+    "file": "design-evidence/verify_refresh_plan.cjs",
+    "exitCode": 0,
+    "passed": 16,
+    "failed": 0
+  },
+  {
+    "file": "design-evidence/verify_matched_workflow.cjs",
+    "exitCode": 0,
+    "passed": 16,
+    "failed": 0
+  },
+  {
+    "file": "design-evidence/verify_refresh_workflow.cjs",
+    "exitCode": 0,
+    "passed": 10,
+    "failed": 0
+  },
+  {
+    "file": "design-evidence/verify_three_value_compare.cjs",
+    "exitCode": 0,
+    "passed": 25,
+    "failed": 0
+  },
+  {
+    "file": "design-evidence/verify_editor_suggestion_states.cjs",
+    "exitCode": 0,
+    "passed": 22,
+    "failed": 0
+  },
+  {
+    "file": "design-evidence/verify_deletion_trace_ui.cjs",
+    "exitCode": 0,
+    "passed": 11,
+    "failed": 0
+  },
+  {
+    "file": "design-evidence/verify_editor_order_toggle.cjs",
+    "exitCode": 0,
+    "passed": 16,
+    "failed": 0
+  },
+  {
+    "file": "design-evidence/verify_removal_suggestion_toggle.cjs",
+    "exitCode": 0,
+    "passed": 9,
+    "failed": 0
+  },
+  {
+    "file": "design-evidence/verify_claude_ui_repairs.cjs",
+    "exitCode": 0,
+    "passed": 38,
+    "failed": 0
+  },
+  {
+    "file": "design-evidence/verify_gui_feedback.cjs",
+    "exitCode": 0,
+    "passed": 30,
+    "failed": 0
+  },
+  {
+    "file": "design-evidence/verify_suggestion_manual_edit.cjs",
+    "exitCode": 0,
+    "passed": 10,
+    "failed": 0
+  },
+  {
+    "file": "design-evidence/verify_display_movement.cjs",
+    "exitCode": 0,
+    "passed": 8,
+    "failed": 0
+  },
+  {
+    "file": "design-evidence/verify_gui_followups.cjs",
+    "exitCode": 0,
+    "passed": 19,
+    "failed": 0
+  },
+  {
+    "file": "design-evidence/verify_windows_snapshot.cjs",
+    "exitCode": 0,
+    "passed": 31,
+    "failed": 0
+  },
+  {
+    "file": "design-evidence/ui-navigation-2026-10-15/verify-navigation.cjs",
+    "exitCode": 0,
+    "passed": 19,
+    "failed": 0
+  },
+  {
+    "file": "design-evidence/verify_history_linkage.cjs",
+    "exitCode": 0,
+    "passed": 10,
+    "failed": 0
+  },
+  {
+    "file": "design-evidence/verify_duplicate_hover.cjs",
+    "exitCode": 0,
+    "passed": 16,
+    "failed": 0
+  },
+  {
+    "file": "design-evidence/verify_config_editor.cjs",
+    "exitCode": 0,
+    "passed": 14,
+    "failed": 0
+  }
+]
