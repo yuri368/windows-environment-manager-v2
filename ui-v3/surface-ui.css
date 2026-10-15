@@ -1,3 +1,76 @@
+/* Execution review: read-only decisions from the existing frozen plan. */
+.preview-dialog { display: flex; flex-direction: column; max-height: calc(100dvh - 32px); overflow: hidden; }
+.preview-dialog .dialoghead, .preview-dialog .dialogfoot { flex: none; }
+.preview-dialog .dialoghead { background: #fff; }
+.preview-dialog .dialogbody { flex: 1; min-height: 0; max-height: none; overflow-y: auto; overflow-x: hidden; scroll-padding: 16px; }
+.review-summary { border: 1px solid var(--line2); border-radius: 8px; background: #f5f7f5; padding: 13px 14px; margin-bottom: 12px; }
+.review-heading { display: flex; align-items: flex-start; gap: 10px; }
+.review-heading > div { min-width: 0; }
+.review-symbol { flex: none; display: grid; place-items: center; width: 25px; height: 25px; border: 1px solid var(--line2); border-radius: 50%; font: 600 15px/1 var(--mono); color: var(--body); background: #fff; }
+.review-heading h4 { margin: 0; color: var(--ink); font-size: 14px; font-weight: 650; line-height: 1.6; }
+.review-heading p { margin: 4px 0 0; font-size: 12px; color: var(--sub); line-height: 1.6; }
+.review-metrics { display: flex; flex-wrap: wrap; gap: 5px 16px; margin: 10px 0 0 35px; font-size: 12px; color: var(--sub); }
+.review-metrics b { color: var(--ink); font-variant-numeric: tabular-nums; font-weight: 650; }
+.review-summary[data-review-state="changed"] { border-color: #b8d4c1; background: #f4faf6; }
+[data-review-state="retained"] > .review-heading .review-symbol { color: #805c25; border-color: #d9bd88; }
+.review-summary[data-review-state="retained"] { background: #fff8eb; border-color: #e5c991; }
+.review-summary[data-review-state="blocked"] { background: var(--red-soft); border-color: #dcb7b0; }
+.review-summary[data-review-state="blocked"] .review-symbol { color: #944339; border-color: #dcb7b0; }
+.review-attention { color: #805c25; }
+.review-targets { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 0 0 16px; }
+details.review-targets { display: block; }
+.review-targets > summary { cursor: pointer; padding: 5px 0; font-size: 12px; color: var(--body); }
+.review-targets > nav { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 6px; }
+.review-nav-label { font-size: 11px; color: var(--sub); margin-right: 3px; }
+.review-target { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 5px; max-width: 100%; background: #fff; border: 1px solid var(--line2); border-radius: 5px; padding: 5px 8px; font-size: 11px; text-align: left; }
+.review-target:hover { background: #f2f6f3; border-color: #88a594; }
+.review-target strong { overflow-wrap: anywhere; }
+.review-target > span:not(.review-target-number), .review-target small { color: var(--sub); font-size: 11px; }
+.review-target-number { font-variant-numeric: tabular-nums; color: var(--sub); border-right: 1px solid var(--line2); padding-right: 6px; }
+.review-target[data-review-state="retained"] small { color: #805c25; }
+.review-target[data-review-state="blocked"] small { color: #944339; }
+.review-row { scroll-margin-top: 12px; }
+.review-row-heading { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 9px; border-radius: 3px; }
+.review-row-heading > strong { color: var(--ink); font: 650 14px/1.5 var(--mono); overflow-wrap: anywhere; }
+.review-source { flex-basis: 100%; color: var(--sub); font-size: 11.5px; font-weight: 400; overflow-wrap: anywhere; }
+.review-state { margin-left: auto; font-size: 11px; color: var(--sub); font-weight: 500; }
+.review-row[data-review-state="retained"] .review-state { color: #805c25; }
+.review-row[data-review-state="blocked"] .review-state { color: #944339; }
+.review-issues { margin-top: 10px; padding: 10px 12px; background: #fff8eb; border-left: 2px solid #d4ae67; border-radius: 0 5px 5px 0; color: #624e30; font-size: 12px; }
+.review-issues ul { list-style: none; margin: 0; padding: 0; }
+.review-issues li + li { border-top: 1px solid #eadcc0; margin-top: 9px; padding-top: 9px; }
+.review-issues li > div { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.review-issues strong { font-size: 12px; font-weight: 600; }
+.review-issues code { white-space: pre-wrap; overflow-wrap: anywhere; font: 12px/1.6 var(--mono); max-width: 100%; }
+.review-issues p { margin: 4px 0 0; color: #725d3e; font-size: 11.5px; line-height: 1.65; }
+.review-issues summary { cursor: pointer; padding: 8px 0 2px; }
+.review-limitation { color: #944339; background: #fcf3f0; padding: 8px 10px; margin: 10px 0 0; border-radius: 4px; font-size: 12px; }
+.review-return { margin: 6px 0 0; padding-left: 0; }
+.preview-dialog .dialogfoot { align-items: center; flex-wrap: wrap; }
+#previewDecisionHint { min-width: 150px; flex: 1; margin: 0 auto 0 0; color: var(--sub); font-size: 11.5px; line-height: 1.6; }
+.inspect-review { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-bottom: 1px solid var(--line); background: #f5f7f5; }
+.inspect-review > div { display: flex; align-items: baseline; flex-wrap: wrap; gap: 3px 9px; min-width: 0; flex: 1; font-size: 12px; }
+.inspect-review strong { font-size: 12px; font-weight: 600; }
+.inspect-review span { color: var(--sub); font-size: 11.5px; }
+.inspect-review .textbtn { flex: none; }
+.inspect-review[data-review-state="retained"] { background: #fff8eb; }
+.inspect-review[data-review-state="retained"] strong { color: #805c25; }
+.inspect-review[data-review-state="blocked"] strong { color: #944339; }
+.inspect-variable { display: inline-flex; flex-direction: column; align-items: flex-start; border: 0; background: none; padding: 3px 0; max-width: 100%; text-align: left; border-radius: 3px; overflow-wrap: anywhere; }
+.inspect-variable small { color: var(--sub); font-size: 10.5px; font-weight: 400; margin-top: 2px; }
+.inspect-variable:hover { color: var(--green); }
+.inspect-variable:hover small { text-decoration: underline; text-underline-offset: 3px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (max-width: 700px) {
+  .preview-dialog { max-height: calc(100dvh - 20px); }
+  .review-summary { padding: 11px; }
+  .review-metrics { margin-left: 0; gap: 5px 12px; }
+  #previewDecisionHint { flex-basis: 100%; }
+  .preview-dialog .dialogfoot .btn { min-height: 34px; }
+  .inspect-review { flex-wrap: wrap; }
+  .inspect-review .textbtn { padding-left: 0; }
+}
+
 /* Read-only value structures across preview, inventory, history and configuration. */
 .windows-page, .history-page, .config-page, .preview-dialog { --sub: #617267; }
 .navtab:not(.active) { color: #617267; }

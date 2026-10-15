@@ -1,0 +1,67 @@
+{
+  "browser": "134.0.6998.35",
+  "platform": "linux",
+  "mode": "headless Chromium; browser-memory demo only",
+  "viewports": [
+    "1360x900",
+    "600x640"
+  ],
+  "font": "QA-only Noto Sans SC injection",
+  "passed": 13,
+  "total": 13,
+  "checks": [
+    {
+      "name": "Workbench comparison entry works by keyboard and preserves selected input",
+      "passed": true
+    },
+    {
+      "name": "Preview target navigation and keyboard focus trap retain the batch scope",
+      "passed": true
+    },
+    {
+      "name": "Checkbox selection and clear keep the new preview label aligned with actual scope",
+      "passed": true
+    },
+    {
+      "name": "Shared-protected partial apply writes only safe operations and retains intent",
+      "passed": true
+    },
+    {
+      "name": "No-operation protected confirmation reports no write and keeps pending intent",
+      "passed": true
+    },
+    {
+      "name": "Current-value refresh preserves disclosure/focus and requires review then confirm",
+      "passed": true
+    },
+    {
+      "name": "Cross-version occurrence focus falls back to the same target heading",
+      "passed": true
+    },
+    {
+      "name": "No-change selection remains confirmable with no fabricated history",
+      "passed": true
+    },
+    {
+      "name": "Unsupported append blocks the full batch and visibly reports a new version",
+      "passed": true
+    },
+    {
+      "name": "Conflicting requests block all targets and display the member modes",
+      "passed": true
+    },
+    {
+      "name": "600x640 long Path has no horizontal overflow or obscured footer/last target",
+      "passed": true
+    },
+    {
+      "name": "Narrow return-to-check preserves the draft and focuses its variable",
+      "passed": true
+    },
+    {
+      "name": "No browser runtime errors",
+      "passed": true
+    }
+  ],
+  "errors": []
+}
