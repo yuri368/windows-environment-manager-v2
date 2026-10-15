@@ -153,3 +153,5 @@ Windows 直接显示与“元素变更对照”一致的元素铭牌，完整原
 重复铭牌悬停增加跨栏同原文组高亮，并保留既有稳定 ID 对应项高亮。修改前/后同 ID 的文本不同时，以当前悬停侧决定重复组；移出恢复焦点身份。该反馈不改变实际结果、重复计数、计划或历史。
 
 依据、边界及验证见 [本轮契约](docs/architecture/CONFIG_INLINE_AND_DUPLICATE_HOVER.txt) 与 [验证记录](design-evidence/ui-config-inline-2026-10-15/report.txt)。
+
+配置三视图标签组仅包含三项标签；文件名与修改提示处于组外，保留原有位置与键盘导航。
