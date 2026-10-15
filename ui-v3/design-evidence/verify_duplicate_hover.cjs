@@ -28,6 +28,7 @@ check('Hovering a repeated Original value highlights every equal raw occurrence 
  for(const id of ids.slice(0,2)){assert.ok(dup(token('Original',id)));assert.ok(dup(token('Preview',id)));assert.ok(dup(row(id)));}
  for(const node of [token('Original',ids[2]),token('Preview',ids[2]),row(ids[2])])assert.ok(!dup(node));
  assert.deepEqual(all('#modal .is-related-highlight').map(n=>n.dataset.elementId),[ids[0],ids[0],ids[0]]);
+ assert.deepEqual(all('#modal .is-link-source'),[token('Original',ids[0])]);
 });
 check('Original and Preview with the same ID but changed raw text select their own duplicate groups',()=>{
  const ids=open('A;A;B');edit(ids[1],'B');pointer(token('Original',ids[1]));
@@ -35,6 +36,7 @@ check('Original and Preview with the same ID but changed raw text select their o
  pointer(token('Original',ids[1]),'pointerout',token('Preview',ids[1]));
  assert.ok(!dup(token('Original',ids[0])));assert.ok(dup(token('Original',ids[2])));assert.ok(dup(token('Preview',ids[1])));assert.ok(dup(token('Preview',ids[2])));assert.ok(dup(row(ids[2])));
  assert.ok(related(token('Original',ids[1])));assert.ok(!related(token('Original',ids[2])));
+ assert.deepEqual(all('#modal .is-link-source'),[token('Preview',ids[1])]);
 });
 check('Pointer transitions among value, duplicate badge and icon keep the duplicate group highlighted',()=>{
  const ids=open('A;A;B'),source=token('Preview',ids[0]),badge=source.querySelector('.is-duplicate'),icon=badge.querySelector('.ic');
@@ -43,7 +45,7 @@ check('Pointer transitions among value, duplicate badge and icon keep the duplic
 });
 check('Pointerleave clears duplicate highlighting and restores focused occurrence identity only',()=>{
  const ids=open('A;A;B');row(ids[2]).querySelector('.element-input').focus();pointer(token('Original',ids[0]));pointer(q('#modal'),'pointerleave');
- assert.equal(all('#modal .is-duplicate-highlight').length,0);
+ assert.equal(all('#modal .is-duplicate-highlight').length,0);assert.equal(all('#modal .is-link-source').length,0);
  assert.deepEqual(all('#modal .is-related-highlight').map(n=>n.dataset.elementId),[ids[2],ids[2],ids[2]]);
  row(ids[0]).querySelector('.element-input').focus();assert.equal(all('#modal .is-duplicate-highlight').length,0);
 });
@@ -82,7 +84,8 @@ check('Read-only streams preserve exact raw equality, case, whitespace, CRLF and
 check('Read-only comparison linkage is symmetric, independently scoped and restores keyboard focus',()=>{
  const html=stream(w.WindowsElements.staticMarkup('A;A;B',{comparison:true}));const host=fixture(html+html),other=fixture(html);
  const nodes=all('.diff-token',host);nodes[2].focus();pointer(nodes[4]);assert.equal(nodes.filter(dup).length,4);assert.equal(all('.is-duplicate-highlight',other).length,0);
- pointer(host,'pointerleave');assert.equal(nodes.filter(dup).length,0);assert.deepEqual(nodes.filter(related),[nodes[2],nodes[5]]);host.remove();other.remove();
+ assert.deepEqual(all('.is-link-source',host),[nodes[4]]);assert.equal(all('.is-link-source',other).length,0);
+ pointer(host,'pointerleave');assert.equal(nodes.filter(dup).length,0);assert.deepEqual(nodes.filter(related),[nodes[2],nodes[5]]);assert.equal(all('.is-link-source',host).length,0);host.remove();other.remove();
 });
 check('History without recorded element audit links duplicate text without inventing occurrence correspondence',()=>{
  const host=fixture(stream(w.WindowsElements.historyMarkup('A;A',{side:'before'}))+stream(w.WindowsElements.historyMarkup('A;B',{side:'after'})));

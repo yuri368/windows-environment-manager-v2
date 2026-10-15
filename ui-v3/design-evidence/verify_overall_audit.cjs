@@ -145,13 +145,12 @@ try {
     assert.equal(q('#configBtn').getAttribute('aria-current'), 'page');
   });
 
-  check('Configuration inspector labels all disabled fields and explains default-source linkage', () => {
+  check('Configuration shows concise facts and page guidance explains default-source linkage', () => {
     q('#configBtn').click();
-    for (const field of all('#editorInspector input:disabled')) {
-      assert.ok(field.id, 'Disabled field has an ID');
-      assert.ok(q(`#editorInspector label[for="${field.id}"]`), `Disabled field ${field.id} has a label`);
-    }
-    const guidance = q('#editorInspector').textContent;
+    assert.equal(all('#editorInspector input:disabled').length, 0);
+    assert.equal(q('#cfgName').textContent, w.eval('configVar().name'));
+    assert.equal(q('#cfgSource').textContent, w.eval('configVar().source'));
+    const guidance = q('#editorbody').textContent;
     assert.match(guidance, /工作台/);
     assert.match(guidance, /默认值/);
     assert.match(guidance, /其他来源/);

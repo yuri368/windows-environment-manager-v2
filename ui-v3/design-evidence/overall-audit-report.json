@@ -41,7 +41,7 @@
       "passed": true
     },
     {
-      "name": "Configuration inspector labels all disabled fields and explains default-source linkage",
+      "name": "Configuration shows concise facts and page guidance explains default-source linkage",
       "passed": true
     },
     {

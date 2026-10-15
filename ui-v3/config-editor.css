@@ -1,128 +1,121 @@
-/* One scrolling configuration canvas, with the selected variable expanded in place. */
+/* Compact desktop configuration workspace. Runtime controls are styled elsewhere. */
 .cfg-editor-shell { width: 100%; min-width: 0; flex-wrap: nowrap; overflow: hidden; }
 .cfg-navigation { width: 190px; flex: none; min-height: 0; border-right: 1px solid var(--line); background: var(--rail); }
 .cfg-navigation > summary { display: none; }
 .cfg-navigation > .editor-left { width: 100%; height: 100%; border: 0; grid-template-rows: minmax(0, 2fr) minmax(0, 1fr); }
 .cfg-navigation .editor-item { white-space: normal; overflow-wrap: anywhere; line-height: 1.4; }
-.cfg-editor-main { flex: 1; min-width: 0; min-height: 0; padding: 18px 22px 24px; overflow: auto; overscroll-behavior: contain; scroll-padding: 16px; }
-.cfg-page-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
-.cfg-page-heading h2 { font-size: 19px; margin: 0 0 4px; }
-.cfg-page-heading p { color: var(--sub); font-size: 12px; margin: 0; overflow-wrap: anywhere; }
+.cfg-editor-main { flex: 1; min-width: 0; min-height: 0; padding: 14px 20px 22px; overflow: auto; overscroll-behavior: contain; scroll-padding: 16px; }
+.cfg-page-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+.cfg-page-heading h2 { font-size: 18px; margin: 0 0 2px; }
+.cfg-page-heading p { color: var(--sub); font-size: 11px; margin: 0; overflow-wrap: anywhere; }
 .cfg-page-heading .view-select { flex: none; max-width: 125px; }
-.cfg-scheme-group + .cfg-scheme-group { margin-top: 26px; }
-.cfg-scheme-heading { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; margin-bottom: 7px; }
-.cfg-scheme-heading h3 { font-size: 13px; margin: 0; overflow-wrap: anywhere; }
+.cfg-scheme-group + .cfg-scheme-group { margin-top: 22px; }
+.cfg-scheme-heading { display: flex; align-items: baseline; gap: 9px; margin-bottom: 6px; }
+.cfg-scheme-heading h3 { margin: 0; font-size: 12px; overflow-wrap: anywhere; }
 .cfg-scheme-heading > span { color: var(--sub); font-size: 11px; }
-.cfg-variable { border-top: 1px solid var(--line); }
-.cfg-variable:last-child { border-bottom: 1px solid var(--line); }
-.cfg-variable-select { display: grid; grid-template-columns: minmax(125px, .7fr) auto minmax(0, 1.3fr); align-items: baseline; gap: 8px 14px; width: 100%; border: 0; background: transparent; padding: 12px 10px; text-align: left; }
-.cfg-variable-select:hover { background: #f0f6f1; }
-.cfg-variable-select > strong { font-size: 13px; overflow-wrap: anywhere; }
-.cfg-variable-meta { font-size: 11px; color: #536b5c; }
-.cfg-variable-value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 12px/1.5 Consolas, 'Microsoft YaHei UI', monospace; color: #536b5c; }
-.cfg-open-caption { justify-self: end; color: #536b5c; font-size: 11px; }
-.cfg-variable.is-active { background: #fcfdfb; }
-.cfg-variable.is-active > .cfg-variable-select { background: #edf3ee; }
-.cfg-inline-form { padding: 14px 14px 18px; min-width: 0; }
-.cfg-rules { display: grid; grid-template-columns: minmax(120px, .75fr) minmax(180px, 1fr) minmax(200px, 1fr); gap: 10px 14px; margin-bottom: 12px; align-items: end; }
-.cfg-default-block { min-width: 0; }
+.cfg-variable-strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(154px, 1fr)); border-top: 1px solid #d6e1d8; border-left: 1px solid #d6e1d8; }
+.cfg-variable-select { min-width: 0; min-height: 34px; display: flex; align-items: center; justify-content: space-between; gap: 7px; padding: 5px 9px; border: 0; border-right: 1px solid #d6e1d8; border-bottom: 1px solid #d6e1d8; border-radius: 0; background: #f7faf7; color: #294634; text-align: left; cursor: pointer; }
+.cfg-variable-select:hover { background: #eef5ef; }
+.cfg-variable-select.is-active { background: #dcece0; color: #173b28; box-shadow: inset 0 -2px #39724c; }
+.cfg-variable-select > strong { min-width: 0; font-size: 12px; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cfg-variable-meta { flex: none; font-size: 10px; color: #5e7465; white-space: nowrap; }
+.cfg-variable-select.is-active .cfg-variable-meta { color: #365e42; }
+.cfg-inline-form { min-width: 0; padding: 12px 0 8px; }
+.cfg-form-heading { min-width: 0; display: flex; align-items: baseline; justify-content: space-between; gap: 10px 22px; padding-bottom: 8px; border-bottom: 1px solid #d6e1d8; }
+.cfg-form-heading h3 { min-width: 0; margin: 0; color: #214b30; font-size: 15px; line-height: 1.4; overflow-wrap: anywhere; }
+.cfg-facts { min-width: 0; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 3px 14px; color: #58705f; font-size: 11px; line-height: 1.45; }
+.cfg-facts > span { min-width: 0; display: inline-flex; align-items: baseline; gap: 5px; }
+.cfg-facts strong { min-width: 0; max-width: 34ch; display: inline-block; color: #345440; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
+.cfg-rules { display: grid; grid-template-columns: minmax(120px, 160px) minmax(150px, 205px) minmax(270px, 1fr); align-items: end; gap: 8px 12px; padding: 10px 0 12px; }
 .cfg-inline-form .field { min-width: 0; margin: 0; }
-.cfg-inline-form .field label, .cfg-default-heading > label { color: #425d4c; font-size: 12px; }
-.cfg-inline-form .field :is(input,select,textarea), .cfg-raw-input { width: 100%; min-width: 0; background: #fff; border: 1px solid #c6d3ca; border-radius: 4px; padding: 7px 9px; font-size: 12px; caret-color: var(--green); }
-.cfg-inline-form .field select { height: 33px; }
-.cfg-inline-form .field textarea, .cfg-raw-input { display: block; resize: vertical; font: 12px/1.65 Consolas, 'Microsoft YaHei UI', monospace; white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 4; }
-.cfg-inline-form .field textarea { min-height: 33px; }
-.cfg-raw-input { min-height: 56px; max-height: 300px; }
-.cfg-switches { display: flex; flex-direction: column; justify-content: center; gap: 6px; min-height: 54px; padding-bottom: 2px; }
-.cfg-switches .checklabel { display: flex; gap: 6px; align-items: center; font-size: 12px; color: #425d4c; line-height: 1.4; }
+.cfg-inline-form .field label, .cfg-default-heading > label { display: block; margin-bottom: 3px; color: #425d4c; font-size: 11px; }
+.cfg-inline-form .field :is(input,select,textarea), .cfg-raw-input { width: 100%; min-width: 0; background: #fff; border: 1px solid #bccdbf; border-radius: 3px; padding: 5px 7px; color: #263f2e; font-size: 12px; caret-color: var(--green); }
+.cfg-inline-form .field select { height: 30px; }
+.cfg-inline-form .field textarea, .cfg-raw-input { display: block; resize: vertical; font: 12px/1.5 Consolas, 'Microsoft YaHei UI', monospace; white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 4; }
+.cfg-raw-input { min-height: 57px; max-height: 280px; }
+.cfg-switches { display: flex; align-items: center; flex-wrap: wrap; gap: 5px 16px; min-height: 30px; padding-bottom: 2px; }
+.cfg-switches .checklabel { display: inline-flex; align-items: center; gap: 5px; margin: 0; color: #425d4c; font-size: 11px; line-height: 1.4; }
 .cfg-switches input { margin: 0; accent-color: var(--green); }
-.cfg-field-key { font: 10px Consolas, monospace; color: #58715f; }
-.cfg-default-heading, .cfg-section-heading { display: flex; justify-content: space-between; align-items: center; gap: 10px; min-height: 28px; margin-bottom: 4px; }
-.cfg-text-action { flex: none; border: 0; background: transparent; padding: 5px 1px; color: var(--green); text-decoration: underline; text-underline-offset: 3px; font-size: 12px; }
-.cfg-text-action:hover { color: #183f2b; background: #edf3ee; }
-.cfg-hint { font-size: 11px; color: #536b5c; margin: 5px 0 0; line-height: 1.6; max-width: 75ch; }
-.cfg-value-disclosure { font-size: 12px; margin-top: 10px; }
-.cfg-value-disclosure > summary { cursor: pointer; color: #425d4c; padding: 5px 0; width: fit-content; }
-.cfg-value-disclosure > summary:hover { color: var(--green); text-decoration: underline; text-underline-offset: 3px; }
-.cfg-value-disclosure .value-stream { margin-top: 7px; }
-.cfg-choices { min-width: 0; border-top: 1px solid var(--line); padding-top: 12px; margin-top: 14px; }
-.cfg-section-heading h3 { font-size: 13px; margin: 0; }
-.cfg-count { color: #58715f; font-size: 11px; font-weight: 400; margin-left: 4px; }
-.cfg-choice-list { margin-top: 8px; }
-.cfg-choice-row { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 9px; padding: 9px 0; border-top: 1px solid #e0e7e1; align-items: start; }
-.cfg-choice-row:first-child { border-top: 0; padding-top: 4px; }
-.cfg-choice-order { font-size: 11px; font-variant-numeric: tabular-nums; color: #58715f; padding-top: 26px; }
-.cfg-choice-fields { display: grid; grid-template-columns: minmax(110px, .65fr) minmax(0, 1.8fr); align-items: start; gap: 10px; }
-.cfg-choice-fields .field textarea[data-choice-label] { font-family: inherit; line-height: 1.65; }
-.cfg-choice-fields .field textarea[data-choice-value] { min-height: 58px; }
-.cfg-choice-actions { display: flex; gap: 3px; padding-top: 23px; flex-wrap: wrap; max-width: 132px; }
-.cfg-choice-actions button { border: 1px solid transparent; background: transparent; color: #425d4c; font-size: 11px; padding: 4px; border-radius: 3px; }
-.cfg-choice-actions button:hover:enabled { background: #edf3ee; border-color: #bdcec1; }
-.cfg-choice-actions [data-choice-remove]:hover:enabled { color: #9b3d36; background: #fbeeea; border-color: #deb4ad; }
-.cfg-choice-actions button:disabled { opacity: .5; }
-.cfg-empty { color: #536b5c; font-size: 12px; margin: 10px 0 2px; }
-.cfg-source-info { border-top: 1px solid var(--line); margin-top: 15px; padding-top: 8px; }
-.cfg-source-fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; margin-top: 8px; }
-.cfg-source-fields .field:last-child { grid-column: 1 / -1; }
-.cfg-source-fields input:disabled, .cfg-source-fields textarea:read-only { opacity: 1; color: #536b5c; background: #f4f7f3; }
+.cfg-field-key { color: #6a7e70; font: 10px Consolas, monospace; }
+.cfg-default-heading, .cfg-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 9px; min-height: 25px; margin-bottom: 3px; }
+.cfg-default-heading > label { margin: 0; }
+.cfg-text-action { flex: none; border: 1px solid #a8c4af; border-radius: 3px; background: #edf5ef; padding: 4px 8px; color: #245e37; font-size: 11px; cursor: pointer; }
+.cfg-text-action:hover { background: #dcece0; border-color: #76a583; }
+.cfg-hint { margin: 4px 0 0; color: #58705f; font-size: 10px; line-height: 1.4; }
+.cfg-choices { min-width: 0; }
+.cfg-section-heading h3 { margin: 0; color: #264b32; font-size: 12px; }
+.cfg-count { margin-left: 3px; color: #58705f; font-size: 11px; font-weight: 400; font-variant-numeric: tabular-nums; }
+.cfg-choice-list { margin-top: 5px; border-top: 1px solid #c9d8cc; }
+.cfg-choice-columns, .cfg-choice-row { display: grid; grid-template-columns: 28px minmax(110px, .7fr) minmax(170px, 1.6fr) 121px; gap: 8px; align-items: center; }
+.cfg-choice-columns { min-height: 25px; padding: 2px 5px; background: #f0f5f1; color: #506c58; font-size: 10px; font-weight: 600; }
+.cfg-choice-row { min-height: 39px; padding: 4px 5px; border-top: 1px solid #e1e9e2; }
+.cfg-choice-row:hover { background: #f8fbf8; }
+.cfg-choice-order { color: #617a68; font-size: 11px; font-variant-numeric: tabular-nums; text-align: center; }
+.cfg-choice-cell { min-width: 0; }
+.cfg-choice-cell .field label { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+.cfg-choice-cell textarea { min-height: 29px; height: 29px; max-height: 140px; line-height: 1.4; }
+.cfg-choice-cell textarea[data-choice-label] { font-family: inherit; }
+.cfg-choice-actions { display: flex; align-items: center; gap: 2px; white-space: nowrap; }
+.cfg-choice-actions button { border: 1px solid transparent; border-radius: 3px; background: transparent; color: #3f6450; font-size: 10px; padding: 5px 4px; cursor: pointer; }
+.cfg-choice-actions button:hover:enabled { background: #e6f0e8; border-color: #b8d0bd; }
+.cfg-choice-actions [data-choice-remove]:hover:enabled { color: #973e37; background: #fbeeea; border-color: #deb4ad; }
+.cfg-choice-actions button:disabled { opacity: .42; cursor: default; }
+.cfg-empty { color: #58705f; font-size: 11px; margin: 9px 0 2px; }
 .cfg-inline-form :is(label,.cfg-choices).is-config-edited { color: #865b16; }
-.cfg-inline-form label.is-config-edited::after { content: '已修改'; display: inline-block; margin-left: 6px; color: #865b16; font-size: 10px; }
+.cfg-inline-form label.is-config-edited::after { content: '已修改'; display: inline-block; margin-left: 5px; color: #865b16; font-size: 10px; }
 .cfg-inline-form :is(input,select,textarea).is-config-edited { background: #fffbf2; border-color: #ccab6d; }
-.cfg-choices.is-config-edited .cfg-section-heading h3::after { content: '已修改'; color: #865b16; font-size: 10px; font-weight: 400; margin-left: 6px; }
-.cfg-inline-form :is(input,select,textarea):focus-visible { background: #fff; outline: 2px solid #729e81; outline-offset: 2px; }
-.cfg-validation { color: #9b3d36; font-size: 12px; background: #fbeeea; padding: 8px 10px; margin-top: 10px; border-radius: 4px; overflow-wrap: anywhere; }
+.cfg-choices.is-config-edited .cfg-section-heading h3::after { content: '已修改'; color: #865b16; font-size: 10px; font-weight: 400; margin-left: 5px; }
+.cfg-editor-shell :is(button,select,textarea):focus-visible { outline: 2px solid #4c8860; outline-offset: 2px; }
+.cfg-validation { color: #9b3d36; font-size: 11px; background: #fbeeea; padding: 7px 9px; margin-top: 9px; border-radius: 3px; overflow-wrap: anywhere; }
 .cfg-validation[hidden] { display: none; }
-.cfg-page-note { color: #536b5c; font-size: 11px; margin: 16px 0 0; max-width: 75ch; line-height: 1.6; }
+.cfg-page-note { color: #58705f; font-size: 10px; margin: 12px 0 0; line-height: 1.4; }
 .cfg-editor-shell ::selection { color: #153e27; background: #d2e8d8; }
-@media (min-width: 1101px) {
-  .cfg-inline-form { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.4fr); gap: 10px 22px; align-items: start; }
-  .cfg-inline-form > :is(.cfg-rules,.cfg-validation,.cfg-source-info) { grid-column: 1 / -1; }
-  .cfg-inline-form > .cfg-rules { margin-bottom: 0; }
-  .cfg-inline-form > .cfg-choices { border-top: 0; padding-top: 0; margin-top: 0; }
-  .cfg-inline-form > .cfg-source-info { margin-top: 0; }
-  .cfg-inline-form > .cfg-validation { margin-top: 0; }
+@media (min-width: 1300px) {
+  .cfg-inline-form { display: grid; grid-template-columns: minmax(260px, .83fr) minmax(500px, 1.5fr); align-items: start; gap: 0 20px; }
+  .cfg-form-heading, .cfg-rules, .cfg-validation { grid-column: 1 / -1; }
 }
-@media (max-width: 1200px) {
-  .cfg-rules { grid-template-columns: minmax(110px, .7fr) minmax(160px, 1fr); }
-  .cfg-switches { grid-column: 1 / -1; flex-direction: row; flex-wrap: wrap; justify-content: flex-start; min-height: 28px; gap: 8px 18px; }
-  .cfg-choice-fields { grid-template-columns: minmax(0, 1fr); }
-  .cfg-choice-actions { flex-direction: column; padding-top: 23px; }
-  .cfg-choice-fields .field textarea[data-choice-label] { max-width: 340px; }
+@media (max-width: 1299px) {
+  .cfg-default-block { margin-bottom: 12px; }
+}
+@media (max-width: 950px) {
+  .cfg-rules { grid-template-columns: minmax(110px, 1fr) minmax(130px, 1fr); }
+  .cfg-switches { grid-column: 1 / -1; }
+  .cfg-form-heading { flex-wrap: wrap; }
+  .cfg-facts { justify-content: flex-start; }
 }
 @media (max-width: 860px) {
   .cfg-navigation { width: 154px; }
   .cfg-navigation > .editor-left { height: 100%; }
-  .cfg-editor-main { flex-basis: auto; overflow: auto; padding: 16px; }
-  .cfg-variable-select { grid-template-columns: minmax(0, 1fr) auto; gap: 3px 10px; }
-  .cfg-variable-value { grid-column: 1 / -1; }
-  .cfg-open-caption { display: none; }
-  .cfg-variable-meta { white-space: normal; text-align: right; }
-  .cfg-inline-form { padding: 12px 10px 16px; }
+  .cfg-editor-main { flex-basis: auto; padding: 13px 14px 20px; }
+  .cfg-choice-columns, .cfg-choice-row { grid-template-columns: 24px minmax(90px, .7fr) minmax(130px, 1.5fr) 112px; gap: 5px; }
+  .cfg-choice-actions button { padding: 5px 2px; }
 }
 @media (max-width: 700px) {
   .cfg-editor-shell { flex-direction: column; }
   .cfg-navigation { width: 100%; border-right: 0; border-bottom: 1px solid var(--line); }
-  .cfg-navigation > summary { display: list-item; margin-left: 27px; padding: 9px 12px 9px 0; font-size: 12px; cursor: pointer; }
+  .cfg-navigation > summary { display: list-item; margin-left: 27px; padding: 8px 12px 8px 0; font-size: 12px; cursor: pointer; }
   .cfg-navigation > summary span { color: #536b5c; display: inline; margin-left: 8px; overflow-wrap: anywhere; font-size: 11px; }
   .cfg-navigation > .editor-left { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 14px; height: 170px; padding: 2px 12px 12px; }
   .cfg-navigation:not([open]) > .editor-left { display: none; }
-  .cfg-page-heading { margin-bottom: 14px; }
-  .cfg-editor-main { width: 100%; padding: 14px 12px 24px; }
-  .cfg-page-heading h2 { font-size: 17px; }
-  .cfg-page-heading .view-select { width: 104px; font-size: 12px; }
+  .cfg-editor-main { width: 100%; padding: 12px 11px 20px; }
+  .cfg-page-heading h2 { font-size: 16px; }
+  .cfg-page-heading .view-select { width: 105px; font-size: 11px; }
+  .cfg-variable-strip { grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); }
+  .cfg-choice-columns { display: none; }
+  .cfg-choice-row { grid-template-columns: 20px minmax(0, 1fr) 108px; align-items: start; }
+  .cfg-choice-row > .cfg-choice-cell:nth-of-type(2) { grid-column: 2; }
+  .cfg-choice-row > .cfg-choice-actions { grid-column: 3; grid-row: 1 / 3; flex-wrap: wrap; align-self: center; }
+  .cfg-choice-cell .field label { position: static; width: auto; height: auto; padding: 0; margin: 0 0 2px; overflow: visible; clip-path: none; white-space: normal; border: 0; }
 }
 @media (max-width: 430px) {
+  .cfg-page-heading { flex-wrap: wrap; }
+  .cfg-navigation > summary span { display: block; margin-left: 0; margin-top: 2px; }
   .cfg-rules { grid-template-columns: minmax(0, 1fr); }
   .cfg-switches { grid-column: auto; }
-  .cfg-page-heading { flex-wrap: wrap; }
-  .cfg-source-fields { grid-template-columns: minmax(0, 1fr); }
-  .cfg-choice-row { grid-template-columns: 16px minmax(0, 1fr); gap: 5px; }
-  .cfg-choice-actions { grid-column: 2; flex-direction: row; padding-top: 0; max-width: none; }
-  .cfg-navigation > summary span { display: block; margin-left: 0; margin-top: 2px; }
+  .cfg-variable-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cfg-choice-row { grid-template-columns: 19px minmax(0, 1fr); }
+  .cfg-choice-row > .cfg-choice-actions { grid-column: 2; grid-row: auto; justify-content: flex-start; }
 }
 @media (prefers-reduced-motion: reduce) {
   .cfg-editor-shell *, .cfg-editor-shell *::before, .cfg-editor-shell *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
-
-/* Runtime text uses the same raw-line-ending mapping as configuration fields. */
-.running-value textarea.vinput { min-height: 29px; padding: 5px 8px; line-height: 17px; resize: vertical; white-space: pre; overflow: auto; }

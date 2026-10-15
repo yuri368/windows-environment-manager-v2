@@ -127,6 +127,14 @@ body { padding: 12px; font-size: 13px; line-height: 1.55; }
 .has-changes { color: var(--amber); }
 .running-value { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .running-value .vinput { flex: 1; min-width: 0; }
+.running-value textarea.vinput { display: block; height: 32px; min-height: 32px; max-height: 112px; padding: 6px 8px; line-height: 18px; resize: none; white-space: pre-wrap; overflow-wrap: anywhere; overflow-x: hidden; overflow-y: auto; }
+.value-comparison .comparison-pair.is-plan-stale .result-pane { align-self: start; }
+.value-comparison .comparison-pair.is-plan-stale .result-pane .value-box { flex: none; min-height: 0; padding: 0; border: 0; background: transparent; }
+.comparison-pair.is-plan-stale::before, .comparison-pair.is-plan-stale::after { display: none; }
+.stale-result { padding: 12px; border: 1px solid #d8bd89; border-radius: 7px; background: #fffbf3; color: #704f20; font: 12px/1.55 'Microsoft YaHei UI','Segoe UI',sans-serif; }
+.stale-result strong { display: block; font-size: 12.5px; }
+.stale-result p { margin: 5px 0 10px; }
+.stale-result .btn { height: 30px; font-size: 12px; }
 .pending-state { flex-shrink: 0; padding: 1px 4px; border-radius: 3px; font-size: 10px; color: var(--amber); background: var(--amber-soft); }
 .demo-description { max-width: 720px; margin: 9px 0 0; font-size: 12px; line-height: 1.6; color: var(--sub); }
 .app-title, .editor-mid h2, .editor-right h3 { overflow-wrap: anywhere; min-width: 0; }

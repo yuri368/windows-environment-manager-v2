@@ -69,6 +69,7 @@ button.comparison-static-token { appearance: none; cursor: pointer; }
 .history-element-table tbody tr:hover { background: #f5faf7; }
 .history-change.is-linking .comparison-static-token:not(.is-related-highlight):not(.is-duplicate-highlight) { opacity: .6; }
 .history-element-table tr.is-related-highlight { background: #eaf3ed; }
+.history-element-table tr.is-link-source { outline: 2px solid #1d583f; outline-offset: -2px; }
 .history-element-table tr:focus-visible { outline: 2px solid var(--green); outline-offset: -2px; }
 .history-element-table tbody tr { transition: background-color 120ms ease-out; }
 .history-change .raw-disclosure .history-values { margin-top: 4px; }
@@ -135,12 +136,11 @@ button.comparison-static-token { appearance: none; cursor: pointer; }
 @keyframes history-unfold { from { opacity: .55; } to { opacity: 1; } }
 @keyframes stream-resolve { from { opacity: .4; transform: translateX(-5px); } to { opacity: 1; transform: none; } }
 @keyframes preview-add-stamp { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
-@keyframes link-arrive { 0% { outline: 2px solid #509373; outline-offset: 6px; } 100% { outline: 2px solid transparent; outline-offset: 0; } }
 @keyframes link-conduct { 0% { transform: translateX(-4px); opacity: .4; } 70% { transform: translateX(4px); opacity: 1; } 100% { transform: none; } }
 @keyframes history-arrive { from { opacity: .5; clip-path: inset(0 0 100% 0); transform: translateY(-8px); } to { opacity: 1; clip-path: inset(0); transform: none; } }
 @keyframes history-pin { 0% { box-shadow: 0 0 0 0 #3b9a7470; } 100% { box-shadow: 0 0 0 9px #3b9a7400; } }
 @keyframes surface-trace { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-.preview-flow .is-related-highlight { z-index: 2; animation: link-arrive 380ms ease-out; }
+.preview-flow .is-related-highlight { z-index: 2; }
 .value-link-group.is-linking .flow-arrow { animation: link-conduct 350ms var(--ease-out); }
 .history-details[open] > .history-detail-body { animation: history-arrive 360ms var(--ease-out); }
 .history-page tr:has(.history-details[open]) .time-dot { background: var(--green); animation: history-pin 550ms ease-out; }

@@ -160,10 +160,15 @@ var WindowsElements = (() => {
       after:!active?'<span class="invalid-result">计划已失效，需要重新检测并预览</span>':(render(after,'after')||'<span class="empty-element">'+(plan.after.exists?'（空字符串）':'（不存在）')+'</span>')+(after.some(item=>item.ghost)?'<span class="comparison-ghost-hint">应用后预览。划线元素不计入最终写入值，当前尚未应用。</span>':'')};
   }
   const comparisonBindings=new WeakMap();
+  const linkLegendMarkup=()=>'<span class="link-legend"><span class="link-key key-source">当前触碰</span><span class="link-key key-identity">同项前后</span><span class="link-key key-duplicate">重复同值</span></span>';
   // Raw equality is a separate hover-only display group, never occurrence identity.
   const duplicateValueFor=element=>element?.classList.contains('is-duplicate')&&element.hasAttribute('data-duplicate-value')?element.dataset.duplicateValue:null;
   function paintDuplicateGroup(root,value){
     root.querySelectorAll('[data-duplicate-value]').forEach(element=>element.classList.toggle('is-duplicate-highlight',value!==null&&element.dataset.duplicateValue===value));
+  }
+  function paintLinkSource(root,source){
+    root.querySelectorAll('.is-link-source').forEach(element=>{if(element!==source)element.classList.remove('is-link-source')});
+    if(source&&root.contains(source))source.classList.add('is-link-source');
   }
   function bindComparison(root){
     comparisonBindings.get(root)?.();
@@ -180,7 +185,7 @@ var WindowsElements = (() => {
     const keyFor=target=>target?.closest?.('[data-related-key]')?.dataset.relatedKey??null;
     const hoverFor=target=>{const token=target?.closest?.('[data-related-key],[data-duplicate-value]');return token&&root.contains(token)?token:null};
     let hovered=null,focused=root.contains(document.activeElement)?keyFor(document.activeElement):null;
-    const paint=()=>{const key=hovered?keyFor(hovered):focused,duplicateValue=duplicateValueFor(hovered);root.classList.toggle('is-linking',key!==null||duplicateValue!==null);root.querySelectorAll('[data-related-key]').forEach(node=>node.classList.toggle('is-related-highlight',node.dataset.relatedKey===key));paintDuplicateGroup(root,duplicateValue)};
+    const paint=()=>{const key=hovered?keyFor(hovered):focused,duplicateValue=duplicateValueFor(hovered);root.classList.toggle('is-linking',key!==null||duplicateValue!==null);root.querySelectorAll('[data-related-key]').forEach(node=>node.classList.toggle('is-related-highlight',node.dataset.relatedKey===key));paintDuplicateGroup(root,duplicateValue);paintLinkSource(root,hovered)};
     const handlers={
       pointerover:e=>{const next=hoverFor(e.target);if(next!==hovered){hovered=next;paint()}},
       pointerout:e=>{const next=hoverFor(e.relatedTarget);if(next!==hovered){hovered=next;paint()}},
@@ -349,6 +354,7 @@ var WindowsElements = (() => {
       element.classList.toggle('is-related-highlight', id !== null && Number(element.dataset.elementId) === id);
     });
     paintDuplicateGroup(session.container,session.container.contains(session.hoveredElement)?duplicateValueFor(session.hoveredElement):null);
+    paintLinkSource(session.container,session.hoveredElement);
   }
   function elementAt(target) {
     if (!target || target.nodeType !== 1) return null;
@@ -489,7 +495,7 @@ var WindowsElements = (() => {
       half.className='break-half is-'+side;half.style.clipPath=poly(side);
       [clone,...clone.querySelectorAll('*')].forEach(n=>[...n.attributes].forEach(a=>{if(a.name.startsWith('data-')||a.name==='id'||a.name==='for'||a.name==='draggable')n.removeAttribute(a.name);}));
       clone.querySelectorAll('input,textarea,button').forEach(n=>{n.tabIndex=-1;n.disabled=true;});
-      clone.classList.remove('is-dragging','is-related-highlight','is-duplicate-highlight','is-focus');half.appendChild(clone);wrap.appendChild(half);
+      clone.classList.remove('is-dragging','is-related-highlight','is-duplicate-highlight','is-link-source','is-focus');half.appendChild(clone);wrap.appendChild(half);
     });
     wrap.insertAdjacentHTML('beforeend',`<svg class="break-crack" viewBox="0 0 100 100" preserveAspectRatio="none"><polyline pathLength="1" points="${CRACK.map(point=>point.join(',')).join(' ')}"/></svg>`);
     for(let index=0;index<7;index++){
@@ -574,7 +580,7 @@ var WindowsElements = (() => {
         <div class="change-legend" role="group" aria-label="状态图例与计数"><span class="legend-group"><span class="legend-heading">本次变更</span><span class="lg legend-added"><i class="st-cell st-added"><b class="ic ic-add"></b></i>新增<em data-legend-count="added">0</em></span><span class="lg legend-manual-added"><i class="st-cell st-manual-added"><b class="ic ic-add"></b></i>手动新增<em data-legend-count="manual-added">0</em></span><span class="lg legend-replaced"><i class="st-cell st-replaced"><b class="ic ic-swap"></b></i>替换<em data-legend-count="replaced">0</em></span><span class="lg legend-moved" title="普通原始元素的展示位置变化；实际应用仍依据有效元素顺序"><i class="st-cell st-moved"><b class="ic ic-move"></b></i>移动<em data-legend-count="moved">0</em></span><span class="lg legend-moved" title="已移除原始元素的展示位置变化，不写入结果"><i class="st-cell st-moved"><b class="ic ic-move"></b></i>幽灵移动<em data-legend-count="ghost-moved">0</em></span><span class="lg legend-removed"><i class="st-cell st-removed"><b class="ic ic-cut"></b></i>删除<em data-legend-count="removed">0</em></span></span><span class="legend-group"><span class="legend-heading">提示</span><span class="lg legend-duplicate"><i class="st-cell st-duplicate"><b class="ic ic-stack"></b></i>重复<em data-legend-count="duplicate">0</em></span><span class="lg legend-empty"><i class="st-cell st-empty"><b class="ic ic-void"></b></i>空元素<em data-legend-count="empty">0</em></span><span class="lg legend-match"><i class="st-cell st-match"><b class="ic ic-check"></b></i>匹配<em data-legend-count="match">0</em></span></span></div>
         <div class="element-list" id="elementList"></div><div class="element-validation" id="elementValidation" role="status"></div><div id="pendingElements" hidden></div>
       </div><aside class="elements-compare" aria-label="元素变更对照">
-        <details class="element-raw" open><summary>元素变更对照</summary><p class="comparison-hint">悬停元素，同一项与原文相同的重复元素跨栏亮起；聚焦只对照同一项。重复按每栏原文统计，空元素保留；删除项不计入新值。</p><div class="raw-comparison"><div class="raw-pane"><label>打开时的值</label><pre id="elementOriginal"></pre></div><div class="raw-pane"><label>编辑后的值 · 含删除标记</label><pre id="elementPreview"></pre></div></div><details class="serialized-result" open><summary>实际结果字符串（不含标记或删除项）</summary><pre id="elementSerialized"></pre></details></details>
+        <details class="element-raw" open><summary>元素变更对照</summary><p class="comparison-hint">${linkLegendMarkup()}</p><div class="raw-comparison"><div class="raw-pane"><label>打开时的值</label><pre id="elementOriginal"></pre></div><div class="raw-pane"><label>编辑后的值 · 含删除标记</label><pre id="elementPreview"></pre></div></div><details class="serialized-result" open><summary>实际结果字符串（不含标记或删除项）</summary><pre id="elementSerialized"></pre></details></details>
       </aside></div><div class="dialogfoot element-footer"><span id="elementStatus" role="status">仅更新演示数据</span><button class="btn" id="cancelDialog" title="丢弃弹窗内修改，保留页面快照">取消修改</button><button class="btn primary" id="applyElements" disabled>应用（演示）</button></div></div>`;
     container.classList.add('open');
     bindRelated();
@@ -757,10 +763,10 @@ var WindowsElements = (() => {
   }
   function dismiss() {
     if (session) {
-      session.container.querySelectorAll('.is-related-highlight,.is-duplicate-highlight').forEach(element=>element.classList.remove('is-related-highlight','is-duplicate-highlight'));
+      session.container.querySelectorAll('.is-related-highlight,.is-duplicate-highlight,.is-link-source').forEach(element=>element.classList.remove('is-related-highlight','is-duplicate-highlight','is-link-source'));
       for (const [type, handler] of Object.entries(session.relatedHandlers || {})) session.container.removeEventListener(type, handler);
     }
     session=null;
   }
-  return {highlight,staticMarkup,historyMarkup,selectionInfo,selectionMarkup,pendingMarkup,comparisonMarkup,bindComparison,open,dismiss};
+  return {highlight,staticMarkup,historyMarkup,selectionInfo,selectionMarkup,pendingMarkup,comparisonMarkup,linkLegendMarkup,bindComparison,open,dismiss};
 })();

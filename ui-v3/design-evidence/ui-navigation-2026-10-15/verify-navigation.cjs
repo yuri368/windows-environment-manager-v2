@@ -69,6 +69,7 @@ async function check(name,run){try{await run();checks.push({name,passed:true});}
   await check('Config variable switch retains navigation and expands exactly one inline form',()=>{
     q('[data-editor-list="apps"]').scrollTop=110;q('.editor-mid').scrollTop=100;q('[data-tablevar="1"]').click();
     assert.equal(q('[data-editor-list="apps"]').scrollTop,110);assert.equal(all('#editorInspector').length,1);assert.ok(q('#editorInspector').closest('.cfg-variable'));assert.equal(q('.editor-right'),null);assert.equal(w.document.activeElement.dataset.tablevar,'1');
+    const content=contentState();key(w.document.activeElement,'ArrowLeft');assert.equal(w.document.activeElement.dataset.tablevar,'0');key(w.document.activeElement,'ArrowRight');assert.equal(w.document.activeElement.dataset.tablevar,'1');assert.equal(contentState(),content);
   });
   await check('New config app or profile starts at top without resetting application list scroll',()=>{
     q('.editor-mid').scrollTop=250;q('.editor-shell').scrollTop=320;q('[data-editor-list="apps"]').scrollTop=90;
