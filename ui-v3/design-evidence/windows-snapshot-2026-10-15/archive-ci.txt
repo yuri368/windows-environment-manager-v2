@@ -1,0 +1,166 @@
+- link "Skip to content":
+  - /url: "#start-of-content"
+- banner:
+  - heading "Navigation Menu" [level=2]
+  - button "Toggle navigation"
+  - link "Homepage":
+    - /url: /
+  - link "Sign in":
+    - /url: /login?return_to=https%3A%2F%2Fgithub.com%2Fyuri368%2Fwindows-environment-manager-v2%2Factions%3Fquery%3Dbranch%253Av3%252Fwindows-snapshot
+    - generic: Sign in
+  - button "Appearance settings":
+- main:
+  - complementary "Actions":
+    - navigation "Actions workflows":
+      - list:
+        - link "All workflows":
+          - /url: /yuri368/windows-environment-manager-v2/actions
+          - generic: All workflows
+        - heading "Workflows" [level=3]
+        - list "Workflows":
+          - link "Python tests":
+            - /url: /yuri368/windows-environment-manager-v2/actions/workflows/tests.yml
+            - generic: Python tests
+          - link "V3 UI prototype checks":
+            - /url: /yuri368/windows-environment-manager-v2/actions/workflows/ui-prototype.yml
+            - generic: V3 UI prototype checks
+    - navigation "Actions management":
+      - list:
+        - link "Caches":
+          - /url: /yuri368/windows-environment-manager-v2/actions/caches
+          - generic: Caches
+        - link "Lockfile":
+          - /url: /yuri368/windows-environment-manager-v2/blob/41744c66c17e1a0352aac31055f736442a876f86/.github/workflows/actions.lock
+          - generic: Lockfile
+    - list:
+      - button "Collapse sidebar" [expanded]:
+        - generic: Collapse sidebar
+  - heading "All workflows" [level=1]
+  - generic: Showing runs from all workflows
+  - search "Filter workflow runs":
+    - form "Filter workflow runs":
+      - generic: Filter workflow runs
+      - text: "branch:"
+      - generic: v3/windows-snapshot
+      - combobox "Filter workflow runs": branch:v3/windows-snapshot
+      - button "Clear filter":
+      - button "Search":
+  - region "Workflow runs":
+    - group "Workflow runs results":
+      - heading "Workflow runs" [level=2]
+      - heading "4 workflow run results" [level=3]
+      - 'button "Auto-refresh: 30s"':
+        - generic: "Auto-refresh: 30s"
+      - toolbar "Workflow run filters":
+        - button "Workflow":
+          - generic: Workflow
+        - button "Event":
+          - generic: Event
+        - button "Status":
+          - generic: Status
+        - button "More items":
+      - list "Workflow runs":
+        - 'listitem "completed successfully: Run 43 of V3 UI prototype checks. Archive snapshot review and explain local versus Git line ending hashes"':
+          - heading "Archive snapshot review and explain local versus Git line ending hashes" [level=4]:
+            - link "Archive snapshot review and explain local versus Git line ending hashes":
+              - /url: https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38680086475
+              - generic: Archive snapshot review and explain local versus Git line ending hashes
+          - generic: "completed successfully:"
+          - strong: V3 UI prototype checks
+          - generic: "#43:"
+          - generic: Commit
+          - link "d76e0d8":
+            - /url: /yuri368/windows-environment-manager-v2/commit/d76e0d810245b9d8a02dcc2835bbe8c372c49807
+          - generic: pushed
+          - generic: by
+          - link "yuri368":
+            - /url: /yuri368
+          - link "v3/windows-snapshot":
+            - /url: /yuri368/windows-environment-manager-v2/tree/refs/heads/v3/windows-snapshot
+          - generic "Oct 15, 2026, 12:10 GMT+8": Oct 15, 20265 minutes ago
+          - generic: 54s
+          - button "More actions for workflow run 43":
+        - 'listitem "completed successfully: Run 89 of Python tests. Archive snapshot review and explain local versus Git line ending hashes"':
+          - heading "Archive snapshot review and explain local versus Git line ending hashes" [level=4]:
+            - link "Archive snapshot review and explain local versus Git line ending hashes":
+              - /url: https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38680086387
+              - generic: Archive snapshot review and explain local versus Git line ending hashes
+          - generic: "completed successfully:"
+          - strong: Python tests
+          - generic: "#89:"
+          - generic: Commit
+          - link "d76e0d8":
+            - /url: /yuri368/windows-environment-manager-v2/commit/d76e0d810245b9d8a02dcc2835bbe8c372c49807
+          - generic: pushed
+          - generic: by
+          - link "yuri368":
+            - /url: /yuri368
+          - link "v3/windows-snapshot":
+            - /url: /yuri368/windows-environment-manager-v2/tree/refs/heads/v3/windows-snapshot
+          - generic "Oct 15, 2026, 12:10 GMT+8": Oct 15, 20265 minutes ago
+          - generic: 2m 21s
+          - button "More actions for workflow run 89":
+        - 'listitem "completed successfully: Run 42 of V3 UI prototype checks. Isolate Windows snapshot page from scheme planning UI"':
+          - heading "Isolate Windows snapshot page from scheme planning UI" [level=4]:
+            - link "Isolate Windows snapshot page from scheme planning UI":
+              - /url: https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38678221383
+              - generic: Isolate Windows snapshot page from scheme planning UI
+          - generic: "completed successfully:"
+          - strong: V3 UI prototype checks
+          - generic: "#42:"
+          - generic: Commit
+          - link "0aa41e6":
+            - /url: /yuri368/windows-environment-manager-v2/commit/0aa41e613bbdd077c7c199c18389725fa12fedaf
+          - generic: pushed
+          - generic: by
+          - link "yuri368":
+            - /url: /yuri368
+          - link "v3/windows-snapshot":
+            - /url: /yuri368/windows-environment-manager-v2/tree/refs/heads/v3/windows-snapshot
+          - generic "Oct 15, 2026, 11:49 GMT+8": Oct 15, 202626 minutes ago
+          - generic: 1m 4s
+          - button "More actions for workflow run 42":
+        - 'listitem "completed successfully: Run 88 of Python tests. Isolate Windows snapshot page from scheme planning UI"':
+          - heading "Isolate Windows snapshot page from scheme planning UI" [level=4]:
+            - link "Isolate Windows snapshot page from scheme planning UI":
+              - /url: https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38678221325
+              - generic: Isolate Windows snapshot page from scheme planning UI
+          - generic: "completed successfully:"
+          - strong: Python tests
+          - generic: "#88:"
+          - generic: Commit
+          - link "0aa41e6":
+            - /url: /yuri368/windows-environment-manager-v2/commit/0aa41e613bbdd077c7c199c18389725fa12fedaf
+          - generic: pushed
+          - generic: by
+          - link "yuri368":
+            - /url: /yuri368
+          - link "v3/windows-snapshot":
+            - /url: /yuri368/windows-environment-manager-v2/tree/refs/heads/v3/windows-snapshot
+          - generic "Oct 15, 2026, 11:49 GMT+8": Oct 15, 202626 minutes ago
+          - generic: 1m 36s
+          - button "More actions for workflow run 88":
+- contentinfo:
+  - heading "Footer" [level=2]
+  - link "GitHub Homepage":
+    - /url: https://github.com
+  - generic: © 2026 GitHub, Inc.
+  - navigation "Footer":
+    - heading "Footer navigation" [level=3]
+    - list "Footer navigation":
+      - link "Terms":
+        - /url: https://docs.github.com/site-policy/github-terms/github-terms-of-service
+      - link "Privacy":
+        - /url: https://docs.github.com/site-policy/privacy-policies/github-privacy-statement
+      - link "Security":
+        - /url: https://github.com/security
+      - link "Status":
+        - /url: https://www.githubstatus.com/
+      - link "Community":
+        - /url: https://github.community/
+      - link "Docs":
+        - /url: https://docs.github.com/
+      - link "Contact":
+        - /url: https://support.github.com?tags=dotcom-footer
+      - button "Manage cookies"
+      - button "Do not share my personal information"

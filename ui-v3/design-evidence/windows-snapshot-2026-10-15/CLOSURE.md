@@ -13,3 +13,5 @@ GPT source review: product passed, 0 functional blockers; requested explanation 
 Scope/limits: V3 browser demo only. DemoPlan hash unchanged 950e4f532eaa9a43444ef10ff8b2ba819981ccbbc32202a6a19bf06f669d4bc4; V2/Registry/main/Release untouched. GPT did not independently run the full suite or operate the browser. Native zoom and Windows DPI not tested. Requested viewport980x760 yielded effectiveCSS1307x1013/DPR0.75, recorded as simulation, not native zoom.
 
 Primary-only pre-existing helper code is preserved; its windows-elements.js and resource query hash differ from mirror, both separately hashed and both tested. This round's actual changed product logic is mirrored.
+
+Final GPT evidence recheck: closed the only evidence question; 0 evidence issues and 0 functional blockers. See gpt-evidence-closed.txt. Archive d76e0d8 both CI succeeded (V3 38680086475, Python 38680086387). Final closure commit contains only this note, review verdict/screenshot and CI snapshot.
