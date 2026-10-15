@@ -77,7 +77,7 @@ Success
 
 检查项目
 
-	
+
 
 裁定
 
@@ -86,7 +86,7 @@ Success
 
 Windows 删除重复的快照结构层
 
-	
+
 
 通过
 
@@ -95,7 +95,7 @@ Windows 删除重复的快照结构层
 
 Windows 当前值直接使用元素铭牌
 
-	
+
 
 通过
 
@@ -104,7 +104,7 @@ Windows 当前值直接使用元素铭牌
 
 点击指定 occurrence 定位编辑行
 
-	
+
 
 通过
 
@@ -113,7 +113,7 @@ Windows 当前值直接使用元素铭牌
 
 原始字符串按需展开且保真
 
-	
+
 
 通过
 
@@ -122,7 +122,7 @@ Windows 当前值直接使用元素铭牌
 
 Special 整体展示
 
-	
+
 
 通过
 
@@ -131,7 +131,7 @@ Special 整体展示
 
 历史通过 elementId 关联
 
-	
+
 
 通过
 
@@ -140,7 +140,7 @@ Special 整体展示
 
 beforeIndex / afterIndex 及原值精确验证
 
-	
+
 
 通过
 
@@ -149,7 +149,7 @@ beforeIndex / afterIndex 及原值精确验证
 
 新增、删除只显示在真实存在的一侧
 
-	
+
 
 通过
 
@@ -158,7 +158,7 @@ beforeIndex / afterIndex 及原值精确验证
 
 重复元素不错误关联
 
-	
+
 
 通过
 
@@ -167,7 +167,7 @@ beforeIndex / afterIndex 及原值精确验证
 
 历史记录之间的联动隔离
 
-	
+
 
 通过
 
@@ -176,7 +176,7 @@ beforeIndex / afterIndex 及原值精确验证
 
 TOML 冻结范围
 
-	
+
 
 通过
 
