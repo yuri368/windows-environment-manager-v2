@@ -1,0 +1,12 @@
+{
+  "commit": "0aa41e613bbdd077c7c199c18389725fa12fedaf",
+  "file": "ui-v3/temp.html",
+  "localSha256": "a3f103aa07246c84287cd820bd485358960a85d4b8c9020cace7872a71f6f6b4",
+  "gitSha256": "0aa25c95bd7a54d26d4ac2fb381e0214113e2826d61fb7eef8ca937f7138a4e0",
+  "crlfPairs": 423,
+  "standaloneLf": 24,
+  "localBytes": 79914,
+  "gitBytes": 79491,
+  "equalAfterCrLfToLf": true,
+  "attributes": "ui-v3/temp.html: text: set\nui-v3/temp.html: eol: lf\n"
+}
