@@ -69,7 +69,8 @@ button.comparison-static-token { appearance: none; cursor: pointer; }
 .history-element-table tbody tr:hover { background: #f5faf7; }
 .history-change.is-linking .comparison-static-token:not(.is-related-highlight):not(.is-duplicate-highlight) { opacity: .6; }
 .history-element-table tr.is-related-highlight { background: #eaf3ed; }
-.history-element-table tr.is-link-source { outline: 2px solid #1d583f; outline-offset: -2px; }
+.history-element-table tr.is-link-source { outline: 2px solid var(--link-source); outline-offset: -2px; }
+.history-element-table tr.is-link-source > :first-child { background: var(--link-source); color: #fff; }
 .history-element-table tr:focus-visible { outline: 2px solid var(--green); outline-offset: -2px; }
 .history-element-table tbody tr { transition: background-color 120ms ease-out; }
 .history-change .raw-disclosure .history-values { margin-top: 4px; }

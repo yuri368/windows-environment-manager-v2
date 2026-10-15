@@ -3,7 +3,7 @@
    一个元素 = 铭牌：[状态插槽] 值 [文字标签]。
    状态靠 图标 + 形状/纹理 + 文字 三重表达，颜色只是第三层：
      新增   蓝 · 实心插槽 ＋            替换  琥珀 · ⇄
-     移动   紫 · ↕                       重复  石墨 · 叠卡阴影 + 标签
+     移动   紫 · ↕                       重复  石墨 · 同值标签
      空元素 虚线 · ∅                     匹配  绿 · 圆环 ✓
      准备删除（还在列表里）  红虚线 · 细斜纹 · 空心 −
      结果已排除（删除痕迹）  红斜纹 · 切角断裂 · 实心 ✕ · 粗删除线
@@ -22,6 +22,7 @@
   --st-match: #2f7d5b;    --st-match-line: #8fbfa5;    --st-match-bg: #f0f8f3;    --st-match-ink: #1f5a41;
   --st-adopted: #286c51;  --st-adopted-line: #6fae92;  --st-adopted-bg: #e8f4ed;  --st-adopted-ink: #1d583f;
   --ring: #1f3a4d;
+  --link-source: #173f32;
   --ease-out: cubic-bezier(.2, .75, .25, 1);
   /* legacy names still used by the history table */
   --element-moved-bg: #ede3fa; --element-moved-border: #9770c5; --element-moved-ink: #56327e;
@@ -72,7 +73,7 @@
   margin: 3px 5px 5px 1px; padding: 0; vertical-align: middle;
   border: 1px solid var(--st-line); border-radius: 6px; background: var(--st-bg); color: var(--st-ink);
   font: 12.5px/1.45 var(--mono); isolation: isolate;
-  box-shadow: var(--st-stripe, 0 0 #0000), var(--st-stack, 0 0 #0000);
+  box-shadow: var(--st-stripe, 0 0 #0000);
 }
 .diff-value { min-width: 0; align-self: center; padding: 3px 8px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .st-plate + .diff-value { padding-left: 7px; }
@@ -114,7 +115,6 @@
 .diff-token.is-added.is-manual-added { --st-line: var(--st-manual-added-line); --st-bg: var(--st-manual-added-bg); }
 .diff-token.is-matched:is(.is-added, .is-replaced, .is-moved) { --st-stripe: inset 0 -3px 0 var(--st-match); }
 .diff-token.is-moved:is(.is-added, .is-replaced) { --st-stripe: inset 0 -3px 0 var(--st-moved); }
-.diff-token.is-duplicate, .element-row.is-duplicate .element-input { --st-stack: 3px 3px 0 -1px #fff, 3px 3px 0 0 var(--st-dup-line); }
 .diff-token[data-empty] { border-style: dashed; --st-bg: #fbfcfb; }
 
 /* 准备删除（仍在列表里，可读）：红虚线 + 细斜纹 + 空心 − + 细删除线 */
@@ -140,7 +140,8 @@
 .pending-add-token > .diff-value, .pending-remove-token > .diff-value { min-width: 0; }
 .pending-remove-token > .diff-value { text-decoration: line-through; text-decoration-thickness: 1px; text-decoration-color: var(--st-removed); }
 
-/* Link provenance: source corner, solid occurrence peers, dashed equal-value peers. */
+/* Link provenance: filled source, solid occurrence peers, dashed equal-value peers.
+   Keep status plates/badges visible; duplicate identity never adds an offset frame. */
 .diff-token.is-duplicate-highlight:not(.is-related-highlight) {
   outline: 1px dashed var(--st-dup); outline-offset: 2px; z-index: 2; animation: duplicateTrace .18s var(--ease-out);
 }
@@ -148,14 +149,17 @@
   outline: 1px solid var(--st-match); outline-offset: 2px; z-index: 3; animation: linkPing .18s var(--ease-out);
 }
 .diff-token.is-link-source {
-  outline: 2px solid #1d583f; outline-offset: 3px; z-index: 4;
-  background-image: linear-gradient(225deg, #1d583f 50%, transparent 50%); background-size: 9px 9px; background-position: top right; background-repeat: no-repeat;
+  outline: 2px solid var(--link-source); outline-offset: 0; z-index: 4;
+  background: var(--link-source); color: #fff; animation: none;
 }
+.diff-token.is-link-source > .diff-value { background: var(--link-source); color: #fff; border-radius: 4px; }
+.diff-token.is-link-source .empty-element { color: #fff; }
+.diff-token.is-link-source.is-ghost { background: none; }
 .link-legend { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
 .comparison-link-help { display: flex; gap: 12px; justify-content: space-between; flex-wrap: wrap; }
 .link-key { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
 .link-key::before { content: ''; box-sizing: border-box; width: 13px; height: 10px; border: 1px solid var(--st-match); }
-.link-key.key-source::before { border: 2px solid #1d583f; background: linear-gradient(225deg, #1d583f 4px, transparent 4px); }
+.link-key.key-source::before { border-color: var(--link-source); background: var(--link-source); }
 .link-key.key-duplicate::before { border: 1px dashed var(--st-dup); }
 .diff-token:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; z-index: 3; }
 .element-dialog .raw-comparison .diff-token, .value-comparison .value-box .diff-token { transition: opacity .12s; }
@@ -221,12 +225,12 @@
 .element-row.is-added.is-manual-added { --rail: var(--st-manual-added-line); background: var(--st-manual-added-bg); }
 .element-row.is-duplicate-highlight:not(.is-related-highlight) { outline: 1px dashed var(--st-dup); outline-offset: -2px; z-index: 1; }
 .element-row.is-related-highlight { box-shadow: inset 4px 0 0 var(--rail), inset 0 0 0 1px var(--st-match); z-index: 2; }
-.element-row.is-link-source { outline: 2px solid #1d583f; outline-offset: -2px; z-index: 3; }
-.element-row.is-link-source .element-order { background: #1d583f; color: #fff; }
+.element-row.is-link-source { outline: 2px solid var(--link-source); outline-offset: -2px; z-index: 3; }
 .element-order { grid-area: ord; align-self: start; display: grid; place-items: center; width: 26px; height: 26px; margin-top: 3px; border-radius: 7px; background: #eef2ef; color: #587063;
   font: 600 11.5px/1 var(--mono); font-variant-numeric: tabular-nums; text-align: center; transition: background-color .12s; }
 .element-row[draggable="true"] .element-order { cursor: grab; }
 .element-row[draggable="true"]:hover .element-order { background: #dfe8e2; }
+.element-row.is-link-source[draggable="true"] .element-order, .element-ghost-row.is-link-source .element-order { background: var(--link-source); color: #fff; transition: none; }
 .element-row.is-dragging { opacity: .45; }
 .element-row.is-dragging .element-order { cursor: grabbing; }
 .element-input-wrap { grid-area: inp; min-width: 0; display: block; }
@@ -237,13 +241,14 @@
 .element-input::placeholder { color: #8aa093; font-style: italic; }
 .element-input-wrap textarea:not(.is-line) { height: auto; min-height: 78px; padding: 8px 9px; resize: vertical; }
 .element-row.is-empty .element-input { border-style: dashed; background: #fbfcfb; }
-.element-row.is-duplicate .element-input { margin-bottom: 4px; box-shadow: var(--st-stack); }
 .element-row.is-added .element-input { border-color: var(--st-added-line); }
 .element-row.is-added.is-manual-added .element-input { border-color: var(--st-manual-added-line); }
 .element-row.is-replaced .element-input { border-color: var(--st-replaced-line); }
 .element-row.is-moved .element-input { border-color: var(--st-moved-line); }
 .element-row.is-matched .element-input { border-color: var(--st-match-line); }
 .element-row.is-added .element-input, .element-row.is-replaced .element-input, .element-row.is-moved .element-input, .element-row.is-matched .element-input { background: #ffffffcc; }
+.element-row.is-link-source .element-input { background: var(--link-source); color: #fff; caret-color: #fff; border-color: var(--link-source); transition: none; }
+.element-row.is-link-source .element-input::placeholder { color: #d4e8dd; }
 .element-states { grid-area: sta; display: none; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 6px; min-width: 0; }
 .element-states:has(.st-cell, .diff-label, .element-match-state:not(:empty)) { display: flex; }
 .element-states .st-plate { border: 1px solid var(--line2); border-radius: 5px; height: 19px; }
@@ -282,7 +287,7 @@
 .element-ghost-note { font-size: 10.5px; color: #8d6a6a; }
 .element-ghost-row.is-duplicate-highlight:not(.is-related-highlight) { z-index: 1; outline: 1px dashed var(--st-dup); outline-offset: -3px; }
 .element-ghost-row.is-related-highlight { z-index: 2; outline: 1px solid var(--st-match); outline-offset: -3px; }
-.element-ghost-row.is-link-source { z-index: 3; outline: 2px solid #1d583f; outline-offset: -3px; }
+.element-ghost-row.is-link-source { z-index: 3; outline: 2px solid var(--link-source); outline-offset: -3px; }
 .element-ghost-row .element-actions { justify-content: flex-end; }
 
 /* ---------- 图标按钮：默认 / 悬停 / 按下 / 聚焦 / 禁用 统一 ---------- */
