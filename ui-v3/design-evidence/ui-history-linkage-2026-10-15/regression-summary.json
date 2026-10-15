@@ -1,0 +1,7 @@
+{
+  "scripts": 27,
+  "passed": 522,
+  "failed": 0,
+  "scope": "Node/JSDOM regression; browser geometry is separately recorded",
+  "total": 522
+}

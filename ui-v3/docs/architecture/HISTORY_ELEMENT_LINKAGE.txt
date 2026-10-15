@@ -1,0 +1,13 @@
+History element presentation linkage — 2026-10-15
+
+UI-only extension of the owner's request to reuse the element-comparison appearance and interaction on related element surfaces.
+
+Historical before/after values remain recorded snapshots. When a change has an existing element audit, display correspondence is keyed by its elementId and recorded beforeIndex/afterIndex, with an exact check of that side's recorded value. It never pairs elements by text similarity, same displayed position, or reconstructed diff. No audit means no cross-side correspondence or invented element state.
+
+Before shows recorded removal/replacement/movement badges; After shows recorded addition/replacement/movement badges. Removed occurrences do not appear in After and added occurrences do not appear in Before. Raw values, empty slices, repeated values, Special handling, Audit and business movement counts remain unchanged.
+
+Hover/focus highlights the before/after occurrence and its existing change-table row within that one history change only. Each value stream and change table has one Tab entry; arrows and Home/End only navigate focus. Hover takes precedence, and leaving restores focused correspondence. This state is DOM-only and never written into history or plans.
+
+TOML functions and styles remain frozen by the owner. Notify the owner before a future TOML style pass.
+
+Current implementation and validation: design-evidence/ui-history-linkage-2026-10-15/report.txt.

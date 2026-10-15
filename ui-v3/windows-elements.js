@@ -92,7 +92,7 @@ var WindowsElements = (() => {
   }
   // Generic read-only element stream for Windows inventory, history and config views.
   // This is presentation-only: it splits an existing raw value but never computes an apply result.
-  function staticMarkup(raw,{whole=false,comparison=false,interactive=false}={}){
+  function staticMarkup(raw,{whole=false,comparison=false,interactive=false,annotations=[]}={}){
     if(raw===undefined)return '<span class="value-state-chip is-absent">（不存在）</span>';
     const parts=whole?[raw]:String(raw).split(';'),counts=new Map();
     parts.forEach(value=>counts.set(value,(counts.get(value)||0)+1));
@@ -102,8 +102,20 @@ var WindowsElements = (() => {
       const body=`<span class="diff-value" data-raw-value="${escapeRaw(value)}">${empty?'<span class="empty-element">'+(whole?'（空字符串）':'（空元素）')+'</span>':escapeRaw(value)}</span>`;
       if(!comparison)return `<span class="diff-token static-token${empty?' is-empty':''}"${empty?' data-empty="true"':''}><span class="token-position" aria-label="第 ${index+1} 项">${index+1}</span>${body}${tailMarkup(duplicate)}</span>`;
       const tag=interactive?'button':'span',action=interactive?` type="button" aria-label="${whole?'编辑当前完整字符串':'编辑当前值的第 '+(index+1)+' 个元素'}"`:'';
-      return `<${tag} class="diff-token comparison-static-token${!whole&&counts.get(value)>1?' is-duplicate':''}" data-value-index="${index}" data-related-key="item:${index}" tabindex="${index===0?0:-1}"${empty?' data-empty="true"':''}${action}>${body}${tailMarkup(valueHint(value,whole)+duplicate)}</${tag}>`;
+      const annotation=annotations[index],state=annotation?.kinds?.[0];
+      return `<${tag} class="diff-token comparison-static-token${state?' is-'+state:''}${!whole&&counts.get(value)>1?' is-duplicate':''}" data-value-index="${index}" data-related-key="${escape(annotation?.key??'item:'+index)}" tabindex="${index===0?0:-1}"${empty?' data-empty="true"':''}${action}>${body}${tailMarkup(valueHint(value,whole)+(annotation?.kinds||[]).map(kind=>statusBadge(kind,({added:'新增',removed:'删除',replaced:'替换',moved:'移动'})[kind])).join('')+duplicate)}</${tag}>`;
     }).join('<span class="element-separator">;</span>');
+  }
+  // History correspondence comes only from recorded occurrence IDs and indices.
+  // No matching by value or position is inferred for records without element audit.
+  function historyMarkup(raw,{whole=false,elements=[],side='before'}={}){
+    const parts=raw===undefined?[]:whole?[raw]:String(raw).split(';');
+    const annotations=parts.map((value,index)=>{
+      const element=elements.find(item=>item.elementId!=null&&item[side+'Index']===index&&item[side]===value);
+      return {key:element?'history:'+element.elementId:side+':'+index,
+        kinds:element?['removed','added','replaced','moved'].filter(kind=>element[kind]&&(kind!=='removed'||side==='before')&&(kind!=='added'||side==='after')):[]};
+    });
+    return staticMarkup(raw,{whole,comparison:true,annotations});
   }
   // Display metadata comes from the frozen plan; it never supplies an apply result.
   function comparisonMarkup(plan){
@@ -724,5 +736,5 @@ var WindowsElements = (() => {
     }
     session=null;
   }
-  return {highlight,staticMarkup,selectionInfo,selectionMarkup,pendingMarkup,comparisonMarkup,bindComparison,open,dismiss};
+  return {highlight,staticMarkup,historyMarkup,selectionInfo,selectionMarkup,pendingMarkup,comparisonMarkup,bindComparison,open,dismiss};
 })();

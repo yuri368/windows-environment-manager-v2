@@ -31,3 +31,5 @@ Claude 修复收尾：[本轮缺陷复核与验证记录](CLAUDE_UI_REPAIR_REVIE
 Latest user comments 1–9: `GUI_STATUS_FOLLOWUP.txt` governs ghost movement captions, editor count presentation, status-circle alignment and workbench replace editor entry. Existing business/Audit rules remain.
 
 Latest Windows page scope: `WINDOWS_SNAPSHOT_BOUNDARY.txt` supersedes prior inventory scheme overlays and direct-editor proposal context only. Workbench/preview, core plans and manual editor audit remain unchanged.
+
+History display linkage follows `HISTORY_ELEMENT_LINKAGE.txt`: reuse existing recorded element identity for before/after/detail highlighting; no model, Audit or business-rule changes.

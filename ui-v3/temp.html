@@ -23,7 +23,7 @@
 <link rel="stylesheet" href="elements-ui.css?v=708d27af03c7">
 <link rel="stylesheet" href="shell-ui.css?v=180c0987749f">
 <link rel="stylesheet" href="fx-ui.css">
-<link rel="stylesheet" href="surface-ui.css?v=32b296025cf5">
+<link rel="stylesheet" href="surface-ui.css?v=b71383c8bc22">
 </head>
 <body><div id="app">
 <header class="chrome"><span class="logo">≋</span><strong>环境变量方案管理器</strong><span class="sub mini">Compact UI · 交互演示</span><span class="prototype-mark">本地演示 · 未连接系统</span></header>
@@ -33,7 +33,7 @@
 </div><div class="backdrop" id="modal"></div><div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="demo-configs.js"></script>
 <script src="demo-plan.js"></script>
-<script src="windows-elements.js?v=ab4c2e8b0531"></script>
+<script src="windows-elements.js?v=c85cbda1dbd5"></script>
 <script>
 'use strict';
 const initialApps=[
@@ -319,7 +319,7 @@ function decorateValueStreams(root,{play=true}={}){
   if(play)stream.classList.add('fx-stream-enter');
   const tokens=[...stream.querySelectorAll('.comparison-static-token')];
   if(tokens.length){
-   WindowsElements.bindComparison(stream);
+   if(!stream.closest('.history-change[data-linked-elements]'))WindowsElements.bindComparison(stream);
    stream.onfocusin=e=>{const token=e.target.closest('.comparison-static-token');if(token)tokens.forEach(item=>item.tabIndex=item===token?0:-1)};
    stream.onkeydown=e=>{
     if(e.altKey||e.ctrlKey||e.metaKey||e.shiftKey||!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End'].includes(e.key))return;
@@ -329,6 +329,7 @@ function decorateValueStreams(root,{play=true}={}){
   }
  });
  root.querySelectorAll('.value-link-group').forEach(group=>WindowsElements.bindComparison(group));
+ root.querySelectorAll('.history-change[data-linked-elements]').forEach(group=>WindowsElements.bindComparison(group));
 }
 function previewRowMarkup(r,kind,index){
  const title=`${r.members.map(m=>esc(apps[m.app].name)+' / '+esc(m.profile)).join('、')} · ${esc(r.v.name)}`;
@@ -386,12 +387,12 @@ function historyValue(raw){return raw===undefined?'（不存在）':raw===''?'�
 function historyElementValue(raw){return raw===undefined?'—':raw===''?'（空元素）':esc(raw)}
 function historyChangeMarkup(c){
   const changed=c.whole?[]:(c.elements||[]).filter(e=>e.added||e.removed||e.replaced||e.moved);
-  return `<section class="history-change"><div class="history-change-heading"><strong>${c.scope==='User'?'用户':'系统'} / ${esc(c.name)}</strong><span class="sub mini">${c.whole?'整体值':'元素列表'}${c.mode?' · '+esc(c.mode==='batch'?'批量合并':MODE[c.mode]||'元素编辑'):''}${c.unchanged?' · 无需变化':''}</span></div>
+  return `<section class="history-change"${c.elements?.length?' data-linked-elements':''}><div class="history-change-heading"><strong>${c.scope==='User'?'用户':'系统'} / ${esc(c.name)}</strong><span class="sub mini">${c.whole?'整体值':'元素列表'}${c.mode?' · '+esc(c.mode==='batch'?'批量合并':MODE[c.mode]||'元素编辑'):''}${c.unchanged?' · 无需变化':''}</span></div>
     ${c.app?`<p class="history-source">来源：${esc(c.app)} / ${esc(c.profile)}</p>`:''}
     ${!c.elements&&c.operations?.length?`<p class="history-counts">${esc(planSummary(c.plan))}</p>`:''}
     ${c.counts&&!c.whole?`<p class="history-counts">${esc(changeCountText(c.counts))} <span class="sub mini">同一元素可同时计入替换与移动</span></p>`:''}
-    <div class="history-structure"><div><span class="flow-label">修改前 · 记录快照</span>${rawStreamMarkup(c.before,{whole:c.whole,comparison:true,label:"历史修改前"})}</div><div><span class="flow-label">修改后 · 记录快照</span>${rawStreamMarkup(c.after,{whole:c.whole,comparison:true,label:"历史修改后"})}</div></div><details class="raw-disclosure"><summary>完整原始字符串</summary><div class="history-values"><div><span class="k">修改前</span><pre class="history-before">${historyValue(c.before)}</pre></div><div><span class="k">修改后</span><pre class="history-after">${historyValue(c.after)}</pre></div></div></details>
-    ${changed.length?`<table class="history-element-table"><thead><tr><th>位置（原 → 新）</th><th>状态</th><th>原元素</th><th>新元素</th></tr></thead><tbody>${changed.map(e=>`<tr><td>${e.beforeIndex===null?'—':e.beforeIndex+1} → ${e.afterIndex===null?'—':e.afterIndex+1}</td><td>${[['added','新增'],['removed','删除'],['replaced','替换'],['moved','移动']].filter(([kind])=>e[kind]).map(([kind,label])=>`<span class="diff-label is-${kind}">${label}</span>`).join('')}</td><td><code>${historyElementValue(e.before)}</code></td><td><code>${historyElementValue(e.after)}</code></td></tr>`).join('')}</tbody></table>`:''}
+    <div class="history-structure"><div><span class="flow-label">修改前 · 记录快照</span>${valueStreamMarkup(WindowsElements.historyMarkup(c.before,{whole:c.whole,elements:c.elements,side:'before'}),'','历史修改前')}</div><div><span class="flow-label">修改后 · 记录快照</span>${valueStreamMarkup(WindowsElements.historyMarkup(c.after,{whole:c.whole,elements:c.elements,side:'after'}),'','历史修改后')}</div></div>${c.elements?.length?'<p class="stream-help">悬停或聚焦元素与下方明细，追踪同一项的修改前后。方向键定位，明细使用 ↑↓。</p>':''}<details class="raw-disclosure"><summary>完整原始字符串</summary><div class="history-values"><div><span class="k">修改前</span><pre class="history-before">${historyValue(c.before)}</pre></div><div><span class="k">修改后</span><pre class="history-after">${historyValue(c.after)}</pre></div></div></details>
+    ${changed.length?`<table class="history-element-table"><thead><tr><th>位置（原 → 新）</th><th>状态</th><th>原元素</th><th>新元素</th></tr></thead><tbody>${changed.map((e,index)=>`<tr data-related-key="history:${esc(e.elementId)}" tabindex="${index===0?0:-1}"><td>${e.beforeIndex===null?'—':e.beforeIndex+1} → ${e.afterIndex===null?'—':e.afterIndex+1}</td><td>${[['added','新增'],['removed','删除'],['replaced','替换'],['moved','移动']].filter(([kind])=>e[kind]).map(([kind,label])=>`<span class="diff-label is-${kind}">${label}</span>`).join('')}</td><td><code>${historyElementValue(e.before)}</code></td><td><code>${historyElementValue(e.after)}</code></td></tr>`).join('')}</tbody></table>`:''}
   </section>`;
 }
 function renderHistory(){
@@ -402,6 +403,8 @@ function renderHistory(){
       const c=h.changes[index];
       section.querySelector('.history-before').textContent=c.before===undefined?'（不存在）':c.before===''?'（空字符串）':c.before;
       section.querySelector('.history-after').textContent=c.after===undefined?'（不存在）':c.after===''?'（空字符串）':c.after;
+      const table=section.querySelector('.history-element-table');
+      if(table){bindListKeys(table,'tbody tr[data-related-key]');table.onfocusin=e=>{const row=e.target.closest('tr[data-related-key]');if(row)table.querySelectorAll('tbody tr').forEach(item=>item.tabIndex=item===row?0:-1)}};
     });
     const details=row.querySelector('.history-details');
     if(details)details.addEventListener('toggle',()=>{const caption=details.querySelector('.history-expand');caption.textContent=details.open?'收起详情':'查看详情';if(details.open)decorateValueStreams(details)});

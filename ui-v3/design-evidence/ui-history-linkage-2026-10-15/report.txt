@@ -1,0 +1,23 @@
+History element linkage — 2026-10-15
+Baseline: b2d6897, branch v3/ui-surface-continuity.
+
+Problem and change:
+The history page already used comparison plates but each before/after value was isolated. This extension links the existing audit occurrence to both snapshots and its detail row, including replacement and movement. Added/deleted items only appear on the side where they exist. Recorded state badges reuse the element-comparison system. No extra default raw-string layer is added.
+
+Correspondence is read only from recorded elementId, beforeIndex/afterIndex and the exact side value. Records lacking element audit do not infer identity from text or position. DOM focus/hover state remains outside plans and history. Each value and detail table has a roving Tab position; arrows and Home/End move focus only. Hover has priority and leaving restores focused linkage.
+
+Validation:
+- npm test completed successfully: 27 scripts, 522 checks, zero failures. Includes 10 new history-linkage checks. Scope: Node/JSDOM, not native Windows/DPI.
+- Tests cover exact duplicate occurrence mapping, replacement plus movement, one-sided addition/deletion, empty slices, raw snapshots, keyboard focus without data changes, hover/focus priority, record isolation with reused IDs, no-audit fallback, CRLF/HTML/Special, reopening and frozen history.
+- Frozen TOML visual/raw/diff DOM equals baseline b2d6897; default markup identical on empty/duplicate/CRLF/Special fixtures (4 checks). No TOML functions or styles changed.
+- Independent new QA browser tab used. The earlier preview contained a pending edit and was not reset/cancelled/applied. QA scenario: replace the second Alpha, move it before an empty value, remove Gamma, add New Tools, apply to demo, open History.
+- Actual browser CSS viewport 1280x583: keyboard focus on original occurrence index 2 highlights exactly three nodes (Before, After, detail row) under key history:3; focus from first detail row gives the same three nodes. Repeated Alpha at original index 0 remains distinct. Current screenshots: history-linked-desktop.png and history-detail-focus.png.
+- Requested narrow simulation 600x740 remained at actual 1280x583, so narrow-layout verification is NOT claimed. The later viewport-reset request timed out and browser control detached. No further page mutation was attempted; pending user edit was not intentionally changed.
+- One design detector scan reports the pre-existing toast countdown stripe and repeating-gradient advisory. No unrelated toast/texture changes made. This is not a clean-detector claim or visual acceptance.
+
+Collaboration:
+Attempted to reopen the previously requested project GPT conversation. Its tab became unavailable before a message could be sent. No new GPT web approval or delivered completion report is claimed. This implementation remains within existing UI-only authority and does not introduce architecture/model changes.
+
+Scope:
+No changes to DemoPlan, matching, Apply rules, frozen history data, business movement, real Registry or V2. Existing style system is reused rather than replaced. TOML stays frozen; remind the owner before future style work.
+Independent focused Sol review: ship within this UI-demo scope. Reviewed source, linkage tests and both desktop screenshots. No blocking material findings. Confirmed occurrence keys and exact-value validation, per-change isolation, no-audit fallback, factual state badges and keyboard-only focus changes. Reviewer did not run tests and did not claim narrow-layout acceptance.

@@ -67,6 +67,10 @@ button.comparison-static-token { appearance: none; cursor: pointer; }
 .history-change-heading strong { overflow-wrap: anywhere; }
 .history-element-table { margin-top: 12px; }
 .history-element-table tbody tr:hover { background: #f5faf7; }
+.history-change.is-linking .comparison-static-token:not(.is-related-highlight) { opacity: .6; }
+.history-element-table tr.is-related-highlight { background: #eaf3ed; }
+.history-element-table tr:focus-visible { outline: 2px solid var(--green); outline-offset: -2px; }
+.history-element-table tbody tr { transition: background-color 120ms ease-out; }
 .history-change .raw-disclosure .history-values { margin-top: 4px; }
 
 /* Configuration: input remains authoritative; the structure explains its delimiters. */
@@ -175,6 +179,6 @@ button.comparison-static-token { appearance: none; cursor: pointer; }
   .variable-empty { flex-wrap: wrap; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .value-stream, .value-stream *, .history-detail-body, .config-structure, .flow-arrow, .time-dot, .pageh::after { animation: none !important; transition: none !important; }
+  .value-stream, .value-stream *, .history-detail-body, .history-element-table tbody tr, .config-structure, .flow-arrow, .time-dot, .pageh::after { animation: none !important; transition: none !important; }
   .recovery-empty, .appitem.is-located, #inspect.is-revealing, #editorbody > .fullpage, #copyText::before, #compareToggle::before { animation: none !important; transition: none !important; }
 }
