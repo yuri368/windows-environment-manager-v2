@@ -101,7 +101,7 @@
       "passed": true
     },
     {
-      "name": "Windows environment same-target specs retain mixed directions and scope isolation; parent guidance stays readonly",
+      "name": "Windows direct editing ignores mixed scheme directions and preserves scope isolation",
       "passed": true
     },
     {

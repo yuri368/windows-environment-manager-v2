@@ -279,7 +279,7 @@ try {
     edit(rows()[0].dataset.elementId, 'C'); q('#applyElements').click();
     assert.equal(w.eval("windows['User|PATH']"), 'A'); assert.equal(w.eval("windows['System|PATH']"), 'C');
   });
-  check('Windows target conflicts suppress executable candidates while isolated System append remains available', () => {
+  check('Windows snapshot and direct editors ignore conflicting and append scheme requests in both scopes', () => {
     fixture({name:'APPEND_TEST',actual:'A',desired:'A;B'});
     w.eval(`{
       curProfile().vars.push(mkVar(['APPEND_TEST','User','replace','A;C'],1));
@@ -290,12 +290,12 @@ try {
     const system = q('[data-windows-value="System|APPEND_TEST"]');
     assert.equal(user.textContent, 'A'); assert.equal(system.textContent, 'D');
     assert.equal(user.querySelector('.pending-additions'), null);
-    assert.deepEqual(rawValues(user.parentElement.querySelector('.pending-additions')), []);assert.match(user.parentElement.textContent,/目标计划冲突/);
-    assert.deepEqual(rawValues(system.parentElement.querySelector('.pending-additions')), ['A']);
+    assert.deepEqual(rawValues(user.parentElement.querySelector('.pending-additions')), []);assert.doesNotMatch(user.parentElement.textContent,/目标计划冲突/);
+    assert.deepEqual(rawValues(system.parentElement.querySelector('.pending-additions')), []);
     q('[data-windows-edit="User|APPEND_TEST"]').click();
     assert.deepEqual(candidates(), []); assert.equal(serialized(), 'A'); cancel();
     q('[data-windows-edit="System|APPEND_TEST"]').click();
-    assert.deepEqual(candidates(), ['A']); assert.equal(serialized(), 'D'); cancel();
+    assert.deepEqual(candidates(), []); assert.equal(serialized(), 'D'); cancel();
   });
   check('Source switching refreshes desired guidance and newly opened dialog selection', () => {
     fixture(); assert.deepEqual(inspectorCandidates(), ['B']);

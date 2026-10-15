@@ -474,7 +474,7 @@ var WindowsElements = (() => {
       const kind=String(operation.type||operation.action).toLowerCase(),key=kind==='insert'?'add':kind;
       if(key in operationCounts)operationCounts[key]++;
     }
-    const hasSuggestions=!session.whole&&candidates.valid!==false&&((candidates.operations||[]).some(op=>!op.adopted)||(candidates.issues||[]).length>0);
+    const hasSuggestions=session.showSuggestions!==false&&!session.whole&&candidates.valid!==false&&((candidates.operations||[]).some(op=>!op.adopted)||(candidates.issues||[]).length>0);
     const structureChanged=JSON.stringify(session.rows.map(row=>({id:row.id,value:row.value})))!==JSON.stringify(session.originalRows)
       ||session.displayOrder.some((id,index)=>id!==session.originalRows[index]?.id)||session.displayOrder.length!==session.originalRows.length;
     root.querySelector('#elementTotal').textContent=`有效${session.whole?'字符串':'元素'} ${session.rows.length} · 已移除 ${session.originalRows.filter(row=>!session.rows.some(live=>live.id===row.id)).length}`;
@@ -484,9 +484,10 @@ var WindowsElements = (() => {
     root.querySelector('#elementStatus').textContent=changed?`本次编辑：新增 ${additions.added} · 手动新增 ${additions.manualAdded} · 删除 ${operationCounts.remove} · 替换 ${operationCounts.replace} · 展示移动：移动 ${movement.moved} · 幽灵移动 ${movement['ghost-moved']} · 确认后生效`:`本次编辑：0 项变化${hasSuggestions?' · 有尚未采纳的方案建议':''}${structureChanged?' · 结果值未改变':''} · 展示移动：移动 ${movement.moved} · 幽灵移动 ${movement['ghost-moved']}`;
     root.querySelectorAll('[data-element-id]').forEach(el=>{if(!el.classList.contains('element-row'))return;const row=session.rows.find(row=>row.id===Number(el.dataset.elementId));if(row)paintRow(el,row);});
     const pending = root.querySelector('#pendingElements');
-    pending.innerHTML = pendingMarkup(raw,session.appendValues,session.whole,true,session.appendModes,candidates);
+    pending.innerHTML = session.showSuggestions===false?'':pendingMarkup(raw,session.appendValues,session.whole,true,session.appendModes,candidates);
     pending.hidden = !pending.innerHTML;
     paintLegend();
+    root.querySelector('.legend-match').hidden=session.showSuggestions===false;
     applySuggestionFx(pending);
     session.suggestionButtons=new Set(pending.querySelectorAll('[data-add-pending],[data-remove-pending]'));
     const editingSession=session;

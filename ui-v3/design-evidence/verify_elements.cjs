@@ -58,9 +58,9 @@ check('Edit, move, add and delete stay in draft; cancel restores focus and snaps
 check('Explicit workbench edit button provides a discoverable alternative', () => {
   q('#editWindowsElements').click(); assert.ok(q('.element-dialog')); cancel();
 });
-check('Windows table highlights prepared schemes and shares the same editor', () => {
+check('Windows table shows snapshot without scheme highlights and shares the direct editor', () => {
   q('[data-view="windows"]').click(); const el = q('[data-windows-value="User|PATH"]');
-  assert.equal(el.textContent, raw()); assert.equal(el.querySelectorAll('mark').length, 9);
+  assert.equal(el.textContent, raw()); assert.equal(el.querySelectorAll('mark').length, 0);
   dbl(el); assert.ok(q('.element-dialog')); assert.equal(values().join(';'), raw()); cancel();
   q('[data-windows-edit="User|PATH"]').click(); assert.ok(q('.element-dialog')); cancel();
 });

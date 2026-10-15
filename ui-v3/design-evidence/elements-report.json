@@ -26,7 +26,7 @@
       "passed": true
     },
     {
-      "name": "Windows table highlights prepared schemes and shares the same editor",
+      "name": "Windows table shows snapshot without scheme highlights and shares the direct editor",
       "passed": true
     },
     {

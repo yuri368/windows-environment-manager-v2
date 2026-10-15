@@ -32,7 +32,7 @@
 </div><div class="backdrop" id="modal"></div><div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="demo-configs.js"></script>
 <script src="demo-plan.js"></script>
-<script src="windows-elements.js?v=8b6a4a3749b2"></script>
+<script src="windows-elements.js?v=1c2e941842bf"></script>
 <script>
 'use strict';
 const initialApps=[
@@ -256,7 +256,7 @@ function openWindowsElements(scope,name,selectedValues=[],whole=false,mode=null,
  if(screen==='workbench'&&(mode==='replace'||curProfile().vars[focusedVariable]?.mode==='replace'))return;
  lastDialogFocus=document.activeElement;
  const variable={scope,name},target=key(variable),snapshot=demoSnapshot(variable);
- WindowsElements.open({container:$('modal'),name,scope,raw:windows[target],snapshot,selectionPlan,selectedValues,whole,appendValues:whole?[]:appendValues??(isAppendMode(mode)?selectedValues:[]),appendEntries:whole?null:appendEntries??(isAppendMode(mode)?selectedValues.map(value=>({value,mode})):null),replacementExpected:(whole||mode==='replace')&&selectedValues.length===1&&windows[target]!==undefined&&windows[target]!==selectedValues[0],
+ WindowsElements.open({container:$('modal'),name,scope,raw:windows[target],snapshot,selectionPlan,selectedValues,whole,showSuggestions:mode!==null||selectionPlan!==null||appendValues!==null||appendEntries!==null,appendValues:whole?[]:appendValues??(isAppendMode(mode)?selectedValues:[]),appendEntries:whole?null:appendEntries??(isAppendMode(mode)?selectedValues.map(value=>({value,mode})):null),replacementExpected:(whole||mode==='replace')&&selectedValues.length===1&&windows[target]!==undefined&&windows[target]!==selectedValues[0],
    registryType:snapshot.type,close:closeModal,
    onApply:(raw,audit,plan)=>{
      if(!sameSnapshot(plan,variable)){render();notify('当前值已变化，本次编辑已失效；请重新打开元素编辑器。');return;}
@@ -303,23 +303,26 @@ function confirmPreview(){
 }
 function renderWindows() {
   const items=Object.keys(windows).sort();
-  const targetsFor=k=>apps.flatMap((a,i)=>scheme(i).vars.map((v,j)=>({app:i,profile:scheme(i).name,varIdx:j,v}))).filter(t=>key(t.v)===k);
-  const specsFor=k=>targetsFor(k).map(t=>t.v),plans=new Map(items.map(k=>[k,recordsFor(targetsFor(k),'应用')[0]?.plan]));
-  $('screen').innerHTML=`<div class="fullpage" style="width:100%"><div class="pageh"><div><h2>Windows 环境</h2><p>演示快照 · 双击变量值打开元素列表</p></div><span class="tag neutral">${items.length} 项变量</span></div>
-    <table class="outline-table"><thead><tr><th style="width:130px">作用域</th><th style="width:155px">变量</th><th>模拟当前值</th><th style="width:86px">操作</th></tr></thead><tbody>${items.map(k=>{
-      const specs=specsFor(k), whole=specs.some(v=>v.special);
-      return `<tr><td><span class="scope-chip" data-scope="${k.startsWith('User')?'user':'system'}">${k.startsWith('User')?'用户':'系统'}</span></td><td><strong>${esc(k.split('|')[1])}</strong></td><td><div class="codevalue inspect-editable" tabindex="0" role="button" aria-label="编辑 ${esc(k.split('|')[1])} 元素" title="双击打开元素列表（演示）" data-windows-value="${esc(k)}">${WindowsElements.highlight(windows[k],specs.map(value),whole,false,plans.get(k))}</div>${WindowsElements.pendingMarkup(windows[k],specs.filter(v=>isAppendMode(v.mode)).map(value),whole,false,[],plans.get(k))}</td><td><button class="textbtn" data-windows-edit="${esc(k)}">编辑</button></td></tr>`;
-    }).join('')}</tbody></table><div class="helpnote match-legend"><span class="legend-swatch"></span>高亮为当前准备方案中的匹配元素</div></div>`;
+  // Special is static variable metadata shared across profiles, not a selected scheme's plan.
+  const wholeFor=k=>apps.some(a=>a.profiles.some(p=>p.vars.some(v=>key(v)===k&&v.special)));
+  $('screen').innerHTML=`<div class="fullpage" style="width:100%"><div class="pageh"><div><h2>Windows 环境</h2><p>当前演示快照 · 双击变量值直接编辑</p></div><span class="tag neutral">${items.length} 项变量</span></div>
+    <table class="outline-table"><thead><tr><th style="width:130px">作用域</th><th style="width:155px">变量</th><th>模拟当前值</th><th style="width:86px">操作</th></tr></thead><tbody>${items.map(k=>
+      `<tr><td><span class="scope-chip" data-scope="${k.startsWith('User')?'user':'system'}">${k.startsWith('User')?'用户':'系统'}</span></td><td><strong>${esc(k.split('|')[1])}</strong></td><td><div class="codevalue inspect-editable" tabindex="0" role="button" aria-label="编辑 ${esc(k.split('|')[1])} 元素" title="双击直接编辑当前值（演示）" data-windows-value="${esc(k)}"></div></td><td><button class="textbtn" data-windows-edit="${esc(k)}">编辑</button></td></tr>`
+    ).join('')}</tbody></table></div>`;
   const open=k=>{
-    const [scope,name]=k.split('|'),specs=specsFor(k),appendSpecs=specs.filter(v=>isAppendMode(v.mode));
-    openWindowsElements(scope,name,specs.map(value),specs.some(v=>v.special),null,appendSpecs.map(value),appendSpecs.map(v=>({value:value(v),mode:v.mode})),plans.get(k));
+    const [scope,name]=k.split('|');
+    openWindowsElements(scope,name,[],wholeFor(k));
   };
   document.querySelectorAll('[data-windows-value]').forEach(el=>{
+    const raw=windows[el.dataset.windowsValue];
+    // textContent preserves the snapshot verbatim, including CRLF, without HTML parsing.
+    if(raw==='')el.innerHTML='<span class="empty-element">（空字符串）</span>';
+    else el.textContent=raw;
     el.ondblclick=()=>open(el.dataset.windowsValue);
     el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open(el.dataset.windowsValue)}};
   });
   document.querySelectorAll('[data-windows-edit]').forEach(button=>button.onclick=()=>open(button.dataset.windowsEdit));
-  $('footer').innerHTML=`<div class="footer-summary"><strong>Windows 环境（演示）</strong><small>元素编辑与应用只更新本页数据</small></div><button class="btn" id="toWork">返回工作台</button>`;
+  $('footer').innerHTML=`<div class="footer-summary"><strong>Windows 环境（演示）</strong><small>当前快照与直接编辑 · 确认后仅更新演示数据</small></div><button class="btn" id="toWork">返回工作台</button>`;
   $('toWork').onclick=()=>go('workbench');
 }
 function changeCountText(counts){return [['added','新增'],['removed','删除'],['replaced','替换'],['moved','移动']].filter(([kind])=>counts[kind]).map(([kind,label])=>`${label} ${counts[kind]}`).join(' · ')||'整体值修改'}

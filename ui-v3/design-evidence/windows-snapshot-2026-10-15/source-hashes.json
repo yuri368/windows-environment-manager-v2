@@ -1,0 +1,25 @@
+{
+  "coreUnchanged": "950e4f532eaa9a43444ef10ff8b2ba819981ccbbc32202a6a19bf06f669d4bc4",
+  "files": [
+    {
+      "name": "temp.html",
+      "primary": "a1d83ddf76bb6a0bcae1252f5b42cea7a5eed15b357c9a205238af563586c4bd",
+      "mirror": "a3f103aa07246c84287cd820bd485358960a85d4b8c9020cace7872a71f6f6b4"
+    },
+    {
+      "name": "windows-elements.js",
+      "primary": "8c643e9aa636b09e8c59622f5df1d1bea766e9018d86db2011760e566b76492d",
+      "mirror": "1c2e941842bfc878b53b657e92d631c60e99050b59567afaff0a3921544f484d"
+    },
+    {
+      "name": "demo-plan.js",
+      "primary": "950e4f532eaa9a43444ef10ff8b2ba819981ccbbc32202a6a19bf06f669d4bc4",
+      "mirror": "950e4f532eaa9a43444ef10ff8b2ba819981ccbbc32202a6a19bf06f669d4bc4"
+    },
+    {
+      "name": "elements-ui.css",
+      "primary": "708d27af03c76b167c2613f7ebd6588c865ae56509b507afa2ecfb6d6ea7ba74",
+      "mirror": "708d27af03c76b167c2613f7ebd6588c865ae56509b507afa2ecfb6d6ea7ba74"
+    }
+  ]
+}

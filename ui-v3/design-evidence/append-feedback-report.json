@@ -113,7 +113,7 @@
       "passed": true
     },
     {
-      "name": "Windows target conflicts suppress executable candidates while isolated System append remains available",
+      "name": "Windows snapshot and direct editors ignore conflicting and append scheme requests in both scopes",
       "passed": true
     },
     {

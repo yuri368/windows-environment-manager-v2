@@ -19,3 +19,5 @@
 该pwsh使用模拟管理员身份运行(让程序自认为自己应用管理员权限)，且沙盒中的注册表修改操作只会修改沙盒中的注册表，不会对真实的系统环境产生影响
 沙盒路径：C:\Sandbox\Yuri368\DefaultBox
 - Display movement labels/counts follow `docs/architecture/GUI_DISPLAY_MOVEMENT.txt`; business movement and Audit retain the live-original ordering contract.
+
+- Windows environment snapshot/direct-edit isolation follows `docs/architecture/WINDOWS_SNAPSHOT_BOUNDARY.txt`; scheme analysis remains in workbench and preview.

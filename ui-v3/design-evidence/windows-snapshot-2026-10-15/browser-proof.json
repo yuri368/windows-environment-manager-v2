@@ -1,0 +1,60 @@
+{
+  "inventory": {
+    "body": "Windows 环境\n\n当前演示快照 · 双击变量值直接编辑\n\n18 项变量\n作用域\t变量\t模拟当前值\t操作\n系统\tCUDA_PATH\t\nC:\\Program Files\\GPU Toolkit\\CUDA\\v11.8\n\t编辑\n系统\tDOTNET_CLI_TELEMETRY_OPTOUT\t\n1\n\t编辑\n系统\tDOTNET_ROOT\t\nC:\\Build Tools\\dotnet\n\t编辑\n系统\tPATH\t\nC:\\Windows\\System32;;%CUDA_PATH%\\bin;%CUDA_PATH%\\libnvvp;C:\\Windows\\System32;%DOTNET_ROOT%;\n\t编辑\n用户\tCUDA_CACHE_PATH\t\nC:\\Demo Cache\\CUDA\n\t编辑\n用户\tDEMO_COMMAND\t\ncmd /c \"echo alpha;beta\"\n\t编辑\n用户\tDEMO_EMPTY_VALUE\t\n（空字符串）\n\t编辑\n用户\tDEMO_SEARCH_PATH\t\nC:\\Demo\\Alpha;;C:\\Demo\\Alpha;C:\\Demo\\Gamma;\n\t编辑\n用户\tDOTNET_CLI_TELEMETRY_OPTOUT\t\n1\n\t编辑\n用户\tDOTNET_ROOT\t\nD:\\Portable Apps\\dotnet\n\t编辑\n用户\tJAVA_HOME\t\nH:\\ProgramFiles\\DevTools\\Java\\jdk1.8.0_202\n\t编辑\n用户\tMAVEN_HOME\t\nH:\\ProgramFiles\\DevTools\\Maven\\apache-maven-3.9.11\n\t编辑\n用户\tNODE_HOME\t\nC:\\Dev Tools\\Node22\n\t编辑\n用户\tNODE_OPTIONS\t\n--max-old-space-size=4096 --require \"C:\\团队工具\\初始化;本地.js\"\n\t编辑\n用户\tPATH\t\n%JAVA_HOME%\\bin;%PYTHON_HOME%;%PYTHON_HOME%\\Scripts;%MAVEN_HOME%\\bin;H:\\ProgramFiles\\PortableGit\\cmd;H:\\ProgramFiles\\VSCode\\bin;%NODE_HOME%\\bin;%DOTNET_ROOT%;%TEAM_TOOLS_HOME%\\bin\n\t编辑\n用户\tPYTHON_HOME\t\nH:\\ProgramFiles\\Python313\n\t编辑\n用户\tTEAM_LOG_LEVEL\t\nINFO\n\t编辑\n用户\tTEAM_TOOLS_HOME\t\nD:\\团队工具\\稳定版\n\t编辑",
+    "overlays": 0,
+    "raw": "%JAVA_HOME%\\bin;%PYTHON_HOME%;%PYTHON_HOME%\\Scripts;%MAVEN_HOME%\\bin;H:\\ProgramFiles\\PortableGit\\cmd;H:\\ProgramFiles\\VSCode\\bin;%NODE_HOME%\\bin;%DOTNET_ROOT%;%TEAM_TOOLS_HOME%\\bin"
+  },
+  "direct": {
+    "matchHidden": true,
+    "matchedRows": 0,
+    "pendingHidden": true,
+    "values": [
+      "%JAVA_HOME%\\bin",
+      "%PYTHON_HOME%",
+      "%PYTHON_HOME%\\Scripts",
+      "%MAVEN_HOME%\\bin",
+      "H:\\ProgramFiles\\PortableGit\\cmd",
+      "H:\\ProgramFiles\\VSCode\\bin",
+      "%NODE_HOME%\\bin",
+      "%DOTNET_ROOT%",
+      "%TEAM_TOOLS_HOME%\\bin"
+    ]
+  },
+  "applied": "%JAVA_HOME%\\bin;%PYTHON_HOME%;%PYTHON_HOME%\\Scripts;%MAVEN_HOME%\\bin2;H:\\ProgramFiles\\PortableGit\\cmd;H:\\ProgramFiles\\VSCode\\bin;%NODE_HOME%\\bin;%DOTNET_ROOT%;%TEAM_TOOLS_HOME%\\bin",
+  "draft": "%MAVEN_HOME%\\bin1",
+  "workbench": {
+    "draft": "%MAVEN_HOME%\\bin1",
+    "pendingHidden": false,
+    "proposal": "方案建议\n\n点击 − 或 ＋ 采纳方案建议；已采纳的卡片可点 ↶ 撤销。所有变化仅作用于本次编辑，确认应用前不会写入 Windows。\n\n建议追加\n%MAVEN_HOME%\\bin1\n建议追加"
+  },
+  "special": {
+    "addHidden": true,
+    "pendingHidden": true,
+    "values": [
+      "cmd /c \"echo alpha;beta\""
+    ]
+  },
+  "empty": {
+    "applyDisabled": true,
+    "emptyBadges": 3,
+    "values": [
+      ""
+    ]
+  },
+  "narrow": {
+    "dialog": {
+      "bottom": 856.9687805175781,
+      "height": 700.6041870117188,
+      "left": 33.333335876464844,
+      "right": 1273.3333358764648,
+      "top": 156.36459350585938,
+      "width": 1240,
+      "x": 33.333335876464844,
+      "y": 156.36459350585938
+    },
+    "documentWidth": 1307,
+    "dpr": 0.75,
+    "innerHeight": 1013,
+    "innerWidth": 1307
+  }
+}

@@ -1,0 +1,14 @@
+Windows environment snapshot boundary — 2026-10-15
+Owner requirement: Windows environment page mainly shows current snapshot and direct editing. Scheme additions/removals/conflicts belong to workbench and scheme preview.
+
+Windows inventory renders raw snapshot values through textContent, preserves raw whitespace/CRLF/empty slices and escapes HTML by construction. Existing empty strings display （空字符串）; absent variables remain absent.
+No selected scheme/value, checked batch, planned match highlighting, pending additions/removals or plan conflicts are read/rendered by this page.
+Its direct editor receives the target/snapshot and empty selected values, with no selection plan, append entries or replacement expectation. Scheme suggestions and scheme-match legend are hidden. Manual edits, add/remove/restore/move, structural empty/duplicate hints, snapshot validation and existing Apply/Audit/History remain.
+Special is static scope + case-insensitive name metadata read across all app/profile declarations. Same-key consistency is the existing configuration invariant; this patch adds no conflict resolution. It protects whole command strings containing semicolons. Undeclared variables use ordinary element editing. Current profile, selected values and checked state do not choose Special.
+Workbench editor and preview retain all scheme analyses. Its replace-entry guard remains. No new toggle/model or DemoPlan/V2/Registry change.
+Presentation option showSuggestions=false hides only proposal UI/match legend; normal explicitly provided scheme context keeps prior editor behavior.
+
+Acceptance: primary and Git mirror each pass 25 scripts / 487 checks, including new 25-check snapshot suite. Three old Windows-overlay assertions now test the new snapshot boundary; workbench analysis tests remain.
+Browser: independent new localhost QA tab, original user tab preserved. Verified dirty Maven input does not appear as Windows suggestion, direct PATH change updates snapshot while Maven draft remains, workbench suggestion remains after explicit baseline recheck, Special semicolon stays one string, empty string is one existing row.
+Viewport simulation request 980x760 produced effective CSS viewport 1307x1013 at DPR0.75; this is simulation only. Native zoom and Windows DPI are not tested.
+GPT approved scope before implementation. Final source review/CI is recorded in the accompanying evidence report.

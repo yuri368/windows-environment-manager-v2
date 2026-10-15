@@ -234,7 +234,7 @@ try {
       assert.equal(host.querySelector('button,input,textarea,[data-element-id],[data-delete],[data-move-up],[data-move-down]'),null);
     }
   });
-  check('Windows environment same-target specs retain mixed directions and scope isolation; parent guidance stays readonly', () => {
+  check('Windows direct editing ignores mixed scheme directions and preserves scope isolation', () => {
     fixture({actual:'U;;U',desired:' FRONT ',mode:'+append',name:'ADOPT_TEST'});
     w.eval(`{
       curProfile().vars.push(mkVar(['ADOPT_TEST','User','-append',' BACK '],1));
@@ -246,18 +246,16 @@ try {
     }`);
     for (const target of ['User|ADOPT_TEST','System|ADOPT_TEST']) {
       const host = q(`[data-windows-value="${target}"]`).parentElement;
-      assert.equal(host.querySelector('.pending-additions button'),null);
+      assert.equal(host.querySelector('.pending-additions'),null);
     }
     const before = persisted(); q('[data-windows-edit="User|ADOPT_TEST"]').click();
-    assert.deepEqual(pending(),[' FRONT ',' BACK ','CUSTOM']);
-    button(0).click(); button(1).click(); button(2).click();
-    assert.deepEqual(values(),[' FRONT ','U','','U',' BACK ','CUSTOM']);
-    assert.equal(persisted(),before); q('#applyElements').click();
-    assert.equal(w.eval("windows['User|ADOPT_TEST']"),' FRONT ;U;;U; BACK ;CUSTOM');
+    assert.deepEqual(pending(),[]);assert.deepEqual(values(),['U','','U']);
+    assert.equal(q('#pendingElements').hidden,true);assert.equal(persisted(),before);
+    assert.equal(q('#applyElements').disabled,true);cancel();
     assert.equal(w.eval("windows['System|ADOPT_TEST']"),'S');
     q('[data-windows-edit="System|ADOPT_TEST"]').click();
-    assert.deepEqual(pending(),['SYS_FRONT','SYS_BACK']); button(0).click(); button(1).click();
-    assert.deepEqual(values(),['SYS_FRONT','S','SYS_BACK']); cancel();
+    assert.deepEqual(pending(),[]);assert.deepEqual(values(),['S']);
+    assert.equal(q('#pendingElements').hidden,true);cancel();
     assert.equal(w.eval("windows['System|ADOPT_TEST']"),'S');
   });
   check('Adoption workflows emit no JSDOM runtime errors', () => assert.deepEqual(errors,[]));
