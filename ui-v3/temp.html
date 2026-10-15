@@ -32,7 +32,7 @@
 </div><div class="backdrop" id="modal"></div><div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="demo-configs.js"></script>
 <script src="demo-plan.js"></script>
-<script src="windows-elements.js?v=1c2e941842bf"></script>
+<script src="windows-elements.js?v=8c643e9aa636"></script>
 <script>
 'use strict';
 const initialApps=[
@@ -282,6 +282,32 @@ function recordsFor(targets,kind){
   const plan=kind!=='应用'?null:members.length===1?demoPlan(v):DemoPlan.buildBatch({target:{scope:v.scope,name:v.name},snapshot,requests:members.map(m=>({id:m.app+'|'+m.profile+'|'+m.varIdx,mode:m.v.mode,whole:m.v.special,selectedRaw:m.selectedRaw,baseline:m.v.matchBaseline})),protectedValues});
   return Object.freeze({...first,members:Object.freeze(members.map(Object.freeze)),before:snapshot.exists?snapshot.raw:undefined,after:plan?plan.afterRaw:'（撤销后值需由真实操作日志计算）',plan,baseSnapshot:Object.freeze(snapshot),selectionSignature:planContextSignature(vars),protectionSignature:JSON.stringify(protectedValues),scope:v.scope,name:v.name,mode:v.mode,whole:v.special});
  });
+}
+function valueStreamMarkup(content,className='',label='元素值'){
+ return `<div class="value-stream ${className}" role="group" aria-label="${esc(label)}">${content}</div>`;
+}
+function rawStreamMarkup(raw,{whole=false,keyPrefix='raw',matchedValues=[],className='',label='元素值'}={}){
+ return valueStreamMarkup(WindowsElements.staticMarkup(raw,{whole,keyPrefix,matchedValues}),className,label);
+}
+function planStreamMarkup(plan,side,className='',label='元素值'){
+ const view=WindowsElements.comparisonMarkup(plan);
+ return valueStreamMarkup(view[side],className,label);
+}
+function decorateValueStreams(root,{play=true}={}){
+ if(!root)return;
+ root.querySelectorAll('.value-stream').forEach(stream=>{
+  [...stream.querySelectorAll('.diff-token,.value-state-chip')].forEach((token,index)=>token.style.setProperty('--token-i',index));
+  if(play){stream.classList.remove('fx-stream-enter');void stream.offsetWidth;stream.classList.add('fx-stream-enter');setTimeout(()=>stream.classList.remove('fx-stream-enter'),950)}
+ });
+ root.querySelectorAll('.value-link-group').forEach(group=>WindowsElements.bindComparison(group));
+}
+function previewRowMarkup(r,kind,index){
+ const title=`${r.members.map(m=>esc(apps[m.app].name)+' / '+esc(m.profile)).join('、')} · ${esc(r.v.name)}`;
+ const meta=`${r.v.scope==='User'?'用户':'系统'} · ${esc(r.members.length>1?'批量合并':MODE[r.v.mode])}`;
+ const view=r.plan?WindowsElements.comparisonMarkup(r.plan):null;
+ const before=valueStreamMarkup(view?view.actual:WindowsElements.staticMarkup(r.before,{whole:r.whole,keyPrefix:'preview:'+index+':before'}),'is-before','模拟当前');
+ const after=kind==='应用'&&view?valueStreamMarkup(view.after,'is-after','目标结果'):`<div class="operation-note"><b class="ic ic-undo"></b><span>${esc(r.after===undefined?'（不存在）':r.after===''?'（空字符串）':r.after)}</span></div>`;
+ return `<div class="diffrow value-link-group" style="--row-i:${index}"><div class="k">${title} <span class="sub mini">${meta}</span></div><div class="preview-flow"><section><span class="flow-label">模拟当前</span>${before}</section><i class="flow-arrow ic ic-arrow" aria-hidden="true"></i><section><span class="flow-label">${kind==='应用'?'目标结果':'操作说明'}</span>${after}</section></div>${r.plan&&planSummary(r.plan)?`<p class="plan-summary">${esc(planSummary(r.plan))}</p>`:''}</div>`;
 }
 function showPreview(kind,title,targets){lastDialogFocus=document.activeElement?.closest('#revokeMenu')?$('revokeButton'):document.activeElement;closeDropdowns();const rows=recordsFor(targets,kind);modalAction={kind,targets,rows};const replacements=new Map();rows.forEach(r=>{if(kind!=='应用'||r.v.mode!=='replace'&&!r.v.special)return;const k=key(r.v);const s=replacements.get(k)||new Set();s.add(value(r.v));replacements.set(k,s)});const conflict=[...replacements.values()].some(s=>s.size>1);const invalidPlan=rows.some(r=>r.plan?.valid===false);modalAction.conflict=conflict||invalidPlan;const needsOrdering=rows.some(r=>kind==='应用'&&r.members.some(m=>m.v.mode==='append'));modalAction.needsOrdering=needsOrdering;const unchanged=rows.filter(r=>r.after===r.before).length;$('modal').innerHTML=`<div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialoghead"><div><h3 id="dialogTitle">${esc(title)}</h3><p>${targets.length} 条变量记录 · ${rows.length} 个目标 · ${unchanged} 条无需变化 · ${kind==='应用'?'将模拟应用到浏览器内存':'演示撤销流程与操作范围'}</p></div><button class="close" id="closeDialog" aria-label="关闭">×</button></div><div class="dialogbody">${needsOrdering?'<div class="banner warn">所选方案包含 append 自定义排序模式。本原型不实现完整排序确认，因此禁止模拟应用；正式应用必须先确认合并后的元素顺序。</div>':''}${invalidPlan?'<div class="banner warn">编辑基线已失效，或同一目标值存在冲突。本次不能确认；请返回对照区重新检测编辑基线。</div>':''}${conflict?'<div class="banner warn">检测到相同 Windows 环境变量的目标值存在冲突，演示中禁止确认。真实程序必须交由专门的共享冲突分析引擎处理。</div>':`<div class="banner">这是离线 UI 原型。${kind==='应用'?'确认后只更新页面中的模拟 Windows 环境。':'不具备真正的撤销日志，不会伪造精确的撤销结果。'}</div>`}${rows.map(r=>`<div class="diffrow"><div class="k">${r.members.map(m=>esc(apps[m.app].name)+' / '+esc(m.profile)).join('、')} · ${esc(r.v.name)} <span class="sub mini">${r.v.scope==='User'?'用户':'系统'} · ${esc(r.members.length>1?'批量合并':MODE[r.v.mode])}</span></div><div class="pair del"><span>模拟当前</span><span>${esc(r.before===undefined?'（不存在）':r.before)}</span></div><div class="pair add"><span>${kind==='应用'?'目标结果':'操作说明'}</span><span>${esc(r.after===undefined?'（不存在）':r.after===''?'（空字符串）':r.after)}</span></div>${r.plan&&planSummary(r.plan)?`<p class="plan-summary">${esc(planSummary(r.plan))}</p>`:''}</div>`).join('')}</div><div class="dialogfoot"><button class="btn" id="cancelDialog">取消</button><button class="btn primary" id="confirmDialog" ${conflict||invalidPlan||needsOrdering||kind==='撤销'?'disabled':''}>${kind==='应用'?'模拟确认应用':'需要真实操作日志'}</button></div></div>`;$('modal').classList.add('open');$('closeDialog').onclick=closeModal;$('cancelDialog').onclick=closeModal;$('confirmDialog').onclick=confirmPreview;$('closeDialog').focus()}
 function closeModal(){const wasOpen=$('modal').classList.contains('open');$('modal').classList.remove('open');modalAction=null;WindowsElements.dismiss();if(wasOpen&&lastDialogFocus?.isConnected)lastDialogFocus.focus();lastDialogFocus=null}

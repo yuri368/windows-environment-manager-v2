@@ -89,6 +89,19 @@ var WindowsElements = (() => {
     }).join('<span class="element-separator">;</span>');
     return willReplace ? `<span class="pending-replacement"><span class="diff-value" data-raw-value="${escape(raw)}">${content}</span><span class="diff-label replacement-label">整体待替换</span></span>` : content;
   }
+  // Generic read-only element stream for Windows inventory, history and config views.
+  // This is presentation-only: it splits an existing raw value but never computes an apply result.
+  function staticMarkup(raw,{whole=false,keyPrefix='value',matchedValues=[]}={}){
+    if(raw===undefined)return '<span class="value-state-chip is-absent"><b class="ic ic-void"></b>变量不存在</span>';
+    const parts=whole?[raw]:String(raw).split(';'),counts=new Map();
+    if(!whole)parts.forEach(value=>counts.set(value,(counts.get(value)||0)+1));
+    return parts.map((value,index)=>{
+      const empty=value==='',matched=matchedValues.length>0&&matches(value,matchedValues,whole),kinds=empty?['empty']:[];
+      const classes=['diff-token','comparison-token','static-token',matched?'is-matched':''].filter(Boolean).join(' ');
+      const duplicate=!whole?duplicateLabel(counts.get(value)):'';
+      return `<span class="${classes}" tabindex="0" data-related-key="${escape(keyPrefix+':'+index)}"${empty?' data-empty="true"':''}>${plateMarkup(kinds)}<span class="diff-value" data-raw-value="${escape(value)}">${empty?'<span class="empty-element">'+(whole?'（空字符串）':'（空元素）')+'</span>':escape(value)}</span>${tailMarkup(duplicate)}</span>`;
+    }).join('<span class="element-separator">;</span>');
+  }
   // Display metadata comes from the frozen plan; it never supplies an apply result.
   function comparisonMarkup(plan){
     const whole=plan.kind!=='append',active=plan.valid!==false;
@@ -708,5 +721,5 @@ var WindowsElements = (() => {
     }
     session=null;
   }
-  return {highlight,selectionInfo,selectionMarkup,pendingMarkup,comparisonMarkup,bindComparison,open,dismiss};
+  return {highlight,staticMarkup,selectionInfo,selectionMarkup,pendingMarkup,comparisonMarkup,bindComparison,open,dismiss};
 })();
