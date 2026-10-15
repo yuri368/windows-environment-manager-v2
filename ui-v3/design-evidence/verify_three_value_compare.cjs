@@ -16,6 +16,7 @@ const plan=()=>ev('demoPlan(scheme(1).vars[1])');
 const rawPane=id=>all('#'+id+' .diff-value[data-raw-value]').filter(n=>!n.closest('.is-ghost')).map(n=>n.dataset.rawValue).join(';');
 const rawTokens=selector=>all(selector+' .diff-value[data-raw-value]').map(n=>n.dataset.rawValue);
 const preview=()=>ev("showPreview('应用','三值验证',[{app:1,profile:'Python313',varIdx:1}])");
+const press=(node,key,extra={})=>{const event=new w.KeyboardEvent('keydown',{key,bubbles:true,cancelable:true,...extra});node.dispatchEvent(event);return event;};
 function editor(raw,after,elements){return P.buildElementEdit({target,snapshot:snapshot(raw),afterRaw:after,audit:{before:raw,after,whole:false,elements}});}
 const row=(id,before,after,bi,ai,flags={})=>({elementId:id,before,after,beforeIndex:bi,afterIndex:ai,...flags});
 check('Three labeled value panes replace candidate stacks and exact strings remain authoritative',()=>{
@@ -36,6 +37,26 @@ check('Duplicate occurrences retain separate identities after preceding removal'
 });
 check('Focus links definite ADD to Desired but never to deleted similar old text',()=>{
  setup('A;B','B');input('B1');const added=q('#compareAfter .is-added'),removed=q('#compareActual .is-removed');added.focus();assert.equal(all('.value-comparison .is-related-highlight').length,2);assert.ok(q('#compareDesired .is-added').classList.contains('is-related-highlight'));assert.ok(!removed.classList.contains('is-related-highlight'));removed.dispatchEvent(new w.Event('pointerover',{bubbles:true}));assert.ok(q('#compareAfter .is-ghost').classList.contains('is-related-highlight'));assert.ok(!added.classList.contains('is-related-highlight'));
+});
+check('Workbench panes have one Tab entry and arrows navigate duplicate and empty occurrences without editing',()=>{
+ setup('A;;A;B','A');const before=ev('JSON.stringify({apps,windows,history})');
+ for(const id of ['compareDesired','compareActual','compareAfter'])assert.equal(all('#'+id+' .comparison-token[tabindex="0"]').length,1);
+ const tokens=all('#compareActual .comparison-token');tokens[0].focus();press(tokens[0],'ArrowRight');assert.equal(w.document.activeElement,tokens[1]);press(tokens[1],'End');assert.equal(w.document.activeElement,tokens[3]);press(tokens[3],'Home');assert.equal(w.document.activeElement,tokens[0]);
+ tokens[2].focus();assert.equal(tokens[2].tabIndex,0);assert.equal(tokens[0].tabIndex,-1);assert.equal(all('.value-comparison .is-related-highlight').length,2);assert.ok(!tokens[0].classList.contains('is-related-highlight'));assert.equal(ev('JSON.stringify({apps,windows,history})'),before);assert.ok(!q('#modal').classList.contains('open'));
+});
+check('Modified and composition arrows keep native shortcuts; pane boundaries do not wrap or activate',()=>{
+ setup();const tokens=all('#compareActual .comparison-token');tokens[0].focus();assert.equal(press(tokens[0],'ArrowLeft').defaultPrevented,true);assert.equal(w.document.activeElement,tokens[0]);
+ for(const modifier of ['ctrlKey','metaKey','altKey','shiftKey','isComposing']){const event=press(tokens[0],'ArrowRight',{[modifier]:true});assert.equal(event.defaultPrevented,false);assert.equal(w.document.activeElement,tokens[0]);}
+ assert.equal(press(tokens[0],'Tab').defaultPrevented,false);assert.ok(!q('#modal').classList.contains('open'));
+});
+check('Preview arrows retain frozen plan and linked counterpart while Cancel restores the trigger',()=>{
+ setup('A;;A;B','A');input('A;E');const trigger=q('#previewButton');trigger.focus();preview();const before=ev('JSON.stringify({apps,windows,history})'),frozen=ev('modalAction.rows[0].plan');
+ const streams=all('.preview-flow .value-stream');for(const stream of streams)assert.equal(stream.querySelectorAll('.comparison-token[tabindex="0"]').length,1);
+ const tokens=Array.from(streams[0].querySelectorAll('.comparison-token'));tokens[0].focus();press(tokens[0],'ArrowRight');assert.equal(w.document.activeElement,tokens[1]);const key=tokens[1].dataset.relatedKey;assert.equal(all('.value-link-group .is-related-highlight').length,2);assert.ok(q('.preview-flow .is-after [data-related-key="'+key+'"]').classList.contains('is-related-highlight'));
+ assert.strictEqual(ev('modalAction.rows[0].plan'),frozen);assert.equal(ev('JSON.stringify({apps,windows,history})'),before);q('#cancelDialog').click();assert.equal(w.document.activeElement,trigger);assert.equal(ev('JSON.stringify({apps,windows,history})'),before);
+});
+check('Rebinding keeps the active occurrence and removes previous key handlers',()=>{
+ setup();const root=q('.value-comparison'),tokens=all('#compareActual .comparison-token');tokens[1].focus();w.WindowsElements.bindComparison(root);w.WindowsElements.bindComparison(root);assert.equal(tokens[1].tabIndex,0);assert.equal(tokens[0].tabIndex,-1);assert.ok(tokens[1].classList.contains('is-related-highlight'));press(tokens[1],'ArrowRight');assert.equal(w.document.activeElement,tokens[2]);
 });
 check('Invalid plans preserve input and current snapshot but expose no definite result or operation badges',()=>{
  setup();input('A;E');ev("windows['User|PATH']+=';EXTERNAL';targetRevisions['User|PATH']=1;render()");assert.equal(plan().valid,false);assert.equal(rawPane('compareDesired'),'A;E');assert.equal(rawPane('compareActual'),'X;A;B;C;Y;EXTERNAL');assert.match(q('#compareAfter').textContent,/计划已失效/);assert.match(q('#compareSerialized').textContent,/计划已失效/);assert.equal(all('.value-comparison .is-added,.value-comparison .is-removed').length,0);preview();assert.ok(q('#confirmDialog').disabled);q('#cancelDialog').click();

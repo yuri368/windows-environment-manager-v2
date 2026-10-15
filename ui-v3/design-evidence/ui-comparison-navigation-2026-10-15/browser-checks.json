@@ -1,0 +1,45 @@
+[
+  {
+    "activeRaw": "",
+    "modalOpen": false,
+    "step": "ArrowRight enters preserved empty occurrence",
+    "tabEntries": 1
+  },
+  {
+    "activePane": "compareAfter",
+    "step": "Tab leaves current pane after End"
+  },
+  {
+    "highlighted": 2,
+    "raw": "",
+    "step": "Preview arrow focuses preserved empty occurrence",
+    "tabEntries": [
+      1,
+      1
+    ]
+  },
+  {
+    "columns": "491.333px",
+    "height": 740,
+    "pageOverflow": false,
+    "step": "Responsive preview",
+    "width": 600
+  },
+  {
+    "activeId": "previewButton",
+    "step": "Cancel returns keyboard focus"
+  },
+  {
+    "columns": "538.667px",
+    "height": 740,
+    "historyTableWidth": 556,
+    "pageOverflow": false,
+    "step": "History responsive columns",
+    "width": 600
+  },
+  {
+    "focusedRow": "TR",
+    "highlighted": 3,
+    "step": "History detail linkage at 600px"
+  }
+]

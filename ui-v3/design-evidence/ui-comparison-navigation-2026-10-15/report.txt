@@ -1,0 +1,26 @@
+Comparison keyboard continuity — 2026-10-15
+Baseline: 6a9379b, branch v3/ui-surface-continuity.
+
+Changed behavior:
+Workbench three-value panes and application-preview before/after panes now have one Tab entry per nonempty token stream. Left/Right/Up/Down and Home/End navigate occurrences within that stream, without wrapping, changing data, applying a plan, or opening an editor. Modified shortcuts and composing input are left alone. Programmatic focus updates the Tab entry. Rebinding preserves the active occurrence and removes prior handlers. Existing hover/focus correspondence and editor entry behavior remain.
+
+Implementation is in the existing WindowsElements.bindComparison. It only enrolls comparison-token nodes in value-box/value-stream panes; frozen TOML static markup is unaffected. No new module, framework or business-state mechanism.
+
+Validation:
+- npm test: 27 scripts, 526 checks, zero failures. Four new checks extend the existing three-value suite (24 total), covering roving focus with duplicates/empty occurrences, modifiers/composition, boundaries, preview frozen plan/cancel focus and repeated binding. This is Node/JSDOM evidence.
+- Four freeze checks: TOML visual/raw/diff DOM equals baseline 6a9379b, default static markup equals baseline for empty/duplicate/CRLF/Special fixtures.
+- Actual Chrome in independent new QA tab (profile with the existing review conversation): workbench ArrowRight reaches a preserved empty occurrence, exactly one Tab entry remains in its pane, End then Tab moves into compareAfter. Preview empty occurrence links exactly two sides; each side has one Tab entry. Cancel focuses previewButton. See browser-checks.json and desktop screenshots.
+- Actual CSS viewport 600x740: preview becomes one column, history before/after becomes one column, no page-level horizontal overflow. History detail focus links three nodes. This resolves the previous 6a9379b report's narrow-check gap for this recorded scenario; not native DPI or universal responsive acceptance. Screenshots preview-600.png and history-600.png. Temporary viewport override reset after recording.
+- Source remains the existing design system. No CSS or animation changes. One detector pass still flags the pre-existing toast countdown stripe and repeating-gradient advisory; no unrelated changes made.
+
+Current requested UI coverage:
+- Windows values: direct comparison plates; repeated structure layer removed, raw on demand, occurrence-specific editor entry (b2d6897).
+- History: recorded before/after/detail correspondence, factual badges, value/table keyboard focus (6a9379b).
+- Application preview: frozen-plan comparison and linkage, raw on demand, existing cancel/confirm/conflict behavior, now consistent pane keyboard flow.
+- Navigation/recovery: existing a7e693e search recovery, locating current app, scroll context, dropdown focus and copy feedback; its 19 checks were integrated in b2d6897.
+- TOML/config editor: owner freeze remains. Before preparing its future style pass, the owner has now been reminded and asked which missing functions must shape its layout. No dependent TOML edit will proceed without that context.
+
+Collaboration:
+The owner-requested GPT review session was found available in its original Chrome profile. Report for b2d6897/6a9379b plus this final keyboard scope was submitted; the page displayed a running response and thinking progress, alongside a reply-loading error. A final review result is not yet claimed. GitHub connector CI lookup failed at transport, so it was not treated as CI success.
+
+No DemoPlan, matching, Apply, serialization, frozen audit/history data, Registry or V2 changes. Full project UI completion is not claimed while TOML requirements and final review remain unresolved.

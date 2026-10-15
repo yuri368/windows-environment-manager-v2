@@ -162,16 +162,33 @@ var WindowsElements = (() => {
   const comparisonBindings=new WeakMap();
   function bindComparison(root){
     comparisonBindings.get(root)?.();
-    let hovered=null,focused=null;
+    const panes=new Map();
+    root.querySelectorAll('.comparison-token').forEach(token=>{
+      const pane=token.closest('.value-box,.value-stream');
+      if(pane){if(!panes.has(pane))panes.set(pane,[]);panes.get(pane).push(token)}
+    });
+    const selectTab=token=>{
+      const items=panes.get(token?.closest('.value-box,.value-stream'));
+      items?.forEach(item=>item.tabIndex=item===token?0:-1);
+    };
+    for(const items of panes.values())selectTab(items.find(item=>item===document.activeElement)||items[0]);
     const keyFor=target=>target?.closest?.('[data-related-key]')?.dataset.relatedKey??null;
+    let hovered=null,focused=root.contains(document.activeElement)?keyFor(document.activeElement):null;
     const paint=()=>{const key=hovered??focused;root.classList.toggle('is-linking',key!==null);root.querySelectorAll('[data-related-key]').forEach(node=>node.classList.toggle('is-related-highlight',node.dataset.relatedKey===key))};
     const handlers={
       pointerover:e=>{hovered=keyFor(e.target);paint()},
       pointerout:e=>{hovered=root.contains(e.relatedTarget)?keyFor(e.relatedTarget):null;paint()},
       pointerleave:()=>{hovered=null;paint()},
-      focusin:e=>{focused=keyFor(e.target);paint()},
-      focusout:e=>{focused=root.contains(e.relatedTarget)?keyFor(e.relatedTarget):null;paint()}
+      focusin:e=>{const token=e.target.closest('.comparison-token');if(token)selectTab(token);focused=keyFor(e.target);paint()},
+      focusout:e=>{focused=root.contains(e.relatedTarget)?keyFor(e.relatedTarget):null;paint()},
+      keydown:e=>{
+        if(e.altKey||e.ctrlKey||e.metaKey||e.shiftKey||e.isComposing||!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End'].includes(e.key))return;
+        const token=e.target.closest('.comparison-token'),items=panes.get(token?.closest('.value-box,.value-stream')),at=items?.indexOf(token);
+        if(at===undefined||at<0)return;
+        e.preventDefault();const next=e.key==='Home'?0:e.key==='End'?items.length-1:Math.max(0,Math.min(items.length-1,at+(['ArrowRight','ArrowDown'].includes(e.key)?1:-1)));items[next].focus();
+      }
     };
+    paint();
     for(const [type,handler] of Object.entries(handlers))root.addEventListener(type,handler);
     comparisonBindings.set(root,()=>{for(const [type,handler] of Object.entries(handlers))root.removeEventListener(type,handler)});
   }
