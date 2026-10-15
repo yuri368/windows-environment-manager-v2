@@ -12,7 +12,7 @@
 
 ## 验证
 
-1. 最终 npm test：25 组、487 项通过，见 test.log。原有验证脚本未改。
+1. 最终 npm test：25 组、487 项通过，见 test-output.txt。原有验证脚本未改。
 2. 结构专项 8 项：保留 CRLF/单 CR/空白、重复与空项；HTML 文本转义；Special 不拆分；Windows 方案隔离；配置输入焦点/快照/历史隔离；预览冻结计划；撤销禁用。见 structural-checks.json。这是本次临时检查记录，不在 npm test 内。
 3. 复核修正 4 项：预览 Actual/After 的 CRLF/CR 保真、Special 局部标记与稳定控件名称、整体结构。见 review-fix-checks.json。
 4. Chrome 独立新标签页：配置输入实时更新、Special 单字符串切换、Windows 结构展开、直接编辑到历史的衔接、预览 Tab 同项联动（两侧同 key 各一项）、原始值展开、无 error 级页面日志。截图为 windows.jpg、config.jpg、preview.jpg、history.jpg。
@@ -28,3 +28,5 @@
 任务分支：v3/ui-surface-continuity。基线 d9853b2 保存开发入口已有的未接入辅助代码，上游起点为 51b62f2；主目录负责预览，V3-git/ui-v3 负责版本记录。
 
 按负责人要求新建 ChatGPT 会话：[完善环境变量界面](https://chatgpt.com/c/6ad08f59-7e5c-83ea-a0c9-e76b5ef6688e)。已发送身份、现状与方案，刷新后重发；网页两次显示“无法加载此回复”，后续汇报显示 Unknown error。见 gpt-status.jpg。该会话已保留；网页架构审查未完成，不能写成已获批准。本轮仅执行既有合同内的 UI 续作。
+
+实现提交：75f89b2，已推送到 origin/v3/ui-surface-continuity。未创建 PR、合并 main 或部署。
