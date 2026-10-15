@@ -6,7 +6,7 @@ const root=path.resolve(__dirname,'..'),checks=[],errors=[];
 const vc=new VirtualConsole();vc.on('jsdomError',error=>errors.push(error.message));
 const dom=new JSDOM(fs.readFileSync(path.join(root,'temp.html'),'utf8'),{
   runScripts:'dangerously',pretendToBeVisual:true,virtualConsole:vc,
-  beforeParse(w){
+  beforeParse(w){ for(const configModule of ['config-format.js','config-editor.js'])w.eval(require('node:fs').readFileSync(require('node:path').resolve(__dirname,"..",configModule),'utf8'));
     w.confirm=()=>true;
     for(const file of ['demo-plan.js','demo-configs.js','windows-elements.js'])
       w.eval(fs.readFileSync(path.join(root,file),'utf8'));

@@ -30,7 +30,7 @@
 .diffrow.value-link-group { padding: 16px 14px; }
 .value-link-group:focus-within { scroll-margin: 15px; }
 .value-link-group .comparison-token:focus-visible { outline: 2px solid var(--green); outline-offset: 3px; }
-.value-link-group.is-linking .comparison-token:not(.is-related-highlight) { opacity: .65; }
+.value-link-group.is-linking .comparison-token:not(.is-related-highlight):not(.is-duplicate-highlight) { opacity: .65; }
 .value-link-group .comparison-token { transition: opacity 120ms, border-color 120ms, background-color 120ms; }
 .operation-note { display: flex; align-items: flex-start; gap: 8px; padding: 12px; color: var(--sub); background: #f4f5f3; border-radius: 6px; font-size: 12px; }
 .operation-note .ic { flex: none; margin-top: 2px; }
@@ -38,7 +38,7 @@
 /* Inventory: current values use the same plates as the element comparison. */
 .comparison-static-token { text-align: left; cursor: default; }
 button.comparison-static-token { appearance: none; cursor: pointer; }
-.value-stream.is-linking .comparison-static-token:not(.is-related-highlight) { opacity: .6; }
+.value-stream.is-linking .comparison-static-token:not(.is-related-highlight):not(.is-duplicate-highlight) { opacity: .6; }
 .comparison-static-token { transition: opacity 120ms, border-color 120ms, background-color 120ms; }
 .comparison-static-token:hover { border-color: #7b9e8a; }
 .windows-page .outline-table { table-layout: fixed; }
@@ -67,7 +67,7 @@ button.comparison-static-token { appearance: none; cursor: pointer; }
 .history-change-heading strong { overflow-wrap: anywhere; }
 .history-element-table { margin-top: 12px; }
 .history-element-table tbody tr:hover { background: #f5faf7; }
-.history-change.is-linking .comparison-static-token:not(.is-related-highlight) { opacity: .6; }
+.history-change.is-linking .comparison-static-token:not(.is-related-highlight):not(.is-duplicate-highlight) { opacity: .6; }
 .history-element-table tr.is-related-highlight { background: #eaf3ed; }
 .history-element-table tr:focus-visible { outline: 2px solid var(--green); outline-offset: -2px; }
 .history-element-table tbody tr { transition: background-color 120ms ease-out; }

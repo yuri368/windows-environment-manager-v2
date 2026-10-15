@@ -3,7 +3,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
 const {JSDOM,VirtualConsole}=require('jsdom');
 const root=path.resolve(__dirname,'..'),checks=[],errors=[];
 const vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));
-const dom=new JSDOM(fs.readFileSync(path.join(root,'temp.html'),'utf8'),{runScripts:'dangerously',pretendToBeVisual:true,virtualConsole:vc,beforeParse(w){w.confirm=()=>true;for(const f of ['demo-plan.js','demo-configs.js','windows-elements.js'])w.eval(fs.readFileSync(path.join(root,f),'utf8'));}});
+const dom=new JSDOM(fs.readFileSync(path.join(root,'temp.html'),'utf8'),{runScripts:'dangerously',pretendToBeVisual:true,virtualConsole:vc,beforeParse(w){ for(const configModule of ['config-format.js','config-editor.js'])w.eval(require('node:fs').readFileSync(require('node:path').resolve(__dirname,"..",configModule),'utf8'));w.confirm=()=>true;for(const f of ['demo-plan.js','demo-configs.js','windows-elements.js'])w.eval(fs.readFileSync(path.join(root,f),'utf8'));}});
 const w=dom.window,q=s=>w.document.querySelector(s),all=s=>[...w.document.querySelectorAll(s)],ev=s=>w.eval(s);
 const get=()=>ev('scheme(1).vars[1]'),snapshot=()=>ev('JSON.stringify(windows)'),history=()=>ev('history.length');
 const rawPane=id=>all('#'+id+' .diff-value[data-raw-value]').filter(node=>!node.closest('.comparison-token.is-ghost')).map(node=>node.getAttribute('data-raw-value')).join(';');

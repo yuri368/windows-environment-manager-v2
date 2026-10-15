@@ -13,7 +13,7 @@ const virtualConsole = new VirtualConsole();
 virtualConsole.on('jsdomError', error => errors.push(error.message));
 const dom = new JSDOM(fs.readFileSync(path.join(root, 'temp.html'), 'utf8'), {
   runScripts: 'dangerously', pretendToBeVisual: true, virtualConsole,
-  beforeParse(window) {
+  beforeParse(window){ for(const configModule of ['config-format.js','config-editor.js'])window.eval(require('node:fs').readFileSync(require('node:path').resolve(__dirname,"..",configModule),'utf8'));
     window.confirm = () => true;
     for (const file of ['demo-plan.js', 'demo-configs.js', 'windows-elements.js'])
       window.eval(fs.readFileSync(path.join(root, file), 'utf8'));

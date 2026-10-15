@@ -100,10 +100,10 @@ var WindowsElements = (() => {
     return parts.map((value,index)=>{
       const empty=value==='',duplicate=!whole?duplicateLabel(counts.get(value)):'';
       const body=`<span class="diff-value" data-raw-value="${escapeRaw(value)}">${empty?'<span class="empty-element">'+(whole?'（空字符串）':'（空元素）')+'</span>':escapeRaw(value)}</span>`;
-      if(!comparison)return `<span class="diff-token static-token${empty?' is-empty':''}"${empty?' data-empty="true"':''}><span class="token-position" aria-label="第 ${index+1} 项">${index+1}</span>${body}${tailMarkup(duplicate)}</span>`;
+      if(!comparison)return `<span class="diff-token static-token${duplicate?' is-duplicate':''}${empty?' is-empty':''}" data-duplicate-value="${escapeRaw(value)}"${empty?' data-empty="true"':''}><span class="token-position" aria-label="第 ${index+1} 项">${index+1}</span>${body}${tailMarkup(duplicate)}</span>`;
       const tag=interactive?'button':'span',action=interactive?` type="button" aria-label="${whole?'编辑当前完整字符串':'编辑当前值的第 '+(index+1)+' 个元素'}"`:'';
       const annotation=annotations[index],state=annotation?.kinds?.[0];
-      return `<${tag} class="diff-token comparison-static-token${state?' is-'+state:''}${!whole&&counts.get(value)>1?' is-duplicate':''}" data-value-index="${index}" data-related-key="${escape(annotation?.key??'item:'+index)}" tabindex="${index===0?0:-1}"${empty?' data-empty="true"':''}${action}>${body}${tailMarkup(valueHint(value,whole)+(annotation?.kinds||[]).map(kind=>statusBadge(kind,({added:'新增',removed:'删除',replaced:'替换',moved:'移动'})[kind])).join('')+duplicate)}</${tag}>`;
+      return `<${tag} class="diff-token comparison-static-token${state?' is-'+state:''}${!whole&&counts.get(value)>1?' is-duplicate':''}" data-duplicate-value="${escapeRaw(value)}" data-value-index="${index}" data-related-key="${escape(annotation?.key??'item:'+index)}" tabindex="${index===0?0:-1}"${empty?' data-empty="true"':''}${action}>${body}${tailMarkup(valueHint(value,whole)+(annotation?.kinds||[]).map(kind=>statusBadge(kind,({added:'新增',removed:'删除',replaced:'替换',moved:'移动'})[kind])).join('')+duplicate)}</${tag}>`;
     }).join('<span class="element-separator">;</span>');
   }
   // History correspondence comes only from recorded occurrence IDs and indices.
@@ -146,10 +146,10 @@ var WindowsElements = (() => {
         const issue=side==='actual'||side==='after'?plan.issues?.find(issue=>issue.actualIndexes?.includes(item.beforeIndex)):null;
         const matched=side==='selected'?item.matched:whole?item.value===plan.desiredRaw:matches(item.value,[plan.desiredRaw]);
         const added=(side==='after'||side==='selected')&&item.added;
-        const classes=['diff-token','comparison-token',item.ghost?'is-ghost':'',removed?'is-removed':added?'is-added pending-add-token':item.wholeChange?'is-replaced':matched?'is-matched':''].filter(Boolean).join(' ');
+        const classes=['diff-token','comparison-token',!whole&&counts.get(item.value)>1?'is-duplicate':'',item.ghost?'is-ghost':'',removed?'is-removed':added?'is-added pending-add-token':item.wholeChange?'is-replaced':matched?'is-matched':''].filter(Boolean).join(' ');
         const label=removed?statusBadge('removed',item.ghost?'结果排除':'待删除',item.ghost?'removed':'pendingRemove'):added?statusBadge('pending-add','待追加','pendingAdd'):item.wholeChange?statusBadge('replaced','整体待替换'):issue?'<span class="diff-label is-retained">'+(issue.reason==='shared'?'共享保留':'删除需确认')+'</span>':'';
         const dup=!whole?duplicateLabel(counts.get(item.value)):'';
-        return '<span class="'+classes+'" tabindex="0" data-related-key="'+item.key+'"'+(item.value===''?' data-empty="true"':'')+(item.beforeIndex===undefined?'':' data-before-index="'+item.beforeIndex+'"')+'>'+'<span class="diff-value" data-raw-value="'+escapeRaw(item.value)+'">'+(item.value===''?'<span class="empty-element">'+(whole?'（空字符串）':'（空元素）')+'</span>':escapeRaw(item.value))+'</span>'+tailMarkup(valueHint(item.value,whole)+label+dup)+'</span>';
+        return '<span class="'+classes+'" tabindex="0" data-duplicate-value="'+escapeRaw(item.value)+'" data-related-key="'+item.key+'"'+(item.value===''?' data-empty="true"':'')+(item.beforeIndex===undefined?'':' data-before-index="'+item.beforeIndex+'"')+'>'+'<span class="diff-value" data-raw-value="'+escapeRaw(item.value)+'">'+(item.value===''?'<span class="empty-element">'+(whole?'（空字符串）':'（空元素）')+'</span>':escapeRaw(item.value))+'</span>'+tailMarkup(valueHint(item.value,whole)+label+dup)+'</span>';
       }).join('<span class="element-separator">;</span>');
     };
     const tally=!active?'':whole?'<span class="tally tally-'+(after.some(item=>item.wholeChange)?'replace">整体替换':'keep">无变化')+'</span>'
@@ -160,6 +160,11 @@ var WindowsElements = (() => {
       after:!active?'<span class="invalid-result">计划已失效，需要重新检测并预览</span>':(render(after,'after')||'<span class="empty-element">'+(plan.after.exists?'（空字符串）':'（不存在）')+'</span>')+(after.some(item=>item.ghost)?'<span class="comparison-ghost-hint">应用后预览。划线元素不计入最终写入值，当前尚未应用。</span>':'')};
   }
   const comparisonBindings=new WeakMap();
+  // Raw equality is a separate hover-only display group, never occurrence identity.
+  const duplicateValueFor=element=>element?.classList.contains('is-duplicate')&&element.hasAttribute('data-duplicate-value')?element.dataset.duplicateValue:null;
+  function paintDuplicateGroup(root,value){
+    root.querySelectorAll('[data-duplicate-value]').forEach(element=>element.classList.toggle('is-duplicate-highlight',value!==null&&element.dataset.duplicateValue===value));
+  }
   function bindComparison(root){
     comparisonBindings.get(root)?.();
     const panes=new Map();
@@ -173,11 +178,12 @@ var WindowsElements = (() => {
     };
     for(const items of panes.values())selectTab(items.find(item=>item===document.activeElement)||items[0]);
     const keyFor=target=>target?.closest?.('[data-related-key]')?.dataset.relatedKey??null;
+    const hoverFor=target=>{const token=target?.closest?.('[data-related-key],[data-duplicate-value]');return token&&root.contains(token)?token:null};
     let hovered=null,focused=root.contains(document.activeElement)?keyFor(document.activeElement):null;
-    const paint=()=>{const key=hovered??focused;root.classList.toggle('is-linking',key!==null);root.querySelectorAll('[data-related-key]').forEach(node=>node.classList.toggle('is-related-highlight',node.dataset.relatedKey===key))};
+    const paint=()=>{const key=hovered?keyFor(hovered):focused,duplicateValue=duplicateValueFor(hovered);root.classList.toggle('is-linking',key!==null||duplicateValue!==null);root.querySelectorAll('[data-related-key]').forEach(node=>node.classList.toggle('is-related-highlight',node.dataset.relatedKey===key));paintDuplicateGroup(root,duplicateValue)};
     const handlers={
-      pointerover:e=>{hovered=keyFor(e.target);paint()},
-      pointerout:e=>{hovered=root.contains(e.relatedTarget)?keyFor(e.relatedTarget):null;paint()},
+      pointerover:e=>{const next=hoverFor(e.target);if(next!==hovered){hovered=next;paint()}},
+      pointerout:e=>{const next=hoverFor(e.relatedTarget);if(next!==hovered){hovered=next;paint()}},
       pointerleave:()=>{hovered=null;paint()},
       focusin:e=>{const token=e.target.closest('.comparison-token');if(token)selectTab(token);focused=keyFor(e.target);paint()},
       focusout:e=>{focused=root.contains(e.relatedTarget)?keyFor(e.relatedTarget):null;paint()},
@@ -320,7 +326,7 @@ var WindowsElements = (() => {
   function token(row, state, removed = false, duplicateCount = 1, ghost = false) {
     const matched = matches(row.value,session.selectedValues || [],session.whole);
     const classes = [removed?'is-removed':'',ghost?'is-ghost':'',state.added?'is-added':'',manualAddition(row,state)?'is-manual-added':'',state.replaced?'is-replaced':'',state.moved?'is-moved':'',matched?'is-matched':'',duplicateCount>1?'is-duplicate':''].filter(Boolean).join(' ');
-    return `<span class="diff-token ${classes}" data-element-id="${row.id}" data-duplicate-count="${duplicateCount}"${row.value===''?' data-empty="true"':''} tabindex="-1"><span class="diff-value" data-raw-value="${escape(row.value)}">${row.value === '' ? `<span class="empty-element">${session.whole?'（空字符串）':'（空元素）'}</span>` : escape(row.value)}</span>${tailMarkup(labels(state,removed,row)+duplicateLabel(duplicateCount)+(matched&&!removed?statusBadge('match','匹配'):''))}</span>`;
+    return `<span class="diff-token ${classes}" data-element-id="${row.id}" data-duplicate-value="${escapeRaw(row.value)}" data-duplicate-count="${duplicateCount}"${row.value===''?' data-empty="true"':''} tabindex="-1"><span class="diff-value" data-raw-value="${escape(row.value)}">${row.value === '' ? `<span class="empty-element">${session.whole?'（空字符串）':'（空元素）'}</span>` : escape(row.value)}</span>${tailMarkup(labels(state,removed,row)+duplicateLabel(duplicateCount)+(matched&&!removed?statusBadge('match','匹配'):''))}</span>`;
   }
   function renderComparison() {
     const root=session.container;
@@ -342,6 +348,7 @@ var WindowsElements = (() => {
     session.container.querySelectorAll('[data-element-id]').forEach(element => {
       element.classList.toggle('is-related-highlight', id !== null && Number(element.dataset.elementId) === id);
     });
+    paintDuplicateGroup(session.container,session.container.contains(session.hoveredElement)?duplicateValueFor(session.hoveredElement):null);
   }
   function elementAt(target) {
     if (!target || target.nodeType !== 1) return null;
@@ -355,16 +362,16 @@ var WindowsElements = (() => {
       if (!session) return;
       const element = elementAt(event.target);
       const id = element ? Number(element.dataset.elementId) : null;
-      if (session.hoveredId !== id) { session.hoveredId = id; paintRelated(); }
+      if (session.hoveredElement !== element) { session.hoveredElement = element; session.hoveredId = id; paintRelated(); }
     };
     handlers.pointerout = event => {
       if (!session) return;
       const next = elementAt(event.relatedTarget);
       const id = next ? Number(next.dataset.elementId) : null;
-      if (session.hoveredId !== id) { session.hoveredId = id; paintRelated(); }
+      if (session.hoveredElement !== next) { session.hoveredElement = next; session.hoveredId = id; paintRelated(); }
     };
     handlers.pointerleave = () => {
-      if (session) { session.hoveredId = null; paintRelated(); }
+      if (session) { session.hoveredElement = null; session.hoveredId = null; paintRelated(); }
     };
     handlers.focusin = event => {
       if (!session) return;
@@ -388,6 +395,7 @@ var WindowsElements = (() => {
     for(const flag of ['added','replaced','moved'])element.classList.toggle('is-'+flag,!!state[flag]);
     const duplicateCount = session.currentCounts.get(row.value);
     element.classList.toggle('is-duplicate', duplicateCount > 1);
+    element.dataset.duplicateValue = row.value;
     element.dataset.duplicateCount = duplicateCount;
     element.classList.toggle('is-empty',row.value==='');
     element.querySelector('.element-match-state').innerHTML=matched?statusBadge('match','匹配'):'';
@@ -481,7 +489,7 @@ var WindowsElements = (() => {
       half.className='break-half is-'+side;half.style.clipPath=poly(side);
       [clone,...clone.querySelectorAll('*')].forEach(n=>[...n.attributes].forEach(a=>{if(a.name.startsWith('data-')||a.name==='id'||a.name==='for'||a.name==='draggable')n.removeAttribute(a.name);}));
       clone.querySelectorAll('input,textarea,button').forEach(n=>{n.tabIndex=-1;n.disabled=true;});
-      clone.classList.remove('is-dragging','is-related-highlight','is-focus');half.appendChild(clone);wrap.appendChild(half);
+      clone.classList.remove('is-dragging','is-related-highlight','is-duplicate-highlight','is-focus');half.appendChild(clone);wrap.appendChild(half);
     });
     wrap.insertAdjacentHTML('beforeend',`<svg class="break-crack" viewBox="0 0 100 100" preserveAspectRatio="none"><polyline pathLength="1" points="${CRACK.map(point=>point.join(',')).join(' ')}"/></svg>`);
     for(let index=0;index<7;index++){
@@ -566,7 +574,7 @@ var WindowsElements = (() => {
         <div class="change-legend" role="group" aria-label="状态图例与计数"><span class="legend-group"><span class="legend-heading">本次变更</span><span class="lg legend-added"><i class="st-cell st-added"><b class="ic ic-add"></b></i>新增<em data-legend-count="added">0</em></span><span class="lg legend-manual-added"><i class="st-cell st-manual-added"><b class="ic ic-add"></b></i>手动新增<em data-legend-count="manual-added">0</em></span><span class="lg legend-replaced"><i class="st-cell st-replaced"><b class="ic ic-swap"></b></i>替换<em data-legend-count="replaced">0</em></span><span class="lg legend-moved" title="普通原始元素的展示位置变化；实际应用仍依据有效元素顺序"><i class="st-cell st-moved"><b class="ic ic-move"></b></i>移动<em data-legend-count="moved">0</em></span><span class="lg legend-moved" title="已移除原始元素的展示位置变化，不写入结果"><i class="st-cell st-moved"><b class="ic ic-move"></b></i>幽灵移动<em data-legend-count="ghost-moved">0</em></span><span class="lg legend-removed"><i class="st-cell st-removed"><b class="ic ic-cut"></b></i>删除<em data-legend-count="removed">0</em></span></span><span class="legend-group"><span class="legend-heading">提示</span><span class="lg legend-duplicate"><i class="st-cell st-duplicate"><b class="ic ic-stack"></b></i>重复<em data-legend-count="duplicate">0</em></span><span class="lg legend-empty"><i class="st-cell st-empty"><b class="ic ic-void"></b></i>空元素<em data-legend-count="empty">0</em></span><span class="lg legend-match"><i class="st-cell st-match"><b class="ic ic-check"></b></i>匹配<em data-legend-count="match">0</em></span></span></div>
         <div class="element-list" id="elementList"></div><div class="element-validation" id="elementValidation" role="status"></div><div id="pendingElements" hidden></div>
       </div><aside class="elements-compare" aria-label="元素变更对照">
-        <details class="element-raw" open><summary>元素变更对照</summary><p class="comparison-hint">悬停或聚焦任一元素，三处对应项一起亮起。重复按每栏的原始文本统计，空元素保留；删除项不计入新值。</p><div class="raw-comparison"><div class="raw-pane"><label>打开时的值</label><pre id="elementOriginal"></pre></div><div class="raw-pane"><label>编辑后的值 · 含删除标记</label><pre id="elementPreview"></pre></div></div><details class="serialized-result" open><summary>实际结果字符串（不含标记或删除项）</summary><pre id="elementSerialized"></pre></details></details>
+        <details class="element-raw" open><summary>元素变更对照</summary><p class="comparison-hint">悬停元素，同一项与原文相同的重复元素跨栏亮起；聚焦只对照同一项。重复按每栏原文统计，空元素保留；删除项不计入新值。</p><div class="raw-comparison"><div class="raw-pane"><label>打开时的值</label><pre id="elementOriginal"></pre></div><div class="raw-pane"><label>编辑后的值 · 含删除标记</label><pre id="elementPreview"></pre></div></div><details class="serialized-result" open><summary>实际结果字符串（不含标记或删除项）</summary><pre id="elementSerialized"></pre></details></details>
       </aside></div><div class="dialogfoot element-footer"><span id="elementStatus" role="status">仅更新演示数据</span><button class="btn" id="cancelDialog" title="丢弃弹窗内修改，保留页面快照">取消修改</button><button class="btn primary" id="applyElements" disabled>应用（演示）</button></div></div>`;
     container.classList.add('open');
     bindRelated();
@@ -654,7 +662,7 @@ var WindowsElements = (() => {
   }
   function ghostRowMarkup(row,displayIndex,total) {
     const beforeIndex=session.originalRows.findIndex(original=>original.id===row.id);
-    return `<div class="element-ghost-row${displayMoved(row.id)?' is-moved':''}" data-element-id="${row.id}"><span class="element-order" title="原始位置：第 ${beforeIndex+1} 项">${displayIndex+1}</span><span class="element-ghost-body"><span class="element-ghost-value" data-raw-value="${escape(row.value)}">${row.value===''?'<span class="empty-element">（空元素）</span>':escape(row.value)}</span><span class="element-ghost-state">${valueHint(row.value,session.whole)}${statusBadge('removed','本次编辑已移除')}${displayMoved(row.id)?statusBadge('moved','幽灵移动'):''}<span class="element-ghost-note">仅展示痕迹 · 不写入结果</span></span></span>${elementActionsMarkup(row.id,displayIndex,total,true)}</div>`;
+    return `<div class="element-ghost-row${displayMoved(row.id)?' is-moved':''}" data-element-id="${row.id}" data-duplicate-value="${escapeRaw(row.value)}"><span class="element-order" title="原始位置：第 ${beforeIndex+1} 项">${displayIndex+1}</span><span class="element-ghost-body"><span class="element-ghost-value" data-raw-value="${escape(row.value)}">${row.value===''?'<span class="empty-element">（空元素）</span>':escape(row.value)}</span><span class="element-ghost-state">${valueHint(row.value,session.whole)}${statusBadge('removed','本次编辑已移除')}${displayMoved(row.id)?statusBadge('moved','幽灵移动'):''}<span class="element-ghost-note">仅展示痕迹 · 不写入结果</span></span></span>${elementActionsMarkup(row.id,displayIndex,total,true)}</div>`;
   }
   function renderRows(focusId) {
     const root=session.container;
@@ -663,6 +671,7 @@ var WindowsElements = (() => {
     const keepSuggestion=session.suggestFx?{...session.suggestFx}:null;
     session.fx=null;session.focusPrefer=null;
     session.hoveredId = null;
+    session.hoveredElement = null;
     session.focusedId = null;
     const ordered=rowDisplayOrder(),total=ordered.length;
     root.querySelector('#elementList').innerHTML=ordered.map(({row,displayIndex,ghost})=>ghost?ghostRowMarkup(row,displayIndex,total):`<div class="element-row" data-element-id="${row.id}" draggable="${!session.whole}">
@@ -748,7 +757,7 @@ var WindowsElements = (() => {
   }
   function dismiss() {
     if (session) {
-      session.container.querySelectorAll('.is-related-highlight').forEach(element=>element.classList.remove('is-related-highlight'));
+      session.container.querySelectorAll('.is-related-highlight,.is-duplicate-highlight').forEach(element=>element.classList.remove('is-related-highlight','is-duplicate-highlight'));
       for (const [type, handler] of Object.entries(session.relatedHandlers || {})) session.container.removeEventListener(type, handler);
     }
     session=null;

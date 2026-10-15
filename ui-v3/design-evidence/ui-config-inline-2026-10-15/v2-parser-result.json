@@ -1,0 +1,20 @@
+{
+  "parser": "V2 envmanager.config.parse_config",
+  "applications": 13,
+  "profiles": 23,
+  "variables": 60,
+  "edited_choices": [
+    {
+      "label": "Node 22 · 团队便携版",
+      "value": "D:\\团队工具\\Node22;D:\\团队工具\\Node22\\bin"
+    },
+    {
+      "label": "候选值 2",
+      "value": "D:\\便携工具\\Node22"
+    },
+    {
+      "label": "空字符串示例",
+      "value": ""
+    }
+  ]
+}

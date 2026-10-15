@@ -3,7 +3,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
 const {JSDOM,VirtualConsole}=require('jsdom');
 const root=path.resolve(__dirname,'../..'),checks=[],errors=[];
 const vc=new VirtualConsole();vc.on('jsdomError',error=>errors.push(error.message));
-const dom=new JSDOM(fs.readFileSync(path.join(root,'temp.html'),'utf8'),{runScripts:'dangerously',pretendToBeVisual:true,virtualConsole:vc,beforeParse(w){
+const dom=new JSDOM(fs.readFileSync(path.join(root,'temp.html'),'utf8'),{runScripts:'dangerously',pretendToBeVisual:true,virtualConsole:vc,beforeParse(w){ for(const configModule of ['config-format.js','config-editor.js'])w.eval(require('node:fs').readFileSync(require('node:path').resolve(__dirname,"../..",configModule),'utf8'));
   w.confirm=()=>true;
   for(const file of ['demo-plan.js','demo-configs.js','windows-elements.js'])w.eval(fs.readFileSync(path.join(root,file),'utf8'));
 }});
@@ -62,13 +62,13 @@ async function check(name,run){try{await run();checks.push({name,passed:true});}
     key(w.document.activeElement,'Home');assert.equal(w.document.activeElement.dataset.editapp,'0');assert.equal(contentState(),before);
     const schemes=all('[data-editplan]');schemes[0].focus();key(w.document.activeElement,'End');assert.equal(w.document.activeElement,schemes.at(-1));
   });
-  await check('Config same-variable refresh retains inspector and sidebar scroll',()=>{
-    q('[data-editor-list="apps"]').scrollTop=98;q('.editor-right').scrollTop=142;q('.editor-mid').scrollTop=31;
-    q('#cfgScope').dispatchEvent(new w.Event('change',{bubbles:true}));assert.equal(q('[data-editor-list="apps"]').scrollTop,98);assert.equal(q('.editor-right').scrollTop,142);assert.equal(q('.editor-mid').scrollTop,31);assert.equal(w.document.activeElement.id,'cfgScope');
+  await check('Config same-variable refresh retains the unified canvas and sidebar scroll',()=>{
+    q('[data-editor-list="apps"]').scrollTop=98;q('.editor-mid').scrollTop=31;
+    q('#cfgScope').dispatchEvent(new w.Event('change',{bubbles:true}));assert.equal(q('[data-editor-list="apps"]').scrollTop,98);assert.equal(q('.editor-right'),null);assert.equal(q('.editor-mid').scrollTop,31);assert.equal(w.document.activeElement.id,'cfgScope');
   });
-  await check('Config variable switch retains navigation position and resets new inspector',()=>{
-    q('[data-editor-list="apps"]').scrollTop=110;q('.editor-right').scrollTop=100;q('[data-tablevar="1"]').click();
-    assert.equal(q('[data-editor-list="apps"]').scrollTop,110);assert.equal(q('.editor-right').scrollTop,0);assert.equal(w.document.activeElement.dataset.tablevar,'1');
+  await check('Config variable switch retains navigation and expands exactly one inline form',()=>{
+    q('[data-editor-list="apps"]').scrollTop=110;q('.editor-mid').scrollTop=100;q('[data-tablevar="1"]').click();
+    assert.equal(q('[data-editor-list="apps"]').scrollTop,110);assert.equal(all('#editorInspector').length,1);assert.ok(q('#editorInspector').closest('.cfg-variable'));assert.equal(q('.editor-right'),null);assert.equal(w.document.activeElement.dataset.tablevar,'1');
   });
   await check('New config app or profile starts at top without resetting application list scroll',()=>{
     q('.editor-mid').scrollTop=250;q('.editor-shell').scrollTop=320;q('[data-editor-list="apps"]').scrollTop=90;

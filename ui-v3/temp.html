@@ -20,10 +20,11 @@
 @media(max-width:860px){.brand{display:none}.sidebar{width:190px}.navtab{padding:0 7px}.appitem{grid-template-columns:15px minmax(0,1fr) 31px;gap:6px}.appicon{display:none}.tag{padding:2px 4px}.overview{align-items:flex-start;flex-wrap:wrap}.plan-side{margin-left:39px}.editor-right{width:240px}.editor-left{width:155px}.toolbar .tool{font-size:11px}}
 </style>
 <link rel="stylesheet" href="ui-polish.css">
-<link rel="stylesheet" href="elements-ui.css?v=708d27af03c7">
+<link rel="stylesheet" href="elements-ui.css?v=2e85ca0a8012">
 <link rel="stylesheet" href="shell-ui.css?v=180c0987749f">
 <link rel="stylesheet" href="fx-ui.css">
-<link rel="stylesheet" href="surface-ui.css?v=b71383c8bc22">
+<link rel="stylesheet" href="surface-ui.css?v=08576f13c7a0">
+<link rel="stylesheet" href="config-editor.css?v=bf42eb5a4293">
 </head>
 <body><div id="app">
 <header class="chrome"><span class="logo">≋</span><strong>环境变量方案管理器</strong><span class="sub mini">Compact UI · 交互演示</span><span class="prototype-mark">本地演示 · 未连接系统</span></header>
@@ -33,7 +34,9 @@
 </div><div class="backdrop" id="modal"></div><div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="demo-configs.js"></script>
 <script src="demo-plan.js"></script>
-<script src="windows-elements.js?v=b2bed2dcebb1"></script>
+<script src="config-format.js?v=40be702d6b7e"></script>
+<script src="config-editor.js?v=1c5307834ac3"></script>
+<script src="windows-elements.js?v=da16277d0959"></script>
 <script>
 'use strict';
 const initialApps=[
@@ -51,11 +54,12 @@ const MODE={'replace':'替换','+append':'前置','-append':'后置','append':'�
 const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 let apps=[],windows={},checked=new Set(),selected=2,profileChoice={},filter='all',search='',onlyMismatch=false,compareShown=true,focusedVariable=0,screen='workbench',modalAction=null,revision=0,history=[],editor={app:2,profile:'3.9.11',varIdx:0,tab:'visual'},toastTimer=null;
 let lastDialogFocus = null, targetRevisions = {}, targetTypes = {}, planCache = new WeakMap();
-function mkVar(v,i){return {id:i,name:v[0],scope:v[1],mode:v[2],defaultValue:v[3],savedValue:v[4]?.savedValue??null,source:'默认值',custom:null,choices:[...(v[4]?.choices||[])],special:!!v[4]?.special,baselineValue:v[3],matchBaseline:null,dirty:false}}
+function mkVar(v,i){return {id:i,name:v[0],scope:v[1],mode:v[2],defaultValue:v[3],savedValue:v[4]?.savedValue??null,source:'默认值',custom:null,choices:ConfigFormat.choices({choices:v[4]?.choices||[]}),editable:v[4]?.editable??true,special:!!v[4]?.special,baselineValue:v[3],matchBaseline:null,dirty:false}}
 function reset(quiet=false){apps=clone(initialApps).map(a=>({...a,profiles:a.profiles.map(p=>({...p,vars:p.vars.map(mkVar)}))}));windows={'User|JAVA_HOME':'H:\\ProgramFiles\\DevTools\\Java\\jdk1.8.0_202','User|PYTHON_HOME':'H:\\ProgramFiles\\Python313','User|MAVEN_HOME':'H:\\ProgramFiles\\DevTools\\Maven\\apache-maven-3.9.11','User|PATH':['%JAVA_HOME%\\bin','%PYTHON_HOME%;%PYTHON_HOME%\\Scripts','%MAVEN_HOME%\\bin','H:\\ProgramFiles\\PortableGit\\cmd','H:\\ProgramFiles\\VSCode\\bin'].join(';')};Object.assign(windows,extraDemoWindows);windows['User|PATH']+=';'+extraDemoUserPath.join(';');checked=new Set();selected=2;profileChoice={};apps.forEach((a,i)=>profileChoice[i]=a.default);filter='all';search='';onlyMismatch=false;compareShown=true;focusedVariable=0;history=[{when:'演示初始快照',action:'打开演示环境',detail:'模拟 Windows 数据已载入'}];revision=0;targetRevisions={};targetTypes={};planCache=new WeakMap();Object.keys(removalMemo).forEach(k=>delete removalMemo[k]);editor={app:2,profile:'3.9.11',varIdx:0,tab:'visual'};screen='workbench';render();if(!quiet)notify('已恢复演示初始状态')}
 function appNow(i=selected){return apps[i]}
 function scheme(i=selected){return apps[i].profiles.find(p=>p.name===profileChoice[i])||apps[i].profiles[0]}
-function value(v){if(v.source.startsWith('候选值 '))return v.choices[Number(v.source.slice(4))-1]??v.defaultValue;return v.source==='自定义值'?v.custom??'':v.source==='已保存值'?v.savedValue??v.defaultValue:v.source==='候选值'?v.choices[0]??v.defaultValue:v.defaultValue}
+function choiceValue(choice,fallback){return choice===undefined?fallback:typeof choice==='string'?choice:choice.value}
+function value(v){if(v.source.startsWith('候选值 '))return choiceValue(v.choices[Number(v.source.slice(4))-1],v.defaultValue);return v.source==='自定义值'?v.custom??'':v.source==='已保存值'?v.savedValue??v.defaultValue:v.source==='候选值'?choiceValue(v.choices[0],v.defaultValue):v.defaultValue}
 function key(v){return v.scope+'|'+v.name.toUpperCase()}
 function demoSnapshot(v,raw){
  const current=arguments.length>1?raw:windows[key(v)];
@@ -159,7 +163,7 @@ function restoreAppFilters(locate=false){
 }
 function renderWorkbench(){
  const listScroll=$('applist')?.scrollTop??0;
- $('screen').innerHTML=`<aside class="sidebar"><div class="sidehead"><div class="sidecaption"><strong>应用</strong><span class="sub mini" id="selectionCounter"></span></div><div class="search"><span>⌕</span><input id="appSearch" placeholder="搜索应用或方案…" value="${esc(search)}" aria-label="搜索应用"><button type="button" class="search-clear" id="clearAppSearch" aria-label="清空应用搜索" title="清空搜索 · Esc" ${search?'':'hidden'}><b class="ic ic-cut" aria-hidden="true"></b></button></div><div class="filters"><button class="filter" data-filter="all">全部</button><button class="filter" data-filter="matched">已匹配</button><button class="filter" data-filter="unmatched">需配置</button></div></div><div class="batchbar"><span>批量选择</span><span><button class="textbtn" id="selectAll" title="选择当前搜索与筛选结果；保留已有勾选">全选可见</button><button class="textbtn" id="selectNone">清空</button></span></div><div class="list-context" id="appListContext"></div><div class="applist" id="applist" aria-label="应用搜索结果"></div><div class="sidefoot">☑ 勾选用于批量操作；点击应用行查看详情。<br>切换方案不会直接修改 Windows。</div></aside><section class="workspace"><div class="workscroll"><div class="overview" id="overview"></div><div class="content"><div class="sectionbar"><h2>环境变量 <small id="varTotal"></small></h2><div class="sectionright"><label class="checklabel"><input id="onlyMismatch" type="checkbox" ${onlyMismatch?'checked':''}>仅看未匹配</label><button class="textbtn" id="compareToggle" aria-controls="inspect" aria-expanded="${compareShown}">${compareShown?'收起':'展开'} Windows 对照</button></div></div><div class="tablebox"><table class="vartable"><thead><tr><th>变量</th><th>作用域 / 模式</th><th>值来源</th><th>当前选定值</th><th>检测</th><th>操作</th></tr></thead><tbody id="varRows"></tbody></table></div><div class="inspect" id="inspect" ${compareShown?'':'hidden'}><div class="inspecthead"><strong id="inspectTitle">Windows 值对照</strong><span class="mini sub">元素编辑 · 离线演示</span></div><div class="inspectbody value-comparison"><section class="selection-pane"><div class="inspect-value-heading"><div class="k">当前选定值</div><div id="compareActions" class="comparison-actions"></div></div><div class="codevalue value-box" id="compareDesired"></div><div class="inspector-meta" id="compareLabel"></div></section><div class="comparison-pair"><section><div class="inspect-value-heading"><div class="k">Windows 当前值</div><button class="textbtn" id="editWindowsElements">编辑元素</button></div><div class="codevalue value-box inspect-editable" id="compareActual" tabindex="0" role="button" aria-label="打开 Windows 值元素编辑器" title="双击打开元素列表（演示）"></div></section><section class="result-pane"><div class="inspect-value-heading"><div class="k">应用后的值</div><div class="pane-tally" id="compareTally" aria-label="结果构成"></div><span class="mini sub">预览 · 尚未应用</span></div><div class="codevalue value-box" id="compareAfter" aria-live="polite"></div></section></div><div class="comparison-serialized"><span class="k">最终写入字符串 · 不含删除项</span><pre id="compareSerialized"></pre></div><div class="comparison-footer"><span class="inspector-meta" id="compareResult"></span><span class="inspector-meta" id="compareSummary"></span></div><div id="compareNotice" aria-live="polite"></div><p class="comparison-hint">悬停或聚焦元素，可对照同一项；Tab 切换区域，方向键与 Home/End 浏览栏内元素。</p></div></div><div class="helpnote">ⓘ 此页面为交互设计原型。输入与方案切换只修改演示选定值，预览确认也只更新模拟数据。</div></div></div></section>`;
+ $('screen').innerHTML=`<aside class="sidebar"><div class="sidehead"><div class="sidecaption"><strong>应用</strong><span class="sub mini" id="selectionCounter"></span></div><div class="search"><span>⌕</span><input id="appSearch" placeholder="搜索应用或方案…" value="${esc(search)}" aria-label="搜索应用"><button type="button" class="search-clear" id="clearAppSearch" aria-label="清空应用搜索" title="清空搜索 · Esc" ${search?'':'hidden'}><b class="ic ic-cut" aria-hidden="true"></b></button></div><div class="filters"><button class="filter" data-filter="all">全部</button><button class="filter" data-filter="matched">已匹配</button><button class="filter" data-filter="unmatched">需配置</button></div></div><div class="batchbar"><span>批量选择</span><span><button class="textbtn" id="selectAll" title="选择当前搜索与筛选结果；保留已有勾选">全选可见</button><button class="textbtn" id="selectNone">清空</button></span></div><div class="list-context" id="appListContext"></div><div class="applist" id="applist" aria-label="应用搜索结果"></div><div class="sidefoot">☑ 勾选用于批量操作；点击应用行查看详情。<br>切换方案不会直接修改 Windows。</div></aside><section class="workspace"><div class="workscroll"><div class="overview" id="overview"></div><div class="content"><div class="sectionbar"><h2>环境变量 <small id="varTotal"></small></h2><div class="sectionright"><label class="checklabel"><input id="onlyMismatch" type="checkbox" ${onlyMismatch?'checked':''}>仅看未匹配</label><button class="textbtn" id="compareToggle" aria-controls="inspect" aria-expanded="${compareShown}">${compareShown?'收起':'展开'} Windows 对照</button></div></div><div class="tablebox"><table class="vartable"><thead><tr><th>变量</th><th>作用域 / 模式</th><th>值来源</th><th>当前选定值</th><th>检测</th><th>操作</th></tr></thead><tbody id="varRows"></tbody></table></div><div class="inspect" id="inspect" ${compareShown?'':'hidden'}><div class="inspecthead"><strong id="inspectTitle">Windows 值对照</strong><span class="mini sub">元素编辑 · 离线演示</span></div><div class="inspectbody value-comparison"><section class="selection-pane"><div class="inspect-value-heading"><div class="k">当前选定值</div><div id="compareActions" class="comparison-actions"></div></div><div class="codevalue value-box" id="compareDesired"></div><div class="inspector-meta" id="compareLabel"></div></section><div class="comparison-pair"><section><div class="inspect-value-heading"><div class="k">Windows 当前值</div><button class="textbtn" id="editWindowsElements">编辑元素</button></div><div class="codevalue value-box inspect-editable" id="compareActual" tabindex="0" role="button" aria-label="打开 Windows 值元素编辑器" title="双击打开元素列表（演示）"></div></section><section class="result-pane"><div class="inspect-value-heading"><div class="k">应用后的值</div><div class="pane-tally" id="compareTally" aria-label="结果构成"></div><span class="mini sub">预览 · 尚未应用</span></div><div class="codevalue value-box" id="compareAfter" aria-live="polite"></div></section></div><div class="comparison-serialized"><span class="k">最终写入字符串 · 不含删除项</span><pre id="compareSerialized"></pre></div><div class="comparison-footer"><span class="inspector-meta" id="compareResult"></span><span class="inspector-meta" id="compareSummary"></span></div><div id="compareNotice" aria-live="polite"></div><p class="comparison-hint">悬停可联动同一项及原文相同的重复元素；聚焦对照同一项。Tab 切换区域，方向键与 Home/End 浏览栏内元素。</p></div></div><div class="helpnote">ⓘ 此页面为交互设计原型。输入与方案切换只修改演示选定值，预览确认也只更新模拟数据。</div></div></div></section>`;
  $('appSearch').addEventListener('input',e=>{search=e.target.value;renderAppList()});$('clearAppSearch').onclick=()=>{search='';$('appSearch').value='';renderAppList();$('appSearch').focus()};$('appSearch').onkeydown=e=>{if(e.key==='Escape'&&search&&!e.isComposing){e.preventDefault();e.stopPropagation();$('clearAppSearch').click()}};$('selectAll').onclick=()=>{visibleApps().forEach(i=>checked.add(i));renderAppList();renderFooter()};$('selectNone').onclick=()=>{checked.clear();renderAppList();renderFooter()};document.querySelectorAll('[data-filter]').forEach(el=>el.onclick=()=>{filter=el.dataset.filter;renderAppList()});$('onlyMismatch').onchange=e=>{onlyMismatch=e.target.checked;renderRows()};$('compareToggle').onclick=()=>{compareShown=!compareShown;$('inspect').hidden=!compareShown;$('compareToggle').textContent=(compareShown?'收起':'展开')+' Windows 对照';$('compareToggle').setAttribute('aria-expanded',String(compareShown));if(compareShown)retrigger($('inspect'),'is-revealing')};renderAppList();$('applist').scrollTop=listScroll;renderOverview();renderRows();renderFooter()
 }
 function visibleApps(){
@@ -210,23 +214,24 @@ function renderRows() {
   const ids=p.vars.map((v,i)=>i).filter(i=>!onlyMismatch||!itemMatched(p.vars[i]));
   $('varRows').innerHTML=ids.length?ids.map(i=>{
     const v=p.vars[i],m=itemMatched(v),pending=hasPendingValue(v);
-    const src=['默认值',...(v.savedValue!==null?['已保存值']:[]),...v.choices.map((_,index)=>'候选值 '+(index+1)),'自定义值'];
-    return `<tr class="${focusedVariable===i?'sel':''}" data-row="${i}" data-kind="${kindOf(v)}" style="--i:${Math.min(ids.indexOf(i),10)}"><td><span class="vname">${esc(v.name)}</span></td><td><span class="scope" data-mode="${esc(v.mode)}">${v.scope==='User'?'用户':'系统'} <span>· ${MODE[v.mode]||v.mode}</span></span></td><td><select class="source ${v.source==='自定义值'?'is-custom':''}" aria-label="${esc(v.name)} 值来源">${src.map(source=>`<option ${v.source===source?'selected':''}>${esc(source)}</option>`).join('')}</select></td><td><div class="running-value"><input class="vinput ${pending?'modified':''}" aria-label="${esc(v.name)} 当前选定值" value="${esc(value(v))}" title="${esc(value(v))}" spellcheck="false"><span class="pending-state" ${pending?'':'hidden'} title="与初始或最近模拟应用的选定值不同；Windows 检测独立计算">待应用</span></div></td><td><span class="result ${m?'':'warn'}" data-kind="${kindOf(v)}" title="比例按选定的非空元素逐项统计；重复项分别计数，不要求当前值具有相同副本数量；空元素保留但不计比例。替换模式还需核对额外内容。">${glyphed(detectionText(v))}</span></td><td><button class="actmini" title="查看历史操作撤销范围；不会恢复当前输入" data-undo="${i}">撤销预览</button></td></tr>`;
+    const src=['默认值',...(v.savedValue!==null?['已保存值']:[]),...v.choices.map((_,index)=>'候选值 '+(index+1)),...(v.editable!==false?['自定义值']:[])];
+    return `<tr class="${focusedVariable===i?'sel':''}" data-row="${i}" data-kind="${kindOf(v)}" style="--i:${Math.min(ids.indexOf(i),10)}"><td><span class="vname">${esc(v.name)}</span></td><td><span class="scope" data-mode="${esc(v.mode)}">${v.scope==='User'?'用户':'系统'} <span>· ${MODE[v.mode]||v.mode}</span></span></td><td><select class="source ${v.source==='自定义值'?'is-custom':''}" aria-label="${esc(v.name)} 值来源">${src.map(source=>`<option value="${esc(source)}" ${v.source===source?'selected':''}>${esc(source.startsWith('候选值 ')?'候选 · '+ConfigFormat.choices(v)[+source.slice(4)-1].label:source)}</option>`).join('')}</select></td><td><div class="running-value"><textarea rows="1" class="vinput ${pending?'modified':''}" aria-label="${esc(v.name)} 当前选定值" title="${esc(value(v))}" spellcheck="false" ${v.editable===false?'readonly aria-readonly="true"':''}></textarea><span class="pending-state" ${pending?'':'hidden'} title="与初始或最近模拟应用的选定值不同；Windows 检测独立计算">待应用</span></div></td><td><span class="result ${m?'':'warn'}" data-kind="${kindOf(v)}" title="比例按选定的非空元素逐项统计；重复项分别计数，不要求当前值具有相同副本数量；空元素保留但不计比例。替换模式还需核对额外内容。">${glyphed(detectionText(v))}</span></td><td><button class="actmini" title="查看历史操作撤销范围；不会恢复当前输入" data-undo="${i}">撤销预览</button></td></tr>`;
   }).join(''):`<tr><td colspan="6" class="empty"><div class="variable-empty"><span class="empty-sigil" aria-hidden="true"><b class="ic ic-check"></b></span><div><strong>${onlyMismatch?'当前方案没有未匹配的变量':'暂无变量'}</strong>${onlyMismatch?'<p>可返回完整列表查看所有变量。</p>':''}</div>${onlyMismatch?'<button class="btn" id="showAllVariables">显示全部变量</button>':''}</div></td></tr>`;
  if($('showAllVariables'))$('showAllVariables').onclick=()=>{onlyMismatch=false;$('onlyMismatch').checked=false;renderRows();$('onlyMismatch').focus()};
   $('varRows').querySelectorAll('[data-row]').forEach(tr=>{
     const i=+tr.dataset.row,v=p.vars[i],inp=tr.querySelector('.vinput'),src=tr.querySelector('.source');
-    tr.onclick=e=>{if(e.target.closest('button,select,input'))return;focusedVariable=i;renderRows();};
+    tr.onclick=e=>{if(e.target.closest('button,select,input,textarea'))return;focusedVariable=i;renderRows();};
     const focusVariable=()=>{focusedVariable=i;$('varRows').querySelectorAll('tr').forEach(row=>row.classList.remove('sel'));tr.classList.add('sel');renderInspector();};
     inp.onfocus=focusVariable;src.onfocus=focusVariable;
     inp.onchange=()=>{if(onlyMismatch&&itemMatched(v)){renderRows();$('onlyMismatch')?.focus()}};
-    inp.oninput=e=>{
-      setSelectedValue(v,e.target.value);src.value='自定义值';
+    ConfigEditor.bindRawInput(inp,()=>value(v),next=>{
+      if(v.editable===false){inp.value=value(v);return;}
+      setSelectedValue(v,next);src.value='自定义值';
       inp.classList.toggle('modified',v.dirty);inp.title=value(v);tr.querySelector('.pending-state').hidden=!v.dirty;
       const m=itemMatched(v),result=tr.querySelector('.result'),kind=kindOf(v),changed=result.dataset.kind!==kind;result.innerHTML=glyphed(detectionText(v));result.classList.toggle('warn',!m);result.dataset.kind=kind;tr.dataset.kind=kind;src.classList.toggle('is-custom',true);if(changed){retrigger(tr,'stamp');retrigger(result,'stamp')}
       renderInspector();renderFooter();renderAppList();renderOverview();
       const count=dirty(p);$('varTotal').textContent=`${p.vars.length} 项${count?' · '+count+' 项待应用':''}`;
-    };
+    });
     src.onchange=e=>{
       const prev=value(v);v.matchBaseline=null;v.source=e.target.value;if(v.source==='自定义值'&&v.custom===null)v.custom=prev;
       v.dirty=hasPendingValue(v);focusedVariable=i;renderRows();renderFooter();renderAppList();renderOverview();
@@ -337,7 +342,7 @@ function previewRowMarkup(r,kind,index){
  const view=r.plan?WindowsElements.comparisonMarkup(r.plan):null;
  const before=valueStreamMarkup(view?view.actual:WindowsElements.staticMarkup(r.before,{whole:r.whole}),'is-before','模拟当前');
  const after=kind==='应用'&&view?valueStreamMarkup(view.after,'is-after','目标结果'):`<div class="operation-note"><b class="ic ic-undo" aria-hidden="true"></b><span>${esc(r.after)}</span></div>`;
- return `<div class="diffrow value-link-group" data-preview-index="${index}"><div class="k">${title} <span class="sub mini">${meta}</span></div><div class="preview-flow"><section><span class="flow-label">模拟当前</span>${before}</section><i class="flow-arrow ic ic-arrow" aria-hidden="true"></i><section><span class="flow-label">${kind==='应用'?'目标结果 · 尚未应用':'操作说明'}</span>${after}</section></div>${view?'<p class="stream-help">悬停或聚焦铭牌，对照同一元素；方向键与 Home/End 浏览栏内元素，划线项不计入最终值。</p>':''}<details class="raw-disclosure"><summary>完整原始字符串</summary><div class="pair del"><span>模拟当前</span><span data-preview-before></span></div><div class="pair add"><span>${kind==='应用'?'目标结果':'操作说明'}</span><span data-preview-after></span></div></details>${r.plan&&planSummary(r.plan)?`<p class="plan-summary">${esc(planSummary(r.plan))}</p>`:''}</div>`;
+ return `<div class="diffrow value-link-group" data-preview-index="${index}"><div class="k">${title} <span class="sub mini">${meta}</span></div><div class="preview-flow"><section><span class="flow-label">模拟当前</span>${before}</section><i class="flow-arrow ic ic-arrow" aria-hidden="true"></i><section><span class="flow-label">${kind==='应用'?'目标结果 · 尚未应用':'操作说明'}</span>${after}</section></div>${view?'<p class="stream-help">悬停可联动同一项与重复元素；聚焦对照同一项。方向键与 Home/End 浏览栏内元素，划线项不计入最终值。</p>':''}<details class="raw-disclosure"><summary>完整原始字符串</summary><div class="pair del"><span>模拟当前</span><span data-preview-before></span></div><div class="pair add"><span>${kind==='应用'?'目标结果':'操作说明'}</span><span data-preview-after></span></div></details>${r.plan&&planSummary(r.plan)?`<p class="plan-summary">${esc(planSummary(r.plan))}</p>`:''}</div>`;
 }
 function showPreview(kind,title,targets){lastDialogFocus=document.activeElement?.closest('#revokeMenu')?$('revokeButton'):document.activeElement;closeDropdowns();const rows=recordsFor(targets,kind);modalAction={kind,targets,rows};const replacements=new Map();rows.forEach(r=>{if(kind!=='应用'||r.v.mode!=='replace'&&!r.v.special)return;const k=key(r.v);const s=replacements.get(k)||new Set();s.add(value(r.v));replacements.set(k,s)});const conflict=[...replacements.values()].some(s=>s.size>1);const invalidPlan=rows.some(r=>r.plan?.valid===false);modalAction.conflict=conflict||invalidPlan;const needsOrdering=rows.some(r=>kind==='应用'&&r.members.some(m=>m.v.mode==='append'));modalAction.needsOrdering=needsOrdering;const unchanged=rows.filter(r=>r.after===r.before).length;$('modal').innerHTML=`<div class="dialog preview-dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialoghead"><div><h3 id="dialogTitle">${esc(title)}</h3><p>${targets.length} 条变量记录 · ${rows.length} 个目标 · ${unchanged} 条无需变化 · ${kind==='应用'?'将模拟应用到浏览器内存':'演示撤销流程与操作范围'}</p></div><button class="close" id="closeDialog" aria-label="关闭">×</button></div><div class="dialogbody">${needsOrdering?'<div class="banner warn">所选方案包含 append 自定义排序模式。本原型不实现完整排序确认，因此禁止模拟应用；正式应用必须先确认合并后的元素顺序。</div>':''}${invalidPlan?'<div class="banner warn">编辑基线已失效，或同一目标值存在冲突。本次不能确认；请返回对照区重新检测编辑基线。</div>':''}${conflict?'<div class="banner warn">检测到相同 Windows 环境变量的目标值存在冲突，演示中禁止确认。真实程序必须交由专门的共享冲突分析引擎处理。</div>':`<div class="banner">这是离线 UI 原型。${kind==='应用'?'确认后只更新页面中的模拟 Windows 环境。':'不具备真正的撤销日志，不会伪造精确的撤销结果。'}</div>`}${rows.map((r,index)=>previewRowMarkup(r,kind,index)).join('')}</div><div class="dialogfoot"><button class="btn" id="cancelDialog">取消</button><button class="btn primary" id="confirmDialog" ${conflict||invalidPlan||needsOrdering||kind==='撤销'?'disabled':''}>${kind==='应用'?'模拟确认应用':'需要真实操作日志'}</button></div></div>`;$('modal').querySelectorAll('[data-preview-index]').forEach(el=>{const r=rows[+el.dataset.previewIndex];el.querySelector('[data-preview-before]').textContent=r.before===undefined?'（不存在）':r.before;el.querySelector('[data-preview-after]').textContent=r.plan?.valid===false?'计划已失效，需要重新检测并预览':r.after===undefined?'（不存在）':r.after===''?'（空字符串）':r.after});decorateValueStreams($('modal'));$('modal').classList.add('open');$('closeDialog').onclick=closeModal;$('cancelDialog').onclick=closeModal;$('confirmDialog').onclick=confirmPreview;$('closeDialog').focus()}
 function closeModal(){const wasOpen=$('modal').classList.contains('open');$('modal').classList.remove('open');modalAction=null;WindowsElements.dismiss();if(wasOpen&&lastDialogFocus?.isConnected)lastDialogFocus.focus();lastDialogFocus=null}
@@ -413,17 +418,19 @@ function renderHistory(){
 }
 function configProfile(){const a=apps[editor.app];return a.profiles.find(p=>p.name===editor.profile)||a.profiles[0]}
 function configVar(){return configProfile().vars[editor.varIdx]||configProfile().vars[0]}
-const CONFIG_FIELDS = [['defaultValue','默认值'],['scope','作用域'],['mode','模式'],['special','整体处理']];
+const CONFIG_FIELDS = [['defaultValue','默认值'],['scope','作用域'],['mode','模式'],['special','整体处理'],['editable','运行时自由输入'],['choices','候选值']];
 function configChanges() {
   return apps.flatMap((a,i)=>a.profiles.flatMap(p=>p.vars.flatMap((v,j)=>{
     const m=initialApps[i].profiles.find(x=>x.name===p.name).vars[j];
-    const original={defaultValue:m[3],scope:m[1],mode:m[2],special:!!m[4]?.special};
-    return CONFIG_FIELDS.filter(([field])=>v[field]!==original[field]).map(([field,label])=>({app:a.name,profile:p.name,name:v.name,field,label,before:original[field],after:v[field]}));
+    const original={defaultValue:m[3],scope:m[1],mode:m[2],special:!!m[4]?.special,editable:m[4]?.editable??true,choices:ConfigFormat.choices({choices:m[4]?.choices||[]})};
+    return CONFIG_FIELDS.filter(([field])=>JSON.stringify(field==='choices'?ConfigFormat.choices(v):v[field])!==JSON.stringify(original[field])).map(([field,label])=>({app:a.name,profile:p.name,name:v.name,field,label,before:original[field],after:field==='choices'?ConfigFormat.choices(v):v[field]}));
   })));
 }
 function updateConfigStatus() {
   const count=configChanges().length;
-  if ($('configStatus')) { $('configStatus').textContent=count?`配置修改 · ${count} 项属性修改 · 仅本页保留`:'配置修改未修改 · 编辑不会更改真实文件';$('configStatus').classList.toggle('has-changes',count>0); }
+  const errors=ConfigFormat.errors(apps);
+  if ($('configStatus')) { $('configStatus').textContent=(count?`配置修改 · ${count} 项属性修改 · 仅本页保留`:'配置修改未修改 · 编辑不会更改真实文件')+(errors.length?` · ${errors.length} 项错误，暂不能导出`:'');$('configStatus').classList.toggle('has-changes',count>0); }
+  if($('downloadToml')){$('downloadToml').disabled=errors.length>0;$('downloadToml').title=errors.length?errors[0].message:'导出符合 V2 配置格式的新文件';}
   if ($('cancelConfig')) $('cancelConfig').disabled=count===0;
   const badge=$('configDraftBadge');
   if (badge) { badge.hidden=!count; badge.textContent=`${count} 项属性修改`; }
@@ -432,12 +439,16 @@ function restoreConfig() {
   apps.forEach((a,i)=>a.profiles.forEach(p=>p.vars.forEach((v,j)=>{
     const m=initialApps[i].profiles.find(x=>x.name===p.name).vars[j];
     const contextChanged=v.scope!==m[1]||v.mode!==m[2]||v.special!==!!m[4]?.special||(v.source==='默认值'&&v.defaultValue!==m[3]);
-    Object.assign(v,{defaultValue:m[3],scope:m[1],mode:m[2],special:!!m[4]?.special});if(contextChanged)v.matchBaseline=null;v.dirty=hasPendingValue(v);
+    const selectedChoice=v.source.startsWith('候选值 ')?ConfigFormat.choices(v)[+v.source.slice(4)-1]:null;
+    Object.assign(v,{defaultValue:m[3],scope:m[1],mode:m[2],special:!!m[4]?.special,editable:m[4]?.editable??true,choices:ConfigFormat.choices({choices:m[4]?.choices||[]})});
+    if(contextChanged||selectedChoice)v.matchBaseline=null;
+    if(selectedChoice){const restored=v.choices.findIndex(c=>c.label===selectedChoice.label&&c.value===selectedChoice.value);v.source=restored>=0?'候选值 '+(restored+1):'默认值';}
+    v.dirty=hasPendingValue(v);
   })));
   renderConfig();$('downloadToml').focus();notify('已还原配置修改，页面环境快照未改变');
 }
 function renderConfig() {
-  $('screen').innerHTML=`<div class="config-page"><div class="editor-tabs" role="tablist" aria-label="配置视图"><button id="configTabVisual" role="tab" aria-selected="${editor.tab==='visual'}" tabindex="${editor.tab==='visual'?0:-1}" aria-controls="editorbody" class="navtab ${editor.tab==='visual'?'active':''}" data-edtab="visual" aria-current="${editor.tab==='visual'?'page':'false'}">可视化</button><button id="configTabRaw" role="tab" aria-selected="${editor.tab==='raw'}" tabindex="${editor.tab==='raw'?0:-1}" aria-controls="editorbody" class="navtab ${editor.tab==='raw'?'active':''}" data-edtab="raw" aria-current="${editor.tab==='raw'?'page':'false'}">示例 TOML</button><button id="configTabDiff" role="tab" aria-selected="${editor.tab==='diff'}" tabindex="${editor.tab==='diff'?0:-1}" aria-controls="editorbody" class="navtab ${editor.tab==='diff'?'active':''}" data-edtab="diff" aria-current="${editor.tab==='diff'?'page':'false'}">修改差异</button><span id="configDraftBadge" class="tag dirty" hidden></span><span class="config-file-label">env.toml · 演示配置</span></div><div id="editorbody" class="editor-body" role="tabpanel" aria-labelledby="configTab${{visual:'Visual',raw:'Raw',diff:'Diff'}[editor.tab]}"></div><div class="edfooter"><span id="configStatus" role="status"></span><button class="btn" id="cancelConfig" title="还原全部方案的默认值、作用域、模式及整体处理属性">还原配置修改</button><button class="btn primary" id="downloadToml">导出 TOML 文件 ↓</button></div></div>`;
+  $('screen').innerHTML=`<div class="config-page"><div class="editor-tabs" role="tablist" aria-label="配置视图"><button id="configTabVisual" role="tab" aria-selected="${editor.tab==='visual'}" tabindex="${editor.tab==='visual'?0:-1}" aria-controls="editorbody" class="navtab ${editor.tab==='visual'?'active':''}" data-edtab="visual" aria-current="${editor.tab==='visual'?'page':'false'}">可视化</button><button id="configTabRaw" role="tab" aria-selected="${editor.tab==='raw'}" tabindex="${editor.tab==='raw'?0:-1}" aria-controls="editorbody" class="navtab ${editor.tab==='raw'?'active':''}" data-edtab="raw" aria-current="${editor.tab==='raw'?'page':'false'}">示例 TOML</button><button id="configTabDiff" role="tab" aria-selected="${editor.tab==='diff'}" tabindex="${editor.tab==='diff'?0:-1}" aria-controls="editorbody" class="navtab ${editor.tab==='diff'?'active':''}" data-edtab="diff" aria-current="${editor.tab==='diff'?'page':'false'}">修改差异</button><span id="configDraftBadge" class="tag dirty" hidden></span><span class="config-file-label">env.toml · 演示配置</span></div><div id="editorbody" class="editor-body" role="tabpanel" aria-labelledby="configTab${{visual:'Visual',raw:'Raw',diff:'Diff'}[editor.tab]}"></div><div class="edfooter"><span id="configStatus" role="status"></span><button class="btn" id="cancelConfig" title="还原全部方案的默认值、候选值、作用域、模式、整体处理及自由输入属性">还原配置修改</button><button class="btn primary" id="downloadToml">导出 TOML 文件 ↓</button></div></div>`;
   document.querySelectorAll('[data-edtab]').forEach(b=>b.onclick=()=>{
     editor.tab=b.dataset.edtab;renderConfig();document.querySelector(`[data-edtab="${editor.tab}"]`).focus();
   });
@@ -451,13 +462,10 @@ function renderConfig() {
   renderEditorBody();updateConfigStatus();
 }
 function renderEditorBody(focusId) {
-  const root = $('editorbody'), a = apps[editor.app], p = configProfile();
-  const viewKey=editor.app+'|'+p.name+'|'+editor.varIdx,sameApp=root.dataset.editorApp===String(editor.app),sameProfile=sameApp&&root.dataset.editorProfile===p.name,sameVariable=root.dataset.editorVariable===viewKey;
-  const scrolls=[...root.querySelectorAll('[data-editor-list],.editor-mid,.editor-right,.editor-shell')].map(node=>({selector:node.dataset.editorList?'[data-editor-list="'+node.dataset.editorList+'"]':'.'+node.classList[0],top:node.scrollTop,left:node.scrollLeft}));
-  root.dataset.editorApp=editor.app;root.dataset.editorProfile=p.name;root.dataset.editorVariable=viewKey;
+  const root = $('editorbody');
   if (editor.tab !== 'visual') {
     const raw = editor.tab === 'raw';
-    root.innerHTML = `<div class="fullpage" style="width:100%"><div class="pageh"><div><h2>${raw ? '示例 TOML' : '当前修改差异'}</h2><p>${raw ? '由演示数据生成。正式文件的解析与无损保存将在后端接入时处理。' : '比较本页配置修改的属性修改；不涉及系统环境写入。'}</p></div><button class="btn" id="copyText">复制内容</button></div><pre class="codetext" id="sourceText">${esc(raw ? generateToml() : generateDiff())}</pre></div>`;
+    root.innerHTML = `<div class="fullpage" style="width:100%"><div class="pageh"><div><h2>${raw ? '示例 TOML' : '当前修改差异'}</h2><p>${raw ? '按 V2 配置格式生成；此处预览当前草稿，导出前会检查字段与候选值规则。' : '比较本页配置修改的属性修改；不涉及系统环境写入。'}</p></div><button class="btn" id="copyText">复制内容</button></div><pre class="codetext" id="sourceText">${esc(raw ? generateToml(true) : generateDiff())}</pre></div>`;
     $('copyText').onclick = async event => {
       const button=event.currentTarget,text=$('sourceText').textContent;
       try {
@@ -469,65 +477,33 @@ function renderEditorBody(focusId) {
     };
     return;
   }
-  const visibleProfiles = editor.showAll ? a.profiles : [p];
-  const groups = visibleProfiles.map(profile => `
-    <tr class="scheme-group"><th colspan="4"><div class="scheme-heading"><span class="scheme-name">${esc(profile.name)}</span><span class="group-meta">${profile.vars.length} 项变量</span><span class="scheme-flags">${[profile.name === a.default ? '默认方案' : '', profile.name === p.name ? '当前编辑' : ''].filter(Boolean).join(' · ')}</span></div></th></tr>
-    ${profile.vars.map((v, i) => `<tr tabindex="0" class="${profile.name === p.name && i === editor.varIdx ? 'active' : ''}" data-tableplan="${esc(profile.name)}" data-tablevar="${i}" aria-current="${profile.name===p.name&&i===editor.varIdx?'true':'false'}" aria-label="编辑 ${esc(profile.name)} 的 ${esc(v.name)}"><td><strong>${esc(v.name)}</strong></td><td>${v.scope === 'User' ? '用户' : '系统'}</td><td>${esc(MODE[v.mode])}</td><td title="${esc(v.defaultValue)}">${esc(v.defaultValue)}</td></tr>`).join('')}
-  `).join('');
-  root.innerHTML = `<div class="editor-shell" style="width:100%">
-    <aside class="editor-left"><section class="editor-nav-group"><div class="editor-section"><strong id="editorAppsHeading">应用</strong><span class="mini sub">${apps.length} 项</span></div><div class="editor-nav-list" data-editor-list="apps" aria-labelledby="editorAppsHeading">
-      ${apps.map((x,i) => `<button class="editor-item ${editor.app === i ? 'active' : ''}" data-editapp="${i}" aria-current="${editor.app===i?'true':'false'}" title="${esc(x.name)}">${esc(x.name)}<span class="sub mini">›</span></button>`).join('')}
-      </div></section><section class="editor-nav-group"><div class="editor-section"><strong id="editorProfilesHeading">方案</strong><span class="mini sub">${a.profiles.length} 项</span></div><div class="editor-nav-list" data-editor-list="profiles" aria-labelledby="editorProfilesHeading">
-      ${a.profiles.map(x => `<button class="editor-item ${p.name === x.name ? 'active' : ''}" data-editplan="${esc(x.name)}" aria-current="${p.name===x.name?'true':'false'}" title="${esc(x.name)}">${esc(x.name)}${x.name === a.default ? ' · 默认' : ''}</button>`).join('')}
-      </div></section></aside>
-    <main class="editor-mid"><div class="eyebrow">配置 / ${esc(a.name)}</div><h2>${esc(a.name)}</h2><div class="littlemeta">正在编辑 ${esc(p.name)} · ${p.vars.length} 项变量 · 默认方案 ${esc(a.default)}</div>
-      <div class="sectionbar"><h2>方案变量</h2><select id="editorView" class="view-select" aria-label="配置方案显示范围"><option value="current" ${!editor.showAll ? 'selected' : ''}>当前方案</option><option value="all" ${editor.showAll ? 'selected' : ''}>全部方案</option></select></div>
-      <table class="editor-table"><thead><tr><th>变量名称</th><th>作用域</th><th>模式</th><th>默认值</th></tr></thead><tbody>${groups}</tbody></table>
-      <p class="helpnote">选择变量编辑属性。这里的修改属于配置修改，不会应用到系统环境。</p>
-    </main><aside class="editor-right" id="editorInspector"></aside>
-  </div>`;
-  $('editorView').onchange = e => { editor.showAll = e.target.value === 'all'; renderEditorBody('editorView'); };
-  root.querySelectorAll('[data-editapp]').forEach(b => b.onclick = () => { editor.app = +b.dataset.editapp; editor.profile = apps[editor.app].default; editor.varIdx = 0; renderEditorBody();root.querySelectorAll('[data-editapp]')[editor.app]?.focus({preventScroll:true}); });
-  root.querySelectorAll('[data-editplan]').forEach(b => b.onclick = () => { editor.profile = b.dataset.editplan; editor.varIdx = 0; renderEditorBody();[...root.querySelectorAll('[data-editplan]')].find(el=>el.dataset.editplan===editor.profile)?.focus({preventScroll:true}); });
-  root.querySelectorAll('[data-tableplan]').forEach(row => {
-    const choose = () => { editor.profile = row.dataset.tableplan; editor.varIdx = +row.dataset.tablevar; renderEditorBody();[...root.querySelectorAll('[data-tableplan]')].find(el=>el.dataset.tableplan===editor.profile&&+el.dataset.tablevar===editor.varIdx)?.focus({preventScroll:true}); };
-    row.onclick = choose;
-    row.onkeydown = e => {
-      if(e.key==='Enter'||e.key===' '){e.preventDefault();choose();return;}
-      if(!['ArrowUp','ArrowDown','Home','End'].includes(e.key))return;
-      e.preventDefault();const rows=[...root.querySelectorAll('[data-tableplan]')],position=rows.indexOf(row);
-      const next=e.key==='Home'?0:e.key==='End'?rows.length-1:Math.max(0,Math.min(rows.length-1,position+(e.key==='ArrowDown'?1:-1)));
-      rows[next]?.click();
-    };
-  });
-  renderEditorInspector();updateConfigStatus();
-  for(const saved of scrolls){
-    if(saved.selector==='[data-editor-list="profiles"]'&&!sameApp||saved.selector==='.editor-right'&&!sameVariable||['.editor-mid','.editor-shell'].includes(saved.selector)&&!sameProfile)continue;
-    const node=root.querySelector(saved.selector);if(node){node.scrollTop=saved.top;node.scrollLeft=saved.left}
+  ConfigEditor.render({root,apps,editor,modeLabels:MODE,choices:ConfigFormat.choices,changes:configChanges,change:setConfigProperty,rerender:renderEditorBody,status:updateConfigStatus,preview:(raw,whole)=>rawStreamMarkup(raw,{whole,comparison:true,label:'配置默认值元素'}),errors:v=>ConfigFormat.errors(apps).filter(item=>item.variable===v),focusId});
+}
+function setConfigProperty(v,field,next,meta={}){
+ const selectedChoice=v.source.startsWith('候选值 ')?+v.source.slice(4)-1:null;
+ if(field==='defaultValue'&&v.source==='默认值')beginSelectedEdit(v,next);
+ if(field==='choices'&&selectedChoice!==null){
+  if(meta.action==='edit'&&meta.field==='value'&&meta.index===selectedChoice)beginSelectedEdit(v,next[selectedChoice].value);
+  if(meta.action==='move'){
+   if(selectedChoice===meta.from)v.source='候选值 '+(meta.to+1);
+   else if(selectedChoice===meta.to)v.source='候选值 '+(meta.from+1);
+  }else if(meta.action==='remove'){
+   if(selectedChoice===meta.index){beginSelectedEdit(v,v.defaultValue);v.source='默认值';}
+   else if(selectedChoice>meta.index)v.source='候选值 '+selectedChoice;
   }
-  root.querySelectorAll('[data-editor-list]').forEach(list=>bindListKeys(list,'.editor-item'));
-  if (focusId) $(focusId)?.focus({preventScroll:true});
-}
-function renderEditorInspector(){const v=configVar();$('editorInspector').innerHTML=`<h3>${esc(v.name)}</h3><div class="inspector-context">${esc(apps[editor.app].name)} / ${esc(configProfile().name)} · 变量属性</div><div class="field"><label for="cfgName">变量名</label><input id="cfgName" value="${esc(v.name)}" disabled title="演示中变量名固定，不支持重命名"></div><div class="field"><label for="cfgScope">作用域</label><select id="cfgScope"><option value="User" ${v.scope==='User'?'selected':''}>用户 (User)</option><option value="System" ${v.scope==='System'?'selected':''}>系统 (System)</option></select></div><div class="field"><label for="cfgMode">模式</label><select id="cfgMode">${Object.entries(MODE).map(([k,x])=>`<option value="${k}" ${v.mode===k?'selected':''} ${v.special&&k!=='replace'?'disabled':''}>${esc(k)} · ${x}</option>`).join('')}</select></div><div class="field"><label for="cfgDefault">默认值（保留原始字符串）</label><textarea id="cfgDefault" spellcheck="false">${esc(v.defaultValue)}</textarea></div><section class="config-structure"><div class="structure-heading"><strong>默认值结构</strong><span id="configStructureCount"></span></div><div id="configValueStructure"></div><p class="stream-help">结构预览随输入更新，编辑内容仍以原始字符串保存。</p></section><div class="field"><label for="cfgSaved">已保存值（只读演示数据）</label><input id="cfgSaved" value="${esc(v.savedValue??'（无）')}" disabled></div><div class="field"><label for="cfgSource">当前选定值来源</label><input id="cfgSource" value="${esc(v.source)}" disabled></div><label class="checklabel" for="cfgSpecial" style="margin-top:5px"><input type="checkbox" id="cfgSpecial" ${v.special?'checked':''}>特殊变量 (Special)</label><p class="helpnote">特殊变量的值作为一个整体处理。配置修改保留在此演示状态中，可以导出为新 TOML 文件。工作台使用“默认值”来源时会跟随此处默认值修改；其他来源保持原选定值，仍需预览确认才更新演示环境。</p>`;
- $('cfgScope').onchange=e=>{v.matchBaseline=null;v.scope=e.target.value;renderEditorBody('cfgScope')};$('cfgMode').onchange=e=>{v.matchBaseline=null;v.mode=e.target.value;renderEditorBody('cfgMode')};$('cfgDefault').oninput=e=>{if(v.source==='默认值')beginSelectedEdit(v,e.target.value);v.defaultValue=e.target.value;v.dirty=hasPendingValue(v);const trs=document.querySelectorAll('[data-tableplan]');trs.forEach(tr=>{if(tr.dataset.tableplan===configProfile().name&&+tr.dataset.tablevar===editor.varIdx){const td=tr.lastElementChild;td.textContent=v.defaultValue;td.title=v.defaultValue}});updateConfigStatus();updateConfigStructure(false)};$('cfgSpecial').onchange=e=>{v.matchBaseline=null;v.special=e.target.checked;if(v.special)v.mode='replace';renderEditorBody('cfgSpecial')};updateConfigStructure(true)}
-function updateConfigStructure(play=false){
- const v=configVar(),root=$('configValueStructure');if(!root)return;
- root.innerHTML=rawStreamMarkup(v.defaultValue,{whole:v.special,label:'默认值结构预览'});
- $('configStructureCount').textContent=v.special?'整体字符串':v.defaultValue.split(';').length+' 个元素';
- const changes=configChanges().filter(c=>c.app===apps[editor.app].name&&c.profile===configProfile().name&&c.name===v.name);
- for(const [field,id] of [['defaultValue','cfgDefault'],['scope','cfgScope'],['mode','cfgMode'],['special','cfgSpecial']]){
-   const control=$(id),changed=changes.some(c=>c.field===field);control.classList.toggle('is-config-edited',changed);
-   const label=$('editorInspector').querySelector(`label[for="${id}"]`);if(label){control.setAttribute('aria-label',label.textContent.trim());label.classList.toggle('is-config-edited',changed);}
  }
- decorateValueStreams(root,{play});
+ v[field]=next;
+ if(['scope','mode','special'].includes(field))v.matchBaseline=null;
+ if(field==='special'&&next)v.mode='replace';
+ if(field==='editable'&&!next&&v.source==='自定义值'){v.source='默认值';v.matchBaseline=null;}
+ v.dirty=hasPendingValue(v);
 }
-function tomlQuote(s){return '"'+String(s).replace(/\\/g,'\\\\').replace(/"/g,'\\"').replace(/\r/g,'\\r').replace(/\n/g,'\\n')+'"'}
-function generateToml(){let out=['# 由 Compact UI 演示生成（示例结构，非仓库配置格式的正式序列化）',''];apps.forEach(a=>{out.push('# '+a.name);a.profiles.forEach(p=>{out.push('[[application]]');out.push('name = '+tomlQuote(a.name));out.push('profile = '+tomlQuote(p.name));out.push('default_profile = '+(a.default===p.name?'true':'false'));p.vars.forEach(v=>{out.push('[[application.variable]]');out.push('name = '+tomlQuote(v.name));out.push('scope = '+tomlQuote(v.scope));out.push('mode = '+tomlQuote(v.mode));out.push('default_value = '+tomlQuote(v.defaultValue));if(v.special)out.push('special = true')});out.push('')})});return out.join('\n')}
+function generateToml(preview=false){return ConfigFormat.serialize(apps,{validate:!preview})}
 function generateDiff() {
-  const display=(field,val)=>field==='special'?(val?'是':'否'):String(val);
+  const display=(field,val)=>['special','editable'].includes(field)?(val?'是':'否'):field==='choices'?JSON.stringify(val):String(val);
   return configChanges().map(c=>`${c.app} / ${c.profile} / ${c.name} · ${c.label}\n  原始：${display(c.field,c.before)}\n  修改：${display(c.field,c.after)}`).join('\n\n')||'目前没有配置属性修改。';
 }
-function downloadToml(){const b=new Blob([generateToml()],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(b),a=document.createElement('a');a.href=url;a.download='env.compact-demo.toml';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);notify('已生成演示 TOML（非仓库正式格式）')}
+function downloadToml(){const issues=ConfigFormat.errors(apps);if(issues.length){notify('配置尚不能导出：'+issues[0].message);return;}const b=new Blob([generateToml()],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(b),a=document.createElement('a');a.href=url;a.download='env.compact-demo.toml';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);notify('已生成 V2 格式的演示配置文件')}
 
 document.addEventListener('keydown', e => {
   if (e.key !== 'Tab' || !$('modal').classList.contains('open')) return;

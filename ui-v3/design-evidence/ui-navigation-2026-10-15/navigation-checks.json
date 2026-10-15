@@ -48,11 +48,11 @@
       "passed": true
     },
     {
-      "name": "Config same-variable refresh retains inspector and sidebar scroll",
+      "name": "Config same-variable refresh retains the unified canvas and sidebar scroll",
       "passed": true
     },
     {
-      "name": "Config variable switch retains navigation position and resets new inspector",
+      "name": "Config variable switch retains navigation and expands exactly one inline form",
       "passed": true
     },
     {

@@ -9,7 +9,7 @@ const console = new VirtualConsole();
 console.on('jsdomError', error => errors.push(error.message));
 const dom = new JSDOM(fs.readFileSync(path.join(root, 'temp.html'), 'utf8'), {
   runScripts: 'dangerously', pretendToBeVisual: true, virtualConsole: console,
-  beforeParse(window) {
+  beforeParse(window){ for(const configModule of ['config-format.js','config-editor.js'])window.eval(require('node:fs').readFileSync(require('node:path').resolve(__dirname,"..",configModule),'utf8'));
     window.eval(fs.readFileSync(path.join(__dirname,'../demo-plan.js'),'utf8'));
     window.confirm = () => true;
     window.eval(fs.readFileSync(path.join(root, 'demo-configs.js'), 'utf8'));

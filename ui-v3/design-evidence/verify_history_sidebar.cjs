@@ -11,7 +11,7 @@ const virtualConsole = new VirtualConsole();
 virtualConsole.on('jsdomError', error => errors.push(error.message));
 const dom = new JSDOM(html, {
   runScripts: 'dangerously', pretendToBeVisual: true, virtualConsole,
-  beforeParse(window) {
+  beforeParse(window){ for(const configModule of ['config-format.js','config-editor.js'])window.eval(require('node:fs').readFileSync(require('node:path').resolve(__dirname,"..",configModule),'utf8'));
     window.eval(fs.readFileSync(path.join(__dirname,'../demo-plan.js'),'utf8'));
     window.confirm = () => true;
     window.eval(fs.readFileSync(path.join(root, 'demo-configs.js'), 'utf8'));
@@ -271,12 +271,12 @@ try {
     profile.click();
     assert.equal(w.eval('editor.profile'), profileName);
 
-    const rows = () => all('tr[data-tableplan][data-tablevar]');
+    const rows = () => all('[data-tableplan][data-tablevar]');
     const variableRow = index => rows().find(row => row.dataset.tableplan === w.eval('editor.profile') && +row.dataset.tablevar === index);
     let target = variableRow(1);
     assert.ok(target, 'The selected profile should expose its second variable row');
-    assert.equal(target.tagName, 'TR');
-    assert.equal(target.getAttribute('tabindex'), '0');
+    assert.equal(target.tagName, 'BUTTON');
+    assert.equal(target.tabIndex, 0);
     target.click();
     assert.equal(w.eval('editor.varIdx'), 1);
     assert.equal(variableRow(1).getAttribute('aria-current'), 'true');

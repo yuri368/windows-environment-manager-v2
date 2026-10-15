@@ -12,7 +12,7 @@ const errors = [], results = [];
 const vc = new VirtualConsole();
 vc.on('jsdomError', e => errors.push(e.message));
 const dom = new JSDOM(html, { runScripts: 'dangerously', pretendToBeVisual: true,
-  virtualConsole: vc, beforeParse(w) {
+  virtualConsole: vc, beforeParse(w){ for(const configModule of ['config-format.js','config-editor.js'])w.eval(require('node:fs').readFileSync(require('node:path').resolve(__dirname,"..",configModule),'utf8'));
     w.eval(fs.readFileSync(path.join(__dirname,'../demo-plan.js'),'utf8')); w.confirm = () => true; w.eval(fs.readFileSync(path.join(__dirname,'../demo-configs.js'),'utf8')); w.eval(elementScript); } });
 const w = dom.window, doc = w.document;
 const q = s => doc.querySelector(s);
@@ -69,17 +69,17 @@ check('Batch preview contains selected app names', () => {
 });
 check('Editor defaults to one scheme and All view has explicit groups', () => {
   q('#configBtn').click(); assert.equal(q('#editorView').value, 'current');
-  assert.equal(all('.scheme-group').length, 1); assert.equal(all('[data-tableplan]').length, 2);
-  change(q('#editorView'), 'all'); assert.equal(all('.scheme-group').length, 2);
+  assert.equal(all('.cfg-scheme-group').length, 1); assert.equal(all('[data-tableplan]').length, 2);
+  change(q('#editorView'), 'all'); assert.equal(all('.cfg-scheme-group').length, 2);
   assert.equal(all('[data-tableplan]').length, 4);
   q('[data-tableplan="3.3.3"]').click();
-  assert.match(q('#editorInspector').textContent, /Maven \/ 3\.3\.3/);
+  assert.match(q('.cfg-page-heading').textContent, /Maven/);assert.match(q('#editorInspector').getAttribute('aria-label'), /3\.3\.3/);assert.equal(q('.editor-right'),null);
 });
 check('Configuration exact string only changes selected scheme', () => {
   const exact = '  C:\\New\\Maven;Literal\\Value  ';
   input(q('#cfgDefault'), exact);
-  assert.equal(q('[data-tableplan="3.3.3"] td:last-child').textContent, exact);
-  assert.notEqual(q('[data-tableplan="3.9.11"] td:last-child').textContent, exact);
+  assert.equal(q('#cfgDefault').value, exact);assert.equal(w.eval('configVar().defaultValue'),exact);
+  assert.notEqual(w.eval('apps[editor.app].profiles.find(p=>p.name==="3.9.11").vars[0].defaultValue'),exact);
 });
 check('Raw TOML and differences remain available and labelled as demo', () => {
   q('[data-edtab="diff"]').click(); assert.match(q('#sourceText').textContent, /Literal/);

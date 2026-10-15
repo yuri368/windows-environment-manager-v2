@@ -141,13 +141,13 @@
 .pending-remove-token > .diff-value { text-decoration: line-through; text-decoration-thickness: 1px; text-decoration-color: var(--st-removed); }
 
 /* ---------- 联动：悬停/聚焦一个元素，其余对应项暗下去，当前项亮环 ---------- */
-.diff-token.is-related-highlight, .pending-add-token.is-related-highlight, .pending-remove-token.is-related-highlight {
+.diff-token:is(.is-related-highlight,.is-duplicate-highlight), .pending-add-token.is-related-highlight, .pending-remove-token.is-related-highlight {
   outline: 2px solid var(--ring); outline-offset: 2px; z-index: 3; animation: linkPing .2s var(--ease-out);
 }
 .diff-token:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; z-index: 3; }
 .element-dialog .raw-comparison .diff-token, .value-comparison .value-box .diff-token { transition: opacity .12s; }
-.element-dialog.is-linking .raw-comparison .diff-token:not(.is-related-highlight),
-.value-comparison.is-linking .value-box .diff-token:not(.is-related-highlight) { opacity: .42; }
+.element-dialog.is-linking .raw-comparison .diff-token:not(.is-related-highlight):not(.is-duplicate-highlight),
+.value-comparison.is-linking .value-box .diff-token:not(.is-related-highlight):not(.is-duplicate-highlight) { opacity: .42; }
 
 /* =====================================================================
    元素编辑器
@@ -206,7 +206,7 @@
 .element-row.is-replaced { --rail: var(--st-replaced); background: var(--st-replaced-bg); }
 .element-row.is-added { --rail: var(--st-added); background: var(--st-added-bg); }
 .element-row.is-added.is-manual-added { --rail: var(--st-manual-added-line); background: var(--st-manual-added-bg); }
-.element-row.is-related-highlight { box-shadow: inset 4px 0 0 var(--rail), inset 0 0 0 2px var(--ring); z-index: 2; }
+.element-row:is(.is-related-highlight,.is-duplicate-highlight) { box-shadow: inset 4px 0 0 var(--rail), inset 0 0 0 2px var(--ring); z-index: 2; }
 .element-order { grid-area: ord; align-self: start; display: grid; place-items: center; width: 26px; height: 26px; margin-top: 3px; border-radius: 7px; background: #eef2ef; color: #587063;
   font: 600 11.5px/1 var(--mono); font-variant-numeric: tabular-nums; text-align: center; transition: background-color .12s; }
 .element-row[draggable="true"] .element-order { cursor: grab; }
@@ -264,7 +264,7 @@
 .element-ghost-state .st-cell { width: 20px; }
 .element-ghost-state .st-cell .ic { width: 11px; height: 11px; }
 .element-ghost-note { font-size: 10.5px; color: #8d6a6a; }
-.element-ghost-row.is-related-highlight { z-index: 2; outline: 2px solid var(--ring); outline-offset: -3px; }
+.element-ghost-row:is(.is-related-highlight,.is-duplicate-highlight) { z-index: 2; outline: 2px solid var(--ring); outline-offset: -3px; }
 .element-ghost-row .element-actions { justify-content: flex-end; }
 
 /* ---------- 图标按钮：默认 / 悬停 / 按下 / 聚焦 / 禁用 统一 ---------- */
@@ -458,7 +458,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .backdrop.open .element-dialog, [class*="fx-"], [class*="fx-"]::before, [class*="fx-"] * { animation: none !important; }
-  .diff-token.is-related-highlight { animation: none; }
+  .diff-token:is(.is-related-highlight,.is-duplicate-highlight) { animation: none; }
   .element-drop-end { transition: none; }
 }
 

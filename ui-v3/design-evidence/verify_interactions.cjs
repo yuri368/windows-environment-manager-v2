@@ -6,7 +6,7 @@ const errors = [], checks = [], vc = new VirtualConsole();
 vc.on('jsdomError', e => errors.push(e.message));
 const dom = new JSDOM(fs.readFileSync(path.join(root, 'temp.html'), 'utf8'), {
   runScripts: 'dangerously', pretendToBeVisual: true, virtualConsole: vc,
-  beforeParse(w) {
+  beforeParse(w){ for(const configModule of ['config-format.js','config-editor.js'])w.eval(require('node:fs').readFileSync(require('node:path').resolve(__dirname,"..",configModule),'utf8'));
     w.eval(fs.readFileSync(path.join(__dirname,'../demo-plan.js'),'utf8')); w.eval(fs.readFileSync(path.join(root,'demo-configs.js'),'utf8')); w.eval(fs.readFileSync(path.join(root, 'windows-elements.js'), 'utf8')); }
 });
 const w = dom.window, doc = w.document;
@@ -65,7 +65,7 @@ check('Configuration navigation and All selector preserve their focus and curren
   assert.equal(doc.activeElement.getAttribute('aria-current'),'true');
   q('[data-editplan="3.3.3"]').click();assert.equal(doc.activeElement.dataset.editplan,'3.3.3');
   change(q('#editorView'),'all');assert.equal(doc.activeElement.id,'editorView');
-  const row=q('[data-tableplan="3.9.11"][data-tablevar="1"]');row.focus();key(row,' ');
+  const row=q('[data-tableplan="3.9.11"][data-tablevar="1"]');row.focus();assert.equal(row.tagName,'BUTTON');row.click();
   assert.equal(doc.activeElement.dataset.tableplan,'3.9.11');assert.equal(doc.activeElement.dataset.tablevar,'1');
   assert.equal(doc.activeElement.getAttribute('aria-current'),'true');
 });

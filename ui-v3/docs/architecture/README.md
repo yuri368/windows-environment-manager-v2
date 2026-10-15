@@ -33,3 +33,5 @@ Latest user comments 1–9: `GUI_STATUS_FOLLOWUP.txt` governs ghost movement cap
 Latest Windows page scope: `WINDOWS_SNAPSHOT_BOUNDARY.txt` supersedes prior inventory scheme overlays and direct-editor proposal context only. Workbench/preview, core plans and manual editor audit remain unchanged.
 
 History display linkage follows `HISTORY_ELEMENT_LINKAGE.txt`: reuse existing recorded element identity for before/after/detail highlighting; no model, Audit or business-rule changes.
+
+最新负责人配置与重复悬停需求：`CONFIG_INLINE_AND_DUPLICATE_HOVER.txt` 覆盖此前 TOML 暂缓及同 ID 限定的悬停展示说明；核心计划、Audit 与稳定身份规则保持。

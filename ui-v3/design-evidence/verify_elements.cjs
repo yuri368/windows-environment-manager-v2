@@ -9,7 +9,7 @@ const script = fs.readFileSync(path.join(root, 'windows-elements.js'), 'utf8');
 const errors = [], checks = [];
 const vc = new VirtualConsole(); vc.on('jsdomError', e => errors.push(e.message));
 const dom = new JSDOM(html, { runScripts: 'dangerously', pretendToBeVisual: true,
-  virtualConsole: vc, beforeParse(w) {
+  virtualConsole: vc, beforeParse(w){ for(const configModule of ['config-format.js','config-editor.js'])w.eval(require('node:fs').readFileSync(require('node:path').resolve(__dirname,"..",configModule),'utf8'));
     w.eval(fs.readFileSync(path.join(__dirname,'../demo-plan.js'),'utf8')); w.confirm = () => true; w.eval(fs.readFileSync(path.join(root,'demo-configs.js'),'utf8')); w.eval(script); } });
 const w = dom.window, doc = w.document;
 const q = s => doc.querySelector(s), all = s => [...doc.querySelectorAll(s)];
@@ -125,10 +125,10 @@ check('All schemes copy is simple and group headings separate name, count and fl
   q('#configBtn').click(); q('#editorView').value = 'all';
   q('#editorView').dispatchEvent(new w.Event('change', { bubbles: true }));
   assert.equal(q('#editorView option[value="all"]').textContent, '全部方案');
-  assert.equal(all('.scheme-heading').length, 2);
-  assert.equal(q('.scheme-name').textContent, '3.9.11');
-  assert.equal(q('.group-meta').textContent, '2 项变量');
-  assert.match(q('.scheme-flags').textContent, /默认方案.*当前编辑/);
+  assert.equal(all('.cfg-scheme-heading').length, 2);
+  assert.equal(q('.cfg-scheme-heading h3').textContent, '3.9.11');
+  assert.match(q('.cfg-scheme-heading > span').textContent, /2 项变量.*默认方案/);
+  assert.equal(q('[data-tableplan="3.9.11"][aria-current="true"]').getAttribute('aria-expanded'),'true');
 });
 check('Shared component and additional stylesheet are local; no UI runtime errors', () => {
   assert.deepEqual(errors, []);
