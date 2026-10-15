@@ -1,0 +1,10 @@
+{
+  "passed": 4,
+  "total": 4,
+  "checks": [
+    "Actual CRLF/CR preserved",
+    "After CRLF/CR preserved",
+    "Special local badge and stable accessible name",
+    "Special structure remains one token"
+  ]
+}

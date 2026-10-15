@@ -1,6 +1,7 @@
 /* Element editing and annotations are UI-only. Only serialized live rows are applied. */
 var WindowsElements = (() => {
   const escape = text => String(text ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const escapeRaw = value => escape(value).replace(/\r/g,'&#13;');
   let session = null, sequence = 0;
   const normalized = value => value.trim();
   const matches = (raw,values,whole) => DemoPlan.matches(raw,values,whole);
@@ -91,15 +92,14 @@ var WindowsElements = (() => {
   }
   // Generic read-only element stream for Windows inventory, history and config views.
   // This is presentation-only: it splits an existing raw value but never computes an apply result.
-  function staticMarkup(raw,{whole=false,keyPrefix='value',matchedValues=[]}={}){
-    if(raw===undefined)return '<span class="value-state-chip is-absent"><b class="ic ic-void"></b>变量不存在</span>';
+  function staticMarkup(raw,{whole=false}={}){
+    if(raw===undefined)return '<span class="value-state-chip is-absent">（不存在）</span>';
     const parts=whole?[raw]:String(raw).split(';'),counts=new Map();
-    if(!whole)parts.forEach(value=>counts.set(value,(counts.get(value)||0)+1));
+    parts.forEach(value=>counts.set(value,(counts.get(value)||0)+1));
+    // Numeric CR entities survive HTML parsing; raw whitespace remains display data only.
     return parts.map((value,index)=>{
-      const empty=value==='',matched=matchedValues.length>0&&matches(value,matchedValues,whole),kinds=empty?['empty']:[];
-      const classes=['diff-token','comparison-token','static-token',matched?'is-matched':''].filter(Boolean).join(' ');
-      const duplicate=!whole?duplicateLabel(counts.get(value)):'';
-      return `<span class="${classes}" tabindex="0" data-related-key="${escape(keyPrefix+':'+index)}"${empty?' data-empty="true"':''}>${plateMarkup(kinds)}<span class="diff-value" data-raw-value="${escape(value)}">${empty?'<span class="empty-element">'+(whole?'（空字符串）':'（空元素）')+'</span>':escape(value)}</span>${tailMarkup(duplicate)}</span>`;
+      const empty=value==='',duplicate=!whole?duplicateLabel(counts.get(value)):'';
+      return `<span class="diff-token static-token${empty?' is-empty':''}"${empty?' data-empty="true"':''}><span class="token-position" aria-label="第 ${index+1} 项">${index+1}</span><span class="diff-value" data-raw-value="${escapeRaw(value)}">${empty?'<span class="empty-element">'+(whole?'（空字符串）':'（空元素）')+'</span>':escapeRaw(value)}</span>${tailMarkup(duplicate)}</span>`;
     }).join('<span class="element-separator">;</span>');
   }
   // Display metadata comes from the frozen plan; it never supplies an apply result.
@@ -134,7 +134,7 @@ var WindowsElements = (() => {
         const classes=['diff-token','comparison-token',item.ghost?'is-ghost':'',removed?'is-removed':added?'is-added pending-add-token':item.wholeChange?'is-replaced':matched?'is-matched':''].filter(Boolean).join(' ');
         const label=removed?statusBadge('removed',item.ghost?'结果排除':'待删除',item.ghost?'removed':'pendingRemove'):added?statusBadge('pending-add','待追加','pendingAdd'):item.wholeChange?statusBadge('replaced','整体待替换'):issue?'<span class="diff-label is-retained">'+(issue.reason==='shared'?'共享保留':'删除需确认')+'</span>':'';
         const dup=!whole?duplicateLabel(counts.get(item.value)):'';
-        return '<span class="'+classes+'" tabindex="0" data-related-key="'+item.key+'"'+(item.value===''?' data-empty="true"':'')+(item.beforeIndex===undefined?'':' data-before-index="'+item.beforeIndex+'"')+'>'+'<span class="diff-value" data-raw-value="'+escape(item.value)+'">'+(item.value===''?'<span class="empty-element">'+(whole?'（空字符串）':'（空元素）')+'</span>':escape(item.value))+'</span>'+tailMarkup(valueHint(item.value,whole)+label+dup)+'</span>';
+        return '<span class="'+classes+'" tabindex="0" data-related-key="'+item.key+'"'+(item.value===''?' data-empty="true"':'')+(item.beforeIndex===undefined?'':' data-before-index="'+item.beforeIndex+'"')+'>'+'<span class="diff-value" data-raw-value="'+escapeRaw(item.value)+'">'+(item.value===''?'<span class="empty-element">'+(whole?'（空字符串）':'（空元素）')+'</span>':escapeRaw(item.value))+'</span>'+tailMarkup(valueHint(item.value,whole)+label+dup)+'</span>';
       }).join('<span class="element-separator">;</span>');
     };
     const tally=!active?'':whole?'<span class="tally tally-'+(after.some(item=>item.wholeChange)?'replace">整体替换':'keep">无变化')+'</span>'

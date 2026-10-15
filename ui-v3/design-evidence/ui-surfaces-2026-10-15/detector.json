@@ -1,0 +1,34 @@
+[
+  {
+    "antipattern": "low-contrast",
+    "name": "Low contrast text",
+    "description": "Text does not meet WCAG AA contrast requirements (4.5:1 for body, 3:1 for large text). Increase the contrast between text and background.",
+    "severity": "advisory",
+    "category": "quality",
+    "file": "H:\\Yuri368\\环境变量配置V3\\temp.html",
+    "line": 0,
+    "snippet": "4.46:1 (need 4.5:1) — text #6c7b71 on #ffffff",
+    "advisory": true
+  },
+  {
+    "antipattern": "side-tab",
+    "name": "Side-tab accent border",
+    "description": "Thick colored border on one side of a card — the most recognizable tell of AI-generated UIs. Use a subtler accent or remove it entirely.",
+    "severity": "warning",
+    "category": "slop",
+    "file": "H:\\Yuri368\\环境变量配置V3\\temp.html",
+    "line": 0,
+    "snippet": ".toast::after — absolute 3px pseudo-element stripe (bottom: 0)"
+  },
+  {
+    "antipattern": "repeating-stripes-gradient",
+    "name": "Repeating-gradient stripes",
+    "description": "Repeating-gradient stripes used as surface decoration are a recurring generated-UI signature. Reach for a deliberate texture or leave the surface plain.",
+    "severity": "advisory",
+    "category": "slop",
+    "file": "H:\\Yuri368\\环境变量配置V3\\temp.html",
+    "line": 0,
+    "snippet": "repeating-gradient decorative stripes",
+    "advisory": true
+  }
+]

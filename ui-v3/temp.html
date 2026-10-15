@@ -23,6 +23,7 @@
 <link rel="stylesheet" href="elements-ui.css?v=708d27af03c7">
 <link rel="stylesheet" href="shell-ui.css?v=180c0987749f">
 <link rel="stylesheet" href="fx-ui.css">
+<link rel="stylesheet" href="surface-ui.css?v=3da0a11aa3f5">
 </head>
 <body><div id="app">
 <header class="chrome"><span class="logo">≋</span><strong>环境变量方案管理器</strong><span class="sub mini">Compact UI · 交互演示</span><span class="prototype-mark">本地演示 · 未连接系统</span></header>
@@ -32,7 +33,7 @@
 </div><div class="backdrop" id="modal"></div><div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="demo-configs.js"></script>
 <script src="demo-plan.js"></script>
-<script src="windows-elements.js?v=8c643e9aa636"></script>
+<script src="windows-elements.js?v=c3b9036cb8d5"></script>
 <script>
 'use strict';
 const initialApps=[
@@ -286,30 +287,30 @@ function recordsFor(targets,kind){
 function valueStreamMarkup(content,className='',label='元素值'){
  return `<div class="value-stream ${className}" role="group" aria-label="${esc(label)}">${content}</div>`;
 }
-function rawStreamMarkup(raw,{whole=false,keyPrefix='raw',matchedValues=[],className='',label='元素值'}={}){
- return valueStreamMarkup(WindowsElements.staticMarkup(raw,{whole,keyPrefix,matchedValues}),className,label);
-}
-function planStreamMarkup(plan,side,className='',label='元素值'){
- const view=WindowsElements.comparisonMarkup(plan);
- return valueStreamMarkup(view[side],className,label);
+function rawStreamMarkup(raw,{whole=false,className='',label='元素值'}={}){
+ return valueStreamMarkup(WindowsElements.staticMarkup(raw,{whole}),className,label);
 }
 function decorateValueStreams(root,{play=true}={}){
  if(!root)return;
  root.querySelectorAll('.value-stream').forEach(stream=>{
-  [...stream.querySelectorAll('.diff-token,.value-state-chip')].forEach((token,index)=>token.style.setProperty('--token-i',index));
-  if(play){stream.classList.remove('fx-stream-enter');void stream.offsetWidth;stream.classList.add('fx-stream-enter');setTimeout(()=>stream.classList.remove('fx-stream-enter'),950)}
+  [...stream.querySelectorAll('.diff-token,.value-state-chip')].forEach((token,index)=>token.style.setProperty('--token-i',Math.min(index,7)));
+  if(play)stream.classList.add('fx-stream-enter');
  });
  root.querySelectorAll('.value-link-group').forEach(group=>WindowsElements.bindComparison(group));
+}
+function structureMarkup(raw,whole=false,label='值结构'){
+ const count=raw===undefined?0:whole?1:raw.split(';').length;
+ return `<details class="structure-details"><summary>${label}<span class="structure-count">${whole?'整体字符串':count+' 个元素'}</span></summary>${rawStreamMarkup(raw,{whole,label})}</details>`;
 }
 function previewRowMarkup(r,kind,index){
  const title=`${r.members.map(m=>esc(apps[m.app].name)+' / '+esc(m.profile)).join('、')} · ${esc(r.v.name)}`;
  const meta=`${r.v.scope==='User'?'用户':'系统'} · ${esc(r.members.length>1?'批量合并':MODE[r.v.mode])}`;
  const view=r.plan?WindowsElements.comparisonMarkup(r.plan):null;
- const before=valueStreamMarkup(view?view.actual:WindowsElements.staticMarkup(r.before,{whole:r.whole,keyPrefix:'preview:'+index+':before'}),'is-before','模拟当前');
- const after=kind==='应用'&&view?valueStreamMarkup(view.after,'is-after','目标结果'):`<div class="operation-note"><b class="ic ic-undo"></b><span>${esc(r.after===undefined?'（不存在）':r.after===''?'（空字符串）':r.after)}</span></div>`;
- return `<div class="diffrow value-link-group" style="--row-i:${index}"><div class="k">${title} <span class="sub mini">${meta}</span></div><div class="preview-flow"><section><span class="flow-label">模拟当前</span>${before}</section><i class="flow-arrow ic ic-arrow" aria-hidden="true"></i><section><span class="flow-label">${kind==='应用'?'目标结果':'操作说明'}</span>${after}</section></div>${r.plan&&planSummary(r.plan)?`<p class="plan-summary">${esc(planSummary(r.plan))}</p>`:''}</div>`;
+ const before=valueStreamMarkup(view?view.actual:WindowsElements.staticMarkup(r.before,{whole:r.whole}),'is-before','模拟当前');
+ const after=kind==='应用'&&view?valueStreamMarkup(view.after,'is-after','目标结果'):`<div class="operation-note"><b class="ic ic-undo" aria-hidden="true"></b><span>${esc(r.after)}</span></div>`;
+ return `<div class="diffrow value-link-group" data-preview-index="${index}"><div class="k">${title} <span class="sub mini">${meta}</span></div><div class="preview-flow"><section><span class="flow-label">模拟当前</span>${before}</section><i class="flow-arrow ic ic-arrow" aria-hidden="true"></i><section><span class="flow-label">${kind==='应用'?'目标结果 · 尚未应用':'操作说明'}</span>${after}</section></div>${view?'<p class="stream-help">悬停或聚焦铭牌，对照同一元素；划线项不计入最终值。</p>':''}<details class="raw-disclosure"><summary>完整原始字符串</summary><div class="pair del"><span>模拟当前</span><span data-preview-before></span></div><div class="pair add"><span>${kind==='应用'?'目标结果':'操作说明'}</span><span data-preview-after></span></div></details>${r.plan&&planSummary(r.plan)?`<p class="plan-summary">${esc(planSummary(r.plan))}</p>`:''}</div>`;
 }
-function showPreview(kind,title,targets){lastDialogFocus=document.activeElement?.closest('#revokeMenu')?$('revokeButton'):document.activeElement;closeDropdowns();const rows=recordsFor(targets,kind);modalAction={kind,targets,rows};const replacements=new Map();rows.forEach(r=>{if(kind!=='应用'||r.v.mode!=='replace'&&!r.v.special)return;const k=key(r.v);const s=replacements.get(k)||new Set();s.add(value(r.v));replacements.set(k,s)});const conflict=[...replacements.values()].some(s=>s.size>1);const invalidPlan=rows.some(r=>r.plan?.valid===false);modalAction.conflict=conflict||invalidPlan;const needsOrdering=rows.some(r=>kind==='应用'&&r.members.some(m=>m.v.mode==='append'));modalAction.needsOrdering=needsOrdering;const unchanged=rows.filter(r=>r.after===r.before).length;$('modal').innerHTML=`<div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialoghead"><div><h3 id="dialogTitle">${esc(title)}</h3><p>${targets.length} 条变量记录 · ${rows.length} 个目标 · ${unchanged} 条无需变化 · ${kind==='应用'?'将模拟应用到浏览器内存':'演示撤销流程与操作范围'}</p></div><button class="close" id="closeDialog" aria-label="关闭">×</button></div><div class="dialogbody">${needsOrdering?'<div class="banner warn">所选方案包含 append 自定义排序模式。本原型不实现完整排序确认，因此禁止模拟应用；正式应用必须先确认合并后的元素顺序。</div>':''}${invalidPlan?'<div class="banner warn">编辑基线已失效，或同一目标值存在冲突。本次不能确认；请返回对照区重新检测编辑基线。</div>':''}${conflict?'<div class="banner warn">检测到相同 Windows 环境变量的目标值存在冲突，演示中禁止确认。真实程序必须交由专门的共享冲突分析引擎处理。</div>':`<div class="banner">这是离线 UI 原型。${kind==='应用'?'确认后只更新页面中的模拟 Windows 环境。':'不具备真正的撤销日志，不会伪造精确的撤销结果。'}</div>`}${rows.map(r=>`<div class="diffrow"><div class="k">${r.members.map(m=>esc(apps[m.app].name)+' / '+esc(m.profile)).join('、')} · ${esc(r.v.name)} <span class="sub mini">${r.v.scope==='User'?'用户':'系统'} · ${esc(r.members.length>1?'批量合并':MODE[r.v.mode])}</span></div><div class="pair del"><span>模拟当前</span><span>${esc(r.before===undefined?'（不存在）':r.before)}</span></div><div class="pair add"><span>${kind==='应用'?'目标结果':'操作说明'}</span><span>${esc(r.after===undefined?'（不存在）':r.after===''?'（空字符串）':r.after)}</span></div>${r.plan&&planSummary(r.plan)?`<p class="plan-summary">${esc(planSummary(r.plan))}</p>`:''}</div>`).join('')}</div><div class="dialogfoot"><button class="btn" id="cancelDialog">取消</button><button class="btn primary" id="confirmDialog" ${conflict||invalidPlan||needsOrdering||kind==='撤销'?'disabled':''}>${kind==='应用'?'模拟确认应用':'需要真实操作日志'}</button></div></div>`;$('modal').classList.add('open');$('closeDialog').onclick=closeModal;$('cancelDialog').onclick=closeModal;$('confirmDialog').onclick=confirmPreview;$('closeDialog').focus()}
+function showPreview(kind,title,targets){lastDialogFocus=document.activeElement?.closest('#revokeMenu')?$('revokeButton'):document.activeElement;closeDropdowns();const rows=recordsFor(targets,kind);modalAction={kind,targets,rows};const replacements=new Map();rows.forEach(r=>{if(kind!=='应用'||r.v.mode!=='replace'&&!r.v.special)return;const k=key(r.v);const s=replacements.get(k)||new Set();s.add(value(r.v));replacements.set(k,s)});const conflict=[...replacements.values()].some(s=>s.size>1);const invalidPlan=rows.some(r=>r.plan?.valid===false);modalAction.conflict=conflict||invalidPlan;const needsOrdering=rows.some(r=>kind==='应用'&&r.members.some(m=>m.v.mode==='append'));modalAction.needsOrdering=needsOrdering;const unchanged=rows.filter(r=>r.after===r.before).length;$('modal').innerHTML=`<div class="dialog preview-dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialoghead"><div><h3 id="dialogTitle">${esc(title)}</h3><p>${targets.length} 条变量记录 · ${rows.length} 个目标 · ${unchanged} 条无需变化 · ${kind==='应用'?'将模拟应用到浏览器内存':'演示撤销流程与操作范围'}</p></div><button class="close" id="closeDialog" aria-label="关闭">×</button></div><div class="dialogbody">${needsOrdering?'<div class="banner warn">所选方案包含 append 自定义排序模式。本原型不实现完整排序确认，因此禁止模拟应用；正式应用必须先确认合并后的元素顺序。</div>':''}${invalidPlan?'<div class="banner warn">编辑基线已失效，或同一目标值存在冲突。本次不能确认；请返回对照区重新检测编辑基线。</div>':''}${conflict?'<div class="banner warn">检测到相同 Windows 环境变量的目标值存在冲突，演示中禁止确认。真实程序必须交由专门的共享冲突分析引擎处理。</div>':`<div class="banner">这是离线 UI 原型。${kind==='应用'?'确认后只更新页面中的模拟 Windows 环境。':'不具备真正的撤销日志，不会伪造精确的撤销结果。'}</div>`}${rows.map((r,index)=>previewRowMarkup(r,kind,index)).join('')}</div><div class="dialogfoot"><button class="btn" id="cancelDialog">取消</button><button class="btn primary" id="confirmDialog" ${conflict||invalidPlan||needsOrdering||kind==='撤销'?'disabled':''}>${kind==='应用'?'模拟确认应用':'需要真实操作日志'}</button></div></div>`;$('modal').querySelectorAll('[data-preview-index]').forEach(el=>{const r=rows[+el.dataset.previewIndex];el.querySelector('[data-preview-before]').textContent=r.before===undefined?'（不存在）':r.before;el.querySelector('[data-preview-after]').textContent=r.plan?.valid===false?'计划已失效，需要重新检测并预览':r.after===undefined?'（不存在）':r.after===''?'（空字符串）':r.after});decorateValueStreams($('modal'));$('modal').classList.add('open');$('closeDialog').onclick=closeModal;$('cancelDialog').onclick=closeModal;$('confirmDialog').onclick=confirmPreview;$('closeDialog').focus()}
 function closeModal(){const wasOpen=$('modal').classList.contains('open');$('modal').classList.remove('open');modalAction=null;WindowsElements.dismiss();if(wasOpen&&lastDialogFocus?.isConnected)lastDialogFocus.focus();lastDialogFocus=null}
 function confirmPreview(){
  if(!modalAction||modalAction.kind!=='应用'||modalAction.conflict||modalAction.needsOrdering)return;
@@ -331,9 +332,9 @@ function renderWindows() {
   const items=Object.keys(windows).sort();
   // Special is static variable metadata shared across profiles, not a selected scheme's plan.
   const wholeFor=k=>apps.some(a=>a.profiles.some(p=>p.vars.some(v=>key(v)===k&&v.special)));
-  $('screen').innerHTML=`<div class="fullpage" style="width:100%"><div class="pageh"><div><h2>Windows 环境</h2><p>当前演示快照 · 双击变量值直接编辑</p></div><span class="tag neutral">${items.length} 项变量</span></div>
+  $('screen').innerHTML=`<div class="fullpage windows-page" style="width:100%"><div class="pageh"><div><h2>Windows 环境</h2><p>当前演示快照 · 双击变量值直接编辑</p></div><span class="tag neutral">${items.length} 项变量</span></div>
     <table class="outline-table"><thead><tr><th style="width:130px">作用域</th><th style="width:155px">变量</th><th>模拟当前值</th><th style="width:86px">操作</th></tr></thead><tbody>${items.map(k=>
-      `<tr><td><span class="scope-chip" data-scope="${k.startsWith('User')?'user':'system'}">${k.startsWith('User')?'用户':'系统'}</span></td><td><strong>${esc(k.split('|')[1])}</strong></td><td><div class="codevalue inspect-editable" tabindex="0" role="button" aria-label="编辑 ${esc(k.split('|')[1])} 元素" title="双击直接编辑当前值（演示）" data-windows-value="${esc(k)}"></div></td><td><button class="textbtn" data-windows-edit="${esc(k)}">编辑</button></td></tr>`
+      `<tr><td><span class="scope-chip" data-scope="${k.startsWith('User')?'user':'system'}">${k.startsWith('User')?'用户':'系统'}</span></td><td><strong>${esc(k.split('|')[1])}</strong></td><td><div class="codevalue inspect-editable" tabindex="0" role="button" aria-label="编辑 ${esc(k.split('|')[1])} 元素" title="双击直接编辑当前值（演示）" data-windows-value="${esc(k)}"></div>${structureMarkup(windows[k],wholeFor(k),"快照结构")}</td><td><button class="textbtn" data-windows-edit="${esc(k)}">编辑</button></td></tr>`
     ).join('')}</tbody></table></div>`;
   const open=k=>{
     const [scope,name]=k.split('|');
@@ -349,7 +350,7 @@ function renderWindows() {
   });
   document.querySelectorAll('[data-windows-edit]').forEach(button=>button.onclick=()=>open(button.dataset.windowsEdit));
   $('footer').innerHTML=`<div class="footer-summary"><strong>Windows 环境（演示）</strong><small>当前快照与直接编辑 · 确认后仅更新演示数据</small></div><button class="btn" id="toWork">返回工作台</button>`;
-  $('toWork').onclick=()=>go('workbench');
+  $('toWork').onclick=()=>go('workbench');decorateValueStreams($('screen'),{play:false});
 }
 function changeCountText(counts){return [['added','新增'],['removed','删除'],['replaced','替换'],['moved','移动']].filter(([kind])=>counts[kind]).map(([kind,label])=>`${label} ${counts[kind]}`).join(' · ')||'整体值修改'}
 function historyValue(raw){return raw===undefined?'（不存在）':raw===''?'（空字符串）':esc(raw)}
@@ -360,12 +361,22 @@ function historyChangeMarkup(c){
     ${c.app?`<p class="history-source">来源：${esc(c.app)} / ${esc(c.profile)}</p>`:''}
     ${!c.elements&&c.operations?.length?`<p class="history-counts">${esc(planSummary(c.plan))}</p>`:''}
     ${c.counts&&!c.whole?`<p class="history-counts">${esc(changeCountText(c.counts))} <span class="sub mini">同一元素可同时计入替换与移动</span></p>`:''}
-    <div class="history-values"><div><span class="k">修改前</span><pre class="history-before">${historyValue(c.before)}</pre></div><div><span class="k">修改后</span><pre class="history-after">${historyValue(c.after)}</pre></div></div>
+    <div class="history-structure"><div><span class="flow-label">修改前 · 记录快照</span>${rawStreamMarkup(c.before,{whole:c.whole,label:"历史修改前"})}</div><div><span class="flow-label">修改后 · 记录快照</span>${rawStreamMarkup(c.after,{whole:c.whole,label:"历史修改后"})}</div></div><details class="raw-disclosure"><summary>完整原始字符串</summary><div class="history-values"><div><span class="k">修改前</span><pre class="history-before">${historyValue(c.before)}</pre></div><div><span class="k">修改后</span><pre class="history-after">${historyValue(c.after)}</pre></div></div></details>
     ${changed.length?`<table class="history-element-table"><thead><tr><th>位置（原 → 新）</th><th>状态</th><th>原元素</th><th>新元素</th></tr></thead><tbody>${changed.map(e=>`<tr><td>${e.beforeIndex===null?'—':e.beforeIndex+1} → ${e.afterIndex===null?'—':e.afterIndex+1}</td><td>${[['added','新增'],['removed','删除'],['replaced','替换'],['moved','移动']].filter(([kind])=>e[kind]).map(([kind,label])=>`<span class="diff-label is-${kind}">${label}</span>`).join('')}</td><td><code>${historyElementValue(e.before)}</code></td><td><code>${historyElementValue(e.after)}</code></td></tr>`).join('')}</tbody></table>`:''}
   </section>`;
 }
 function renderHistory(){
-  $('screen').innerHTML=`<div class="fullpage history-page" style="width:100%"><div class="pageh"><div><h2>操作历史</h2><p>本次浏览器会话中的模拟记录 · 展开查看修改前后与元素变化</p></div><span class="tag neutral">${history.length} 条记录</span></div><table class="outline-table"><thead><tr><th style="width:190px">时间</th><th style="width:160px">操作</th><th>描述与详情</th></tr></thead><tbody>${history.map(h=>`<tr><td><span class="time-dot" aria-hidden="true"></span>${esc(h.when)}</td><td><span class="act-chip">${esc(h.action)}</span></td><td>${h.changes?.length?`<details class="history-details"><summary>${esc(h.detail)}<span class="history-expand">查看详情</span></summary><div class="history-detail-body">${h.changes.map(historyChangeMarkup).join('')}<p class="sub mini">仅更新本页演示数据；此记录不提供真实环境恢复。</p></div></details>`:esc(h.detail)}</td></tr>`).join('')}</tbody></table></div>`;
+  $('screen').innerHTML=`<div class="fullpage history-page" style="width:100%"><div class="pageh"><div><h2>操作历史</h2><p>本次浏览器会话中的模拟记录 · 展开查看修改前后与元素变化</p></div><span class="tag neutral">${history.length} 条记录</span></div><table class="outline-table"><thead><tr><th style="width:190px">时间</th><th style="width:160px">操作</th><th>描述与详情</th></tr></thead><tbody>${history.map((h,historyIndex)=>`<tr data-history-index="${historyIndex}"><td><span class="time-dot" aria-hidden="true"></span>${esc(h.when)}</td><td><span class="act-chip">${esc(h.action)}</span></td><td>${h.changes?.length?`<details class="history-details"><summary>${esc(h.detail)}<span class="history-expand">查看详情</span></summary><div class="history-detail-body">${h.changes.map(historyChangeMarkup).join('')}<p class="sub mini">仅更新本页演示数据；此记录不提供真实环境恢复。</p></div></details>`:esc(h.detail)}</td></tr>`).join('')}</tbody></table></div>`;
+  $('screen').querySelectorAll('[data-history-index]').forEach(row=>{
+    const h=history[+row.dataset.historyIndex];
+    row.querySelectorAll('.history-change').forEach((section,index)=>{
+      const c=h.changes[index];
+      section.querySelector('.history-before').textContent=c.before===undefined?'（不存在）':c.before===''?'（空字符串）':c.before;
+      section.querySelector('.history-after').textContent=c.after===undefined?'（不存在）':c.after===''?'（空字符串）':c.after;
+    });
+    const details=row.querySelector('.history-details');
+    if(details)details.addEventListener('toggle',()=>{const caption=details.querySelector('.history-expand');caption.textContent=details.open?'收起详情':'查看详情';if(details.open)decorateValueStreams(details)});
+  });
   $('footer').innerHTML=`<div class="footer-summary"><strong>模拟操作日志</strong><small>这里不代表真实软件的可撤销历史</small></div><button class="btn" id="toWork">返回工作台</button>`;$('toWork').onclick=()=>go('workbench');
 }
 function configProfile(){const a=apps[editor.app];return a.profiles.find(p=>p.name===editor.profile)||a.profiles[0]}
@@ -449,8 +460,19 @@ function renderEditorBody(focusId) {
   renderEditorInspector();updateConfigStatus();
   if (focusId) $(focusId)?.focus();
 }
-function renderEditorInspector(){const v=configVar();$('editorInspector').innerHTML=`<h3>${esc(v.name)}</h3><div class="inspector-context">${esc(apps[editor.app].name)} / ${esc(configProfile().name)} · 变量属性</div><div class="field"><label for="cfgName">变量名</label><input id="cfgName" value="${esc(v.name)}" disabled title="演示中变量名固定，不支持重命名"></div><div class="field"><label for="cfgScope">作用域</label><select id="cfgScope"><option value="User" ${v.scope==='User'?'selected':''}>用户 (User)</option><option value="System" ${v.scope==='System'?'selected':''}>系统 (System)</option></select></div><div class="field"><label for="cfgMode">模式</label><select id="cfgMode">${Object.entries(MODE).map(([k,x])=>`<option value="${k}" ${v.mode===k?'selected':''} ${v.special&&k!=='replace'?'disabled':''}>${esc(k)} · ${x}</option>`).join('')}</select></div><div class="field"><label for="cfgDefault">默认值（保留原始字符串）</label><textarea id="cfgDefault" spellcheck="false">${esc(v.defaultValue)}</textarea></div><div class="field"><label for="cfgSaved">已保存值（只读演示数据）</label><input id="cfgSaved" value="${esc(v.savedValue??'（无）')}" disabled></div><div class="field"><label for="cfgSource">当前选定值来源</label><input id="cfgSource" value="${esc(v.source)}" disabled></div><label class="checklabel" style="margin-top:5px"><input type="checkbox" id="cfgSpecial" ${v.special?'checked':''}>特殊变量 (Special)</label><p class="helpnote">特殊变量的值作为一个整体处理。配置修改保留在此演示状态中，可以导出为新 TOML 文件。工作台使用“默认值”来源时会跟随此处默认值修改；其他来源保持原选定值，仍需预览确认才更新演示环境。</p>`;
- $('cfgScope').onchange=e=>{v.matchBaseline=null;v.scope=e.target.value;renderEditorBody('cfgScope')};$('cfgMode').onchange=e=>{v.matchBaseline=null;v.mode=e.target.value;renderEditorBody('cfgMode')};$('cfgDefault').oninput=e=>{if(v.source==='默认值')beginSelectedEdit(v,e.target.value);v.defaultValue=e.target.value;v.dirty=hasPendingValue(v);const trs=document.querySelectorAll('[data-tableplan]');trs.forEach(tr=>{if(tr.dataset.tableplan===configProfile().name&&+tr.dataset.tablevar===editor.varIdx){const td=tr.lastElementChild;td.textContent=v.defaultValue;td.title=v.defaultValue}});updateConfigStatus()};$('cfgSpecial').onchange=e=>{v.matchBaseline=null;v.special=e.target.checked;if(v.special)v.mode='replace';renderEditorBody('cfgSpecial')}}
+function renderEditorInspector(){const v=configVar();$('editorInspector').innerHTML=`<h3>${esc(v.name)}</h3><div class="inspector-context">${esc(apps[editor.app].name)} / ${esc(configProfile().name)} · 变量属性</div><div class="field"><label for="cfgName">变量名</label><input id="cfgName" value="${esc(v.name)}" disabled title="演示中变量名固定，不支持重命名"></div><div class="field"><label for="cfgScope">作用域</label><select id="cfgScope"><option value="User" ${v.scope==='User'?'selected':''}>用户 (User)</option><option value="System" ${v.scope==='System'?'selected':''}>系统 (System)</option></select></div><div class="field"><label for="cfgMode">模式</label><select id="cfgMode">${Object.entries(MODE).map(([k,x])=>`<option value="${k}" ${v.mode===k?'selected':''} ${v.special&&k!=='replace'?'disabled':''}>${esc(k)} · ${x}</option>`).join('')}</select></div><div class="field"><label for="cfgDefault">默认值（保留原始字符串）</label><textarea id="cfgDefault" spellcheck="false">${esc(v.defaultValue)}</textarea></div><section class="config-structure"><div class="structure-heading"><strong>默认值结构</strong><span id="configStructureCount"></span></div><div id="configValueStructure"></div><p class="stream-help">结构预览随输入更新，编辑内容仍以原始字符串保存。</p></section><div class="field"><label for="cfgSaved">已保存值（只读演示数据）</label><input id="cfgSaved" value="${esc(v.savedValue??'（无）')}" disabled></div><div class="field"><label for="cfgSource">当前选定值来源</label><input id="cfgSource" value="${esc(v.source)}" disabled></div><label class="checklabel" for="cfgSpecial" style="margin-top:5px"><input type="checkbox" id="cfgSpecial" ${v.special?'checked':''}>特殊变量 (Special)</label><p class="helpnote">特殊变量的值作为一个整体处理。配置修改保留在此演示状态中，可以导出为新 TOML 文件。工作台使用“默认值”来源时会跟随此处默认值修改；其他来源保持原选定值，仍需预览确认才更新演示环境。</p>`;
+ $('cfgScope').onchange=e=>{v.matchBaseline=null;v.scope=e.target.value;renderEditorBody('cfgScope')};$('cfgMode').onchange=e=>{v.matchBaseline=null;v.mode=e.target.value;renderEditorBody('cfgMode')};$('cfgDefault').oninput=e=>{if(v.source==='默认值')beginSelectedEdit(v,e.target.value);v.defaultValue=e.target.value;v.dirty=hasPendingValue(v);const trs=document.querySelectorAll('[data-tableplan]');trs.forEach(tr=>{if(tr.dataset.tableplan===configProfile().name&&+tr.dataset.tablevar===editor.varIdx){const td=tr.lastElementChild;td.textContent=v.defaultValue;td.title=v.defaultValue}});updateConfigStatus();updateConfigStructure(false)};$('cfgSpecial').onchange=e=>{v.matchBaseline=null;v.special=e.target.checked;if(v.special)v.mode='replace';renderEditorBody('cfgSpecial')};updateConfigStructure(true)}
+function updateConfigStructure(play=false){
+ const v=configVar(),root=$('configValueStructure');if(!root)return;
+ root.innerHTML=rawStreamMarkup(v.defaultValue,{whole:v.special,label:'默认值结构预览'});
+ $('configStructureCount').textContent=v.special?'整体字符串':v.defaultValue.split(';').length+' 个元素';
+ const changes=configChanges().filter(c=>c.app===apps[editor.app].name&&c.profile===configProfile().name&&c.name===v.name);
+ for(const [field,id] of [['defaultValue','cfgDefault'],['scope','cfgScope'],['mode','cfgMode'],['special','cfgSpecial']]){
+   const control=$(id),changed=changes.some(c=>c.field===field);control.classList.toggle('is-config-edited',changed);
+   const label=$('editorInspector').querySelector(`label[for="${id}"]`);if(label){control.setAttribute('aria-label',label.textContent.trim());label.classList.toggle('is-config-edited',changed);}
+ }
+ decorateValueStreams(root,{play});
+}
 function tomlQuote(s){return '"'+String(s).replace(/\\/g,'\\\\').replace(/"/g,'\\"').replace(/\r/g,'\\r').replace(/\n/g,'\\n')+'"'}
 function generateToml(){let out=['# 由 Compact UI 演示生成（示例结构，非仓库配置格式的正式序列化）',''];apps.forEach(a=>{out.push('# '+a.name);a.profiles.forEach(p=>{out.push('[[application]]');out.push('name = '+tomlQuote(a.name));out.push('profile = '+tomlQuote(p.name));out.push('default_profile = '+(a.default===p.name?'true':'false'));p.vars.forEach(v=>{out.push('[[application.variable]]');out.push('name = '+tomlQuote(v.name));out.push('scope = '+tomlQuote(v.scope));out.push('mode = '+tomlQuote(v.mode));out.push('default_value = '+tomlQuote(v.defaultValue));if(v.special)out.push('special = true')});out.push('')})});return out.join('\n')}
 function generateDiff() {
