@@ -23,7 +23,7 @@
 <link rel="stylesheet" href="elements-ui.css?v=708d27af03c7">
 <link rel="stylesheet" href="shell-ui.css?v=180c0987749f">
 <link rel="stylesheet" href="fx-ui.css">
-<link rel="stylesheet" href="surface-ui.css?v=ca0ca7e61dd7">
+<link rel="stylesheet" href="surface-ui.css?v=32b296025cf5">
 </head>
 <body><div id="app">
 <header class="chrome"><span class="logo">≋</span><strong>环境变量方案管理器</strong><span class="sub mini">Compact UI · 交互演示</span><span class="prototype-mark">本地演示 · 未连接系统</span></header>
@@ -33,7 +33,7 @@
 </div><div class="backdrop" id="modal"></div><div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="demo-configs.js"></script>
 <script src="demo-plan.js"></script>
-<script src="windows-elements.js?v=c3b9036cb8d5"></script>
+<script src="windows-elements.js?v=ab4c2e8b0531"></script>
 <script>
 'use strict';
 const initialApps=[
@@ -309,20 +309,26 @@ function recordsFor(targets,kind){
 function valueStreamMarkup(content,className='',label='元素值'){
  return `<div class="value-stream ${className}" role="group" aria-label="${esc(label)}">${content}</div>`;
 }
-function rawStreamMarkup(raw,{whole=false,className='',label='元素值'}={}){
- return valueStreamMarkup(WindowsElements.staticMarkup(raw,{whole}),className,label);
+function rawStreamMarkup(raw,{whole=false,comparison=false,className='',label='元素值'}={}){
+ return valueStreamMarkup(WindowsElements.staticMarkup(raw,{whole,comparison}),className,label);
 }
 function decorateValueStreams(root,{play=true}={}){
  if(!root)return;
  root.querySelectorAll('.value-stream').forEach(stream=>{
   [...stream.querySelectorAll('.diff-token,.value-state-chip')].forEach((token,index)=>token.style.setProperty('--token-i',Math.min(index,7)));
   if(play)stream.classList.add('fx-stream-enter');
+  const tokens=[...stream.querySelectorAll('.comparison-static-token')];
+  if(tokens.length){
+   WindowsElements.bindComparison(stream);
+   stream.onfocusin=e=>{const token=e.target.closest('.comparison-static-token');if(token)tokens.forEach(item=>item.tabIndex=item===token?0:-1)};
+   stream.onkeydown=e=>{
+    if(e.altKey||e.ctrlKey||e.metaKey||e.shiftKey||!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End'].includes(e.key))return;
+    const token=e.target.closest('.comparison-static-token'),at=tokens.indexOf(token);if(at<0)return;
+    e.preventDefault();const next=e.key==='Home'?0:e.key==='End'?tokens.length-1:Math.max(0,Math.min(tokens.length-1,at+(['ArrowRight','ArrowDown'].includes(e.key)?1:-1)));tokens[next].focus();
+   };
+  }
  });
  root.querySelectorAll('.value-link-group').forEach(group=>WindowsElements.bindComparison(group));
-}
-function structureMarkup(raw,whole=false,label='值结构'){
- const count=raw===undefined?0:whole?1:raw.split(';').length;
- return `<details class="structure-details"><summary>${label}<span class="structure-count">${whole?'整体字符串':count+' 个元素'}</span></summary>${rawStreamMarkup(raw,{whole,label})}</details>`;
 }
 function previewRowMarkup(r,kind,index){
  const title=`${r.members.map(m=>esc(apps[m.app].name)+' / '+esc(m.profile)).join('、')} · ${esc(r.v.name)}`;
@@ -352,26 +358,27 @@ function confirmPreview(){
 }
 function renderWindows() {
   const items=Object.keys(windows).sort();
-  // Special is static variable metadata shared across profiles, not a selected scheme's plan.
   const wholeFor=k=>apps.some(a=>a.profiles.some(p=>p.vars.some(v=>key(v)===k&&v.special)));
-  $('screen').innerHTML=`<div class="fullpage windows-page" style="width:100%"><div class="pageh"><div><h2>Windows 环境</h2><p>当前演示快照 · 双击变量值直接编辑</p></div><span class="tag neutral">${items.length} 项变量</span></div>
-    <table class="outline-table"><thead><tr><th style="width:130px">作用域</th><th style="width:155px">变量</th><th>模拟当前值</th><th style="width:86px">操作</th></tr></thead><tbody>${items.map(k=>
-      `<tr><td><span class="scope-chip" data-scope="${k.startsWith('User')?'user':'system'}">${k.startsWith('User')?'用户':'系统'}</span></td><td><strong>${esc(k.split('|')[1])}</strong></td><td><div class="codevalue inspect-editable" tabindex="0" role="button" aria-label="编辑 ${esc(k.split('|')[1])} 元素" title="双击直接编辑当前值（演示）" data-windows-value="${esc(k)}"></div>${structureMarkup(windows[k],wholeFor(k),"快照结构")}</td><td><button class="textbtn" data-windows-edit="${esc(k)}">编辑</button></td></tr>`
+  $('screen').innerHTML=`<div class="fullpage windows-page" style="width:100%"><div class="pageh"><div><h2>Windows 环境</h2><p>点击元素直接编辑 · 方向键定位元素</p></div><span class="tag neutral">${items.length} 项变量</span></div>
+    <table class="outline-table"><thead><tr><th style="width:100px">作用域</th><th style="width:190px">变量</th><th>模拟当前值</th><th style="width:96px">操作</th></tr></thead><tbody>${items.map((k,index)=>
+      `<tr><td><span class="scope-chip" data-scope="${k.startsWith('User')?'user':'system'}">${k.startsWith('User')?'用户':'系统'}</span></td><td><strong>${esc(k.split('|')[1])}</strong></td><td><div class="codevalue value-stream windows-current" tabindex="-1" role="group" aria-label="${esc(k.split('|')[1])} 当前值" data-windows-value="${esc(k)}">${WindowsElements.staticMarkup(windows[k],{whole:wholeFor(k),comparison:true,interactive:true})}</div><pre class="windows-raw-value" id="windowsRaw${index}" data-windows-raw="${esc(k)}" hidden></pre></td><td class="windows-actions"><button class="textbtn" data-windows-edit="${esc(k)}">编辑</button><button class="textbtn" data-windows-show-raw="${esc(k)}" aria-controls="windowsRaw${index}" aria-expanded="false">原文</button></td></tr>`
     ).join('')}</tbody></table></div>`;
-  const open=k=>{
-    const [scope,name]=k.split('|');
-    openWindowsElements(scope,name,[],wholeFor(k));
+  const open=(k,index=null)=>{
+    const [scope,name]=k.split('|');openWindowsElements(scope,name,[],wholeFor(k));
+    if(index!==null)$('modal').querySelectorAll('.element-row .element-input')[index]?.focus();
   };
-  document.querySelectorAll('[data-windows-value]').forEach(el=>{
-    const raw=windows[el.dataset.windowsValue];
-    // textContent preserves the snapshot verbatim, including CRLF, without HTML parsing.
-    if(raw==='')el.innerHTML='<span class="empty-element">（空字符串）</span>';
-    else el.textContent=raw;
-    el.ondblclick=()=>open(el.dataset.windowsValue);
-    el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open(el.dataset.windowsValue)}};
+  $('screen').querySelectorAll('[data-windows-value]').forEach(el=>{
+    const k=el.dataset.windowsValue;
+    el.closest('tr').querySelector('[data-windows-raw]').textContent=windows[k];
+    el.querySelectorAll('[data-value-index]').forEach(token=>token.onclick=()=>open(k,+token.dataset.valueIndex));
+    el.ondblclick=e=>{if(!e.target.closest('[data-value-index]'))open(k)};
+    el.addEventListener('keydown',e=>{if(e.target===el&&(e.key==='Enter'||e.key===' ')){e.preventDefault();open(k)}});
   });
-  document.querySelectorAll('[data-windows-edit]').forEach(button=>button.onclick=()=>open(button.dataset.windowsEdit));
-  $('footer').innerHTML=`<div class="footer-summary"><strong>Windows 环境（演示）</strong><small>当前快照与直接编辑 · 确认后仅更新演示数据</small></div><button class="btn" id="toWork">返回工作台</button>`;
+  $('screen').querySelectorAll('[data-windows-edit]').forEach(button=>button.onclick=()=>open(button.dataset.windowsEdit));
+  $('screen').querySelectorAll('[data-windows-show-raw]').forEach(button=>button.onclick=()=>{
+    const raw=button.closest('tr').querySelector('[data-windows-raw]'),expanded=raw.hidden;raw.hidden=!expanded;button.setAttribute('aria-expanded',String(expanded));button.textContent=expanded?'收起原文':'原文';
+  });
+  $('footer').innerHTML=`<div class="footer-summary"><strong>Windows 环境（演示）</strong><small>直接编辑当前值 · 确认后仅更新演示数据</small></div><button class="btn" id="toWork">返回工作台</button>`;
   $('toWork').onclick=()=>go('workbench');decorateValueStreams($('screen'),{play:false});
 }
 function changeCountText(counts){return [['added','新增'],['removed','删除'],['replaced','替换'],['moved','移动']].filter(([kind])=>counts[kind]).map(([kind,label])=>`${label} ${counts[kind]}`).join(' · ')||'整体值修改'}
@@ -383,7 +390,7 @@ function historyChangeMarkup(c){
     ${c.app?`<p class="history-source">来源：${esc(c.app)} / ${esc(c.profile)}</p>`:''}
     ${!c.elements&&c.operations?.length?`<p class="history-counts">${esc(planSummary(c.plan))}</p>`:''}
     ${c.counts&&!c.whole?`<p class="history-counts">${esc(changeCountText(c.counts))} <span class="sub mini">同一元素可同时计入替换与移动</span></p>`:''}
-    <div class="history-structure"><div><span class="flow-label">修改前 · 记录快照</span>${rawStreamMarkup(c.before,{whole:c.whole,label:"历史修改前"})}</div><div><span class="flow-label">修改后 · 记录快照</span>${rawStreamMarkup(c.after,{whole:c.whole,label:"历史修改后"})}</div></div><details class="raw-disclosure"><summary>完整原始字符串</summary><div class="history-values"><div><span class="k">修改前</span><pre class="history-before">${historyValue(c.before)}</pre></div><div><span class="k">修改后</span><pre class="history-after">${historyValue(c.after)}</pre></div></div></details>
+    <div class="history-structure"><div><span class="flow-label">修改前 · 记录快照</span>${rawStreamMarkup(c.before,{whole:c.whole,comparison:true,label:"历史修改前"})}</div><div><span class="flow-label">修改后 · 记录快照</span>${rawStreamMarkup(c.after,{whole:c.whole,comparison:true,label:"历史修改后"})}</div></div><details class="raw-disclosure"><summary>完整原始字符串</summary><div class="history-values"><div><span class="k">修改前</span><pre class="history-before">${historyValue(c.before)}</pre></div><div><span class="k">修改后</span><pre class="history-after">${historyValue(c.after)}</pre></div></div></details>
     ${changed.length?`<table class="history-element-table"><thead><tr><th>位置（原 → 新）</th><th>状态</th><th>原元素</th><th>新元素</th></tr></thead><tbody>${changed.map(e=>`<tr><td>${e.beforeIndex===null?'—':e.beforeIndex+1} → ${e.afterIndex===null?'—':e.afterIndex+1}</td><td>${[['added','新增'],['removed','删除'],['replaced','替换'],['moved','移动']].filter(([kind])=>e[kind]).map(([kind,label])=>`<span class="diff-label is-${kind}">${label}</span>`).join('')}</td><td><code>${historyElementValue(e.before)}</code></td><td><code>${historyElementValue(e.after)}</code></td></tr>`).join('')}</tbody></table>`:''}
   </section>`;
 }

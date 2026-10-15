@@ -60,7 +60,7 @@ check('Explicit workbench edit button provides a discoverable alternative', () =
 });
 check('Windows table shows snapshot without scheme highlights and shares the direct editor', () => {
   q('[data-view="windows"]').click(); const el = q('[data-windows-value="User|PATH"]');
-  assert.equal(el.textContent, raw()); assert.equal(el.querySelectorAll('mark').length, 0);
+  assert.equal(q('[data-windows-raw="User|PATH"]').textContent, raw()); assert.equal(el.querySelectorAll('mark').length, 0);
   dbl(el); assert.ok(q('.element-dialog')); assert.equal(values().join(';'), raw()); cancel();
   q('[data-windows-edit="User|PATH"]').click(); assert.ok(q('.element-dialog')); cancel();
 });
@@ -99,7 +99,7 @@ check('Apply updates only demo snapshot, keeps raw order, and records a demo his
   const configBefore = w.eval('JSON.stringify(apps)'); const expected = values().join(';');
   q('#applyElements').click(); assert.equal(raw(), expected);
   assert.equal(q('#modal').classList.contains('open'), false);
-  assert.equal(q('[data-windows-value="User|PATH"]').textContent, expected);
+  assert.equal(q('[data-windows-raw="User|PATH"]').textContent, expected);
   assert.equal(w.eval('JSON.stringify(apps)'), configBefore);
   assert.match(w.eval('history[0].detail'), /仅更新页面数据/);
   assert.equal(doc.activeElement.dataset.windowsEdit, 'User|PATH');

@@ -17,6 +17,7 @@ const windowsState=()=>ev('JSON.stringify(windows)');
 const visible=node=>!!node&&!node.closest('[hidden]')&&w.getComputedStyle(node).display!=='none';
 const targetNode=(selector,target)=>all(selector).find(n=>(n.dataset.windowsValue??n.dataset.windowsEdit)===target);
 const pageValue=target=>targetNode('[data-windows-value]',target);
+const pageRaw=target=>all('[data-windows-raw]').find(node=>node.dataset.windowsRaw===target).textContent;
 function setup(raw='X;A;C;Y',old='A;C',desired='A;E'){
  ev('closeModal();reset(true)');opened.length=0;
  ev('selected=1;focusedVariable=1;const v=scheme(1).vars[1];v.defaultValue='+JSON.stringify(old)+';v.baselineValue=v.defaultValue;v.mode="-append";windows["User|PATH"]='+JSON.stringify(raw)+';render()');
@@ -52,9 +53,42 @@ function declare(scope,name,special,profile=1){
 }
 check('Windows page shows escaped snapshot text with original spaces and CRLF, without scheme overlays',()=>{
  const raw='  <img src=x onerror="evil()"> & \'quoted\'\r\nnext\rline\nlast ;;A;A; ';setup(raw);
- assert.equal(pageValue('User|PATH').textContent,raw);assert.equal(pageValue('User|PATH').querySelector('img,script,mark'),null);
+ assert.equal(pageRaw('User|PATH'),raw);assert.equal(pageValue('User|PATH').querySelector('img,script,mark'),null);
  assert.equal(all('#screen mark,#screen .pending-add,#screen .pending-remove,#screen .pending-elements,#screen .match-legend,#screen .is-matched,#screen .is-conflict').length,0);
  assert.doesNotMatch(q('#screen').textContent,/高亮为当前准备方案|建议追加|建议删除|待追加|待删除|方案冲突/);
+});
+check('Current values use comparison plates directly; raw text starts collapsed without a second structure layer',()=>{
+ setup(' A\r\nB;;A;A;');const host=pageValue('User|PATH');
+ assert.deepEqual(Array.from(host.querySelectorAll('[data-raw-value]'),n=>n.dataset.rawValue),[' A\r\nB','','A','A','']);
+ assert.equal(host.querySelectorAll('.comparison-static-token').length,5);
+ assert.equal(host.querySelectorAll('.token-position').length,0);
+ assert.equal(host.querySelectorAll('.comparison-static-token.is-duplicate').length,4);
+ assert.ok(all('[data-windows-raw]').every(n=>n.hidden));
+ assert.doesNotMatch(q('#screen').textContent,/快照结构/);
+});
+check('Raw disclosure keeps exact whitespace and line endings and updates its accessible state',()=>{
+ const raw=' \tA\r\nB;;A;';setup(raw);const button=all('[data-windows-show-raw]').find(n=>n.dataset.windowsShowRaw==='User|PATH'),pre=w.document.getElementById(button.getAttribute('aria-controls'));
+ button.click();assert.equal(pre.hidden,false);assert.equal(pre.textContent,raw);assert.equal(button.getAttribute('aria-expanded'),'true');assert.equal(button.textContent,'收起原文');
+ button.click();assert.equal(pre.hidden,true);assert.equal(button.getAttribute('aria-expanded'),'false');assert.equal(button.textContent,'原文');
+});
+check('Arrow and Home/End navigation select occurrences without changing snapshot or opening an editor',()=>{
+ setup('A;;A;');const before=windowsState(),tokens=Array.from(pageValue('User|PATH').querySelectorAll('button'));
+ const key=k=>w.document.activeElement.dispatchEvent(new w.KeyboardEvent('keydown',{key:k,bubbles:true,cancelable:true}));
+ tokens[0].focus();key('ArrowRight');assert.equal(w.document.activeElement,tokens[1]);key('End');assert.equal(w.document.activeElement,tokens[3]);key('Home');assert.equal(w.document.activeElement,tokens[0]);
+ assert.deepEqual(tokens.map(n=>n.tabIndex),[0,-1,-1,-1]);assert.equal(windowsState(),before);assert.equal(opened.length,0);
+});
+check('Clicking the second duplicate opens and focuses its exact occurrence; Cancel preserves the value',()=>{
+ setup('A;;A;B');const before=windowsState(),tokens=pageValue('User|PATH').querySelectorAll('button');
+ tokens[2].click();assertIndependentOptions(opened.at(-1));assert.equal(w.document.activeElement,rows()[2].querySelector('.element-input'));
+ setInput(w.document.activeElement,'SECOND');assert.equal(serialized(),'A;;SECOND;B');q('#cancelDialog').click();assert.equal(windowsState(),before);
+});
+check('Static comparison focus highlights only the selected occurrence, including duplicate values',()=>{
+ setup('A;;A');const host=pageValue('User|PATH'),tokens=host.querySelectorAll('button');tokens[2].focus();
+ assert.equal(host.querySelectorAll('.is-related-highlight').length,1);assert.ok(tokens[2].classList.contains('is-related-highlight'));assert.ok(!tokens[0].classList.contains('is-related-highlight'));
+});
+check('Whole Special strings keep one comparison plate even when they contain semicolons',()=>{
+ setup();declare('User','SNAPSHOT_COMMAND',true);ev('windows["User|SNAPSHOT_COMMAND"]="CMD;ARGS";render()');
+ const host=pageValue('User|SNAPSHOT_COMMAND');assert.equal(host.querySelectorAll('button').length,1);assert.equal(host.querySelector('[data-raw-value]').dataset.rawValue,'CMD;ARGS');host.querySelector('button').click();assert.equal(rows().length,1);assert.equal(w.document.activeElement,rows()[0].querySelector('.element-input'));
 });
 check('Empty Windows string remains an existing editable value rather than a missing variable',()=>{
  setup('');assert.ok(pageValue('User|PATH'));const o=enter();assertIndependentOptions(o);assert.deepEqual(values(),['']);assert.equal(serialized(),'');assert.ok(q('#applyElements').disabled);noSchemeContext();
@@ -75,7 +109,7 @@ check('Windows renderer and entry do not consult current scheme or selected-valu
 check('Inactive-profile Special declaration with case-insensitive same scope/name keeps command semicolons whole',()=>{
  setup();declare('User','snapshot_command',true);const raw='  tool.exe --require "C:\\工具\\init;local.js"; echo done\r\n  tail  ';
  ev('windows["User|SNAPSHOT_COMMAND"]='+JSON.stringify(raw)+';render()');
- assert.equal(pageValue('User|SNAPSHOT_COMMAND').textContent,raw);const o=enter('User|SNAPSHOT_COMMAND');assertIndependentOptions(o,'User|SNAPSHOT_COMMAND');assert.equal(o.whole,true);assert.equal(rows().length,1);assert.equal(serialized(),raw);noSchemeContext();
+ assert.equal(pageRaw('User|SNAPSHOT_COMMAND'),raw);const o=enter('User|SNAPSHOT_COMMAND');assertIndependentOptions(o,'User|SNAPSHOT_COMMAND');assert.equal(o.whole,true);assert.equal(rows().length,1);assert.equal(serialized(),raw);noSchemeContext();
 });
 check('Consistent Special declarations across apps keep whole-string editing independent of selection',()=>{
  setup();declare('User','SNAPSHOT_COMMAND',true,0);declare('User','SNAPSHOT_COMMAND',true,1);
@@ -138,7 +172,7 @@ check('Workbench batch preview still blocks incompatible Special and ordinary ta
  const p=ev('modalAction.rows.find(r=>r.v.scope==="User"&&r.v.name.toUpperCase()==="PATH").plan');assert.equal(p.valid,false);assert.ok(Array.from(p.issues).some(issue=>issue.reason==='conflict'));assert.ok(q('#confirmDialog').disabled);q('#cancelDialog').click();
 });
 check('Windows page remains independent even when selected workbench draft has stale baseline',()=>{
- setup();ev('windows["User|PATH"]="EXTERNAL;RAW";targetRevisions["User|PATH"]=1;render()');assert.equal(pageValue('User|PATH').textContent,'EXTERNAL;RAW');assert.doesNotMatch(q('#screen').textContent,/计划已失效|方案建议已失效|冲突/);assertIndependentOptions(enter());noSchemeContext();setInput(rows()[0].querySelector('.element-input'),'DIRECT');q('#applyElements').click();assert.equal(ev('windows["User|PATH"]'),'DIRECT;RAW');
+ setup();ev('windows["User|PATH"]="EXTERNAL;RAW";targetRevisions["User|PATH"]=1;render()');assert.equal(pageRaw('User|PATH'),'EXTERNAL;RAW');assert.doesNotMatch(q('#screen').textContent,/计划已失效|方案建议已失效|冲突/);assertIndependentOptions(enter());noSchemeContext();setInput(rows()[0].querySelector('.element-input'),'DIRECT');q('#applyElements').click();assert.equal(ev('windows["User|PATH"]'),'DIRECT;RAW');
 });
 check('No JSDOM runtime errors in Windows snapshot and workbench regression workflows',()=>assert.deepEqual(errors,[]));
 console.log(JSON.stringify({passed:checks.filter(c=>c.passed).length,total:checks.length,checks},null,2));if(checks.some(c=>!c.passed))process.exitCode=1;dom.window.close();

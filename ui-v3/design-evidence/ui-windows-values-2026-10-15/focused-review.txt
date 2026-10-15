@@ -1,0 +1,12 @@
+Focused independent UI review — Sol, 2026-10-15
+Disposition: ship (focused scope only)
+
+Evidence read: windows-values.png, windows-raw.png, duplicate-editor.png; renderWindows(), decorateValueStreams(), staticMarkup(), Windows-specific surface-ui.css.
+
+Findings:
+- Duplicate structure layer resolved: one default element view, raw string only on demand.
+- Same plate system and empty/duplicate badges as the reference; separate duplicate occurrences are visible.
+- Native buttons have occurrence-based editing names; implementation supports roving focus and exact occurrence opening. Screenshot shows the third input focused.
+- Read implementation contains no TOML function/style edits.
+
+Limits: screenshot and code review only. Reviewer did not execute browser tests or review the entire diff. Long single-token, narrow viewport and screen-reader behavior were not visually exercised. Separate primary-agent DOM equality fixtures cover the frozen TOML views.

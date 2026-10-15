@@ -13,15 +13,12 @@
 .value-state-chip { display: inline-flex; padding: 3px 9px; color: var(--sub); background: #f2f4f2; border: 1px dashed var(--line2); border-radius: 5px; }
 .flow-label { display: flex; align-items: center; min-height: 24px; margin-bottom: 6px; color: var(--body); font: 600 12px/1.5 'Microsoft YaHei UI', sans-serif; }
 .stream-help { margin: 7px 0 0; color: var(--sub); font-size: 11.5px; line-height: 1.65; }
-.structure-details, .raw-disclosure { min-width: 0; }
-.structure-details > summary, .raw-disclosure > summary { width: fit-content; max-width: 100%; cursor: pointer; padding: 5px 3px; font-size: 12px; color: var(--green-dark); border-radius: 4px; }
-.structure-details > summary:hover, .raw-disclosure > summary:hover { color: var(--green); background: #edf5ef; }
-.structure-count { display: inline-block; margin-left: 9px; color: var(--sub); font: 11px/1.5 'Microsoft YaHei UI', sans-serif; }
-.structure-details[open] > summary { margin-bottom: 5px; }
+.raw-disclosure { min-width: 0; }
+.raw-disclosure > summary { width: fit-content; max-width: 100%; cursor: pointer; padding: 5px 3px; font-size: 12px; color: var(--green-dark); border-radius: 4px; }
+.raw-disclosure > summary:hover { color: var(--green); background: #edf5ef; }
 .raw-disclosure { margin-top: 10px; }
 .raw-disclosure .pair { margin-top: 7px; }
 .raw-disclosure .pair > span:last-child { white-space: pre-wrap; overflow-wrap: anywhere; min-width: 0; font-family: var(--mono); }
-.structure-details:focus-within > summary { text-decoration: underline; text-underline-offset: 4px; }
 
 /* Preview: the frozen plan reads from left to right, with paired occurrences. */
 .preview-dialog { width: min(980px,96vw); }
@@ -38,17 +35,24 @@
 .operation-note { display: flex; align-items: flex-start; gap: 8px; padding: 12px; color: var(--sub); background: #f4f5f3; border-radius: 6px; font-size: 12px; }
 .operation-note .ic { flex: none; margin-top: 2px; }
 
-/* Inventory: raw snapshot stays the direct-edit target; structure is an explicit disclosure. */
+/* Inventory: current values use the same plates as the element comparison. */
+.comparison-static-token { text-align: left; cursor: default; }
+button.comparison-static-token { appearance: none; cursor: pointer; }
+.value-stream.is-linking .comparison-static-token:not(.is-related-highlight) { opacity: .6; }
+.comparison-static-token { transition: opacity 120ms, border-color 120ms, background-color 120ms; }
+.comparison-static-token:hover { border-color: #7b9e8a; }
 .windows-page .outline-table { table-layout: fixed; }
 .windows-page .outline-table td { vertical-align: top; }
 .windows-page .outline-table td:nth-child(2) { overflow-wrap: anywhere; }
-.windows-page .codevalue { border-radius: 5px; padding: 5px 7px; margin: -5px -7px 3px; white-space: pre-wrap; overflow-wrap: anywhere; }
-.windows-page .codevalue:hover { background: #edf5ef; }
-.windows-page tr:focus-within > td { background: #f7fbf8; }
-.windows-page .structure-details > .value-stream { border-top: 1px solid var(--line); padding: 10px 0; }
-.windows-page .structure-details[open] > .value-stream { animation: structure-unfold 220ms var(--ease-out); }
-.windows-page [data-windows-edit] { border: 1px solid var(--line2); border-radius: 5px; padding: 4px 10px; white-space: nowrap; }
+.windows-page .windows-current { display: block; padding: 7px 9px; margin: 0; white-space: normal; border: 1px solid var(--line); border-radius: 6px; background: #f5f7f6; }
+.windows-current:focus-within { border-color: #92b39e; }
+.windows-current .comparison-static-token:hover, .windows-current .comparison-static-token:focus-visible { background: #edf5ef; }
+.windows-page tr:focus-within > td { background: #f9fcfa; }
+.windows-page .windows-actions .textbtn { display: inline-block; padding: 4px 5px; margin-bottom: 3px; white-space: nowrap; }
+.windows-page [data-windows-edit] { border: 1px solid var(--line2); border-radius: 5px; }
 .windows-page [data-windows-edit]:hover { background: #edf5ef; border-color: #91b29d; }
+.windows-page [data-windows-show-raw][aria-expanded="true"] { background: #edf5ef; border-radius: 4px; }
+.windows-raw-value { margin: 7px 0 0; padding: 9px; max-height: 160px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; background: #fff; border: 1px solid var(--line); border-radius: 5px; color: var(--body); font: 12px/1.65 var(--mono); }
 
 /* History: neutral recorded values, with factual audit below. */
 .history-structure { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 12px; margin: 12px 0 4px; }
@@ -127,13 +131,11 @@
 @keyframes history-unfold { from { opacity: .55; } to { opacity: 1; } }
 @keyframes stream-resolve { from { opacity: .4; transform: translateX(-5px); } to { opacity: 1; transform: none; } }
 @keyframes preview-add-stamp { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
-@keyframes inventory-resolve { from { opacity: .35; clip-path: inset(0 100% 0 0); transform: translateX(-7px); } to { opacity: 1; clip-path: inset(0); transform: none; } }
 @keyframes link-arrive { 0% { outline: 2px solid #509373; outline-offset: 6px; } 100% { outline: 2px solid transparent; outline-offset: 0; } }
 @keyframes link-conduct { 0% { transform: translateX(-4px); opacity: .4; } 70% { transform: translateX(4px); opacity: 1; } 100% { transform: none; } }
 @keyframes history-arrive { from { opacity: .5; clip-path: inset(0 0 100% 0); transform: translateY(-8px); } to { opacity: 1; clip-path: inset(0); transform: none; } }
 @keyframes history-pin { 0% { box-shadow: 0 0 0 0 #3b9a7470; } 100% { box-shadow: 0 0 0 9px #3b9a7400; } }
 @keyframes surface-trace { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-.structure-details[open] > .value-stream > .static-token { animation: inventory-resolve 340ms calc(var(--token-i,0) * 24ms) var(--ease-out) backwards; }
 .preview-flow .is-related-highlight { z-index: 2; animation: link-arrive 380ms ease-out; }
 .value-link-group.is-linking .flow-arrow { animation: link-conduct 350ms var(--ease-out); }
 .history-details[open] > .history-detail-body { animation: history-arrive 360ms var(--ease-out); }
@@ -173,6 +175,6 @@
   .variable-empty { flex-wrap: wrap; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .value-stream, .value-stream *, .structure-details > .value-stream, .history-detail-body, .config-structure, .flow-arrow, .time-dot, .pageh::after { animation: none !important; transition: none !important; }
+  .value-stream, .value-stream *, .history-detail-body, .config-structure, .flow-arrow, .time-dot, .pageh::after { animation: none !important; transition: none !important; }
   .recovery-empty, .appitem.is-located, #inspect.is-revealing, #editorbody > .fullpage, #copyText::before, #compareToggle::before { animation: none !important; transition: none !important; }
 }

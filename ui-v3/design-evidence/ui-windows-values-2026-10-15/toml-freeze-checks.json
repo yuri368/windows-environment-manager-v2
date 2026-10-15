@@ -1,0 +1,22 @@
+{
+  "passed": 4,
+  "total": 4,
+  "checks": [
+    {
+      "name": "Frozen TOML visual DOM equals a7e693e baseline",
+      "passed": true
+    },
+    {
+      "name": "Frozen TOML raw DOM equals a7e693e baseline",
+      "passed": true
+    },
+    {
+      "name": "Frozen TOML diff DOM equals a7e693e baseline",
+      "passed": true
+    },
+    {
+      "name": "Default static markup unchanged for empty, duplicate, CRLF and Special fixtures",
+      "passed": true
+    }
+  ]
+}

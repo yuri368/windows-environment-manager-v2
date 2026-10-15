@@ -188,7 +188,7 @@ for (const mode of ['+append', '-append', 'append']) check('Switching replace ba
 check('Windows environment page retains direct editing for a replace-mode target', () => {
   setup('replace'); q('[data-view="windows"]').click();
   const button = q('[data-windows-edit="User|PATH"]'), node = q('[data-windows-value="User|PATH"]');
-  assert.ok(button); assert.equal(node.getAttribute('role'), 'button'); assert.equal(node.getAttribute('tabindex'), '0');
+  assert.ok(button); assert.equal(node.getAttribute('role'), 'group'); assert.equal(node.getAttribute('tabindex'), '-1'); assert.equal(node.querySelector('[data-value-index="0"]').getAttribute('tabindex'),'0');
   for (const trigger of [() => button.click(),
     () => node.dispatchEvent(new w.MouseEvent('dblclick', {bubbles: true})),
     ...['Enter', ' '].map(key => () => node.dispatchEvent(new w.KeyboardEvent('keydown', {key, bubbles: true, cancelable: true})))]) {

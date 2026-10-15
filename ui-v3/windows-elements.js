@@ -92,14 +92,17 @@ var WindowsElements = (() => {
   }
   // Generic read-only element stream for Windows inventory, history and config views.
   // This is presentation-only: it splits an existing raw value but never computes an apply result.
-  function staticMarkup(raw,{whole=false}={}){
+  function staticMarkup(raw,{whole=false,comparison=false,interactive=false}={}){
     if(raw===undefined)return '<span class="value-state-chip is-absent">（不存在）</span>';
     const parts=whole?[raw]:String(raw).split(';'),counts=new Map();
     parts.forEach(value=>counts.set(value,(counts.get(value)||0)+1));
     // Numeric CR entities survive HTML parsing; raw whitespace remains display data only.
     return parts.map((value,index)=>{
       const empty=value==='',duplicate=!whole?duplicateLabel(counts.get(value)):'';
-      return `<span class="diff-token static-token${empty?' is-empty':''}"${empty?' data-empty="true"':''}><span class="token-position" aria-label="第 ${index+1} 项">${index+1}</span><span class="diff-value" data-raw-value="${escapeRaw(value)}">${empty?'<span class="empty-element">'+(whole?'（空字符串）':'（空元素）')+'</span>':escapeRaw(value)}</span>${tailMarkup(duplicate)}</span>`;
+      const body=`<span class="diff-value" data-raw-value="${escapeRaw(value)}">${empty?'<span class="empty-element">'+(whole?'（空字符串）':'（空元素）')+'</span>':escapeRaw(value)}</span>`;
+      if(!comparison)return `<span class="diff-token static-token${empty?' is-empty':''}"${empty?' data-empty="true"':''}><span class="token-position" aria-label="第 ${index+1} 项">${index+1}</span>${body}${tailMarkup(duplicate)}</span>`;
+      const tag=interactive?'button':'span',action=interactive?` type="button" aria-label="${whole?'编辑当前完整字符串':'编辑当前值的第 '+(index+1)+' 个元素'}"`:'';
+      return `<${tag} class="diff-token comparison-static-token${!whole&&counts.get(value)>1?' is-duplicate':''}" data-value-index="${index}" data-related-key="item:${index}" tabindex="${index===0?0:-1}"${empty?' data-empty="true"':''}${action}>${body}${tailMarkup(valueHint(value,whole)+duplicate)}</${tag}>`;
     }).join('<span class="element-separator">;</span>');
   }
   // Display metadata comes from the frozen plan; it never supplies an apply result.
