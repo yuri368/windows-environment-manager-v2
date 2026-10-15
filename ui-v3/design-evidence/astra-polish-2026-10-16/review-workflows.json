@@ -1,0 +1,98 @@
+{
+  "passed": 23,
+  "total": 23,
+  "checks": [
+    {
+      "name": "Review is read-only and consumes the same frozen plan used by apply",
+      "passed": true
+    },
+    {
+      "name": "No-write confirmation commits the selected input without fabricating history",
+      "passed": true
+    },
+    {
+      "name": "Original duplicate protection does not claim current duplicate copies exist",
+      "passed": true
+    },
+    {
+      "name": "Shared explanation identifies protection without invented application ownership",
+      "passed": true
+    },
+    {
+      "name": "Continuity-protected partial apply keeps intent and factual history",
+      "passed": true
+    },
+    {
+      "name": "Conflict blocks all target writes and exposes an actionable explanation",
+      "passed": true
+    },
+    {
+      "name": "Unsupported append blocks the batch even when its own value needs no operation",
+      "passed": true
+    },
+    {
+      "name": "Revoke remains a scope explanation with no executable action",
+      "passed": true
+    },
+    {
+      "name": "Target index merges the same canonical target and separates User/System Path",
+      "passed": true
+    },
+    {
+      "name": "Target navigation changes only reading position and focus",
+      "passed": true
+    },
+    {
+      "name": "Returning to workbench preserves exact input, baseline, state and batch selection",
+      "passed": true
+    },
+    {
+      "name": "Workbench review action preserves the visible batch confirmation scope",
+      "passed": true
+    },
+    {
+      "name": "Real selection and clear actions keep review scope label current without replacing the draft",
+      "passed": true
+    },
+    {
+      "name": "View comparison is focusable without editing the selected value",
+      "passed": true
+    },
+    {
+      "name": "Returning to a replace context does not open a forbidden element editor",
+      "passed": true
+    },
+    {
+      "name": "Refresh preserves raw disclosure and focus by canonical target",
+      "passed": true
+    },
+    {
+      "name": "Cross-version token focus falls back to its target, never a guessed occurrence",
+      "passed": true
+    },
+    {
+      "name": "Pure presentation redraw preserves the focused token in the correct region",
+      "passed": true
+    },
+    {
+      "name": "Updated preview still requires review and separate final confirmation",
+      "passed": true
+    },
+    {
+      "name": "Unrelated snapshot changes do not invalidate review",
+      "passed": true
+    },
+    {
+      "name": "Closing after a trigger redraw restores focus to its replacement",
+      "passed": true
+    },
+    {
+      "name": "More issue details and raw values are escaped without changing frozen data",
+      "passed": true
+    },
+    {
+      "name": "No runtime errors in review workflows",
+      "passed": true
+    }
+  ]
+}
