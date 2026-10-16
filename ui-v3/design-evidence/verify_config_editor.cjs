@@ -19,7 +19,7 @@ check('Editing choice label/value updates one configuration field and workbench 
 });
 check('Choice add/remove/reorder preserve a selected candidate by explicit occurrence action',()=>{
  setup();ev('configVar().source="候选值 1"');const original=ev('value(configVar())');q('[data-choice-down="0"]').click();assert.equal(ev('configVar().source'),'候选值 2');assert.equal(ev('value(configVar())'),original);q('[data-choice-remove="1"]').click();assert.equal(ev('configVar().source'),'默认值');assert.equal(ev('value(configVar())'),ev('configVar().defaultValue'));
- q('#cfgAddChoice').click();assert.equal(w.document.activeElement.id,'cfgChoiceLabel1');assert.ok(q('#downloadToml').disabled);input(q('#cfgChoiceLabel1'),'Empty candidate');assert.equal(choices()[1].value,'');assert.ok(!q('#downloadToml').disabled);q('[data-choice-remove="1"]').click();assert.equal(choices().length,1);
+ q('#cfgAddChoice').click();assert.equal(w.document.activeElement.id,'cfgChoiceDraftLabel');assert.ok(q('#cfgChoiceDraft'));assert.equal(choices().length,1);assert.ok(!q('#downloadToml').disabled);input(q('#cfgChoiceDraftLabel'),'Empty candidate');q('#cfgChoiceDraftAdd').click();assert.equal(choices()[1].value,'');assert.equal(choices()[1].label,'Empty candidate');q('[data-choice-remove="1"]').click();assert.equal(choices().length,1);
 });
 check('V2 exact label/value uniqueness is validated without trimming values or changing case',()=>{
  setup();input(q('#cfgChoiceLabel1'),choices()[0].label);assert.ok(q('#downloadToml').disabled);assert.match(q('#cfgValidation').textContent,/名称重复/);input(q('#cfgChoiceLabel1'),'候选值 1 '.trim().toUpperCase()+' alternate');input(q('#cfgChoiceValue1'),choices()[0].value);assert.ok(q('#downloadToml').disabled);input(q('#cfgChoiceValue1'),choices()[0].value+' ');assert.ok(!q('#downloadToml').disabled);
@@ -37,8 +37,8 @@ check('Config reset covers choices and editable, leaves Windows/history unchange
 check('V2 export uses app/profile tables and required fields without runtime metadata',()=>{
  setup();const text=ev('generateToml()');assert.match(text,/\["Node\.js"\."团队默认"\]/);assert.match(text,/default_option = "团队默认"/);assert.match(text,/editable = true/);assert.match(text,/choices = \[\{ label = /);assert.doesNotMatch(text,/\[\[application|savedValue|baselineValue|matchBaseline|custom =|source =/);
 });
-check('Invalid choices remain editable and raw-previewable, while export is blocked',()=>{
- setup();q('#cfgAddChoice').click();assert.ok(q('#downloadToml').disabled);q('#configTabRaw').click();assert.match(q('#sourceText').textContent,/label = ""/);assert.ok(q('#downloadToml').disabled);q('#configTabVisual').click();assert.ok(q('#cfgChoiceLabel2'));input(q('#cfgChoiceLabel2'),'New empty');assert.ok(!q('#downloadToml').disabled);
+check('Uncommitted choice stays outside raw preview and export until confirmed',()=>{
+ setup();const before=choices();q('#cfgAddChoice').click();input(q('#cfgChoiceDraftLabel'),'New empty');q('#configTabRaw').click();assert.deepEqual(choices(),before);assert.doesNotMatch(q('#sourceText').textContent,/New empty/);assert.ok(!q('#downloadToml').disabled);q('#configTabVisual').click();assert.equal(q('#cfgChoiceDraft'),null);assert.match(q('#cfgAddChoice').textContent,/继续新增/);q('#cfgAddChoice').click();assert.ok(q('#cfgChoiceDraft'));q('#cfgChoiceDraftAdd').click();assert.equal(choices()[2].label,'New empty');assert.equal(choices()[2].value,'');assert.ok(!q('#downloadToml').disabled);
 });
 check('V2 dual-scope variables serialize as one two-record array and Special consistency is enforced',()=>{
  const app={name:'Quoted app',default:'1.2',profiles:[{name:'1.2',vars:[{name:'Path',scope:'User',mode:'+append',editable:false,defaultValue:'A',choices:[]},{name:'PATH',scope:'System',mode:'-append',editable:true,defaultValue:'B',choices:[]}]}]};

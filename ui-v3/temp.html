@@ -24,7 +24,7 @@
 <link rel="stylesheet" href="shell-ui.css?v=180c0987749f">
 <link rel="stylesheet" href="fx-ui.css">
 <link rel="stylesheet" href="surface-ui.css?v=5e67af524687">
-<link rel="stylesheet" href="config-editor.css?v=30dd6e14588c">
+<link rel="stylesheet" href="config-editor.css?v=20261016compact">
 </head>
 <body><div id="app">
 <header class="chrome"><span class="logo">≋</span><strong>环境变量方案管理器</strong><span class="sub mini">Compact UI · 交互演示</span><span class="prototype-mark">本地演示 · 未连接系统</span></header>
@@ -35,7 +35,7 @@
 <script src="demo-configs.js"></script>
 <script src="demo-plan.js?v=b3e3700b709e"></script>
 <script src="config-format.js?v=a87e7be85188"></script>
-<script src="config-editor.js?v=c1a65310e0b0"></script>
+<script src="config-editor.js?v=20261016compact"></script>
 <script src="windows-elements.js?v=66acc970c720"></script>
 <script>
 'use strict';
@@ -56,7 +56,7 @@ let apps=[],windows={},checked=new Set(),selected=2,profileChoice={},filter='all
 let lastDialogFocus = null, targetRevisions = {}, targetTypes = {}, planCache = new WeakMap();
 let configOriginals = new WeakMap();
 function mkVar(v,i){return {id:i,name:v[0],scope:v[1],mode:v[2],defaultValue:v[3],savedValue:v[4]?.savedValue??null,source:'默认值',custom:null,choices:ConfigFormat.choices({choices:v[4]?.choices||[]}),editable:v[4]?.editable??true,special:!!v[4]?.special,baselineValue:v[3],matchBaseline:null,removalState:null,dirty:false}}
-function reset(quiet=false){apps=clone(initialApps).map(a=>({...a,profiles:a.profiles.map(p=>({...p,vars:p.vars.map(mkVar)}))}));captureConfigBaselines();windows={'User|JAVA_HOME':'H:\\ProgramFiles\\DevTools\\Java\\jdk1.8.0_202','User|PYTHON_HOME':'H:\\ProgramFiles\\Python313','User|MAVEN_HOME':'H:\\ProgramFiles\\DevTools\\Maven\\apache-maven-3.9.11','User|PATH':['%JAVA_HOME%\\bin','%PYTHON_HOME%;%PYTHON_HOME%\\Scripts','%MAVEN_HOME%\\bin','H:\\ProgramFiles\\PortableGit\\cmd','H:\\ProgramFiles\\VSCode\\bin'].join(';')};Object.assign(windows,extraDemoWindows);windows['User|PATH']+=';'+extraDemoUserPath.join(';');checked=new Set();selected=2;profileChoice={};apps.forEach((a,i)=>profileChoice[i]=a.default);filter='all';search='';onlyMismatch=false;compareShown=true;focusedVariable=0;history=[{when:'演示初始快照',action:'打开演示环境',detail:'模拟 Windows 数据已载入'}];revision=0;targetRevisions={};targetTypes={};planCache=new WeakMap();Object.keys(removalMemo).forEach(k=>delete removalMemo[k]);editor={app:2,profile:'3.9.11',varIdx:0,tab:'visual'};screen='workbench';render();if(!quiet)notify('已恢复演示初始状态')}
+function reset(quiet=false){ConfigEditor.clearDraft(editor);apps=clone(initialApps).map(a=>({...a,profiles:a.profiles.map(p=>({...p,vars:p.vars.map(mkVar)}))}));captureConfigBaselines();windows={'User|JAVA_HOME':'H:\\ProgramFiles\\DevTools\\Java\\jdk1.8.0_202','User|PYTHON_HOME':'H:\\ProgramFiles\\Python313','User|MAVEN_HOME':'H:\\ProgramFiles\\DevTools\\Maven\\apache-maven-3.9.11','User|PATH':['%JAVA_HOME%\\bin','%PYTHON_HOME%;%PYTHON_HOME%\\Scripts','%MAVEN_HOME%\\bin','H:\\ProgramFiles\\PortableGit\\cmd','H:\\ProgramFiles\\VSCode\\bin'].join(';')};Object.assign(windows,extraDemoWindows);windows['User|PATH']+=';'+extraDemoUserPath.join(';');checked=new Set();selected=2;profileChoice={};apps.forEach((a,i)=>profileChoice[i]=a.default);filter='all';search='';onlyMismatch=false;compareShown=true;focusedVariable=0;history=[{when:'演示初始快照',action:'打开演示环境',detail:'模拟 Windows 数据已载入'}];revision=0;targetRevisions={};targetTypes={};planCache=new WeakMap();Object.keys(removalMemo).forEach(k=>delete removalMemo[k]);editor={app:2,profile:'3.9.11',varIdx:0,tab:'visual'};screen='workbench';render();if(!quiet)notify('已恢复演示初始状态')}
 function appNow(i=selected){return apps[i]}
 function scheme(i=selected){return apps[i].profiles.find(p=>p.name===profileChoice[i])||apps[i].profiles[0]}
 function choiceValue(choice,fallback){return choice===undefined?fallback:typeof choice==='string'?choice:choice.value}
@@ -201,7 +201,7 @@ function dirty(p){return p.vars.filter(hasPendingValue).length}
 function dir(i){return `--icon-bg:${apps[i].iconBg};--icon-fg:${apps[i].iconFg}`}
 function curProfile(){return scheme()}
 function notify(t){const el=$('toast');el.textContent=t;el.classList.remove('on');void el.offsetWidth;el.classList.add('on');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('on'),2600)}
-function go(view){screen=view;closeDropdowns();closeModal();render();enterFx();(view==='config'?$('configBtn'):document.querySelector('[data-view="'+view+'"]'))?.focus()}
+function go(view){if(screen==='config'&&view!=='config')ConfigEditor.suspendDraft(editor);screen=view;closeDropdowns();closeModal();render();enterFx();(view==='config'?$('configBtn'):document.querySelector('[data-view="'+view+'"]'))?.focus()}
 function render(){document.querySelectorAll('[data-view]').forEach(b=>{b.classList.toggle('active',b.dataset.view===screen);if(b.dataset.view===screen)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});$('configBtn').classList.toggle('active',screen==='config');if(screen==='config')$('configBtn').setAttribute('aria-current','page');else $('configBtn').removeAttribute('aria-current');$('footer').style.display=screen==='config'?'none':'';if(screen==='workbench')renderWorkbench();else if(screen==='windows')renderWindows();else if(screen==='history')renderHistory();else renderConfig();positionInk();refreshPreview()}
 function bindListKeys(root,selector){
  root.onkeydown=e=>{
@@ -620,11 +620,12 @@ function updateConfigStatus() {
   const changeUnit=configChanges().some(c=>c.field==='addition')?'配置变更':'属性修改';
   if ($('configStatus')) { $('configStatus').textContent=(count?`配置修改 · ${count} 项${changeUnit} · 仅本页保留`:'配置修改未修改 · 编辑不会更改真实文件')+(errors.length?` · ${errors.length} 项错误，暂不能导出`:'');$('configStatus').classList.toggle('has-changes',count>0); }
   if($('downloadToml')){$('downloadToml').disabled=errors.length>0;$('downloadToml').title=errors.length?errors[0].message:'导出符合 V2 配置格式的新文件';}
-  if ($('cancelConfig')) $('cancelConfig').disabled=count===0;
+  if ($('cancelConfig')) $('cancelConfig').disabled=count===0&&!ConfigEditor.hasDraft(editor);
   const badge=$('configDraftBadge');
   if (badge) { badge.hidden=!count; badge.textContent=`${count} 项${changeUnit}`; }
 }
 function restoreConfig() {
+  ConfigEditor.clearDraft(editor);
   apps=apps.filter(a=>configOriginals.has(a));
   apps.forEach((a,i)=>{
    a.profiles=a.profiles.filter(p=>configOriginals.has(p));
@@ -651,6 +652,7 @@ function restoreConfig() {
 function renderConfig() {
   $('screen').innerHTML=`<div class="config-page"><div class="editor-tabs"><div class="config-view-tabs" role="tablist" aria-label="配置视图"><button id="configTabVisual" role="tab" aria-selected="${editor.tab==='visual'}" tabindex="${editor.tab==='visual'?0:-1}" aria-controls="editorbody" class="navtab ${editor.tab==='visual'?'active':''}" data-edtab="visual" aria-current="${editor.tab==='visual'?'page':'false'}">可视化</button><button id="configTabRaw" role="tab" aria-selected="${editor.tab==='raw'}" tabindex="${editor.tab==='raw'?0:-1}" aria-controls="editorbody" class="navtab ${editor.tab==='raw'?'active':''}" data-edtab="raw" aria-current="${editor.tab==='raw'?'page':'false'}">示例 TOML</button><button id="configTabDiff" role="tab" aria-selected="${editor.tab==='diff'}" tabindex="${editor.tab==='diff'?0:-1}" aria-controls="editorbody" class="navtab ${editor.tab==='diff'?'active':''}" data-edtab="diff" aria-current="${editor.tab==='diff'?'page':'false'}">修改差异</button></div><span id="configDraftBadge" class="tag dirty" hidden></span><span class="config-file-label">env.toml · 演示配置</span></div><div id="editorbody" class="editor-body" role="tabpanel" aria-labelledby="configTab${{visual:'Visual',raw:'Raw',diff:'Diff'}[editor.tab]}"></div><div class="edfooter"><span id="configStatus" role="status"></span><button class="btn" id="cancelConfig" title="移除本轮新增的应用、方案和变量，并还原已有配置属性；运行草稿和环境快照保留">还原配置修改</button><button class="btn primary" id="downloadToml">导出 TOML 文件 ↓</button></div></div>`;
   document.querySelectorAll('[data-edtab]').forEach(b=>b.onclick=()=>{
+    if(editor.tab==='visual'&&b.dataset.edtab!=='visual')ConfigEditor.suspendDraft(editor);
     editor.tab=b.dataset.edtab;renderConfig();document.querySelector(`[data-edtab="${editor.tab}"]`).focus();
   });
   document.querySelector('.editor-tabs').onkeydown=e=>{

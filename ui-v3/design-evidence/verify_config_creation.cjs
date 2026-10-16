@@ -44,12 +44,14 @@ const assertRejectedWithoutMutation = (kind, fields, context) => {
   assert.deepEqual(unchanged(), before);
 };
 
-check('Add buttons open one inline form and cancellation leaves all data untouched', () => {
+check('Add buttons open local creation rows and cancellation leaves all data untouched', () => {
   setup(); const before = unchanged();
   for (const button of ['#cfgAddApp', '#cfgAddProfile', '#cfgAddVariable']) {
     click(button);
     assert.ok(q('#cfgCreateForm'));
-    for (const id of ['#cfgCreateName', '#cfgCreateScope', '#cfgCreateMode', '#cfgCreateSubmit', '#cfgCreateCancel']) assert.ok(q(id));
+    for (const id of ['#cfgCreateName', '#cfgCreateSubmit', '#cfgCreateCancel', '#cfgScope', '#cfgMode']) assert.ok(q(id));
+    assert.equal(q('#cfgCreateScope'), null); assert.equal(q('#cfgCreateMode'), null);
+    assert.deepEqual(unchanged(), before);
     if (button === '#cfgAddApp') { assert.ok(q('#cfgCreateAppName')); assert.ok(q('#cfgCreateProfileName')); }
     if (button === '#cfgAddProfile') assert.ok(q('#cfgCreateProfileName'));
     click('#cfgCreateCancel');
@@ -79,7 +81,7 @@ check('App button creates one app, its default profile and first empty variable'
 check('Profile button creates an appended profile with one selected variable', () => {
   setup(); const before = ev('apps[7].profiles.length');
   click('#cfgAddProfile'); input('#cfgCreateProfileName', '新方案'); input('#cfgCreateName', 'DEMO_HOME');
-  change('#cfgCreateScope', 'System'); change('#cfgCreateMode', '+append'); click('#cfgCreateSubmit');
+  change('#cfgScope', 'System'); change('#cfgMode', '+append'); click('#cfgCreateSubmit');
   const profile = json('apps[7].profiles[apps[7].profiles.length-1]');
   assert.equal(ev('apps[7].profiles.length'), before + 1);
   assert.equal(profile.name, '新方案'); assert.equal(profile.vars.length, 1);
@@ -196,7 +198,7 @@ check('Restoring a selected new app leaves config and workbench navigation usabl
 });
 
 check('Existing invalid choice blocks any new entry without mutating the draft', () => {
-  setup(); click('#cfgAddChoice');
+  setup(); ev('setConfigProperty(configVar(),"choices",[...ConfigFormat.choices(configVar()),{label:"",value:""}]);renderEditorBody()');
   assert.ok(ev('ConfigFormat.errors(apps).length>0'));
   const before = unchanged(), initialCount = ev('configChanges().length');
   const result = create('variable', {name:'BLOCKED_ROOT'});
@@ -206,6 +208,141 @@ check('Existing invalid choice blocks any new entry without mutating the draft',
   click('#cfgAddVariable'); input('#cfgCreateName', 'BLOCKED_ROOT'); click('#cfgCreateSubmit');
   assert.match(q('#cfgCreateError').textContent, /候选|配置/);
   assert.deepEqual(unchanged(), before);
+});
+
+check('Failed and cancelled creation never add configuration nodes or diffs', () => {
+  setup(); const before = unchanged();
+  click('#cfgAddApp'); input('#cfgCreateAppName', 'Node.js'); input('#cfgCreateProfileName', 'Fresh'); input('#cfgCreateName', 'FRESH_HOME');
+  click('#cfgCreateSubmit'); assert.ok(q('#cfgCreateError')?.textContent);
+  assert.deepEqual(unchanged(), before); assert.equal(ev('configChanges().length'), 0);
+  click('#cfgCreateCancel'); assert.equal(q('#cfgCreateForm'), null);
+  click('#cfgAddProfile'); input('#cfgCreateProfileName', '团队默认'); input('#cfgCreateName', 'FRESH_HOME');
+  click('#cfgCreateSubmit'); assert.ok(q('#cfgCreateError')?.textContent);
+  assert.deepEqual(unchanged(), before); assert.equal(ev('configChanges().length'), 0);
+  click('#cfgCreateCancel');
+});
+
+check('Same variable name in System requires an explicit scope choice and commits once', () => {
+  setup(); const before = unchanged();
+  click('#cfgAddVariable'); input('#cfgCreateName', 'NODE_HOME'); click('#cfgCreateSubmit');
+  assert.match(q('#cfgCreateError')?.textContent || '', /同名|存在/);
+  assert.deepEqual(unchanged(), before); assert.equal(ev('configChanges().length'), 0);
+  change('#cfgScope', 'System');
+  assert.deepEqual(unchanged(), before);
+  click('#cfgCreateSubmit');
+  assert.equal(ev('configProfile().vars.filter(v=>ConfigFormat.matchName(v.name)==="NODE_HOME").length'), 2);
+  assert.equal(ev('configVar().scope'), 'System'); assert.equal(ev('configChanges().length'), 1);
+  assert.equal(w.document.activeElement.id, 'cfgDefault');
+});
+
+check('Whole target creation constrains the UI mode to replace and preserves the inherited rule', () => {
+  setup(); click('#cfgAddProfile'); input('#cfgCreateProfileName', '整体处理继承'); input('#cfgCreateName', 'NODE_OPTIONS');
+  assert.equal(q('#cfgMode').value, 'replace'); assert.equal(q('#cfgMode').disabled, true);
+  click('#cfgCreateSubmit');
+  assert.equal(ev('configVar().special'), true); assert.equal(ev('configVar().mode'), 'replace');
+});
+
+check('Candidate draft rejects blank or duplicate label and duplicate full value before writing', () => {
+  setup(); const before = unchanged(), first = json('ConfigFormat.choices(configVar())[0]');
+  click('#cfgAddChoice'); assert.ok(q('#cfgChoiceDraft')); assert.deepEqual(unchanged(), before);
+  click('#cfgChoiceDraftAdd'); assert.ok(q('#cfgChoiceDraft')?.textContent.match(/不能为空|名称/)); assert.deepEqual(unchanged(), before);
+  input('#cfgChoiceDraftLabel', first.label); click('#cfgChoiceDraftAdd'); assert.ok(q('#cfgChoiceDraft')?.textContent.match(/重复/)); assert.deepEqual(unchanged(), before);
+  input('#cfgChoiceDraftLabel', '合法新标签'); input('#cfgChoiceDraftValue', first.value); click('#cfgChoiceDraftAdd');
+  assert.ok(q('#cfgChoiceDraft')?.textContent.match(/重复/)); assert.deepEqual(unchanged(), before);
+  input('#cfgChoiceDraftValue', '  X;;X;  '); click('#cfgChoiceDraftAdd');
+  const last = json('ConfigFormat.choices(configVar()).at(-1)');
+  assert.deepEqual(last, {label:'合法新标签',value:'  X;;X;  '}); assert.equal(ev('configChanges().length'), 1);
+});
+
+check('Candidate draft cancellation and composition keys preserve model and focus', () => {
+  setup(); const before = unchanged(); click('#cfgAddChoice'); input('#cfgChoiceDraftLabel', '输入中');
+  const label = q('#cfgChoiceDraftLabel');
+  for (const key of ['Enter','Escape']) label.dispatchEvent(new w.KeyboardEvent('keydown', {key,isComposing:true,bubbles:true,cancelable:true}));
+  assert.ok(q('#cfgChoiceDraft')); assert.equal(q('#cfgChoiceDraftLabel').value, '输入中'); assert.deepEqual(unchanged(), before);
+  click('#cfgChoiceDraftCancel'); assert.equal(q('#cfgChoiceDraft'), null); assert.equal(w.document.activeElement.id, 'cfgAddChoice');
+  assert.deepEqual(unchanged(), before);
+});
+
+check('Candidate draft keeps leading newline, spaces and empty elements after view and variable switches', () => {
+  setup();
+  ev('setConfigProperty(configVar(),"defaultValue","A\\r\\nB\\rC\\nD");renderEditorBody()');
+  const original = ev('configVar().defaultValue');
+  click('#cfgAddChoice'); input('#cfgChoiceDraftLabel', '保真候选');
+  input('#cfgChoiceDraftValue', '\n  A;\r\n;A;\rC  ');
+  const browserValue = q('#cfgChoiceDraftValue').value;
+  assert.equal(browserValue, '\n  A;\n;A;\nC  ');
+  click('#configTabRaw'); click('#configTabVisual');
+  assert.equal(q('#cfgChoiceDraft'), null); assert.match(q('#cfgAddChoice').textContent, /继续新增/);
+  click('#cfgAddChoice');
+  assert.equal(q('#cfgChoiceDraftValue').value, browserValue);
+  click('[data-tablevar="1"]'); assert.equal(q('#cfgChoiceDraft'), null);
+  click('[data-tablevar="0"]'); assert.equal(q('#cfgChoiceDraft'), null); click('#cfgAddChoice');
+  assert.equal(q('#cfgChoiceDraftValue').value, browserValue);
+  click('#cfgChoiceDraftAdd');
+  assert.equal(ev('ConfigFormat.choices(configVar()).at(-1).value'), browserValue);
+  assert.equal(ev('configVar().defaultValue'), original);
+});
+
+check('All-profiles variable entry creates under its own group', () => {
+  setup(); const other = json('apps[7].profiles.find(p=>p.name!==editor.profile).name');
+  const before = ev(`apps[7].profiles.find(p=>p.name===${JSON.stringify(other)}).vars.length`);
+  change('#editorView', 'all');
+  const entry = [...w.document.querySelectorAll('[data-add-variable]')].find(node => node.dataset.addVariable === other);
+  assert.ok(entry, `No grouped entry for ${other}`); entry.click();
+  input('#cfgCreateName', 'GROUP_ONLY_HOME'); click('#cfgCreateSubmit');
+  assert.equal(ev('editor.profile'), other);
+  assert.equal(ev(`apps[7].profiles.find(p=>p.name===${JSON.stringify(other)}).vars.length`), before + 1);
+  assert.equal(ev('configVar().name'), 'GROUP_ONLY_HOME');
+});
+
+check('Grouped entry works when the target profile has fewer or no variables than the current index', () => {
+  setup();
+  ev('editor.varIdx=2;apps[7].profiles[1].vars.pop();renderEditorBody()');
+  change('#editorView', 'all');
+  let entry = [...w.document.querySelectorAll('[data-add-variable]')].find(node => node.dataset.addVariable === '实验版本');
+  assert.ok(entry); entry.click(); assert.ok(q('#cfgCreateForm'));
+  input('#cfgCreateName', 'SHORT_PROFILE_HOME'); click('#cfgCreateSubmit');
+  assert.equal(ev('editor.profile'), '实验版本'); assert.equal(ev('configVar().name'), 'SHORT_PROFILE_HOME');
+
+  setup();
+  ev('editor.varIdx=2;apps[7].profiles[1].vars=[];renderEditorBody()');
+  change('#editorView', 'all');
+  entry = [...w.document.querySelectorAll('[data-add-variable]')].find(node => node.dataset.addVariable === '实验版本');
+  assert.ok(entry); entry.click(); assert.ok(q('#cfgCreateForm'));
+  input('#cfgCreateName', 'EMPTY_PROFILE_HOME'); click('#cfgCreateSubmit');
+  assert.equal(ev('editor.profile'), '实验版本'); assert.equal(ev('configVar().name'), 'EMPTY_PROFILE_HOME');
+});
+
+check('One creation draft stays with its original owner across navigation and requires explicit replacement', () => {
+  setup(); const before = unchanged();
+  click('#cfgAddVariable'); input('#cfgCreateName', 'SUSPENDED_HOME');
+  click('[data-editapp="0"]'); assert.equal(q('#cfgCreateForm'), null);
+  click('#cfgAddProfile'); assert.ok(q('#cfgCreateConflict'));
+  assert.deepEqual(unchanged(), before); assert.equal(ev('configChanges().length'), 0);
+  click('#cfgCreateResume'); assert.equal(ev('editor.app'), 7);
+  assert.equal(q('#cfgCreateName')?.value, 'SUSPENDED_HOME');
+  click('[data-editapp="0"]'); click('#cfgAddProfile'); click('#cfgCreateDiscard');
+  assert.ok(q('#cfgCreateProfileName')); assert.equal(q('#cfgCreateName')?.value, '');
+  assert.deepEqual(unchanged(), before); click('#cfgCreateCancel');
+});
+
+check('Restore and global reset clear pending creation without manufacturing a diff', () => {
+  setup(); click('#cfgAddVariable'); input('#cfgCreateName', 'PENDING_HOME');
+  ev('restoreConfig()'); assert.equal(q('#cfgCreateForm'), null);
+  assert.equal(ev('configChanges().length'), 0);
+  click('#cfgAddVariable'); assert.equal(q('#cfgCreateName').value, '');
+  input('#cfgCreateName', 'SECOND_PENDING'); ev('reset(true)');
+  ev('editor={app:7,profile:"团队默认",varIdx:0,tab:"visual"};go("config")');
+  click('#cfgAddVariable'); assert.equal(q('#cfgCreateName').value, '');
+});
+
+check('Composing Enter and Escape leave the name draft alone; plain Escape restores entry focus', () => {
+  setup(); click('#cfgAddVariable'); input('#cfgCreateName', '输入法变量');
+  const node = q('#cfgCreateName'); node.focus();
+  for (const key of ['Enter','Escape']) node.dispatchEvent(new w.KeyboardEvent('keydown', {key,isComposing:true,bubbles:true,cancelable:true}));
+  assert.equal(q('#cfgCreateName')?.value, '输入法变量'); assert.equal(ev('configChanges().length'), 0);
+  node.dispatchEvent(new w.KeyboardEvent('keydown', {key:'Escape',bubbles:true,cancelable:true}));
+  assert.equal(q('#cfgCreateForm'), null); assert.equal(w.document.activeElement.id, 'cfgAddVariable');
 });
 
 check('A new same-target selection invalidates and refreshes the open shared-target preview', () => {
