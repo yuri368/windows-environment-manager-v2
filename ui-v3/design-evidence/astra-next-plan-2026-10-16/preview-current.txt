@@ -1,0 +1,406 @@
+- banner:
+  - generic: ≋
+  - strong: 环境变量方案管理器
+  - generic: Compact UI · 交互演示
+  - generic: 本地演示 · 未连接系统
+- navigation:
+  - generic: 环境方案
+  - button "工作台"
+  - button "Windows 环境"
+  - button "历史"
+  - button "↻刷新检测"
+  - button "⚙配置编辑器"
+  - button "重置演示"
+- complementary:
+  - strong: 应用
+  - generic: 已选 0 / 13
+  - generic: ⌕
+  - textbox "搜索应用":
+    - /placeholder: 搜索应用或方案…
+  - button "全部 13" [pressed]
+  - button "已匹配 6"
+  - button "需配置 7"
+  - generic: 批量选择
+  - button "全选可见"
+  - button "清空"
+  - status: 显示 13 / 13
+  - generic "应用搜索结果":
+    - group "Java":
+      - checkbox "批量选择Java"
+      - button "查看Java":
+        - generic: J
+        - generic: Java
+        - generic "JDK8"
+        - generic: ✓
+        - text: 2/2
+        - generic: 匹配
+    - group "Python":
+      - checkbox "批量选择Python"
+      - button "查看Python":
+        - generic: Py
+        - generic: Python
+        - generic "Python313"
+        - generic: ✓
+        - text: 2/2
+        - generic: 匹配
+    - group "Maven":
+      - checkbox "批量选择Maven"
+      - button "查看Maven":
+        - generic: M
+        - generic: Maven
+        - generic "3.9.11"
+        - generic: ✓
+        - text: 2/2
+        - generic: 匹配
+    - group "Hadoop":
+      - checkbox "批量选择Hadoop"
+      - button "查看Hadoop" [pressed]:
+        - generic: H
+        - generic: Hadoop
+        - generic "2.9.2": 2.9.2 · 有待应用修改
+        - generic: "!"
+        - text: 0/2
+        - generic: 需配置
+    - group "Scala":
+      - checkbox "批量选择Scala"
+      - button "查看Scala":
+        - generic: S
+        - generic: Scala
+        - generic "2.12.15"
+        - generic: "!"
+        - text: 0/2
+        - generic: 需配置
+    - group "Git":
+      - checkbox "批量选择Git"
+      - button "查看Git":
+        - generic: G
+        - generic: Git
+        - generic "Portable"
+        - generic: ✓
+        - text: 1/1
+        - generic: 匹配
+    - group "VSCode":
+      - checkbox "批量选择VSCode"
+      - button "查看VSCode":
+        - generic: V
+        - generic: VSCode
+        - generic "Insiders"
+        - generic: ✓
+        - text: 1/1
+        - generic: 匹配
+    - group "Node.js":
+      - checkbox "批量选择Node.js"
+      - button "查看Node.js":
+        - generic: "N"
+        - generic: Node.js
+        - generic "团队默认"
+        - generic: ✓
+        - text: 3/3
+        - generic: 匹配
+    - group ".NET SDK":
+      - checkbox "批量选择.NET SDK"
+      - button "查看.NET SDK":
+        - generic: D
+        - generic: .NET SDK
+        - generic "日常开发"
+        - generic: "!"
+        - text: 2/3
+        - generic: 需配置
+    - group "CUDA Toolkit":
+      - checkbox "批量选择CUDA Toolkit"
+      - button "查看CUDA Toolkit":
+        - generic: C
+        - generic: CUDA Toolkit
+        - generic "GPU 开发"
+        - generic: "!"
+        - text: 1/3
+        - generic: 需配置
+    - group "中文长路径工具链":
+      - checkbox "批量选择中文长路径工具链"
+      - button "查看中文长路径工具链":
+        - generic: 工
+        - generic: 中文长路径工具链
+        - generic "团队共享目录（中文及空格）"
+        - generic: "!"
+        - text: 2/6
+        - generic: 需配置
+    - group "列表与空值":
+      - checkbox "批量选择列表与空值"
+      - button "查看列表与空值":
+        - generic: 列
+        - generic: 列表与空值
+        - generic "重复元素与空值"
+        - generic: "!"
+        - text: 2/4
+        - generic: 需配置
+    - group "共享变量冲突示例":
+      - checkbox "批量选择共享变量冲突示例"
+      - button "查看共享变量冲突示例":
+        - generic: 共
+        - generic: 共享变量冲突示例
+        - generic "另一组运行时"
+        - generic: "!"
+        - text: 1/2
+        - generic: 需配置
+  - text: ☑ 勾选用于批量操作；点击应用行查看详情。
+  - text: 切换方案不会直接修改 Windows。
+- generic: 应用 / Hadoop
+- generic: H
+- generic: Hadoop
+- generic: "!"
+- text: Windows · 未匹配 0/2
+- text: 最近应用：
+- strong: 无
+- text: 默认方案：
+- strong: 2.9.2
+- generic: ● 有待应用修改
+- generic: 准备使用的方案
+- button "2.9.2 ⌄":
+  - generic: 2.9.2
+  - generic: ⌄
+- heading "环境变量 2 项 · 1 项待应用" [level=2]
+- checkbox "仅看未匹配"
+- text: 仅看未匹配
+- button "收起 Windows 对照" [expanded]
+- table:
+  - rowgroup:
+    - row "变量 作用域 / 模式 值来源 当前选定值 检测 操作":
+      - columnheader "变量"
+      - columnheader "作用域 / 模式"
+      - columnheader "值来源"
+      - columnheader "当前选定值"
+      - columnheader "检测"
+      - columnheader "操作"
+  - rowgroup:
+    - row "查看 HADOOP_HOME 的 Windows 对照 用户 · 替换 默认值 H:\\ProgramFiles\\Hadoop\\2.9.2 不匹配 0/1 撤销预览":
+      - cell "查看 HADOOP_HOME 的 Windows 对照":
+        - button "查看 HADOOP_HOME 的 Windows 对照":
+          - generic: HADOOP_HOME
+          - generic: 查看对照 ↗
+      - cell "用户 · 替换":
+        - text: 用户
+        - generic: · 替换
+      - cell "默认值":
+        - combobox "HADOOP_HOME 值来源":
+          - option "默认值" [selected]
+          - option "自定义值"
+      - cell "H:\\ProgramFiles\\Hadoop\\2.9.2":
+        - textbox "HADOOP_HOME 当前选定值": H:\ProgramFiles\Hadoop\2.9.2
+      - cell "不匹配 0/1":
+        - generic "比例按选定的非空元素逐项统计；重复项分别计数，不要求当前值具有相同副本数量；空元素保留但不计比例。替换模式还需核对额外内容。":
+          - generic: "!"
+          - generic: 不匹配 0/1
+      - cell "撤销预览":
+        - button "撤销预览"
+    - row "查看 Path 的 Windows 对照 用户 · 前置 自定义值 %HADOOP_HOME%\\bin;;%HADOOP_HOME%\\bin; H:\\开发工具\\长目录 ; 待应用 不匹配 0/3 撤销预览":
+      - cell "查看 Path 的 Windows 对照":
+        - button "查看 Path 的 Windows 对照":
+          - generic: Path
+          - generic: 查看对照 ↗
+      - cell "用户 · 前置":
+        - text: 用户
+        - generic: · 前置
+      - cell "自定义值":
+        - combobox "Path 值来源":
+          - option "默认值"
+          - option "自定义值" [selected]
+      - cell "%HADOOP_HOME%\\bin;;%HADOOP_HOME%\\bin; H:\\开发工具\\长目录 ; 待应用":
+        - textbox "Path 当前选定值": "%HADOOP_HOME%\\bin;;%HADOOP_HOME%\\bin; H:\\开发工具\\长目录 ;"
+        - generic "与初始或最近模拟应用的选定值不同；Windows 检测独立计算": 待应用
+      - cell "不匹配 0/3":
+        - generic "比例按选定的非空元素逐项统计；重复项分别计数，不要求当前值具有相同副本数量；空元素保留但不计比例。替换模式还需核对额外内容。":
+          - generic: "!"
+          - generic: 不匹配 0/3
+      - cell "撤销预览":
+        - button "撤销预览"
+- strong: Windows 值对照 · Path
+- generic: 元素编辑 · 离线演示
+- strong: 有实际变更
+- generic: 实际变更待确认
+- button "查看方案预览 →"
+- generic: 当前选定值
+- button "恢复本次选定值编辑，不改变当前 Windows 值": 恢复编辑
+- generic: "%HADOOP_HOME%\\bin"
+- generic: 待追加
+- generic "此栏有 2 个原始文本完全相同的元素；仅提示，不自动去重": 重复 ×2
+- text: ;
+- generic: （空元素）
+- generic: 空元素
+- generic "此栏有 2 个原始文本完全相同的元素；仅提示，不自动去重": 重复 ×2
+- text: ;
+- generic: "%HADOOP_HOME%\\bin"
+- generic "此栏有 2 个原始文本完全相同的元素；仅提示，不自动去重": 重复 ×2
+- text: ;
+- generic: H:\开发工具\长目录
+- generic: 待追加
+- text: ;
+- generic: （空元素）
+- generic: 空元素
+- generic "此栏有 2 个原始文本完全相同的元素；仅提示，不自动去重": 重复 ×2
+- generic: 选定值已修改 · 用户 · 前置 · 自定义值
+- generic: Windows 当前值
+- button "编辑元素"
+- button "打开 Windows 值元素编辑器":
+  - generic: "%JAVA_HOME%\\bin"
+  - text: ;
+  - generic: "%PYTHON_HOME%"
+  - text: ;
+  - generic: "%PYTHON_HOME%\\Scripts"
+  - text: ;
+  - generic: "%MAVEN_HOME%\\bin"
+  - text: ;
+  - generic: H:\ProgramFiles\PortableGit\cmd
+  - text: ;
+  - generic: H:\ProgramFiles\VSCode\bin
+  - text: ;
+  - generic: "%NODE_HOME%\\bin"
+  - text: ;
+  - generic: "%DOTNET_ROOT%"
+  - text: ;
+  - generic: "%TEAM_TOOLS_HOME%\\bin"
+- generic: 应用后的值
+- generic "结果构成":
+  - text: 保留
+  - generic: "9"
+  - text: 新增
+  - generic: "2"
+  - text: 删除
+  - generic: "0"
+- generic: 预览 · 尚未应用
+- generic: "%HADOOP_HOME%\\bin"
+- generic: 待追加
+- text: ;
+- generic: H:\开发工具\长目录
+- generic: 待追加
+- text: ;
+- generic: "%JAVA_HOME%\\bin"
+- text: ;
+- generic: "%PYTHON_HOME%"
+- text: ;
+- generic: "%PYTHON_HOME%\\Scripts"
+- text: ;
+- generic: "%MAVEN_HOME%\\bin"
+- text: ;
+- generic: H:\ProgramFiles\PortableGit\cmd
+- text: ;
+- generic: H:\ProgramFiles\VSCode\bin
+- text: ;
+- generic: "%NODE_HOME%\\bin"
+- text: ;
+- generic: "%DOTNET_ROOT%"
+- text: ;
+- generic: "%TEAM_TOOLS_HOME%\\bin"
+- text: 最终写入字符串 · 不含删除项
+- generic: "%HADOOP_HOME%\\bin; H:\\开发工具\\长目录 ;%JAVA_HOME%\\bin;%PYTHON_HOME%;%PYTHON_HOME%\\Scripts;%MAVEN_HOME%\\bin;H:\\ProgramFiles\\PortableGit\\cmd;H:\\ProgramFiles\\VSCode\\bin;%NODE_HOME%\\bin;%DOTNET_ROOT%;%TEAM_TOOLS_HOME%\\bin"
+- generic: "! 不匹配 0/3"
+- generic: 在开头追加 2 项 · 保留其他元素
+- paragraph:
+  - generic: 当前触碰
+  - generic: 同项前后
+  - generic: 重复同值
+  - generic: Tab 切换区域，方向键浏览元素
+- generic: ⓘ 此页面为交互设计原型。输入与方案切换只修改演示选定值，预览确认也只更新模拟数据。
+- contentinfo:
+  - strong: 单应用 · Hadoop / 2.9.2
+  - generic: 1 项待应用修改 · 演示状态 · 不连接 Windows 注册表
+  - button "撤销配置 ⌄"
+  - button "预览并应用 →"
+- dialog "单应用方案预览":
+  - heading "单应用方案预览" [level=3]
+  - paragraph: 2 条变量记录 · 2 个目标 · 预览版本 1 · 仅更新页面模拟数据
+  - status
+  - button "关闭" [active]: ×
+  - region "本次预览结论":
+    - generic: →
+    - heading "已准备好 2 个目标的变更" [level=4]
+    - paragraph: 核对下方当前值与目标结果，再确认模拟应用。
+    - generic: 2 个目标
+    - generic: 2 个有实际变更
+    - generic: 0 个值不变
+  - navigation "预览目标":
+    - generic: 按目标定位
+    - button "定位用户 HADOOP_HOME，有实际变更":
+      - generic: "1"
+      - strong: HADOOP_HOME
+      - generic: 用户
+      - generic: 有实际变更
+    - button "定位用户 Path，有实际变更":
+      - generic: "2"
+      - strong: Path
+      - generic: 用户
+      - generic: 有实际变更
+  - strong: HADOOP_HOME
+  - generic: 用户
+  - generic: 有实际变更
+  - generic: Hadoop / 2.9.2 · 替换
+  - generic: 模拟当前
+  - group "模拟当前":
+    - generic: （不存在）
+  - generic: 目标结果 · 尚未应用
+  - group "目标结果":
+    - generic: H:\ProgramFiles\Hadoop\2.9.2
+    - generic: 整体待替换
+  - paragraph:
+    - generic: 当前触碰
+    - generic: 同项前后
+    - generic: 重复同值
+  - generic "完整原始字符串"
+  - paragraph: 应用时整体替换当前值。
+  - strong: Path
+  - generic: 用户
+  - generic: 有实际变更
+  - generic: Hadoop / 2.9.2 · 前置
+  - generic: 模拟当前
+  - group "模拟当前":
+    - generic: "%JAVA_HOME%\\bin"
+    - generic: ;
+    - generic: "%PYTHON_HOME%"
+    - generic: ;
+    - generic: "%PYTHON_HOME%\\Scripts"
+    - generic: ;
+    - generic: "%MAVEN_HOME%\\bin"
+    - generic: ;
+    - generic: H:\ProgramFiles\PortableGit\cmd
+    - generic: ;
+    - generic: H:\ProgramFiles\VSCode\bin
+    - generic: ;
+    - generic: "%NODE_HOME%\\bin"
+    - generic: ;
+    - generic: "%DOTNET_ROOT%"
+    - generic: ;
+    - generic: "%TEAM_TOOLS_HOME%\\bin"
+  - generic: 目标结果 · 尚未应用
+  - group "目标结果":
+    - generic: "%HADOOP_HOME%\\bin"
+    - generic: 待追加
+    - generic: ;
+    - generic: H:\开发工具\长目录
+    - generic: 待追加
+    - generic: ;
+    - generic: "%JAVA_HOME%\\bin"
+    - generic: ;
+    - generic: "%PYTHON_HOME%"
+    - generic: ;
+    - generic: "%PYTHON_HOME%\\Scripts"
+    - generic: ;
+    - generic: "%MAVEN_HOME%\\bin"
+    - generic: ;
+    - generic: H:\ProgramFiles\PortableGit\cmd
+    - generic: ;
+    - generic: H:\ProgramFiles\VSCode\bin
+    - generic: ;
+    - generic: "%NODE_HOME%\\bin"
+    - generic: ;
+    - generic: "%DOTNET_ROOT%"
+    - generic: ;
+    - generic: "%TEAM_TOOLS_HOME%\\bin"
+  - paragraph:
+    - generic: 当前触碰
+    - generic: 同项前后
+    - generic: 重复同值
+  - generic "完整原始字符串"
+  - paragraph: 在开头追加 2 项 · 保留其他元素
+  - paragraph: 仅执行本预览列出的实际变更。
+  - button "取消"
+  - button "模拟确认应用"
+- status: ✓
