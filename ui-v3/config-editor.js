@@ -95,13 +95,48 @@
     </section>`;
     const visibleProfiles = editor.showAll ? app.profiles : [profile];
     root.innerHTML = `<div class="editor-shell cfg-editor-shell"><details class="cfg-navigation" ${navOpen ? 'open' : ''}><summary>应用与方案 <span>${escape(app.name)} / ${escape(profile.name)}</span></summary><aside class="editor-left">
-      <section class="editor-nav-group"><div class="editor-section"><strong id="editorAppsHeading">应用</strong><span class="mini sub">${apps.length} 项</span></div><div class="editor-nav-list" data-editor-list="apps" aria-labelledby="editorAppsHeading">${apps.map((a, index) => `<button type="button" class="editor-item ${editor.app === index ? 'active' : ''}" data-editapp="${index}" aria-current="${editor.app === index}" title="${escape(a.name)}">${escape(a.name)}</button>`).join('')}</div></section>
-      <section class="editor-nav-group"><div class="editor-section"><strong id="editorProfilesHeading">方案</strong><span class="mini sub">${app.profiles.length} 项</span></div><div class="editor-nav-list" data-editor-list="profiles" aria-labelledby="editorProfilesHeading">${app.profiles.map(p => `<button type="button" class="editor-item ${profile.name === p.name ? 'active' : ''}" data-editplan="${escape(p.name)}" aria-current="${profile.name === p.name}" title="${escape(p.name)}">${escape(p.name)}${app.default === p.name ? ' · 默认' : ''}</button>`).join('')}</div></section>
+      <section class="editor-nav-group"><div class="editor-section"><strong id="editorAppsHeading">应用</strong><span class="mini sub">${apps.length} 项</span><button type="button" class="cfg-text-action cfg-create-entry" id="cfgAddApp">新增应用</button></div><div class="editor-nav-list" data-editor-list="apps" aria-labelledby="editorAppsHeading">${apps.map((a, index) => `<button type="button" class="editor-item ${editor.app === index ? 'active' : ''}" data-editapp="${index}" aria-current="${editor.app === index}" title="${escape(a.name)}">${escape(a.name)}</button>`).join('')}</div></section>
+      <section class="editor-nav-group"><div class="editor-section"><strong id="editorProfilesHeading">方案</strong><span class="mini sub">${app.profiles.length} 项</span><button type="button" class="cfg-text-action cfg-create-entry" id="cfgAddProfile">新增方案</button></div><div class="editor-nav-list" data-editor-list="profiles" aria-labelledby="editorProfilesHeading">${app.profiles.map(p => `<button type="button" class="editor-item ${profile.name === p.name ? 'active' : ''}" data-editplan="${escape(p.name)}" aria-current="${profile.name === p.name}" title="${escape(p.name)}">${escape(p.name)}${app.default === p.name ? ' · 默认' : ''}</button>`).join('')}</div></section>
       </aside></details><main class="editor-mid cfg-editor-main"><div class="cfg-page-heading"><div><h2>${escape(app.name)}</h2><p>${escape(profile.name)} · ${profile.vars.length} 项变量 · 默认方案 ${escape(app.default)}</p></div><select id="editorView" class="view-select" aria-label="配置方案显示范围"><option value="current" ${!editor.showAll ? 'selected' : ''}>当前方案</option><option value="all" ${editor.showAll ? 'selected' : ''}>全部方案</option></select></div>
+      <div id="cfgCreateSlot"></div><div class="cfg-variable-toolbar"><span>${escape(profile.name)} · 变量</span><button type="button" class="cfg-text-action" id="cfgAddVariable">新增变量</button></div>
       <div class="cfg-variable-list">${visibleProfiles.map(p => `<section class="cfg-scheme-group" aria-label="${escape(p.name)}">${editor.showAll ? `<div class="cfg-scheme-heading"><h3>${escape(p.name)}</h3><span>${p.vars.length} 项变量${p.name === app.default ? ' · 默认方案' : ''}</span></div>` : ''}${p.vars.length ? `<div class="cfg-variable-strip" aria-label="${escape(p.name)}变量">${p.vars.map((v, index) => {const active = p.name === profile.name && index === editor.varIdx; return `<button type="button" class="cfg-variable-select ${active ? 'is-active' : ''}" data-tableplan="${escape(p.name)}" data-tablevar="${index}" aria-current="${active}" aria-expanded="${active}" ${active ? 'aria-controls="editorInspector"' : ''} title="${escape(v.name)} · ${v.scope === 'System' ? '系统' : '用户'} · ${escape(modeLabels[v.mode] || v.mode)}"><strong>${escape(v.name)}</strong><span class="cfg-variable-meta">${v.scope === 'System' ? '系统' : '用户'}</span></button>`;}).join('')}</div>${p.name === profile.name && variable ? form(variable) : ''}` : '<p class="cfg-empty">此方案尚无变量。</p>'}</section>`).join('')}</div><p class="cfg-page-note">默认值来源跟随配置修改；其他来源保留选定值。到工作台预览后再应用。</p>
       </main></div>`;
     const find = id => root.querySelector(`[id="${id}"]`);
     const refresh = focusId => rerender(focusId);
+    const openCreate = kind => {
+      const names = {app:'新增应用',profile:'新增方案',variable:'新增变量'}, slot = find('cfgCreateSlot');
+      const entry = {app:'cfgAddApp',profile:'cfgAddProfile',variable:'cfgAddVariable'}[kind];
+      slot.innerHTML = `<form id="cfgCreateForm" class="cfg-create-form" aria-labelledby="cfgCreateTitle"><div class="cfg-section-heading"><h3 id="cfgCreateTitle">${names[kind]}</h3><span class="cfg-hint">${kind === 'app' ? '同时创建第一个方案和变量' : kind === 'profile' ? '同时创建第一条变量；原默认方案不变' : escape(app.name)+' / '+escape(profile.name)}</span></div><div class="cfg-create-fields">
+        ${kind === 'app' ? field('cfgCreateAppName','应用名称','<input id="cfgCreateAppName" autocomplete="off" placeholder="例如 Rust">') : ''}
+        ${kind !== 'variable' ? field('cfgCreateProfileName','方案名称','<input id="cfgCreateProfileName" autocomplete="off" placeholder="例如 稳定版">') : ''}
+        ${field('cfgCreateName',kind === 'variable' ? '变量名' : '首个变量名','<input id="cfgCreateName" autocomplete="off" spellcheck="false" placeholder="例如 RUST_HOME">')}
+        ${field('cfgCreateScope','作用域','<select id="cfgCreateScope"><option value="User">用户 · User</option><option value="System">系统 · System</option></select>')}
+        ${field('cfgCreateMode','应用模式',`<select id="cfgCreateMode">${Object.entries(modeLabels).map(([key,label])=>`<option value="${escape(key)}">${escape(label)} · ${escape(key)}</option>`).join('')}</select>`)}
+      </div><p id="cfgCreateHint" class="cfg-hint" hidden></p><p id="cfgCreateError" class="cfg-validation" role="alert" hidden></p><div class="cfg-create-actions"><span class="cfg-hint">创建后编辑默认值与候选值；不会直接应用。</span><button type="button" class="btn" id="cfgCreateCancel">取消</button><button type="submit" class="btn primary" id="cfgCreateSubmit">${names[kind]}</button></div></form>`;
+      let inheritedWhole = false, previousMode = 'replace';
+      const checkTarget = () => {
+        const canonical = window.ConfigFormat.matchName(find('cfgCreateName').value), scope = find('cfgCreateScope').value;
+        const whole = apps.some(a=>a.profiles.some(p=>p.vars.some(v=>v.scope===scope&&window.ConfigFormat.matchName(v.name)===canonical&&v.special)));
+        const mode = find('cfgCreateMode'), hint = find('cfgCreateHint');
+        if(whole&&!inheritedWhole){previousMode=mode.value;mode.value='replace';}
+        if(!whole&&inheritedWhole)mode.value=previousMode;
+        inheritedWhole=whole;mode.disabled=whole;hint.hidden=!whole;hint.textContent=whole?'同一目标已定义整体处理，沿用 replace 模式。':'';
+      };
+      find('cfgCreateName').oninput=checkTarget;find('cfgCreateScope').onchange=checkTarget;
+      const cancel = () => { slot.replaceChildren(); find(entry)?.focus(); };
+      find('cfgCreateCancel').onclick = cancel;
+      find('cfgCreateForm').onkeydown = event => { if(event.key === 'Escape'){event.preventDefault();event.stopPropagation();cancel();} };
+      find('cfgCreateForm').onsubmit = event => {
+        event.preventDefault();
+        const fields = Object.fromEntries(['appName','profileName','name','scope','mode'].map(key => [key,find('cfgCreate'+key[0].toUpperCase()+key.slice(1))?.value]));
+        const result = options.create?.(kind, fields, {app:editor.app,profile:profile.name});
+        if(!result?.ok){const message=find('cfgCreateError');message.hidden=false;message.textContent=result?.error||'未能创建，请检查填写内容。';find('cfgCreate'+(result?.field||'name')[0].toUpperCase()+(result?.field||'name').slice(1))?.focus();return;}
+        refresh('cfgDefault');
+      };
+      find(kind === 'app' ? 'cfgCreateAppName' : kind === 'profile' ? 'cfgCreateProfileName' : 'cfgCreateName').focus();
+      slot.scrollIntoView?.({block:'nearest'});
+    };
+    for(const [id,kind] of [['cfgAddApp','app'],['cfgAddProfile','profile'],['cfgAddVariable','variable']])find(id).onclick = () => openCreate(kind);
     const navFocus = (selector, value) => [...root.querySelectorAll(selector)].find(node => node.dataset[selector.includes('editapp') ? 'editapp' : 'editplan'] === String(value))?.focus({preventScroll:true});
     find('editorView').onchange = event => { editor.showAll = event.target.value === 'all'; refresh('editorView'); };
     root.querySelectorAll('[data-editapp]').forEach(button => button.onclick = () => { editor.app = +button.dataset.editapp; editor.profile = apps[editor.app].default; editor.varIdx = 0; refresh(); navFocus('[data-editapp]', editor.app); });

@@ -1,3 +1,5 @@
+配置新增能力：[CONFIG_CREATION.txt](CONFIG_CREATION.txt) 规定应用、方案与变量的原子创建、稳定对象基线、差异与还原；不改变运行计划与系统写入边界。
+
 执行前审阅展示：[PLAN_REVIEW_PRESENTATION.txt](PLAN_REVIEW_PRESENTATION.txt) 定义冻结计划的只读摘要、目标定位、原因说明、窄屏与刷新焦点规则。核心无缝刷新与安全边界继续遵循以下契约。
 
 Latest refresh behavior: [SEAMLESS_REFRESH.txt](SEAMLESS_REFRESH.txt) supersedes manual rebase and snapshot-wide stale blocking in V3.2/V3.3, following the owner requirement and Astra/ChatGPT review on 2026-10-16. Original intent, duplicate/shared protection and single-plan execution remain.

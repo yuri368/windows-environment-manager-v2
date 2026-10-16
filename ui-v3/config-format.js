@@ -8,11 +8,17 @@ var ConfigFormat = (() => {
     const issues=[],targets=new Map();
     const add=(variable,field,message)=>issues.push({variable,field,message});
     const valueError=value=>typeof value!=='string'?'必须是字符串':value.includes('\0')?'不能包含 NUL 字符':value.length>32766?'不能超过 32766 个 UTF-16 单元':null;
+    const appNames=new Set();
     apps.forEach(app=>{
       if(!app.name?.trim())add(null,'name','应用名称不能为空');
+      if(appNames.has(app.name))add(null,'appName','应用名称重复：'+app.name);appNames.add(app.name);
+      if(!app.profiles.length)add(null,'profile','应用必须包含方案');
       if(!app.profiles.some(p=>p.name===app.default))add(null,'default','默认方案必须指向现有方案');
+      const profileNames=new Set();
       app.profiles.forEach(profile=>{
         if(!profile.name?.trim()||profile.name==='default_option')add(null,'profile','方案名称不能为空或使用保留名 default_option');
+        if(profileNames.has(profile.name))add(null,'profileName','方案名称重复：'+profile.name);profileNames.add(profile.name);
+        if(!profile.vars.length)add(null,'name','方案必须包含变量');
         const names=new Map();
         profile.vars.forEach(v=>{
           if(!v.name||/[=\0]/.test(v.name))add(v,'name','变量名不能为空或包含 =、NUL');
@@ -58,5 +64,5 @@ var ConfigFormat = (() => {
     }
     return lines.join('\n');
   }
-  return {choices,errors,serialize};
+  return {choices,errors,serialize,matchName};
 })();

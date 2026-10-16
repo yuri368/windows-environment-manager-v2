@@ -24,7 +24,7 @@
 <link rel="stylesheet" href="shell-ui.css?v=180c0987749f">
 <link rel="stylesheet" href="fx-ui.css">
 <link rel="stylesheet" href="surface-ui.css?v=5e67af524687">
-<link rel="stylesheet" href="config-editor.css?v=8c47febf3f32">
+<link rel="stylesheet" href="config-editor.css?v=30dd6e14588c">
 </head>
 <body><div id="app">
 <header class="chrome"><span class="logo">≋</span><strong>环境变量方案管理器</strong><span class="sub mini">Compact UI · 交互演示</span><span class="prototype-mark">本地演示 · 未连接系统</span></header>
@@ -34,8 +34,8 @@
 </div><div class="backdrop" id="modal"></div><div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="demo-configs.js"></script>
 <script src="demo-plan.js?v=b3e3700b709e"></script>
-<script src="config-format.js?v=40be702d6b7e"></script>
-<script src="config-editor.js?v=7ef9f3118ddd"></script>
+<script src="config-format.js?v=a87e7be85188"></script>
+<script src="config-editor.js?v=c1a65310e0b0"></script>
 <script src="windows-elements.js?v=66acc970c720"></script>
 <script>
 'use strict';
@@ -54,8 +54,9 @@ const MODE={'replace':'替换','+append':'前置','-append':'后置','append':'�
 const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 let apps=[],windows={},checked=new Set(),selected=2,profileChoice={},filter='all',search='',onlyMismatch=false,compareShown=true,focusedVariable=0,screen='workbench',modalAction=null,revision=0,history=[],editor={app:2,profile:'3.9.11',varIdx:0,tab:'visual'},toastTimer=null;
 let lastDialogFocus = null, targetRevisions = {}, targetTypes = {}, planCache = new WeakMap();
+let configOriginals = new WeakMap();
 function mkVar(v,i){return {id:i,name:v[0],scope:v[1],mode:v[2],defaultValue:v[3],savedValue:v[4]?.savedValue??null,source:'默认值',custom:null,choices:ConfigFormat.choices({choices:v[4]?.choices||[]}),editable:v[4]?.editable??true,special:!!v[4]?.special,baselineValue:v[3],matchBaseline:null,removalState:null,dirty:false}}
-function reset(quiet=false){apps=clone(initialApps).map(a=>({...a,profiles:a.profiles.map(p=>({...p,vars:p.vars.map(mkVar)}))}));windows={'User|JAVA_HOME':'H:\\ProgramFiles\\DevTools\\Java\\jdk1.8.0_202','User|PYTHON_HOME':'H:\\ProgramFiles\\Python313','User|MAVEN_HOME':'H:\\ProgramFiles\\DevTools\\Maven\\apache-maven-3.9.11','User|PATH':['%JAVA_HOME%\\bin','%PYTHON_HOME%;%PYTHON_HOME%\\Scripts','%MAVEN_HOME%\\bin','H:\\ProgramFiles\\PortableGit\\cmd','H:\\ProgramFiles\\VSCode\\bin'].join(';')};Object.assign(windows,extraDemoWindows);windows['User|PATH']+=';'+extraDemoUserPath.join(';');checked=new Set();selected=2;profileChoice={};apps.forEach((a,i)=>profileChoice[i]=a.default);filter='all';search='';onlyMismatch=false;compareShown=true;focusedVariable=0;history=[{when:'演示初始快照',action:'打开演示环境',detail:'模拟 Windows 数据已载入'}];revision=0;targetRevisions={};targetTypes={};planCache=new WeakMap();Object.keys(removalMemo).forEach(k=>delete removalMemo[k]);editor={app:2,profile:'3.9.11',varIdx:0,tab:'visual'};screen='workbench';render();if(!quiet)notify('已恢复演示初始状态')}
+function reset(quiet=false){apps=clone(initialApps).map(a=>({...a,profiles:a.profiles.map(p=>({...p,vars:p.vars.map(mkVar)}))}));captureConfigBaselines();windows={'User|JAVA_HOME':'H:\\ProgramFiles\\DevTools\\Java\\jdk1.8.0_202','User|PYTHON_HOME':'H:\\ProgramFiles\\Python313','User|MAVEN_HOME':'H:\\ProgramFiles\\DevTools\\Maven\\apache-maven-3.9.11','User|PATH':['%JAVA_HOME%\\bin','%PYTHON_HOME%;%PYTHON_HOME%\\Scripts','%MAVEN_HOME%\\bin','H:\\ProgramFiles\\PortableGit\\cmd','H:\\ProgramFiles\\VSCode\\bin'].join(';')};Object.assign(windows,extraDemoWindows);windows['User|PATH']+=';'+extraDemoUserPath.join(';');checked=new Set();selected=2;profileChoice={};apps.forEach((a,i)=>profileChoice[i]=a.default);filter='all';search='';onlyMismatch=false;compareShown=true;focusedVariable=0;history=[{when:'演示初始快照',action:'打开演示环境',detail:'模拟 Windows 数据已载入'}];revision=0;targetRevisions={};targetTypes={};planCache=new WeakMap();Object.keys(removalMemo).forEach(k=>delete removalMemo[k]);editor={app:2,profile:'3.9.11',varIdx:0,tab:'visual'};screen='workbench';render();if(!quiet)notify('已恢复演示初始状态')}
 function appNow(i=selected){return apps[i]}
 function scheme(i=selected){return apps[i].profiles.find(p=>p.name===profileChoice[i])||apps[i].profiles[0]}
 function choiceValue(choice,fallback){return choice===undefined?fallback:typeof choice==='string'?choice:choice.value}
@@ -565,36 +566,90 @@ function renderHistory(){
 function configProfile(){const a=apps[editor.app];return a.profiles.find(p=>p.name===editor.profile)||a.profiles[0]}
 function configVar(){return configProfile().vars[editor.varIdx]||configProfile().vars[0]}
 const CONFIG_FIELDS = [['defaultValue','默认值'],['scope','作用域'],['mode','模式'],['special','整体处理'],['editable','运行时自由输入'],['choices','候选值']];
+function configAttributes(v){return Object.fromEntries(CONFIG_FIELDS.map(([field])=>[field,field==='choices'?ConfigFormat.choices(v):v[field]]));}
+function configTree(node,kind){
+ if(kind==='variable')return {name:node.name,...clone(configAttributes(node))};
+ if(kind==='profile')return {name:node.name,vars:node.vars.map(v=>configTree(v,'variable'))};
+ return {name:node.name,default:node.default,profiles:node.profiles.map(p=>configTree(p,'profile'))};
+}
+function captureConfigBaselines(){
+ configOriginals=new WeakMap();
+ for(const app of apps){configOriginals.set(app,{name:app.name,default:app.default});for(const profile of app.profiles){configOriginals.set(profile,{name:profile.name});for(const v of profile.vars)configOriginals.set(v,clone(configAttributes(v)));}}
+}
+function createConfigEntry(kind,fields={},context={app:editor.app,profile:editor.profile}){
+ const fail=(field,error)=>({ok:false,field,error});
+ if(!['app','profile','variable'].includes(kind))return fail('name','新增类型无效');
+ const nameOK=text=>typeof text==='string'&&text.trim()!==''&&!text.includes('\0');
+ if(kind==='app'&&!nameOK(fields.appName))return fail('appName','请填写应用名称，不能仅包含空白或 NUL');
+ if(kind!=='variable'&&(!nameOK(fields.profileName)||fields.profileName==='default_option'))return fail('profileName','请填写方案名称，不能使用保留名 default_option');
+ if(!nameOK(fields.name)||fields.name.includes('='))return fail('name','变量名不能为空、仅为空白，或包含 =、NUL');
+ const app=apps[context.app],profile=app?.profiles.find(p=>p.name===context.profile);
+ if(kind!=='app'&&!app)return fail('appName','应用已不存在，请重新选择');
+ if(kind==='variable'&&!profile)return fail('profileName','方案已不存在，请重新选择');
+ if(kind==='app'&&apps.some(a=>a.name===fields.appName))return fail('appName','应用名称已存在');
+ if(kind==='profile'&&app.profiles.some(p=>p.name===fields.profileName))return fail('profileName','此应用中已存在同名方案');
+ const scope=fields.scope??'User',mode=fields.mode??'replace';
+ if(!['User','System'].includes(scope))return fail('scope','作用域必须是 User 或 System');
+ if(!Object.hasOwn(MODE,mode))return fail('mode','应用模式无效');
+ const canonical=ConfigFormat.matchName(fields.name);
+ if(kind==='variable'&&profile.vars.some(v=>v.scope===scope&&ConfigFormat.matchName(v.name)===canonical))return fail('name','同一方案中已存在此作用域的同名变量');
+ const targetVars=apps.flatMap(a=>a.profiles.flatMap(p=>p.vars)).filter(v=>v.scope===scope&&ConfigFormat.matchName(v.name)===canonical);
+ const special=targetVars[0]?.special??false;
+ const variable=mkVar([fields.name,scope,special?'replace':mode,'',{special}],kind==='variable'?Math.max(-1,...profile.vars.map(v=>v.id))+1:0);
+ const newProfile={name:fields.profileName,vars:[variable]};
+ const newApp={name:fields.appName,icon:Array.from(fields.appName||'')[0]||'A',iconBg:'#edf3ef',iconFg:'#286c51',active:null,default:fields.profileName,profiles:[newProfile]};
+ const candidate=kind==='app'?[...apps,newApp]:apps.map(a=>a!==app?a:{...a,profiles:kind==='profile'?[...a.profiles,newProfile]:a.profiles.map(p=>p!==profile?p:{...p,vars:[...p.vars,variable]})});
+ const problems=ConfigFormat.errors(candidate);
+ if(problems.length)return fail('name','请先修正配置：'+problems[0].message);
+ if(kind==='app'){apps.push(newApp);editor.app=apps.length-1;profileChoice[editor.app]=newApp.default;editor.profile=newProfile.name;editor.varIdx=0;}
+ else if(kind==='profile'){app.profiles.push(newProfile);editor.app=context.app;editor.profile=newProfile.name;editor.varIdx=0;}
+ else {profile.vars.push(variable);editor.app=context.app;editor.profile=profile.name;editor.varIdx=profile.vars.length-1;}
+ editor.showAll=false;
+ return {ok:true,app:editor.app,profile:editor.profile,varIdx:editor.varIdx};
+}
 function configChanges() {
-  return apps.flatMap((a,i)=>a.profiles.flatMap(p=>p.vars.flatMap((v,j)=>{
-    const m=initialApps[i].profiles.find(x=>x.name===p.name).vars[j];
-    const original={defaultValue:m[3],scope:m[1],mode:m[2],special:!!m[4]?.special,editable:m[4]?.editable??true,choices:ConfigFormat.choices({choices:m[4]?.choices||[]})};
+  const addition=(a,p,v,kind,node)=>({app:a.name,profile:p?.name??'',name:v?.name??'',field:'addition',label:'新增'+{app:'应用',profile:'方案',variable:'变量'}[kind],before:null,after:configTree(node,kind)});
+  return apps.flatMap(a=>!configOriginals.has(a)?[addition(a,null,null,'app',a)]:a.profiles.flatMap(p=>!configOriginals.has(p)?[addition(a,p,null,'profile',p)]:p.vars.flatMap(v=>{
+    const original=configOriginals.get(v);if(!original)return [addition(a,p,v,'variable',v)];
     return CONFIG_FIELDS.filter(([field])=>JSON.stringify(field==='choices'?ConfigFormat.choices(v):v[field])!==JSON.stringify(original[field])).map(([field,label])=>({app:a.name,profile:p.name,name:v.name,field,label,before:original[field],after:field==='choices'?ConfigFormat.choices(v):v[field]}));
   })));
 }
 function updateConfigStatus() {
   const count=configChanges().length;
   const errors=ConfigFormat.errors(apps);
-  if ($('configStatus')) { $('configStatus').textContent=(count?`配置修改 · ${count} 项属性修改 · 仅本页保留`:'配置修改未修改 · 编辑不会更改真实文件')+(errors.length?` · ${errors.length} 项错误，暂不能导出`:'');$('configStatus').classList.toggle('has-changes',count>0); }
+  const changeUnit=configChanges().some(c=>c.field==='addition')?'配置变更':'属性修改';
+  if ($('configStatus')) { $('configStatus').textContent=(count?`配置修改 · ${count} 项${changeUnit} · 仅本页保留`:'配置修改未修改 · 编辑不会更改真实文件')+(errors.length?` · ${errors.length} 项错误，暂不能导出`:'');$('configStatus').classList.toggle('has-changes',count>0); }
   if($('downloadToml')){$('downloadToml').disabled=errors.length>0;$('downloadToml').title=errors.length?errors[0].message:'导出符合 V2 配置格式的新文件';}
   if ($('cancelConfig')) $('cancelConfig').disabled=count===0;
   const badge=$('configDraftBadge');
-  if (badge) { badge.hidden=!count; badge.textContent=`${count} 项属性修改`; }
+  if (badge) { badge.hidden=!count; badge.textContent=`${count} 项${changeUnit}`; }
 }
 function restoreConfig() {
-  apps.forEach((a,i)=>a.profiles.forEach(p=>p.vars.forEach((v,j)=>{
-    const m=initialApps[i].profiles.find(x=>x.name===p.name).vars[j];
-    const contextChanged=v.scope!==m[1]||v.mode!==m[2]||v.special!==!!m[4]?.special||(v.source==='默认值'&&v.defaultValue!==m[3]);
+  apps=apps.filter(a=>configOriginals.has(a));
+  apps.forEach((a,i)=>{
+   a.profiles=a.profiles.filter(p=>configOriginals.has(p));
+   a.default=configOriginals.get(a).default;
+   if(!a.profiles.some(p=>p.name===a.active))a.active=null;
+   if(!a.profiles.some(p=>p.name===profileChoice[i]))profileChoice[i]=a.default;
+   a.profiles.forEach(p=>{p.vars=p.vars.filter(v=>configOriginals.has(v));p.vars.forEach(v=>{
+    const original=configOriginals.get(v);
+    const contextChanged=v.scope!==original.scope||v.mode!==original.mode||v.special!==original.special||(v.source==='默认值'&&v.defaultValue!==original.defaultValue);
     const selectedChoice=v.source.startsWith('候选值 ')?ConfigFormat.choices(v)[+v.source.slice(4)-1]:null;
-    Object.assign(v,{defaultValue:m[3],scope:m[1],mode:m[2],special:!!m[4]?.special,editable:m[4]?.editable??true,choices:ConfigFormat.choices({choices:m[4]?.choices||[]})});
+    Object.assign(v,clone(original));
     if(contextChanged||selectedChoice){v.matchBaseline=null;v.removalState=null;}
     if(selectedChoice){const restored=v.choices.findIndex(c=>c.label===selectedChoice.label&&c.value===selectedChoice.value);v.source=restored>=0?'候选值 '+(restored+1):'默认值';}
     v.dirty=hasPendingValue(v);
-  })));
+   });});
+  });
+  checked=new Set([...checked].filter(i=>i<apps.length));
+  Object.keys(profileChoice).forEach(i=>{if(+i>=apps.length)delete profileChoice[i];});
+  selected=Math.min(selected,apps.length-1);focusedVariable=Math.min(focusedVariable,scheme().vars.length-1);
+  editor.app=Math.min(editor.app,apps.length-1);if(!apps[editor.app].profiles.some(p=>p.name===editor.profile))editor.profile=apps[editor.app].default;
+  editor.varIdx=Math.min(editor.varIdx,configProfile().vars.length-1);
   renderConfig();$('downloadToml').focus();notify('已还原配置修改，页面环境快照未改变');
 }
 function renderConfig() {
-  $('screen').innerHTML=`<div class="config-page"><div class="editor-tabs"><div class="config-view-tabs" role="tablist" aria-label="配置视图"><button id="configTabVisual" role="tab" aria-selected="${editor.tab==='visual'}" tabindex="${editor.tab==='visual'?0:-1}" aria-controls="editorbody" class="navtab ${editor.tab==='visual'?'active':''}" data-edtab="visual" aria-current="${editor.tab==='visual'?'page':'false'}">可视化</button><button id="configTabRaw" role="tab" aria-selected="${editor.tab==='raw'}" tabindex="${editor.tab==='raw'?0:-1}" aria-controls="editorbody" class="navtab ${editor.tab==='raw'?'active':''}" data-edtab="raw" aria-current="${editor.tab==='raw'?'page':'false'}">示例 TOML</button><button id="configTabDiff" role="tab" aria-selected="${editor.tab==='diff'}" tabindex="${editor.tab==='diff'?0:-1}" aria-controls="editorbody" class="navtab ${editor.tab==='diff'?'active':''}" data-edtab="diff" aria-current="${editor.tab==='diff'?'page':'false'}">修改差异</button></div><span id="configDraftBadge" class="tag dirty" hidden></span><span class="config-file-label">env.toml · 演示配置</span></div><div id="editorbody" class="editor-body" role="tabpanel" aria-labelledby="configTab${{visual:'Visual',raw:'Raw',diff:'Diff'}[editor.tab]}"></div><div class="edfooter"><span id="configStatus" role="status"></span><button class="btn" id="cancelConfig" title="还原全部方案的默认值、候选值、作用域、模式、整体处理及自由输入属性">还原配置修改</button><button class="btn primary" id="downloadToml">导出 TOML 文件 ↓</button></div></div>`;
+  $('screen').innerHTML=`<div class="config-page"><div class="editor-tabs"><div class="config-view-tabs" role="tablist" aria-label="配置视图"><button id="configTabVisual" role="tab" aria-selected="${editor.tab==='visual'}" tabindex="${editor.tab==='visual'?0:-1}" aria-controls="editorbody" class="navtab ${editor.tab==='visual'?'active':''}" data-edtab="visual" aria-current="${editor.tab==='visual'?'page':'false'}">可视化</button><button id="configTabRaw" role="tab" aria-selected="${editor.tab==='raw'}" tabindex="${editor.tab==='raw'?0:-1}" aria-controls="editorbody" class="navtab ${editor.tab==='raw'?'active':''}" data-edtab="raw" aria-current="${editor.tab==='raw'?'page':'false'}">示例 TOML</button><button id="configTabDiff" role="tab" aria-selected="${editor.tab==='diff'}" tabindex="${editor.tab==='diff'?0:-1}" aria-controls="editorbody" class="navtab ${editor.tab==='diff'?'active':''}" data-edtab="diff" aria-current="${editor.tab==='diff'?'page':'false'}">修改差异</button></div><span id="configDraftBadge" class="tag dirty" hidden></span><span class="config-file-label">env.toml · 演示配置</span></div><div id="editorbody" class="editor-body" role="tabpanel" aria-labelledby="configTab${{visual:'Visual',raw:'Raw',diff:'Diff'}[editor.tab]}"></div><div class="edfooter"><span id="configStatus" role="status"></span><button class="btn" id="cancelConfig" title="移除本轮新增的应用、方案和变量，并还原已有配置属性；运行草稿和环境快照保留">还原配置修改</button><button class="btn primary" id="downloadToml">导出 TOML 文件 ↓</button></div></div>`;
   document.querySelectorAll('[data-edtab]').forEach(b=>b.onclick=()=>{
     editor.tab=b.dataset.edtab;renderConfig();document.querySelector(`[data-edtab="${editor.tab}"]`).focus();
   });
@@ -623,7 +678,7 @@ function renderEditorBody(focusId) {
     };
     return;
   }
-  ConfigEditor.render({root,apps,editor,modeLabels:MODE,choices:ConfigFormat.choices,changes:configChanges,change:setConfigProperty,rerender:renderEditorBody,status:updateConfigStatus,preview:(raw,whole)=>rawStreamMarkup(raw,{whole,comparison:true,label:'配置默认值元素'}),errors:v=>ConfigFormat.errors(apps).filter(item=>item.variable===v),focusId});
+  ConfigEditor.render({root,apps,editor,modeLabels:MODE,choices:ConfigFormat.choices,changes:configChanges,change:setConfigProperty,create:createConfigEntry,rerender:renderEditorBody,status:updateConfigStatus,preview:(raw,whole)=>rawStreamMarkup(raw,{whole,comparison:true,label:'配置默认值元素'}),errors:v=>ConfigFormat.errors(apps).filter(item=>item.variable===v),focusId});
 }
 function setConfigProperty(v,field,next,meta={}){
  const selectedChoice=v.source.startsWith('候选值 ')?+v.source.slice(4)-1:null;
@@ -646,8 +701,8 @@ function setConfigProperty(v,field,next,meta={}){
 }
 function generateToml(preview=false){return ConfigFormat.serialize(apps,{validate:!preview})}
 function generateDiff() {
-  const display=(field,val)=>['special','editable'].includes(field)?(val?'是':'否'):field==='choices'?JSON.stringify(val):String(val);
-  return configChanges().map(c=>`${c.app} / ${c.profile} / ${c.name} · ${c.label}\n  原始：${display(c.field,c.before)}\n  修改：${display(c.field,c.after)}`).join('\n\n')||'目前没有配置属性修改。';
+  const display=(field,val)=>['special','editable'].includes(field)?(val?'是':'否'):['choices','addition'].includes(field)?JSON.stringify(val,null,2):String(val);
+  return configChanges().map(c=>`${[c.app,c.profile,c.name].filter(Boolean).join(" / ")} · ${c.label}\n  原始：${c.field==="addition"?"（不存在）":display(c.field,c.before)}\n  ${c.field==="addition"?"新增":"修改"}：${display(c.field,c.after)}`).join('\n\n')||'目前没有配置属性修改。';
 }
 function downloadToml(){const issues=ConfigFormat.errors(apps);if(issues.length){notify('配置尚不能导出：'+issues[0].message);return;}const b=new Blob([generateToml()],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(b),a=document.createElement('a');a.href=url;a.download='env.compact-demo.toml';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);notify('已生成 V2 格式的演示配置文件')}
 
