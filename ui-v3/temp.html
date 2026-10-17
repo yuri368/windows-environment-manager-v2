@@ -19,11 +19,11 @@
 @media(max-width:1100px){body{padding:0}#app{height:100vh;border:0;border-radius:0}.sidebar{width:233px}.content{padding:15px 13px}.overview{padding:15px 14px}.editor-right{width:265px}.editor-left{width:185px}.toolbar .ico{display:none}.tool{padding:7px 6px}}
 @media(max-width:860px){.brand{display:none}.sidebar{width:190px}.navtab{padding:0 7px}.appitem{grid-template-columns:15px minmax(0,1fr) 31px;gap:6px}.appicon{display:none}.tag{padding:2px 4px}.overview{align-items:flex-start;flex-wrap:wrap}.plan-side{margin-left:39px}.editor-right{width:240px}.editor-left{width:155px}.toolbar .tool{font-size:11px}}
 </style>
-<link rel="stylesheet" href="ui-polish.css?v=20261016astra1">
+<link rel="stylesheet" href="ui-polish.css?v=20261017phase1">
 <link rel="stylesheet" href="elements-ui.css?v=5a9013ac01fa">
-<link rel="stylesheet" href="shell-ui.css?v=20261016astra1">
+<link rel="stylesheet" href="shell-ui.css?v=20261017phase1">
 <link rel="stylesheet" href="fx-ui.css">
-<link rel="stylesheet" href="surface-ui.css?v=20261016astra1">
+<link rel="stylesheet" href="surface-ui.css?v=20261017phase1">
 <link rel="stylesheet" href="config-editor.css?v=20261016compact">
 </head>
 <body><div id="app">
@@ -246,7 +246,7 @@ function renderAppList(){
   row.querySelector('[data-check]').addEventListener('change',e=>{e.stopPropagation();if(e.target.checked)checked.add(i);else checked.delete(i);renderAppList();renderFooter();document.querySelector('[data-check="'+i+'"]')?.focus({preventScroll:true})});
  });
 }
-function renderOverview(){const a=appNow(),p=curProfile(),n=matchCount(p);$('overview').innerHTML=`<div class="overview-main"><div class="titleline"><div class="bigicon" data-kind="${appKind(p)}" style="${dir(selected)};--p:${Math.round(n/Math.max(p.vars.length,1)*100)}">${esc(a.icon)}</div><div class="app-title">${esc(a.name)}</div><span class="tag ${colorStatus(p)}" data-kind="${appKind(p)}"><span class="rs-glyph" aria-hidden="true">${n===p.vars.length?'✓':'!'}</span> Windows · ${status(p)} ${n}/${p.vars.length}</span></div><div class="meta"><span>最近应用：<strong>${esc(a.active||'无')}</strong></span><span class="sep"></span><span>默认：<strong>${esc(a.default)}</strong></span>${dirty(p)?'<span class="overview-dirty">有待应用修改</span>':''}</div></div><div class="plan-side"><div class="plan-field" id="planField"><label>准备方案</label><button class="plan-button" id="planButton" aria-expanded="false" aria-controls="planMenu" aria-haspopup="true"><span>${esc(p.name)}</span><span class="sub">⌄</span></button><div class="dropdown" id="planMenu"><div class="drophelp">准备方案 · 仅更新待应用值</div>${a.profiles.map(opt=>`<button class="option ${opt.name===p.name?'active':''}" data-plan="${esc(opt.name)}"><span>${opt.name===p.name?'✓ ':''}${esc(opt.name)}${a.default===opt.name?' · 默认':''}</span><span class="state ${colorStatus(opt)}">${matchCount(opt)}/${opt.vars.length}</span></button>`).join('')}</div></div></div>`;
+function renderOverview(){const a=appNow(),p=curProfile(),n=matchCount(p);$('overview').innerHTML=`<div class="overview-main"><div class="titleline"><div class="bigicon" data-kind="${appKind(p)}" style="${dir(selected)};--p:${Math.round(n/Math.max(p.vars.length,1)*100)}">${esc(a.icon)}</div><div class="app-title">${esc(a.name)}</div><span class="tag ${colorStatus(p)}" data-kind="${appKind(p)}"><span class="rs-glyph" aria-hidden="true">${n===p.vars.length?'✓':'!'}</span> Windows · ${status(p)} ${n}/${p.vars.length}</span></div><div class="meta"><span>最近应用：<strong>${esc(a.active||'无')}</strong></span><span class="sep"></span><span>默认：<strong>${esc(a.default)}</strong></span>${dirty(p)?'<span class="overview-dirty">有待应用修改</span>':''}${a.description?`<details class="overview-description"><summary>示例说明</summary><p class="demo-description">${esc(a.description)}</p></details>`:''}</div></div><div class="plan-side"><div class="plan-field" id="planField"><label>准备方案</label><button class="plan-button" id="planButton" aria-expanded="false" aria-controls="planMenu" aria-haspopup="true"><span>${esc(p.name)}</span><span class="sub">⌄</span></button><div class="dropdown" id="planMenu"><div class="drophelp">准备方案 · 仅更新待应用值</div>${a.profiles.map(opt=>`<button class="option ${opt.name===p.name?'active':''}" data-plan="${esc(opt.name)}"><span>${opt.name===p.name?'✓ ':''}${esc(opt.name)}${a.default===opt.name?' · 默认':''}</span><span class="state ${colorStatus(opt)}">${matchCount(opt)}/${opt.vars.length}</span></button>`).join('')}</div></div></div>`;
  $('planButton').onclick=()=>{const menu=$('planMenu'),open=!menu.classList.contains('show');closeDropdowns();menu.classList.toggle('show',open);$('planButton').setAttribute('aria-expanded',String(open));if(open){const selectedButton=menu.querySelector('.option.active')||menu.querySelector('.option');selectedButton?.focus()}};bindDropdownKeyboard('planButton','planMenu','[data-plan]');$('planMenu').querySelectorAll('[data-plan]').forEach(btn=>btn.onclick=()=>{profileChoice[selected]=btn.dataset.plan;focusedVariable=0;closeDropdowns();renderWorkbench();enterFx();$('planButton')?.focus()})}
 function closeDropdowns() {
  document.querySelectorAll('.dropdown.show').forEach(menu=>{
@@ -304,7 +304,7 @@ function renderRows() {
 function renderInspector() {
   const v=curProfile().vars[focusedVariable]||curProfile().vars[0];if(!v)return;
   $('inspectTitle').textContent='Windows 值对照 · '+v.name;
-  $('inspect').querySelector('.inspecthead .mini').textContent=v.mode==='replace'?'整值替换 · 离线演示':'元素编辑 · 离线演示';
+  $('inspect').querySelector('.inspecthead > .mini').textContent=v.mode==='replace'?'整值替换 · 离线演示':'元素编辑 · 离线演示';
   const plan=demoPlan(v),view=WindowsElements.comparisonMarkup(plan);
   const invalid=plan.valid===false;
   $('compareDesired').innerHTML=view.selected;$('compareActual').innerHTML=view.actual;
@@ -316,7 +316,7 @@ function renderInspector() {
   $('compareSerialized').textContent=invalid?'':plan.after.exists?(plan.after.raw===''?'（空字符串）':plan.after.raw):'（不存在）';
   $('compareLabel').textContent=(selectionEdit(v)?'选定值已修改 · ':'')+(v.scope==='User'?'用户':'系统')+' · '+MODE[v.mode]+' · '+v.source;
   $('compareResult').textContent=detectionText(v);$('compareSummary').textContent=invalid?'':planSummary(plan)||'无需改变当前值';
-  let review=$('inspectReview');if(!review){review=document.createElement('div');review.id='inspectReview';$('inspect').querySelector('.inspecthead').after(review);}
+  let review=$('inspectReview');if(!review){review=document.createElement('div');review.id='inspectReview';$('inspect').querySelector('.inspecthead').append(review);}
   const inspectState=reviewState(plan,{ordering:v.mode==='append'});
   review.dataset.reviewState=inspectState.kind;review.innerHTML=inspectReviewMarkup(v,plan);$('inspectPreview').onclick=()=>$('previewButton').click();
   $('compareActions').innerHTML=v.matchBaseline?'<button class="textbtn" id="restoreSelectedEdit" aria-label="恢复本次选定值编辑，不改变当前 Windows 值">恢复编辑</button>':'';
