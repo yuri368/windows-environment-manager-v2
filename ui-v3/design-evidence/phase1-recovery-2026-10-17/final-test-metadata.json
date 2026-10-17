@@ -1,0 +1,14 @@
+{
+  "branch": "v3/phase1-ui-recovery-20261017",
+  "head": "573dcfad29f1748d012ac903450c4c49aabcdea1",
+  "npmTestExit": 0,
+  "inspectReviewExit": 0,
+  "files": {
+    "temp.html": "284c8a3d8f1078918cc2bfb2ef7da7cdb05943ffd76dd4830559206cb6e0205d",
+    "ui-polish.css": "43c94f7c6b28e4ee1afdb4da37938baa94d277e727f2b4a48f7d8c75c0a35465",
+    "shell-ui.css": "72b9b316b4315567f916d168821f5551dbdbd7fcd78103ceea5bf44824c79196",
+    "surface-ui.css": "c51d0744a80f895a9fa4a6ed1746b9de408f7bd5fd4d36e7524cd0945c5aa35c"
+  },
+  "testedWorktreeProductCommit": "8a371679182493ca54d59bc62758925956131874",
+  "note": "head records the pre-commit test baseline; files identify the tested final worktree, subsequently committed as testedWorktreeProductCommit."
+}

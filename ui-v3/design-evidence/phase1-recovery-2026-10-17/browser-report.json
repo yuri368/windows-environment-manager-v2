@@ -1,0 +1,69 @@
+{
+  "browser": "isolated headless Google Chrome",
+  "appUrl": "http://127.0.0.1:8000/temp.html",
+  "desktopViewport": {
+    "width": 1383,
+    "height": 851
+  },
+  "narrowWidths": [
+    800,
+    600
+  ],
+  "passed": 13,
+  "total": 13,
+  "checks": [
+    {
+      "name": "Three sources enter the first desktop screen, with unchanged snapshot and real After",
+      "passed": true
+    },
+    {
+      "name": "Hover source is distinct from duplicate linkage and input is retained",
+      "passed": true
+    },
+    {
+      "name": "Preview/cancel and keyboard navigation preserve original input and request scope",
+      "passed": true
+    },
+    {
+      "name": "Long textarea content grows instead of creating a clipped internal scroll",
+      "passed": true
+    },
+    {
+      "name": "Example descriptions remain available without taking a default overview row",
+      "passed": true
+    },
+    {
+      "name": "Retained and blocked review messages keep their meanings and no green title icon",
+      "passed": true
+    },
+    {
+      "name": "Windows stream retains repeated/empty occurrences and compact single-value rows",
+      "passed": true
+    },
+    {
+      "name": "Windows raw disclosure preserves all raw line endings and whitespace",
+      "passed": true
+    },
+    {
+      "name": "Direct edit targets the keyboard occurrence; delete/restore/cancel leave snapshot intact",
+      "passed": true
+    },
+    {
+      "name": "Responsive 800px preserves text, visible actions and access to all values",
+      "passed": true
+    },
+    {
+      "name": "Responsive 600px preserves text, visible actions and access to all values",
+      "passed": true
+    },
+    {
+      "name": "Reduced motion removes local stream and comparison reveal animations",
+      "passed": true
+    },
+    {
+      "name": "No JavaScript runtime errors during all browser workflows",
+      "passed": true
+    }
+  ],
+  "errors": []
+}

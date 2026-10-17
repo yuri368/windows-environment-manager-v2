@@ -1,0 +1,10 @@
+{
+  "startRequestId": "76afc9b9-1c28-40b8-a21f-e6b54bc409ac",
+  "startQueueId": "6638ba87-5601-4697-9946-b685f3a4be66",
+  "finalRequestId": "9b6b39f0-41aa-4df1-88f7-8e3b8fe3c9b3",
+  "finalQueueId": "1cf25b87-8c06-4301-88cd-f98e99f27cef",
+  "finalBridgeJobId": "8fe9b52e-12d7-48e1-9171-13220a790bc5",
+  "finalStatus": "complete",
+  "completedAt": "2026-10-17T03:47:50.002Z",
+  "recovery": "Same queue resumed after read-only message projection fix; never resent."
+}
