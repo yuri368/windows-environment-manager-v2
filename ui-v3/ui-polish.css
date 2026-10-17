@@ -50,16 +50,19 @@ body { padding: 12px; font-size: 13px; line-height: 1.55; }
 .appstat { font-size: 12px; }
 .appstat small { font-size: 11px; color: var(--sub); }
 .sidefoot { font-size: 12px; color: var(--sub); padding: 12px 14px; }
-.overview { padding: 20px 24px; gap: 16px; }
+.overview { padding: 11px 24px 12px; gap: 16px; }
+.overview-main { min-width: 0; }
 .eyebrow { font-size: 12px; color: var(--sub); margin-bottom: 7px; }
-.app-title { font-size: 22px; letter-spacing: -.4px; }
-.bigicon { width: 32px; height: 32px; font-size: 17px; }
-.titleline { flex-wrap: wrap; gap: 10px; }
-.meta { font-size: 12px; color: var(--sub); margin-top: 9px; }
+.app-title { font-size: 20px; letter-spacing: -.35px; }
+.bigicon { width: 28px; height: 28px; font-size: 15px; }
+.titleline { flex-wrap: wrap; gap: 8px; }
+.meta { font-size: 12px; color: var(--sub); margin-top: 5px; }
+.overview-dirty { display: inline-flex; align-items: center; gap: 5px; color: #865b16; font-weight: 600; }
+.overview-dirty::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #b98736; }
 .tag { font-size: 12px; padding: 2px 7px; font-weight: 500; }
-.plan-field { width: 224px; }
-.plan-field label { font-size: 12px; color: var(--sub); margin-bottom: 6px; }
-.plan-button { width: 100%; height: 34px; font-size: 13px; background: transparent; border-color: transparent; }
+.plan-field { width: 200px; }
+.plan-field label { font-size: 12px; color: var(--sub); margin-bottom: 3px; }
+.plan-button { width: 100%; height: 32px; font-size: 13px; background: transparent; border-color: transparent; }
 .plan-button:hover { background: #f4f8f5; border-color: var(--line2); }
 .plan-button:focus-visible { background: #fff; border-color: var(--green); }
 .plan-button span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -73,13 +76,13 @@ body { padding: 12px; font-size: 13px; line-height: 1.55; }
 .option .state { flex: none; font-size: 12px; font-variant-numeric: tabular-nums; }
 .option .state { color: var(--green); }
 .option .state.warn { color: var(--amber); }
-.content { padding: 18px 24px 24px; }
-.sectionbar { margin-bottom: 12px; flex-wrap: wrap; }
+.content { padding: 12px 24px 22px; }
+.sectionbar { margin-bottom: 8px; flex-wrap: wrap; }
 .sectionbar h2 small, .checklabel { font-size: 12px; }
 .checklabel input { width: 15px; height: 15px; }
 .vartable { min-width: 760px; }
-.vartable th { height: 36px; font-size: 12px; color: var(--sub); background: #f8faf9; }
-.vartable td { height: 58px; font-size: 13px; }
+.vartable th { height: 32px; font-size: 12px; color: var(--sub); background: #f8faf9; }
+.vartable td { height: 48px; font-size: 13px; }
 .vartable tbody tr.sel { background: #f7faf8; }
 .vartable th:nth-child(1) { width: 17%; }
 .vartable th:nth-child(2) { width: 15%; }
@@ -93,10 +96,10 @@ body { padding: 12px; font-size: 13px; line-height: 1.55; }
 .source, .vinput { height: 32px; font-size: 12px; background: #f8faf9; border-color: #d5e0d9; }
 .vinput { font-size: 12.5px; color: var(--ink); }
 .vinput:focus, .source:focus { background: #fff; }
-.inspect { margin-top: 16px; }
-.inspecthead { min-height: 38px; height: auto; padding: 8px 14px; gap: 10px; }
+.inspect { margin-top: 10px; }
+.inspecthead { min-height: 36px; height: auto; padding: 6px 14px; gap: 8px 10px; }
 .inspecthead strong { font-size: 13px; }
-.inspectbody { padding: 16px; gap: 24px; }
+.inspectbody { padding: 12px 14px 14px; gap: 14px; }
 .inspectbody .k, .inspector-meta, .helpnote { font-size: 12px; color: var(--sub); }
 .codevalue { font-size: 12.5px; line-height: 1.65; }
 .helpnote { margin-top: 14px; }
@@ -127,7 +130,7 @@ body { padding: 12px; font-size: 13px; line-height: 1.55; }
 .has-changes { color: var(--amber); }
 .running-value { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .running-value .vinput { flex: 1; min-width: 0; }
-.running-value textarea.vinput { display: block; height: 32px; min-height: 32px; max-height: 112px; padding: 6px 8px; line-height: 18px; resize: none; white-space: pre-wrap; overflow-wrap: anywhere; overflow-x: hidden; overflow-y: auto; }
+.running-value textarea.vinput { display: block; height: 32px; min-height: 32px; max-height: none; padding: 6px 8px; line-height: 18px; resize: none; white-space: pre-wrap; overflow-wrap: anywhere; overflow: hidden; }
 .value-comparison .comparison-pair.is-plan-stale .result-pane { align-self: start; }
 .value-comparison .comparison-pair.is-plan-stale .result-pane .value-box { flex: none; min-height: 0; padding: 0; border: 0; background: transparent; }
 .comparison-pair.is-plan-stale::before, .comparison-pair.is-plan-stale::after { display: none; }
@@ -237,7 +240,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .sidefoot { display: none; }
   .workspace { flex: none; overflow: visible; }
   .workscroll { overflow: visible; }
-  .overview, .content { padding: 16px 12px; }
+  .overview { padding: 12px; }
+  .content { padding: 14px 12px 18px; }
   .app-title { font-size: 21px; }
   .sectionright { gap: 8px; flex-wrap: wrap; }
   .inspectbody { grid-template-columns: 1fr; gap: 16px; }
