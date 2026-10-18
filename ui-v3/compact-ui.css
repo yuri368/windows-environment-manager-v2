@@ -1,0 +1,73 @@
+/* Shared desktop-tool density. Keep text sizes and full values readable. */
+.chrome { height: 30px; }
+.nav { height: 42px; padding: 0 14px; }
+.navtab { padding: 0 10px; }
+.tool { padding: 5px 8px; }
+.sidebar { width: 236px; background: var(--rail); }
+.sidehead { padding: 9px 10px 6px; }
+.sidecaption { margin-bottom: 6px; }
+.sidebar .search { height: 30px; }
+.filters { margin-top: 6px; padding: 2px; gap: 2px; border-radius: 4px; }
+.filter { padding: 4px 5px; border-radius: 3px; }
+.batchbar { padding: 3px 10px; }
+.batchbar .textbtn { padding: 3px 4px; }
+.list-context { min-height: 22px; padding: 2px 10px; }
+.applist { padding: 4px 6px 8px; gap: 1px; }
+.appitem { min-height: 50px; padding: 5px 6px 8px; gap: 7px; border-radius: 4px; }
+.appitem:hover { transform: none; }
+.appitem.active { box-shadow: none; }
+.appselect { gap: 7px; }
+.apptext b, .apptext small {
+  white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere;
+}
+.apptext small { margin-top: 0; }
+.pips { left: 62px; right: 8px; bottom: 3px; }
+.overview { padding: 8px 16px; gap: 12px; }
+.content { padding: 10px 16px 16px; }
+.plan-button { height: 30px; }
+.vartable td { height: 40px; padding-top: 4px; padding-bottom: 4px; }
+.inspecthead { min-height: 32px; padding: 4px 10px; }
+.inspectbody.value-comparison { padding: 8px 10px; }
+.value-comparison .selection-pane { margin-bottom: 6px; }
+.value-comparison .value-box { min-height: 34px; padding: 4px 6px; }
+.value-comparison .selection-pane .value-box { padding-top: 4px; }
+.value-comparison .comparison-pair { gap: 14px; }
+.footer { min-height: 48px; padding: 6px 14px; }
+.btn { height: 30px; padding: 0 10px; }
+.edfooter { min-height: 46px; padding: 6px 12px; }
+.fullpage { padding: 16px; }
+.review-summary, .review-summary.is-compact { padding: 8px 10px; margin-bottom: 8px; }
+.diffrow.value-link-group { padding: 10px 12px; }
+.history-summary { padding: 7px 10px; }
+.history-list-head { padding: 5px 10px; }
+.windows-page .outline-table th { height: 30px; }
+.windows-page .outline-table tbody tr { height: 36px; }
+.windows-page .outline-table td { padding: 4px 10px; }
+.cfg-editor-main { padding: 10px 12px 14px; }
+.cfg-inline-form { margin-top: 6px; padding: 8px; }
+.cfg-form-heading { padding-bottom: 5px; }
+.cfg-choice-row { min-height: 36px; padding: 3px 6px; }
+.cfg-choice-cell textarea { min-height: 30px; padding-top: 3px; padding-bottom: 3px; }
+.cfg-choice-actions button { min-height: 28px; padding: 3px 5px; }
+.cfg-choice-draft .cfg-choice-cell textarea { min-height: 28px; }
+@media (max-width: 1100px) {
+  .sidebar { width: 220px; }
+}
+@media (max-width: 860px) {
+  .sidebar { width: 190px; }
+}
+@media (max-width: 700px) {
+  .cfg-editor-main { padding: 10px; }
+  .cfg-choice-draft .cfg-choice-cell .field label {
+    position: static; width: auto; height: auto; padding: 0; margin: 0 0 2px;
+    overflow: visible; clip-path: none; white-space: normal;
+  }
+}
+@media (max-width: 620px) {
+  .nav { height: auto; min-height: 42px; flex-wrap: wrap; padding: 0 8px; }
+  .sidebar { width: 100%; }
+  .appitem { min-height: 50px; }
+  .content, .fullpage { padding: 10px; }
+  .overview { padding: 8px 10px; }
+  .footer { padding: 6px 10px; }
+}

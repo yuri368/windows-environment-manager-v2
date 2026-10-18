@@ -326,17 +326,39 @@ check('Grouped entry works when the target profile has fewer or no variables tha
   assert.equal(ev('editor.profile'), '实验版本'); assert.equal(ev('configVar().name'), 'EMPTY_PROFILE_HOME');
 });
 
-check('One creation draft stays with its original owner across navigation and requires explicit replacement', () => {
+check('Creation entries switch directly and restore drafts at their original owners without conflict prompts', () => {
   setup(); const before = unchanged();
   click('#cfgAddVariable'); input('#cfgCreateName', 'SUSPENDED_HOME');
   click('[data-editapp="0"]'); assert.equal(q('#cfgCreateForm'), null);
-  click('#cfgAddProfile'); assert.ok(q('#cfgCreateConflict'));
+  click('#cfgAddProfile'); assert.equal(q('#cfgCreateConflict'), null);
+  input('#cfgCreateProfileName', 'Java draft');
+  click('#cfgAddApp'); input('#cfgCreateAppName', 'App draft');
+  click('#cfgAddProfile'); assert.equal(q('#cfgCreateProfileName').value, 'Java draft');
+  assert.equal(q('#cfgCreateConflict'), null); click('#cfgCreateCancel');
+  assert.equal(ev('ConfigEditor.hasDraft(editor)'), true);
+  click('[data-editapp="7"]'); click('#cfgAddVariable');
+  assert.equal(q('#cfgCreateName').value, 'SUSPENDED_HOME');
+  assert.equal(ev('editor.app'), 7); assert.equal(q('#cfgCreateConflict'), null);
+  click('#cfgCreateCancel'); click('#cfgAddApp');
+  assert.equal(q('#cfgCreateAppName').value, 'App draft'); click('#cfgCreateCancel');
+  assert.equal(ev('ConfigEditor.hasDraft(editor)'), false);
   assert.deepEqual(unchanged(), before); assert.equal(ev('configChanges().length'), 0);
-  click('#cfgCreateResume'); assert.equal(ev('editor.app'), 7);
-  assert.equal(q('#cfgCreateName')?.value, 'SUSPENDED_HOME');
-  click('[data-editapp="0"]'); click('#cfgAddProfile'); click('#cfgCreateDiscard');
-  assert.ok(q('#cfgCreateProfileName')); assert.equal(q('#cfgCreateName'), null);
-  assert.deepEqual(unchanged(), before); click('#cfgCreateCancel');
+});
+
+check('Choice and application drafts switch without prompts; successful choice creation keeps the other draft', () => {
+  setup(); const before = unchanged();
+  click('#cfgAddChoice'); input('#cfgChoiceDraftLabel', 'saved draft');
+  input('#cfgChoiceDraftValue', 'first\nsecond');
+  click('#cfgAddApp'); input('#cfgCreateAppName', 'PARKED_APP');
+  click('#cfgAddChoice'); assert.equal(q('#cfgCreateConflict'), null);
+  assert.equal(q('#cfgChoiceDraftLabel').value, 'saved draft');
+  assert.equal(q('#cfgChoiceDraftValue').value, 'first\nsecond');
+  assert.deepEqual(unchanged(), before); click('#cfgChoiceDraftAdd');
+  assert.equal(ev('ConfigEditor.hasDraft(editor)'), true);
+  assert.equal(json('configVar().choices').at(-1).value, 'first\nsecond');
+  click('#cfgAddApp'); assert.equal(q('#cfgCreateAppName').value, 'PARKED_APP');
+  click('#cancelConfig'); assert.equal(ev('ConfigEditor.hasDraft(editor)'), false);
+  assert.deepEqual(unchanged(), before);
 });
 
 check('Restore and global reset clear pending creation without manufacturing a diff', () => {

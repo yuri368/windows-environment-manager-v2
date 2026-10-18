@@ -1,0 +1,73 @@
+[
+  {
+    "view": "workbench",
+    "viewport": 1632,
+    "sizes": {
+      ".nav": {
+        "width": 1538.666748046875,
+        "height": 42
+      },
+      ".sidebar": {
+        "width": 236,
+        "height": 665.2604370117188
+      },
+      ".sidehead": {
+        "width": 235.33334350585938,
+        "height": 109.29167175292969
+      },
+      ".batchbar": {
+        "width": 235.33334350585938,
+        "height": 31.260417938232422
+      },
+      ".list-context": {
+        "width": 235.33334350585938,
+        "height": 22
+      },
+      ".appitem": {
+        "width": 203.33334350585938,
+        "height": 50
+      },
+      ".footer": {
+        "width": 1538.666748046875,
+        "height": 53.40625
+      }
+    },
+    "sidefoot": false,
+    "pageOverflow": false
+  },
+  {
+    "view": "candidate",
+    "viewport": 1632,
+    "height": 36,
+    "emptyErrorHeight": 0,
+    "margin": "0px",
+    "inputHeight": 28,
+    "mainOverflow": false
+  },
+  {
+    "view": "multiline-candidate",
+    "viewport": 1632,
+    "height": 85.33333587646484,
+    "clientHeight": 84,
+    "scrollHeight": 84,
+    "maxHeight": "none"
+  },
+  {
+    "view": "candidate-final",
+    "viewport": 600,
+    "mainOverflow": false,
+    "valueHeight": 46.333335876464844,
+    "valueClientHeight": 45,
+    "valueScrollHeight": 45,
+    "pageOverflow": false
+  },
+  {
+    "view": "candidate-final",
+    "viewport": 391,
+    "mainOverflow": false,
+    "valueHeight": 46.333335876464844,
+    "valueClientHeight": 45,
+    "valueScrollHeight": 45,
+    "pageOverflow": false
+  }
+]

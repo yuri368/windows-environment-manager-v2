@@ -187,10 +187,18 @@
 }
 .cfg-choice-actions button:disabled { opacity: .5; }
 .cfg-choice-draft {
-  margin: 6px; border: 1px dashed #8fb89f; border-radius: 8px;
-  background: #f7fbf8; animation: cfg-panel-reveal 220ms cubic-bezier(.2,.7,.2,1);
+  margin: 0; min-height: 36px; padding: 3px 6px; border: 0; border-top: 1px solid var(--cfg-divider); border-radius: 0;
+  background: var(--cfg-surface); animation: none;
 }
-.cfg-choice-draft .cfg-choice-actions button { border-radius: 6px; }
+.cfg-choice-draft .cfg-choice-cell .field label {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+.cfg-choice-draft .cfg-choice-cell textarea { min-height: 28px; height: auto; padding: 3px 6px; }
+.cfg-choice-draft .cfg-choice-order { padding-top: 4px; }
+.cfg-choice-draft .cfg-choice-actions button { min-height: 28px; padding: 3px 5px; border-radius: 3px; }
+.cfg-choice-draft .cfg-create-error { min-height: 0; margin: 0; }
+.cfg-choice-draft .cfg-create-error:empty { display: none; }
 .cfg-empty { padding: 8px; margin: 0; font-size: 12px; color: var(--cfg-muted); }
 
 /* Persistent change feedback; typing does not replay a decorative pulse. */
