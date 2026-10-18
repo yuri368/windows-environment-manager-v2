@@ -72,6 +72,35 @@
   }
   function clearDraft(editor) { sessions.delete(editor); }
   function hasDraft(editor) { const session=sessions.get(editor); return !!(session?.draft || session?.parked.length); }
+  function exportSession(editor, apps) {
+    const current=sessions.get(editor); if(!current)return null;
+    const appRef=a=>a?{id:a.recordId,name:a.name}:null;
+    const profileRef=p=>p?{id:p.recordId,name:p.name}:null;
+    const variableRef=v=>v?{id:v.recordId,name:v.name,scope:v.scope}:null;
+    const save=d=>d?Object.fromEntries(Object.entries(d).filter(([key])=>key!=='submitting').map(([key,value])=>
+      [key,['app','originApp'].includes(key)?appRef(value):['profile','originProfile'].includes(key)?profileRef(value):['variable','originVariable'].includes(key)?variableRef(value):value])):null;
+    return {draft:save(current.draft),parked:current.parked.map(save)};
+  }
+  function importSession(editor, apps, saved) {
+    if(!saved || typeof saved!=='object')return;
+    const appFor=ref=>ref&&apps.find(a=>ref.id?a.recordId===ref.id:a.name===ref.name);
+    const profileFor=(app,ref)=>ref&&app?.profiles.find(p=>ref.id?p.recordId===ref.id:p.name===ref.name);
+    const variableFor=(profile,ref)=>ref&&profile?.vars.find(v=>ref.id?v.recordId===ref.id:v.name===ref.name&&v.scope===ref.scope);
+    const load=value=>{
+      if(!value || !['app','profile','variable','choice'].includes(value.kind))return null;
+      const d={...value},app=appFor(value.app),originApp=appFor(value.originApp);
+      if(!app||!originApp)return null;
+      d.app=app;d.originApp=originApp;d.profile=profileFor(app,value.profile);
+      d.originProfile=profileFor(originApp,value.originProfile);
+      if(!d.profile||!d.originProfile)return null;
+      d.variable=variableFor(d.profile,value.variable);
+      d.originVariable=variableFor(d.originProfile,value.originVariable)??null;
+      if(d.kind==='choice'&&!d.variable)return null;
+      d.submitting=false;
+      return d;
+    };
+    sessions.set(editor,{draft:load(saved.draft),parked:(Array.isArray(saved.parked)?saved.parked:[]).map(load).filter(Boolean)});
+  }
   function suspendDraft(editor) { const draft=sessions.get(editor)?.draft; if(draft)draft.suspended=true; }
   function render(options) {
     const {root, apps, editor, modeLabels = {}, change, rerender, status = () => {}} = options;
@@ -311,5 +340,5 @@
     }
     if (options.focusId) find(options.focusId)?.focus({preventScroll:true});
   }
-  window.ConfigEditor = {render, bindRawInput:bindText, clearDraft, hasDraft, suspendDraft};
+  window.ConfigEditor = {render, bindRawInput:bindText, clearDraft, hasDraft, suspendDraft, exportSession, importSession};
 })();

@@ -587,18 +587,31 @@ var WindowsElements = (() => {
     container.querySelector('#closeDialog').onclick=options.close;container.querySelector('#cancelDialog').onclick=options.close;
     container.querySelector('#addElement').onclick=()=>{const row={id:++sequence,value:''};session.rows.push(row);session.manualAddedIds.add(row.id);session.displayOrder.push(row.id);session.fx={kind:'enter',id:row.id};renderRows(row.id);};
     container.querySelector('#restoreElements').onclick=()=>{session.rows=session.originalRows.map(row=>({...row}));session.displayOrder=session.originalRows.map(row=>row.id);session.adoptionMap.clear();session.manualAddedIds.clear();session.removalAdoptions.clear();session.deletedDrafts.clear();session.dragging=null;session.hoveredId=null;session.focusedId=null;renderRows(session.rows[0]?.id);if(!session.rows.length)container.querySelector('#addElement').focus();};
-    container.querySelector('#applyElements').onclick=()=>{
+    container.querySelector('#applyElements').onclick=async()=>{
       if(!session||!valid()||container.querySelector('#applyElements').disabled)return;
       const current=session,plan=session.plan;
-      if(current.beforeApply&&current.beforeApply(plan)===false){
+      const applyButton=container.querySelector('#applyElements');
+      applyButton.disabled=true;
+      try {
+      let allowed=current.beforeApply?current.beforeApply(plan):true;
+      if(allowed&&typeof allowed.then==='function')allowed=await allowed;
+      if(session!==current)return;
+      if(allowed===false){
         container.querySelector('#elementValidation').textContent='当前值已变化，草稿仍保留。为避免覆盖新值，本次未应用。可复制下方草稿，取消后按最新值重新编辑。';
         const latest=current.currentSnapshot?.();
         if(latest){let notice=container.querySelector('#editorLatestSnapshot');if(!notice){notice=document.createElement('pre');notice.id='editorLatestSnapshot';notice.className='codevalue';container.querySelector('#elementValidation').after(notice);}notice.textContent='最新当前值：\n'+(latest.exists?latest.raw:'（不存在）');}
         return;
       }
-      const result=current.onApply(plan.afterRaw,plan.audit,plan);
-      if(result===false||result?.status==='stale')return;
+      if(session!==current)return;
+      let result=current.onApply(plan.afterRaw,plan.audit,plan);
+      if(result&&typeof result.then==='function')result=await result;
+      if(session!==current||result===false||result?.status==='stale'||result?.verified===false)return;
       current.close();current.onApplied?.(plan);
+      } catch(error) {
+        if(session===current)container.querySelector('#elementValidation').textContent=error.message||'应用失败，全部草稿仍保留。';
+      } finally {
+        if(session===current)applyButton.disabled=!valid();
+      }
     };
     renderRows();container.querySelector('#closeDialog').focus();
   }
