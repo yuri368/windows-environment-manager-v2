@@ -1,0 +1,90 @@
+/* Config editor UI refresh layer: style and motion only. No markup or behavior dependencies.
+   Loaded after config-editor.css; delete this file and its <link> to revert. */
+.cfg-editor-shell {
+  --cfg-accent: #2f7a58; --cfg-accent-deep: #1d4f38; --cfg-accent-soft: #e6f2ea;
+  --cfg-edge: #d3e0d6; --cfg-card: #fff; --cfg-ease: cubic-bezier(.2,.7,.2,1);
+  --cfg-ring: 0 0 0 3px rgba(47,122,88,.18);
+}
+.cfg-editor-main { background: linear-gradient(180deg,#f7faf8 0,#f3f7f4 100%); }
+
+/* page heading */
+.cfg-page-heading h2 { font-size: 20px; letter-spacing: .01em; color: var(--cfg-accent-deep); }
+.cfg-page-heading h2::after { content:''; display:block; width:28px; height:3px; margin-top:5px; border-radius:2px; background:linear-gradient(90deg,var(--cfg-accent),#7fc29c); }
+.cfg-page-heading .view-select { border-radius: 8px; transition: border-color .16s, box-shadow .16s; }
+.cfg-page-heading .view-select:hover { border-color: var(--cfg-accent); }
+
+/* variable picker: pill tabs */
+.cfg-variable-strip { display:flex; flex-wrap:wrap; gap:6px; border:0; padding:3px 0; }
+.cfg-variable-select { position:relative; flex:0 1 auto; min-width:120px; max-width:100%; min-height:36px; padding:6px 12px; border:1px solid var(--cfg-edge); border-radius:999px; background:var(--cfg-card); box-shadow:0 1px 0 rgba(30,70,45,.04); transition:background .16s, border-color .16s, box-shadow .2s var(--cfg-ease), transform .16s var(--cfg-ease); }
+.cfg-variable-select:hover { background:#f1f8f3; border-color:#a9c9b4; transform:translateY(-1px); box-shadow:0 3px 8px rgba(30,70,45,.08); }
+.cfg-variable-select:active { transform:translateY(0) scale(.98); }
+.cfg-variable-select.is-active { background:linear-gradient(180deg,#e9f5ed,#dcefe2); border-color:var(--cfg-accent); color:var(--cfg-accent-deep); box-shadow:inset 0 0 0 1px rgba(47,122,88,.25), 0 3px 10px rgba(47,122,88,.14); }
+.cfg-variable-meta { padding:1px 7px; border-radius:999px; background:rgba(47,122,88,.09); }
+
+/* create entry */
+.cfg-variable-entry .cfg-text-action { border:1px dashed #a9c9b4; border-radius:999px; padding:4px 12px; transition:background .16s, border-color .16s, transform .16s var(--cfg-ease); }
+.cfg-variable-entry .cfg-text-action:hover { background:var(--cfg-accent-soft); border-style:solid; transform:translateY(-1px); }
+.cfg-create-form { padding:12px; border:1px solid var(--cfg-edge); border-radius:10px; background:var(--cfg-card); box-shadow:0 4px 14px rgba(30,70,45,.06); animation:cfg-rise 220ms var(--cfg-ease); }
+.cfg-navigation .cfg-create-form { padding:9px; }
+@keyframes cfg-rise { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:none } }
+
+/* main form card */
+.cfg-inline-form { margin-top:12px; padding:16px 18px 14px; border:1px solid var(--cfg-edge); border-radius:12px; background:var(--cfg-card); box-shadow:0 1px 2px rgba(30,70,45,.05), 0 8px 24px rgba(30,70,45,.05); animation:cfg-rise 240ms var(--cfg-ease); }
+.cfg-form-heading { border-bottom:1px solid #e3ece5; padding-bottom:10px; }
+.cfg-form-heading h3 { font-size:16px; color:var(--cfg-accent-deep); font-family:Consolas,'Microsoft YaHei UI',monospace; letter-spacing:.01em; }
+.cfg-facts > span { padding:2px 8px; border-radius:999px; background:#f1f6f2; }
+
+/* inputs */
+.cfg-inline-form .field :is(input,select,textarea), .cfg-raw-input, .cfg-create-fields input, .cfg-create-fields select { border-color:#c3d3c7; border-radius:8px; background:#fcfdfc; transition:border-color .16s, box-shadow .18s, background .16s; }
+.cfg-inline-form .field :is(input,select,textarea):hover, .cfg-raw-input:hover { border-color:#8fb89f; }
+.cfg-inline-form .field :is(input,select,textarea):focus, .cfg-raw-input:focus, .cfg-create-fields :is(input,select):focus { outline:0; border-color:var(--cfg-accent); background:#fff; box-shadow:var(--cfg-ring); }
+.cfg-editor-shell :is(button,input,select,textarea):focus-visible { outline:2px solid var(--cfg-accent); outline-offset:2px; }
+.cfg-inline-form .field :is(input,select,textarea):focus-visible, .cfg-raw-input:focus-visible { outline:0; }
+.cfg-inline-form .field label, .cfg-default-heading > label { font-weight:600; color:#3b5a47; }
+
+/* checkboxes -> switches */
+.cfg-switches input[type=checkbox] { appearance:none; -webkit-appearance:none; flex:none; width:30px; height:17px; margin:0; border-radius:999px; background:#c9d6cd; position:relative; cursor:pointer; transition:background .2s; }
+.cfg-switches input[type=checkbox]::after { content:''; position:absolute; top:2px; left:2px; width:13px; height:13px; border-radius:50%; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.28); transition:transform .22s var(--cfg-ease); }
+.cfg-switches input[type=checkbox]:checked { background:var(--cfg-accent); }
+.cfg-switches input[type=checkbox]:checked::after { transform:translateX(13px); }
+.cfg-switches input[type=checkbox]:hover { filter:brightness(.96); }
+.cfg-switches .checklabel { cursor:pointer; }
+
+/* buttons */
+.cfg-confirm { border-radius:8px; background:linear-gradient(180deg,#3a8a65,#2c7350); border-color:#276548; box-shadow:0 1px 2px rgba(30,70,45,.25); transition:transform .16s var(--cfg-ease), box-shadow .18s, filter .16s; }
+.cfg-confirm:hover:enabled { transform:translateY(-1px); box-shadow:0 4px 10px rgba(30,70,45,.25); filter:brightness(1.05); }
+.cfg-confirm:active:enabled { transform:none; box-shadow:none; }
+.cfg-text-action { border-radius:8px; transition:background .16s, border-color .16s, color .16s; }
+
+/* choice list */
+.cfg-choice-list { border:1px solid var(--cfg-edge); border-radius:10px; overflow:hidden; background:#fff; }
+.cfg-choice-columns { background:#eef5f0; border-bottom:1px solid var(--cfg-edge); letter-spacing:.04em; }
+.cfg-choice-row { border-top:0; border-bottom:1px solid #edf2ee; transition:background .16s, box-shadow .18s; }
+.cfg-choice-row:last-child { border-bottom:0; }
+.cfg-choice-row:hover, .cfg-choice-row:focus-within { background:#f6faf7; box-shadow:inset 3px 0 var(--cfg-accent); }
+.cfg-choice-order { width:22px; height:22px; line-height:22px; margin:auto; border-radius:50%; background:#edf3ee; font-weight:600; }
+.cfg-choice-actions { opacity:.55; transition:opacity .16s; }
+.cfg-choice-row:hover .cfg-choice-actions, .cfg-choice-row:focus-within .cfg-choice-actions { opacity:1; }
+.cfg-choice-actions button { border-radius:6px; transition:background .14s, border-color .14s, color .14s, transform .14s var(--cfg-ease); }
+.cfg-choice-actions button:active:enabled { transform:scale(.94); }
+.cfg-choice-draft { border:1px dashed #8fb89f; border-radius:8px; margin:6px; background:#f7fbf8; animation:cfg-rise 220ms var(--cfg-ease); }
+.cfg-empty { padding:14px; border:1px dashed var(--cfg-edge); border-radius:10px; text-align:center; background:#fafcfa; }
+
+/* edited state: amber accent, pulses once */
+.cfg-inline-form :is(input,select,textarea).is-config-edited { background:#fffaf0; border-color:#d9b77a; box-shadow:inset 3px 0 #e0b86a; animation:cfg-edited 520ms var(--cfg-ease); }
+.cfg-inline-form label.is-config-edited::after, .cfg-choices.is-config-edited .cfg-section-heading h3::after { padding:1px 6px; border-radius:999px; background:#fbefd6; }
+@keyframes cfg-edited { 0% { box-shadow:0 0 0 0 rgba(224,184,106,.55), inset 3px 0 #e0b86a } 100% { box-shadow:0 0 0 8px rgba(224,184,106,0), inset 3px 0 #e0b86a } }
+
+/* validation */
+.cfg-validation { border-left:3px solid #c9564c; border-radius:8px; animation:cfg-rise 200ms var(--cfg-ease); }
+
+/* scrollbars */
+.cfg-editor-main, .cfg-navigation > .editor-left { scrollbar-width:thin; scrollbar-color:#b7cdbd transparent; }
+
+@media (max-width: 700px) {
+  .cfg-inline-form { padding:12px; border-radius:10px; }
+  .cfg-variable-select { min-width:0; flex:1 1 calc(50% - 6px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cfg-editor-shell *, .cfg-editor-shell *::before, .cfg-editor-shell *::after { animation:none !important; transition:none !important; }
+}
