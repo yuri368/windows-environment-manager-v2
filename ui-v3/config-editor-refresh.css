@@ -104,7 +104,7 @@
   background: var(--cfg-surface); box-shadow: none; animation: none;
 }
 .cfg-create-form:focus-within { border-color: var(--cfg-accent); background: var(--cfg-selected); }
-.cfg-create-form:has(input:focus-visible) { outline: 2px solid var(--cfg-accent); outline-offset: 2px; }
+.cfg-create-form:has(input:focus-visible) { outline: 2px solid var(--cfg-accent); outline-offset: -2px; }
 .cfg-create-form .cfg-create-fields { display: block; grid-column: 1; grid-row: 1; min-width: 0; }
 .cfg-create-form .cfg-create-fields .field label {
   position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
@@ -206,6 +206,9 @@
 .config-page :is(button,input,select,textarea,summary):focus-visible {
   outline: 2px solid var(--cfg-accent); outline-offset: 2px;
 }
+/* Keep keyboard feedback inside compact rows, clear of neighbouring items. */
+.config-page .cfg-navigation .editor-item:focus-visible,
+.config-page .cfg-create-form button:focus-visible { outline-offset: -2px; }
 .cfg-editor-main, .cfg-navigation > .editor-left {
   scrollbar-width: thin; scrollbar-color: #b7c9bd transparent;
 }

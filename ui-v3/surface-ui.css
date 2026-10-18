@@ -60,7 +60,7 @@ details.review-targets { display: block; }
 #inspectReview[data-review-state="retained"] strong { color: #805c25; }
 #inspectReview[data-review-state="blocked"] .inspect-review { background: var(--red-soft); }
 #inspectReview[data-review-state="blocked"] strong { color: #944339; }
-.inspect-variable { display: inline-flex; align-items: center; gap: 7px; min-height: 28px; border: 0; background: none; padding: 3px 0; max-width: 100%; text-align: left; border-radius: 3px; overflow-wrap: anywhere; }
+.inspect-variable { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 0 7px; min-height: 28px; border: 0; background: none; padding: 3px 0; max-width: 100%; text-align: left; border-radius: 3px; overflow-wrap: anywhere; }
 .inspect-variable .vname { min-width: 0; }
 .inspect-variable small { flex: none; color: var(--green); font-size: 12px; font-weight: 400; margin: 0; }
 .inspect-variable:hover { color: var(--green); }

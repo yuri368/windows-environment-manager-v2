@@ -1,0 +1,142 @@
+{
+  "passed": 34,
+  "total": 34,
+  "checks": [
+    {
+      "name": "Add buttons open local creation rows and cancellation leaves all data untouched",
+      "passed": true
+    },
+    {
+      "name": "App button creates one app, its default profile and first empty variable",
+      "passed": true
+    },
+    {
+      "name": "Profile button creates an appended profile with one selected variable",
+      "passed": true
+    },
+    {
+      "name": "Variable button appends a mkVar-shaped variable and selects it",
+      "passed": true
+    },
+    {
+      "name": "Blank names, reserved profile name, invalid scope and invalid mode reject atomically",
+      "passed": true
+    },
+    {
+      "name": "Duplicate app/profile and same-scope variable names reject without partial children",
+      "passed": true
+    },
+    {
+      "name": "Matching names may coexist in User and System and export as a V2 two-record array",
+      "passed": true
+    },
+    {
+      "name": "Existing Special target passes special=true and replace into a new profile",
+      "passed": true
+    },
+    {
+      "name": "Diff records app and profile subtree additions once and variable addition once",
+      "passed": true
+    },
+    {
+      "name": "Restore removes all added levels, preserves original object/runtime identity and environment",
+      "passed": true
+    },
+    {
+      "name": "New app is reachable in workbench and preview without writing simulated Windows/history",
+      "passed": true
+    },
+    {
+      "name": "Restoring a selected new app leaves config and workbench navigation usable",
+      "passed": true
+    },
+    {
+      "name": "Existing invalid choice blocks any new entry without mutating the draft",
+      "passed": true
+    },
+    {
+      "name": "Failed and cancelled creation never add configuration nodes or diffs",
+      "passed": true
+    },
+    {
+      "name": "Same variable name in System requires an explicit scope choice and commits once",
+      "passed": true
+    },
+    {
+      "name": "Whole target creation constrains the UI mode to replace and preserves the inherited rule",
+      "passed": true
+    },
+    {
+      "name": "Candidate draft rejects blank or duplicate label and duplicate full value before writing",
+      "passed": true
+    },
+    {
+      "name": "Candidate draft cancellation and composition keys preserve model and focus",
+      "passed": true
+    },
+    {
+      "name": "Candidate draft keeps leading newline, spaces and empty elements after view and variable switches",
+      "passed": true
+    },
+    {
+      "name": "All-profiles variable entry creates under its own group",
+      "passed": true
+    },
+    {
+      "name": "Grouped entry works when the target profile has fewer or no variables than the current index",
+      "passed": true
+    },
+    {
+      "name": "One creation draft stays with its original owner across navigation and requires explicit replacement",
+      "passed": true
+    },
+    {
+      "name": "Restore and global reset clear pending creation without manufacturing a diff",
+      "passed": true
+    },
+    {
+      "name": "Composing Enter and Escape leave the name draft alone; plain Escape restores entry focus",
+      "passed": true
+    },
+    {
+      "name": "A new same-target selection invalidates and refreshes the open shared-target preview",
+      "passed": true
+    },
+    {
+      "name": "A name-only profile is a resumable empty session draft outside configuration and export",
+      "passed": true
+    },
+    {
+      "name": "Cancelling a first variable returns to its named container; discard and restore clear only session drafts",
+      "passed": true
+    },
+    {
+      "name": "Name-only app and profile stages survive navigation without creating a placeholder variable",
+      "passed": true
+    },
+    {
+      "name": "Named container stages reject invalid names and final validation failures without losing their owner",
+      "passed": true
+    },
+    {
+      "name": "Variable creation requires only its name; optional properties stay collapsed and default values edit after creation",
+      "passed": true
+    },
+    {
+      "name": "App/profile name panels stay beside their entries and the current variable remains editable",
+      "passed": true
+    },
+    {
+      "name": "The first profile of a named app opens at the profile entry without moving its form to the canvas",
+      "passed": true
+    },
+    {
+      "name": "The add-variable entry and name field occupy the last slot in the same variable strip",
+      "passed": true
+    },
+    {
+      "name": "Config creation and rendering produce no JSDOM runtime errors",
+      "passed": true
+    }
+  ]
+}
