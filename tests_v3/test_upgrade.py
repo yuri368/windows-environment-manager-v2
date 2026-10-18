@@ -23,7 +23,7 @@ class UpgradeTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
-        self.root = Path(self.temp.name)
+        self.root = Path(self.temp.name).resolve()
         self.data = self.root / "用户 data"
         self.data.mkdir()
         self.db_path = self.data / "state.sqlite3"
@@ -491,7 +491,7 @@ class UpgradeTests(unittest.TestCase):
             return 0
         with patch.object(upgrade, "default_data_directory", return_value=data) as resolver, \
                 patch.object(upgrade, "_serve", side_effect=serve), redirect_stdout(output):
-            self.assertEqual(upgrade.main(["hold", "--target-version", "3.1", "--session-dir", str(control)]), 0)
+            self.assertEqual(upgrade.main(["hold", "--target-version", "3.1", "--session-dir", str(control)]), 0, output.getvalue())
         resolver.assert_called_once_with()
 
     def test_publish_rename_error_blocks_upgrade(self):

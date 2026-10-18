@@ -41,7 +41,8 @@ class HTTPTests(unittest.TestCase):
     def setUp(self):
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
-        self.root = Path(temporary.name)
+        # The server canonicalizes its asset root (including Windows 8.3 aliases).
+        self.root = Path(temporary.name).resolve()
         self.assets = self.root / "assets"
         self.assets.mkdir()
         (self.assets / "index.html").write_text("<html>V3 shell</html>", encoding="utf-8")
