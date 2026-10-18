@@ -16,6 +16,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+from types import SimpleNamespace
 import unittest
 from unittest import mock
 
@@ -184,7 +185,7 @@ class PackageTests(MockOnly):
         base = Path("C:/Program Files").absolute()
         root = base / "EnvManagerV3"
         win = FakeWin(root, files, manifest)
-        with mock.patch.object(n.os, "name", "nt"), mock.patch.object(sys, "frozen", True, create=True), \
+        with mock.patch.object(n, "os", SimpleNamespace(name="nt")), mock.patch.object(sys, "frozen", True, create=True), \
                 mock.patch.object(sys, "executable", str(root / "EnvManagerV3.exe")), \
                 mock.patch.object(sys, "_MEIPASS", str(root / "_internal"), create=True), mock.patch.object(n, "known_folder", return_value=base):
             with n.verified_package(win=win) as package:
