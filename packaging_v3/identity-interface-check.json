@@ -1,0 +1,7 @@
+{
+  "status": "passed",
+  "kind": "pure schema and ACL-model interface check; no native APIs invoked",
+  "manifestFiles": 113,
+  "packageAcl": "BA owner; protected BA/SY full AU readexec",
+  "receiptAcl": "BA owner; protected BA/SY full AU0x120089"
+}

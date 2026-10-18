@@ -54,6 +54,9 @@ class InstanceLock:
 def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
+    if argv and argv[0] == "--upgrade-helper":
+        from .upgrade import main as upgrade_main
+        return upgrade_main(argv[1:])
     if argv and argv[0] == "--system-helper":
         from .system_helper import main as helper_main
         return helper_main(argv[1:])
