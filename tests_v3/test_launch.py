@@ -39,6 +39,8 @@ class LaunchTests(unittest.TestCase):
 
     def test_default_windows_check_is_mocked_and_never_falls_back(self):
         self.enterContext(patch.object(launch, "os", SimpleNamespace(name="nt", environ=os.environ)))
+        # This test covers backend selection, not a foreign OS file lock.
+        self.enterContext(patch.object(launch, "InstanceLock"))
         self.assertEqual(launch.main(self.args + ["--check"]), 0)
         self.windows.assert_called_once_with()
         self.file.assert_not_called()
@@ -77,6 +79,7 @@ class LaunchTests(unittest.TestCase):
 
     def test_windows_failure_does_not_select_file_backend(self):
         self.enterContext(patch.object(launch, "os", SimpleNamespace(name="nt", environ=os.environ)))
+        self.enterContext(patch.object(launch, "InstanceLock"))
         self.windows.side_effect = RuntimeError("windows-adapter-failed")
         self.assertEqual(launch.main(self.args + ["--check"]), 1)
         self.file.assert_not_called()

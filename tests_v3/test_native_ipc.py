@@ -179,7 +179,9 @@ class IdentityTests(MockOnly):
 class PackageTests(MockOnly):
     def test_live_provider_hashes_three_named_rules_and_pins_all_package_handles(self):
         files, manifest = package_fixture()
-        base = Path("C:/Program Files")
+        # Keep the fake installed root absolute on every test host. Production
+        # still requires the real fixed Program Files directory on Windows.
+        base = Path("C:/Program Files").absolute()
         root = base / "EnvManagerV3"
         win = FakeWin(root, files, manifest)
         with mock.patch.object(n.os, "name", "nt"), mock.patch.object(sys, "frozen", True, create=True), \
