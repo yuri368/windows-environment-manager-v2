@@ -102,3 +102,10 @@ System 通道使用一次提升会话、对端进程身份绑定的本地 named 
 为此次尝试启动的 `native-desktop-runtime` 仅使用 File 后端，3 条初始记录由真正的 Service 计划/审阅/执行生成，不能算作原生验收。后续已依据完整命令行及进程 ID 关闭两个属于该 fixture 的 Python 进程（8793），确认无匹配进程残留，保留数据便于追查。没有关闭用户 Chrome 或其他应用。现有 DefaultBox 原生通知证据和 `024952-878` 候选包未受此尝试影响。
 
 继续完成 §18 仍需要可恢复快照的 Windows VM（干净安装、System/UAC、机器安装及多用户等）和可正常工作的原生桌面控制或人工验收（IME、拖动、各档 DPI）。负责人已说明暂时没有 VM，先完成其余项目；这不取消原验收门槛，也不构成宿主 System 写入许可。
+
+
+## V3 产品持续集成
+
+产品实现、证据与剩余门槛已同步到 GitHub 的 `v3/product-implementation-20261018` 任务分支，未合并 main 或公开 Release。此前 `tests.yml` 只运行 V2 测试，`ui-prototype.yml` 只运行旧演示 npm test；不能用其绿色状态证明 V3 后端通过。
+
+新增独立 `.github/workflows/v3-product.yml`：Windows/Ubuntu，Python 3.13、Node 26.10.0，仅安装 requirements-v3.txt 和 UI 开发依赖，运行 tests_v3 默认 File/mock 测试与产品 JSDOM 契约。tee 后读取真实退出码，始终上传两套原始日志、环境版本和退出码。默认 opt-in native pipe 仍跳过，不执行 Sandboxie、安装器或 Windows 手工 fixture。远端结果以具体 commit/run 为准，工作流存在本身不代表通过，也不代替 VM/UAC/DPI 验收。

@@ -1,0 +1,103 @@
+name: V3 product checks
+
+on:
+  push:
+    branches: ['v3/**']
+    paths:
+      - 'envmanager_v3/**'
+      - 'tests_v3/**'
+      - 'ui-v3/**'
+      - 'requirements-v3.txt'
+      - '.github/workflows/v3-product.yml'
+  pull_request:
+    paths:
+      - 'envmanager_v3/**'
+      - 'tests_v3/**'
+      - 'ui-v3/**'
+      - 'requirements-v3.txt'
+      - '.github/workflows/v3-product.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  product:
+    name: V3 product (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    defaults:
+      run:
+        shell: bash
+    env:
+      PYTHONUTF8: '1'
+      PYTHONIOENCODING: utf-8
+      PYTHONUNBUFFERED: '1'
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: requirements-v3.txt
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '26.10.0'
+          cache: npm
+          cache-dependency-path: ui-v3/package-lock.json
+
+      - name: Create V3 CI log directory
+        run: mkdir -p artifacts/v3-product-results
+
+      - name: Install V3 Python dependencies
+        run: python -m pip install --disable-pip-version-check -r requirements-v3.txt
+
+      - name: Install V3 UI dependencies
+        working-directory: ui-v3
+        run: npm ci --ignore-scripts
+
+      - name: Record V3 test runtime
+        run: |
+          {
+            python -c "import platform, sys; print(sys.version); print(platform.platform())"
+            node --version
+            python -m pip freeze
+          } 2>&1 | tee artifacts/v3-product-results/environment.log
+
+      - name: Run V3 Python unit tests
+        if: success()
+        run: |
+          set +e
+          python -m unittest discover -s tests_v3 -v 2>&1 | tee artifacts/v3-product-results/python-unittest.log
+          test_exit=${PIPESTATUS[0]}
+          printf '%s\n' "$test_exit" > artifacts/v3-product-results/python-unittest.exit-code.txt
+          exit "$test_exit"
+
+      - name: Verify V3 product runtime (JSDOM)
+        if: success()
+        working-directory: ui-v3
+        run: |
+          set +e
+          node design-evidence/verify_product_runtime.cjs 2>&1 | tee ../artifacts/v3-product-results/ui-product-runtime.log
+          test_exit=${PIPESTATUS[0]}
+          printf '%s\n' "$test_exit" > ../artifacts/v3-product-results/ui-product-runtime.exit-code.txt
+          exit "$test_exit"
+
+      # CI runs only the automated V3 product checks above. It does not run Sandboxie or native manual fixtures, and installs no V2 dependencies.
+      - name: Upload V3 product logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v3-product-results-${{ matrix.os }}
+          path: artifacts/v3-product-results/
+          if-no-files-found: warn
+          retention-days: 14
