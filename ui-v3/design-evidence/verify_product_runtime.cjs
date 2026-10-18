@@ -150,6 +150,10 @@ async function harness(empty=false,savedState=null){
         assert.equal(w.planSummary(plan),expected);assert.equal(JSON.stringify(plan),before);
       }
       assert.equal(w.planSummary({kind:'whole',special:true,operations:[{type:'replace'}]}),'应用时整体替换当前值。');
+      const ordered=Object.freeze({kind:'append',valid:true,issues:[],operations:Object.freeze([Object.freeze({type:'insert',position:'tail'}),Object.freeze({type:'move',action:'MOVE',order:['b','a','new']})])});
+      const original=JSON.stringify(ordered);
+      assert.equal(w.planSummary(ordered),'按已确认顺序排列元素 · 新增 1 项');
+      assert.equal(JSON.stringify(ordered),original);
     });
     await check('append ordering uses UUID permutation then rebuilds a fresh receipt',async()=>{run("apps[0].profiles[0].vars[0].mode='append';scheduleDraft()");await run('flushInputs()');await run("showPreview('应用','排序验收',[{app:0,profile:'稳定',varIdx:0}])");assert(q('#confirmDialog').disabled);await run('openOrdering(modalAction,modalAction.rows[0])');q('#saveOrder').click();await tick();assert(q('.preview-dialog'));assert(!q('#confirmDialog').disabled);assert(h.calls.some(c=>c.route.startsWith('/order-sessions/')&&c.method==='PATCH'&&c.body.order.every(s=>/^[0-9a-f-]{36}$/.test(s))));run('closeModal()');});
     await check('undo sends actual variable UUIDs and enables review',async()=>{run("apps[0].profiles[0].vars[0].mode='-append';scheduleDraft()");await run('flushInputs()');await run("showPreview('撤销','撤销验收',[{app:0,profile:'稳定',varIdx:0}])");const call=h.calls.filter(c=>c.route==='/plans').at(-1);assert.equal(call.body.kind,'undo');assert.deepEqual(call.body.recordIds,[id(4)]);assert(!q('#confirmDialog').disabled);run('closeModal()');});

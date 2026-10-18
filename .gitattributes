@@ -1,0 +1,5 @@
+# Packaging records and official inputs may retain vendor CRLF bytes.
+packaging_v3/* whitespace=cr-at-eol
+packaging_v3/Inno-LICENSE.txt -text
+packaging_v3/node-LICENSE.official -text whitespace=cr-at-eol,-space-before-tab
+packaging_v3/node-SHASUMS256.txt -text

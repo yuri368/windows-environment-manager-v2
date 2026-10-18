@@ -52,6 +52,7 @@ function planSummary(plan){
  }
  if(plan.kind!=='append')return '应用时整体替换当前值。';
  const removes=plan.operations.filter(op=>op.type==='remove'),inserts=plan.operations.filter(op=>op.type==='insert');
+ if(plan.operations.some(op=>op.type==='move'||op.action==='MOVE'))return ['按已确认顺序排列元素',inserts.length?`新增 ${inserts.length} 项`:'',removes.length?`删除 ${removes.length} 项`:'',pendingText].filter(Boolean).join(' · ');
  return [removes.length?`删除 ${removes.length} 项`:'',inserts.length?`在${inserts.every(op=>op.position==='head')?'开头':inserts.every(op=>op.position==='tail')?'末尾':'各方案指定位置'}追加 ${inserts.length} 项`:'','保留其他元素',pendingText].filter(Boolean).join(' · ');
 }
 // Presentation only: these classifications never change a frozen plan or its eligibility.
