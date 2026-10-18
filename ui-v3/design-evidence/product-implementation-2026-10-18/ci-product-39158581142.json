@@ -1,0 +1,181 @@
+{
+  "run": {
+    "id": 39158581142,
+    "status": "completed",
+    "conclusion": "success",
+    "head_sha": "3ae084c27ca3f3aac63fa97733b3154853edc763",
+    "url": "https://github.com/yuri368/windows-environment-manager-v2/actions/runs/39158581142"
+  },
+  "jobs": [
+    {
+      "id": 117766859953,
+      "name": "V3 product (windows-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-18T19:23:57Z",
+      "completedAt": "2026-10-18T19:26:24Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v6",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v6",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Create V3 CI log directory",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install V3 Python dependencies",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install V3 UI dependencies",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Record V3 test runtime",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run V3 Python unit tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify V3 product runtime (JSDOM)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Upload V3 product logs",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v6",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v6",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 117766860110,
+      "name": "V3 product (ubuntu-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-18T19:23:57Z",
+      "completedAt": "2026-10-18T19:24:56Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v6",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v6",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Create V3 CI log directory",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install V3 Python dependencies",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install V3 UI dependencies",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Record V3 test runtime",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run V3 Python unit tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify V3 product runtime (JSDOM)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Upload V3 product logs",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v6",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v6",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ]
+}

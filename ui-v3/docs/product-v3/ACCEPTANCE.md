@@ -109,3 +109,10 @@ System 通道使用一次提升会话、对端进程身份绑定的本地 named 
 产品实现、证据与剩余门槛已同步到 GitHub 的 `v3/product-implementation-20261018` 任务分支，未合并 main 或公开 Release。此前 `tests.yml` 只运行 V2 测试，`ui-prototype.yml` 只运行旧演示 npm test；不能用其绿色状态证明 V3 后端通过。
 
 新增独立 `.github/workflows/v3-product.yml`：Windows/Ubuntu，Python 3.13、Node 26.10.0，仅安装 requirements-v3.txt 和 UI 开发依赖，运行 tests_v3 默认 File/mock 测试与产品 JSDOM 契约。tee 后读取真实退出码，始终上传两套原始日志、环境版本和退出码。默认 opt-in native pipe 仍跳过，不执行 Sandboxie、安装器或 Windows 手工 fixture。远端结果以具体 commit/run 为准，工作流存在本身不代表通过，也不代替 VM/UAC/DPI 验收。
+
+
+V3 产品远端回归已于 commit `3ae084c27ca3f3aac63fa97733b3154853edc763` 实际通过：[run 39158581142](https://github.com/yuri368/windows-environment-manager-v2/actions/runs/39158581142)。Windows job `117766859953`：488 项执行，487 通过、1 项 opt-in native pipe 跳过，102.135 秒；Ubuntu job `117766860110`：488 项执行，481 通过、7 项 Windows 平台/opt-in 测试跳过，38.116 秒。两边产品 JSDOM 均 34/34 通过。步骤状态归档 `ci-product-39158581142.json`，逐测试原始结果行摘录 `ci-product-windows-39158581142.txt`、`ci-product-ubuntu-39158581142.txt`；摘录明确不是完整 job 日志，完整日志与 artifact 可从该 run 获取。
+
+最初 run `39157492362` 两平台均失败：Linux 的 launcher 测试模拟 Windows 却调用宿主不存在的 msvcrt，包模拟还修改全局 os.name 影响 pathlib；Windows 的两项临时路径断言使用未规范化路径，与服务规范化路径不一致。修复限定于测试：隔离平台/锁 mock、临时路径先 resolve，保留生产路径/权限/校验规则。中间 run `39157707701` 和 `39157792181` 仍保留 Linux 平台模拟失败；不能用最终通过覆盖这些事实。没有修改生产代码、放宽校验或跳过失败用例。候选 `024952-878` 的运行代码和既有包 hash 不变。
+
+该 CI 验证 File/mock/真实普通文件与 HTTP/Node 链路，既不是安装包独立启动验收，也不补齐真实 UAC/System、多用户、睡眠恢复或原生 DPI/IME/拖动证据。这些门槛继续保持未验证。
