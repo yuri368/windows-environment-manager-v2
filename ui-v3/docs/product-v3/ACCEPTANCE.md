@@ -92,4 +92,13 @@ System 通道使用一次提升会话、对端进程身份绑定的本地 named 
 
 结束由 fixture finally 删除唯一测试变量，读回 absent；boxed User/System 完整清单哈希恢复一致。没有 System 或宿主 Registry 写入，也没有执行广播、睡眠/恢复或 UAC 测试，不能扩大为这些项目通过。FakeAdminRights/DropAdminRights 均保持 y，本轮未改沙盒配置。工具结果 `sandbox-browser-native-notification.json`，页面及输入证据 `browser-native-notification-2026-10-19.json`，截图 `product-native-notification-2026-10-19.png`。
 
-本轮仅新增验收脚本和文档，生产源码未改；对候选 `024952-878` 再执行 verify-bundle，currentSourceMatchesStaged=true，115 包文件、15 生产资源、30 许可证全部一致，原包 hash 继续有效。README 已补正式运行入口，RUNNING.md 已补候选包独立启动及 File 试用方式。原生 IME/拖动/DPI 需要可用的 Windows 桌面人工控制；当前工具只有浏览器 DOM 控制，未将 fill、合成事件或 viewport 仿真计作原生验收。
+本轮仅新增验收脚本和文档，生产源码未改；对候选 `024952-878` 再执行 verify-bundle，currentSourceMatchesStaged=true，115 包文件、15 生产资源、30 许可证全部一致，原包 hash 继续有效。README 已补正式运行入口，RUNNING.md 已补候选包独立启动及 File 试用方式。原生 IME/拖动/DPI 需要可用的 Windows 桌面人工控制；浏览器 DOM 控制不覆盖这些操作；原生控制的实际可用性与后续中止情况见下文，未将 fill、合成事件或 viewport 仿真计作原生验收。
+
+
+## 原生桌面验收中止说明（2026-10-19）
+
+进一步按 computer-use 技能初始化独立 `@oai/sky` 接口，list_apps 和启动已有 Chrome 均成功，因此不能再将原生接口描述为不存在。选择唯一返回的 Chrome 窗口并首次 get_window_state 时，工具因无法可靠识别当前浏览器网址、无法可靠执行其策略检查而主动停止，并要求结束本轮操作。遵守中止要求，没有通过其他桌面接口继续输入、拖动或改变 DPI；IME/拖动/DPI 均未产生通过证据。
+
+为此次尝试启动的 `native-desktop-runtime` 仅使用 File 后端，3 条初始记录由真正的 Service 计划/审阅/执行生成，不能算作原生验收。后续已依据完整命令行及进程 ID 关闭两个属于该 fixture 的 Python 进程（8793），确认无匹配进程残留，保留数据便于追查。没有关闭用户 Chrome 或其他应用。现有 DefaultBox 原生通知证据和 `024952-878` 候选包未受此尝试影响。
+
+继续完成 §18 仍需要可恢复快照的 Windows VM（干净安装、System/UAC、机器安装及多用户等）和可正常工作的原生桌面控制或人工验收（IME、拖动、各档 DPI）。负责人已说明暂时没有 VM，先完成其余项目；这不取消原验收门槛，也不构成宿主 System 写入许可。
