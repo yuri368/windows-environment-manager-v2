@@ -1,0 +1,15 @@
+{
+  "repository": "H:\\Yuri368\\环境变量配置V3-git",
+  "branch": "v3/phase2-preview-history-20261017",
+  "head": "e0e6496bf7acf80379ba3b48736ba6d768b4bf5c",
+  "testCommand": "npm test",
+  "testStartedAt": "2026-10-17T11:57:12.5536079+08:00",
+  "testFinishedAt": "2026-10-17T11:58:01.4089314+08:00",
+  "exitCode": 0,
+  "productFileSha256": {
+    "temp.html": "a967ab958365d5fb9613aae9cb56368ba4c9272c6f9a7ef79e34ae8c166fb6f5",
+    "surface-ui.css": "c7b273ec870b5fc46e392805693f5a5ff7cdb3cc685ef0cf9026d674a21de504",
+    "shell-ui.css": "f57e92cb2b2a350a7ab15f90cf80bdd29d4b78873a69a11804582ca770c4bb59"
+  },
+  "logFile": "H:\\Yuri368\\环境变量配置V3-git\\ui-v3\\design-evidence\\phase2-preview-history-2026-10-17\\final-npm-test.txt"
+}

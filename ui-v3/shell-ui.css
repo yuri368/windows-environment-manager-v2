@@ -205,17 +205,8 @@
 .diffrow .pair > span:first-child::before { content: ''; flex: none; width: 14px; height: 14px; margin-top: 3px; border-radius: 4px; background: var(--st-replaced); -webkit-mask: var(--i-minus) center / 10px no-repeat; mask: var(--i-minus) center / 10px no-repeat; }
 .diffrow .pair.add > span:first-child::before { background: var(--st-match); -webkit-mask-image: var(--i-add); mask-image: var(--i-add); }
 
-/* ---------- 历史页：时间轴 ---------- */
-.history-page .outline-table > tbody > tr > td:first-child { position: relative; padding-left: 34px; font-variant-numeric: tabular-nums; color: var(--body); }
-.time-dot { position: absolute; left: 14px; top: 17px; width: 9px; height: 9px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 2px var(--st-match-line); z-index: 1; }
-.history-page .outline-table > tbody > tr > td:first-child::before { content: ''; position: absolute; left: 18px; top: 0; bottom: 0; width: 1px; background: var(--line2); }
-.history-page .outline-table > tbody > tr:first-child > td:first-child::before { top: 22px; }
-.history-page .outline-table > tbody > tr:last-child > td:first-child::before { bottom: auto; height: 22px; }
-.history-page .outline-table > tbody > tr:only-child > td:first-child::before { display: none; }
-.history-page .outline-table > tbody > tr:first-child .time-dot { background: var(--st-match); box-shadow: 0 0 0 3px #3b9a7429, 0 0 0 1.5px var(--st-match); }
+/* ---------- 历史页：紧凑记录摘要 ---------- */
 .act-chip { display: inline-block; padding: 2px 9px; border: 1px solid var(--line2); border-radius: 999px; background: #f7faf8; font-size: 12px; font-weight: 600; color: var(--body); white-space: nowrap; }
-.history-details summary { border-radius: 4px; }
-.history-details[open] > summary { margin-bottom: 4px; }
 
 /* Preserve the compact two-column application picker at the existing mobile breakpoint. */
 @media (max-width: 620px) {
