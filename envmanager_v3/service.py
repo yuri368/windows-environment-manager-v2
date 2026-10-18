@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 import hashlib
+import json
 from pathlib import Path
 import threading
 import uuid
@@ -766,6 +767,16 @@ class Service:
                     action = {"compensated": "操作已补偿", "cancelled": "操作已取消", "resolved_current": "已确认保留当前值"}.get(item["status"], "操作待恢复")
                 record.update(id=item["operationId"], action=action, when=item.get("when", ""),
                               detail={"committed": "已执行并核验", "compensated": "已恢复执行前值", "cancelled": "已取消", "resolved_current": "保留当前值"}.get(item["status"], "待恢复或对账"), changes=[])
+                # The history snapshot stays immutable. Its original failed
+                # operation may since have been resolved by a reviewed recovery.
+                if item["status"] == "recovery_required":
+                    resolved = self.database.connection.execute(
+                        "SELECT body FROM executions WHERE id=?", (item["operationId"],)).fetchone()
+                    evidence = json.loads(resolved[0]) if resolved else {}
+                    if evidence.get("resolvedBy") and evidence.get("status") in ("compensated", "resolved_current"):
+                        record.update(resolutionStatus=evidence["status"], resolvedBy=evidence["resolvedBy"],
+                                      action="原操作已恢复处理",
+                                      detail="已恢复操作前值" if evidence["status"] == "compensated" else "已确认保留当前实际值")
                 for target in item["targets"]:
                     final = target.get("verifiedBefore") or target.get("verifiedAfter")
                     change = {"scope": target["scope"], "name": target["name"],

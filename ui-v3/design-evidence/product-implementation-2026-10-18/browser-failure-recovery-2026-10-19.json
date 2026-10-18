@@ -1,0 +1,56 @@
+[
+  {
+    "stage": "real_fault_history",
+    "text": "有操作需要恢复处理\naa123d92773c4952b1ddc83b21f2d166 · recovery_required\n操作历史\n\n持久操作记录 · 展开查看修改前后与元素变化\n\n4 条记录\n时间\n操作\n描述与详情\n时间：\n2026-10-18T18:40:21.465779+00:00\n操作：\n操作待恢复\n描述：\n待恢复或对账\n收起详情\n用户 / V3_FAIL_RECOVERY_A\n元素列表\n修改前 · 记录快照\nold-a\n修改后 · 记录快照\nnew-a\n完整原始字符串\n\n恢复前需要审阅新的环境计划。\n\n时间：\n2026-10-18T18:40:20.873586+00:00\n操作：\n撤销配置贡献\n描述：\n已执行并核验\n收起详情\n用户 / V3_FAIL_SHARED\n元素列表\n\n删除 1 项 · 保留其他元素 · 仍有 1 条删除保留提示，未解决的删除继续保留。\n\n修改前 · 记录快照\nA\n;\nB\n;\nBASE\n修改后 · 记录快照\nA\n;\nBASE\n完整原始字符串\n\n恢复前需要审阅新的环境计划。\n\n恢复历史前值\n时间：\n2026-10-18T18:40:19.098867+00:00\n操作：\n应用环境方案\n描述：\n已执行并核验\n查看详情\n恢复历史前值\n时间：\n2026-10-18T18:40:18.034215+00:00\n操作：\n操作已补偿\n描述：\n已恢复执行前值\n收起详情\n用户 / V3_FAIL_COMP_A\n元素列表\n修改前 · 记录快照\nold-a\n修改后 · 记录快照\nold-a\n完整原始字符串\n\n恢复前需要审阅新的环境计划。"
+  },
+  {
+    "stage": "before_recovery_preview_fix",
+    "text": "审阅恢复处理\n\n2 个环境目标 · 预览版本 1\n\n×\n\n取消\n审阅此计划",
+    "toast": "Cannot read properties of undefined (reading 'exact')"
+  },
+  {
+    "stage": "restore_before_preview_fixed",
+    "text": "审阅恢复处理\n\n2 个环境目标 · 预览版本 1\n\n×\n\n2 个目标\n·\n1 个有实际变更\n·\n尚未应用\n\n按目标定位\n1\nV3_FAIL_RECOVERY_A\n用户\n有实际变更\n2\nV3_FAIL_RECOVERY_B\n用户\n值不变\nV3_FAIL_RECOVERY_A\n用户\n有实际变更\n· recovery\nWindows 当前\nexternal-fixture-value\n目标结果 · 尚未应用\nold-a\n完整原始字符串\n\n应用时整体替换当前值。\n\nV3_FAIL_RECOVERY_B\n用户\n值不变\n· recovery\nWindows 当前\nold-b\n目标结果 · 尚未应用\nold-b\n完整原始字符串\n\n请核对全部目标，再点击审阅；审阅不会写入环境。\n\n取消\n审阅此计划"
+  },
+  {
+    "stage": "accept_current_final_preview",
+    "text": "审阅恢复处理\n\n2 个环境目标 · 预览版本 1\n\n×\n=\n当前值无需改变\n\n确认将完成恢复对账，保留当前环境值。\n\n2 个目标\n0 个有实际变更\n2 个值不变\n按目标定位\n1\nV3_FAIL_RECOVERY_A\n用户\n值不变\n2\nV3_FAIL_RECOVERY_B\n用户\n值不变\nV3_FAIL_RECOVERY_A\n用户\n值不变\n· 恢复处理\nWindows 当前\nexternal-fixture-value\n目标结果 · 尚未应用\nexternal-fixture-value\n完整原始字符串\nV3_FAIL_RECOVERY_B\n用户\n值不变\n· 恢复处理\nWindows 当前\nold-b\n目标结果 · 尚未应用\nold-b\n完整原始字符串\n\n请核对全部目标，再点击审阅；审阅不会写入环境。\n\n取消\n审阅此计划"
+  },
+  {
+    "stage": "accept_current_committed",
+    "text": "操作历史\n\n持久操作记录 · 展开查看修改前后与元素变化\n\n4 条记录\n时间：\n2026-10-18T18:40:21.465779+00:00\n操作：\n操作待恢复\n描述：\n待恢复或对账\n查看详情\n时间：\n2026-10-18T18:40:20.873586+00:00\n操作：\n撤销配置贡献\n描述：\n已执行并核验\n查看详情\n恢复历史前值\n时间：\n2026-10-18T18:40:19.098867+00:00\n操作：\n应用环境方案\n描述：\n已执行并核验\n查看详情\n恢复历史前值\n时间：\n2026-10-18T18:40:18.034215+00:00\n操作：\n操作已补偿\n描述：\n已恢复执行前值\n查看详情"
+  },
+  {
+    "stage": "restart_after_resolution",
+    "text": "操作历史\n\n持久操作记录 · 展开查看修改前后与元素变化\n\n4 条记录\n时间\n操作\n描述与详情\n时间：\n2026-10-18T18:40:21.465779+00:00\n操作：\n原操作已恢复处理\n描述：\n已确认保留当前实际值\n查看详情\n时间：\n2026-10-18T18:40:20.873586+00:00\n操作：\n撤销配置贡献\n描述：\n已执行并核验\n查看详情\n恢复历史前值\n时间：\n2026-10-18T18:40:19.098867+00:00\n操作：\n应用环境方案\n描述：\n已执行并核验\n查看详情\n恢复历史前值\n时间：\n2026-10-18T18:40:18.034215+00:00\n操作：\n操作已补偿\n描述：\n已恢复执行前值\n查看详情"
+  },
+  {
+    "stage": "resolved_history_snapshot_unchanged",
+    "text": "操作历史\n\n持久操作记录 · 展开查看修改前后与元素变化\n\n4 条记录\n时间\n操作\n描述与详情\n时间：\n2026-10-18T18:40:21.465779+00:00\n操作：\n原操作已恢复处理\n描述：\n已确认保留当前实际值\n收起详情\n用户 / V3_FAIL_RECOVERY_A\n元素列表\n修改前 · 记录快照\nold-a\n修改后 · 记录快照\nnew-a\n完整原始字符串\n\n恢复前需要审阅新的环境计划。\n\n时间：\n2026-10-18T18:40:20.873586+00:00\n操作：\n撤销配置贡献\n描述：\n已执行并核验\n查看详情\n恢复历史前值\n时间：\n2026-10-18T18:40:19.098867+00:00\n操作：\n应用环境方案\n描述：\n已执行并核验\n查看详情\n恢复历史前值\n时间：\n2026-10-18T18:40:18.034215+00:00\n操作：\n操作已补偿\n描述：\n已恢复执行前值\n查看详情"
+  },
+  {
+    "stage": "stale_history_restore_refused",
+    "message": "当前值已变化，不能用旧历史覆盖。"
+  },
+  {
+    "stage": "real_history_restore_preview",
+    "text": "审阅历史恢复\n\n2 个环境目标 · 预览版本 1\n\n×\n\n2 个目标\n·\n2 个有实际变更\n·\n尚未应用\n\n按目标定位\n1\nV3_FAIL_COMP_A\n用户\n有实际变更\n2\nV3_FAIL_COMP_B\n用户\n有实际变更\nV3_FAIL_COMP_A\n用户\n有实际变更\n· 历史恢复\nWindows 当前\nnew-a\n目标结果 · 尚未应用\nold-a\n完整原始字符串\n\n应用时整体替换当前值。\n\nV3_FAIL_COMP_B\n用户\n有实际变更\n· 历史恢复\nWindows 当前\nnew-b\n目标结果 · 尚未应用\nold-b\n完整原始字符串\n\n应用时整体替换当前值。\n\n请核对全部目标，再点击审阅；审阅不会写入环境。\n\n取消\n审阅此计划"
+  },
+  {
+    "stage": "post_fix_browser_errors",
+    "logs": [
+      {
+        "level": "error",
+        "message": "TypeError: Cannot read properties of undefined (reading 'exact')\n    at Object.comparisonMarkup (http://127.0.0.1:8791/windows-elements.js:126:88)\n    at previewRowMarkup (http://127.0.0.1:8791/product-app.js:332:27)\n    at http://127.0.0.1:8791/product-app.js:837:125\n    at Array.map (<anonymous>)\n    at renderPreview (http://127.0.0.1:8791/product-app.js:837:114)\n    at mountPreview (http://127.0.0.1:8791/product-app.js:830:165)\n    at openPlanPreview (http://127.0.0.1:8791/product-app.js:825:5)",
+        "timestamp": "2026-10-18T18:42:00.473Z",
+        "url": "http://127.0.0.1:8791/product-app.js"
+      },
+      {
+        "level": "error",
+        "message": "ApiError: 当前值已变化，不能用旧历史覆盖。\n    at Object.request (http://127.0.0.1:8791/product-runtime.js:14:88)\n    at async openPlanPreview (http://127.0.0.1:8791/product-app.js:826:226)",
+        "timestamp": "2026-10-18T18:46:01.915Z",
+        "url": "http://127.0.0.1:8791/product-app.js"
+      }
+    ]
+  }
+]

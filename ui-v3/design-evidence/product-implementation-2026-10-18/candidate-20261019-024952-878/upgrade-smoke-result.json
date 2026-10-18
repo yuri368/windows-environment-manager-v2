@@ -1,0 +1,18 @@
+{
+  "status": "passed",
+  "scope": "isolated helper choreography; simulated program-file replacement",
+  "backend": "file",
+  "hostInstallerExecuted": false,
+  "nativeUacOrInstallAclTested": false,
+  "backupId": "2e31b7374f774f728d751b4ed48cade6",
+  "backupManifestSha256": "4f4a46b30b91ae7bd057a9ab105572db406283b8893de437935f386f5c5df39b",
+  "sourceFileCount": 4,
+  "checks": [
+    "synchronous check-user passed before any product data/session creation",
+    "fresh status handshake before replacement",
+    "real product second instance blocked during upgrade",
+    "real SQLite backup and raw draft/recovery bytes preserved",
+    "lease stayed live and blocked product across simulated replacement",
+    "finish installed released lock; source data unchanged; product reopened"
+  ]
+}

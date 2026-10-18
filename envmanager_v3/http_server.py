@@ -4,6 +4,8 @@ The caller owns service lifetime and runs serve_forever().  launch_url carries
 the one-use ticket in its fragment; the page must remove it with replaceState
 and POST {"ticket": ticket} to /api/v1/session/exchange with the exact Origin.
 Exchange returns {"csrfToken": token} and sets the HttpOnly session cookie.
+Authenticated bootstrap repeats the token in X-CSRF-Token so a fresh same-origin
+tab can initialize its own sessionStorage. This never replaces cookie auth.
 Query dictionaries contain strings; repeated query keys are rejected.
 """
 
@@ -381,6 +383,8 @@ class _Handler(BaseHTTPRequestHandler):
                     raise TypeError("Service response must be a dict")
                 if method == "export_workspace":
                     self._export(result)
+                elif method == "bootstrap":
+                    self._json(200, result, (("X-CSRF-Token", self.server._csrf),))
                 else:
                     self._json(200, result)
                 if method == "quit":

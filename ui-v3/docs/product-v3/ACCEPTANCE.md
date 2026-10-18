@@ -46,23 +46,39 @@ System 通道使用一次提升会话、对端进程身份绑定的本地 named 
 
 安装验收迭代：DefaultBox 的 `FakeAdminRights=y` 使原用户 helper 安全检查拒绝；新增同步 `check-user`，身份失败会在备份/替换前明确阻断。经用户授权临时设为 n 后，原生 frozen helper 检查通过（job `4980b437cd1a409bb80e77a70a351db1`），并恢复 y。第二轮真实安装和升级均完成，安装后/升级后 EXE 检查为 ok，但自定义卸载 MsgBox 没有响应静默参数，等待直到外层 300 秒超时（job `3a9ba0731da6458aafe8bb29954bd9b7`）；已确认该轮没有残留 Setup/卸载进程，未重跑未知操作。模拟管理员和降权均读回 y。修复为 SuppressibleMsgBox 后，最新候选已重新构建，完整生命周期复验结果另行登记；不能把这次超时算通过。
 
+最终生命周期 **通过**：候选 `022316-448` 的 user Setup，MCP job `743b38d15a8940aea1cac977fecc9871`，已核验 command/child 都在 DefaultBox；2026-10-18 18:25:15–18:28:43 UTC，Completed/exit 0。全新目录先安装、运行已安装 EXE/File 检查，写入明确标识的 SQLite 历史测试夹具和原始未完成 TOML，再真实升级、启动、核对完整备份，最后静默卸载。程序 EXE 已移除，测试草稿/历史及原始字节保留，boxed User/System 环境清单前后相等。历史夹具为合成数据，不冒充真实应用历史；真实执行历史由前述 Service/browser 验证。完整工具结果 `sandbox-installer-lifecycle-final.json`，原始安装/升级/卸载日志位于 `C:\Sandbox\Yuri368\DefaultBox\drive\C\EnvManagerV3Acceptance\20261019-user-lifecycle-3\`。finally 恢复后，SbieIni 查询 `FakeAdminRights=y`、`DropAdminRights=y`。没有执行宿主 Setup 或宿主环境变量提交；本通过范围仍不是干净 Windows VM 或真实 UAC。
+
+另已由 `022316-448/dist/EnvManagerV3/EnvManagerV3.exe` 本身启动 File 后端提供正式浏览器页面（8788），读取先前验收工作区；配置草稿、运行自定义值和未保存差异仍保留。正式编辑器截图 `packaged-editor-2026-10-19.png`，页面 error 日志为空。该步骤不依赖外部 Python/Node 启动服务。
+
 初次 2026-10-19 联合测试曾有一次升级 helper 未在旧测试窗口内 ready，完整日志保留为 `backend-full-2026-10-19.log`。没有证据确定历史阻塞原因。升级子任务增加有界准备阶段诊断并对齐生产准备预算后，升级 50/50 定向测试、该目标连续五次及以上最终全套回归通过。
 
 ## 完整矩阵的剩余门槛
+
+2026-10-19 追加真实浏览器验收：新同源标签页只有 HttpOnly cookie、没有独立 sessionStorage 中的 CSRF，原版本会拒绝修改。已让鉴权后的 GET bootstrap 通过不可缓存响应头提供该凭据；没有放宽 Cookie、Origin 或 Fetch Metadata 检查，也没有加入重试写入。31 项 HTTP 测试通过，未鉴权/伪造 cookie/跨源请求均不能读出 token。双标签页实际确认非法 NUL 配置草稿、另一页最新运行原文和修正后的有效草稿各自保留；目标输入改变后点击旧执行凭据只返回 version 2 预览，不写旧值，重新审阅后才实际提交 File。另一页刷新历史由 3 条变 4 条，原始环境读回与新记录一致。证据 `browser-cross-tab-before-fix.json`、`browser-cross-tab-after-fix.json`、`product-cross-tab-stale-2026-10-19.png`。
+
+同轮使用 `tests_v3/browser_failure_acceptance.py` 的真实 Service/Executor/File 故障注入生成 4 条持久历史和 1 条恢复待办：补偿完成、共享撤销的部分意图、不可补偿的外部 File 值冲突。既未伪造 DB 历史，也不冒充原生 Windows 故障。发现并修复恢复/历史恢复计划缺少方案匹配字段时前端崩溃的问题：展示其冻结前后快照，无 occurrence 审计 ID 时不编造对应关系。恢复按钮提前、原始完整日志折叠。真实页面取消“恢复前值”预览，再独立审阅并执行“接受当前实际值”，保留 `external-fixture-value` 并清除待办。重启后历史显示已确认保留当前值，原始历史快照仍为 old-a/new-a；新增只读处理结果投影，未改写原历史/Audit。旧历史恢复因连续性不符被正确拒绝；同进程的新真实提交可打开两目标历史恢复预览。证据 `browser-failure-recovery-2026-10-19.json` 和 `product-recovery-*.png`。该过程首个旧版预览错误留有记录，不能宣称整个过程中没有错误。
+
+实际 CSS 宽度 391/600px 补查工作台、Windows 环境、配置视图、元素编辑、冻结预览、历史和恢复入口；长中文路径、重复及空元素保留。表格按现有布局提供横向滚动，配置文件长路径新增 anywhere 换行，避免溢出。配置 Tab 的 ArrowRight 切换已实际操作。截图命名 `product-*-391.png` / `product-*-600.png`，尺寸证据 `browser-layout-2026-10-19.json`。未把浏览器尺寸/缩放仿真当作 Windows DPI、原生 IME 或拖动验收；这些人工项目仍待验。
+
+最终后端回归 `backend-recovery-final-2026-10-19.log`：488 项，487 通过、1 项 native pipe opt-in 跳过，84.765 秒。产品前端 34/34 契约通过（含真实恢复 receipt 形状、原文/空值/删除、折叠审计、仅生成预览）；原始 stdout `product-ui-csrf-2026-10-19.log`。当前候选 `024952-878` 的源码/stage/115 包文件/15生产资源一致，File frozen EXE 两次鉴权启动和升级备份/互斥 smoke 通过。
 
 | Astra 范围 | 状态与仍需补齐的证据 |
 | --- | --- |
 | C01–C04 配置与草稿 | 配置/HTTP/原文测试及真实浏览器已覆盖主要流程；有效工作区分离和重启后的配置差异已与冻结前端合并复验 |
 | E01–E02 原始环境状态 | File/mock 与 DefaultBox 原生 User 已验证；真实 VM System 类型与权限仍待验证 |
-| P01–P05 规则、排序和元素 UI | 共享规则与旧 UI 回归已执行；四撤销范围和多排序目标已补齐正式 UI/File 提交证据；所有窄屏状态尚需完整验收 |
-| R01–R04 连续性与刷新 | 可信审计、未知通知、ABA/重启与草稿保护已有测试；真实 VM 睡眠/恢复、跨标签页和最终通知 UI 仍需验收 |
+| P01–P05 规则、排序和元素 UI | 共享规则与旧 UI 回归已执行；四撤销范围和多排序目标已补齐正式 UI/File 提交证据；主要窄屏编辑/预览状态已补查；原生拖动/IME 仍待验 |
+| R01–R04 连续性与刷新 | 可信审计、未知通知、ABA/重启、跨标签页原文/草稿保留及旧计划更新已有证据；真实 VM 睡眠/恢复和最终原生通知 UI 仍需验收 |
 | X01–X06 执行与恢复 | 故障注入与幂等已有测试；“仅值相等就标补偿”已修复，5 个实际子进程退出边界均通过；原生提升回执仍需真实 VM 验收 |
 | U01–U03 权限和 helper | 固定包/pipe/回执实现、mock 和普通用户真实 pipe 已验证；真实 UAC 成功/取消/其他管理员账户、父进程退出和 System 写入仍需隔离 Windows VM |
-| H01–H02 历史与撤销 | 贡献级测试已覆盖共享/累计/重复与作用域；四撤销入口、批量真实提交和排序原快照历史已补验；失败/部分/恢复记录展示仍需完整验收 |
-| S01–S02 本地边界与资源 | loopback/Origin/CSRF/路径/恶意 after 及缺失运行时测试；022316-448 新包已核对最后源码、115 文件和15生产资源，无漂移 |
-| L01–L02 布局和输入 | 已有桌面及窄屏检查；391/600px 全状态、IME、原生拖动和 100/125/150/200% Windows DPI 尚未全部人工验证 |
-| D01–D02 发布与通知 | 已实际编译用户/机器候选包并运行 File smoke；持续升级锁与完整备份组件及入口已实现并通过测试，安装器接线与最后源码候选包正在收尾；干净 VM 安装/升级/卸载及真实广播仍待验收 |
+| H01–H02 历史与撤销 | 贡献级共享/累计/重复、四撤销入口、批量提交和排序历史已验；补偿/部分意图/恢复历史与真实页面恢复对账已补验，原始记录未改写 |
+| S01–S02 本地边界与资源 | loopback/Origin/CSRF/路径/恶意 after 及缺失运行时测试；024952-878 已核对最终源码、115 文件和15生产资源，无漂移 |
+| L01–L02 布局和输入 | 正式页面主要视图及编辑/预览/恢复状态的391/600px已补查；原生 IME、拖动和100/125/150/200% Windows DPI仍待人工验收 |
+| D01–D02 发布与通知 | 最终用户/机器包已编译并核对冻结源码；DefaultBox 用户安装/启动/升级/卸载/数据保留已真实通过。干净 VM、机器安装/多用户/原生广播和真实 UAC 仍待验收 |
 
 安装包的路径、原始 hash、打包依赖/许可证和每轮 smoke 见 [BUILD.md](BUILD.md)。候选包未经代码签名；源文件改变后不能继续宣称旧包与当前源码一致。
 
 本地 ChatGPT Bridge 的 CDP 连接曾返回 `127.0.0.1:9222` 拒绝连接，没有发送网页协作消息；不得将本轮子 Agent 讨论表述成已取得 ChatGPT 网页确认。
+
+最终冻结包 `024952-878` 另由自身 EXE 在 File 后端启动 8788 正式页面。工作区原始运行输入、配置草稿和 1 项未保存差异仍在；配置应用模式严格只有 replace/+append/-append/append，恢复标签不再进入下拉框。最终页面 error/warn 日志为空，截图 `packaged-final-editor-2026-10-19.png`。此为本机浏览器/File 验收，未执行宿主环境提交。
+
+最终候选 `024952-878` 的 DefaultBox 用户安装生命周期也已完成：job `c300f85b0abb400297ae580e03224b6b`，command/child Verified，Completed/exit 0，2026-10-18 18:53:14–18:56:40 UTC。实际首次安装、已安装 EXE/File 检查、第二次 Setup 升级及完整备份、静默卸载、原始未完成 TOML 和合成历史保留均通过，boxed User/System 清单前后相等。测试后已查询 FakeAdminRights=y、DropAdminRights=y；没有宿主 Setup 或宿主环境提交。工具原始结果 `sandbox-installer-lifecycle-latest.json`，安装日志保留在 `C:\Sandbox\Yuri368\DefaultBox\drive\C\EnvManagerV3Acceptance\20261019-user-lifecycle-5\`。本轮只补齐用户安装器沙盒范围，VM/System/UAC/多用户门槛仍未验证。前一候选同样通过的 job `761d83aa59f74577aa5e0ddfb240137f` 单列为历史证据 `sandbox-installer-lifecycle-024527.json`。

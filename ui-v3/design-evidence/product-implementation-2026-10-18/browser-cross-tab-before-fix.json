@@ -1,0 +1,6 @@
+[
+  {
+    "stage": "fresh_tab_mutation_rejected",
+    "text": "≋\n环境变量方案管理器\nV3\n隔离环境\n环境方案\n工作台\nWindows 环境\n历史\n↻刷新检测\n⚙配置编辑器\n导入配置\n应用\n已选 0 / 1\n⌕\n全部 1\n已匹配 0\n需配置 1\n批量选择\n全选可见清空\n显示 1 / 1\nBr\nBrowserValidation\nLocal · 有待应用修改\n!\n0/2\n需配置\nBr\nBrowserValidation\n!\nWindows · 未匹配 0/2\n最近应用：Local\n默认：Local\n有待应用修改\n准备方案\nLocal\n⌄\n环境变量 2 项\n仅看未匹配\n收起 Windows 对照\n变量\t作用域 / 模式\t值来源\t当前选定值\t检测\t操作\n\nV3_BROWSER_VALIDATION\nWindows 值对比\n\t用户\n· 替换\n\t\n默认值\n已保存值\n自定义值\n\t\n待应用\n\t\n!\n部分匹配 2/3\n\t撤销预览\n\nDRAFT_ONLY_NAME\nWindows 值对比\n\t用户\n· 替换\n\t\n默认值\n自定义值\n\t\n\t\n!\n不匹配\n\t撤销预览\nWindows 值对照 · V3_BROWSER_VALIDATION\n整值替换 · 当前快照\n有实际变更\n查看方案预览 →\n当前选定值\n选定值已修改 · 用户 · 替换 · 自定义值\n B;B;;中文\n尾部 跨页输入\nWindows 当前值\n B;改动第二项;;中文\n尾部 \n应用后的值\n整体替换\n输入提示 · 等待服务端计划\n B;B;;中文\n尾部 跨页输入\n整体待替换\n最终写入字符串 · 不含删除项\n B;B;;中文\n尾部 跨页输入\n! 部分匹配 2/3\n应用时整体替换当前值。\n\n当前触碰\n同项前后\n重复同值\nTab 切换区域，方向键浏览元素\n\n输入与配置不会直接写入环境。执行前请审阅服务端冻结计划。\n单应用 · BrowserValidation / Local\n1 项待应用修改 · 配置与环境独立保存\n撤销配置 ⌄\n预览并应用 →\nCSRF token is missing or invalid."
+  }
+]

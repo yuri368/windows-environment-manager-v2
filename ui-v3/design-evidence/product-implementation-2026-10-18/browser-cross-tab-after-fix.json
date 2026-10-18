@@ -1,0 +1,21 @@
+[
+  {
+    "stage": "peer_runtime_persisted_original_invalid_draft_retained",
+    "draft": "invalid\u0000draft",
+    "saveEnabled": false,
+    "peerRaw": "跨页;B;;尾部 "
+  },
+  {
+    "stage": "correct_draft_keeps_latest_runtime",
+    "raw": "跨页;B;;尾部 "
+  },
+  {
+    "stage": "stale_execute_updates_preview_without_commit",
+    "text": "单应用方案预览\n\n2 个环境目标 · 预览版本 2\n\n预览已更新，请重新审阅。\n×\n↻\n预览已更新，请重新核对\n\n本次尚未应用。查看更新后，需要再次确认。\n\n2 个目标\n1 个有实际变更\n1 个值不变\n按目标定位\n1\nV3_SCOPE_X\n用户\n有实际变更\n2\nV3_SCOPE_Y\n用户\n值不变\nV3_SCOPE_X\n用户\n有实际变更\nScopeA / Current · 前置\nWindows 当前\nB\n;\nC\n;\nA\n待删除\n;\nX\n目标结果 · 尚未应用\n新的跨页值\n待追加\n;\nB\n;\nC\n;\nA\n结果排除\n;\nX\n应用后预览。划线元素不计入最终写入值，当前尚未应用。\n完整原始字符串\n\n删除 1 项 · 在开头追加 1 项 · 保留其他元素\n\nV3_SCOPE_Y\n用户\n值不变\nScopeA / Current · 前置\nWindows 当前\nQ\n;\nZ\n目标结果 · 尚未应用\nQ\n;\nZ\n完整原始字符串\n\n请核对全部目标，再点击审阅；审阅不会写入环境。\n\n取消\n审阅此计划"
+  },
+  {
+    "stage": "peer_commit_visible_after_refresh",
+    "text": "操作历史\n\n持久操作记录 · 展开查看修改前后与元素变化\n\n4 条记录\n时间\n操作\n描述与详情\n时间：\n2026-10-18T18:36:48.813491+00:00\n操作：\n应用环境方案\n描述：\n已执行并核验\n收起详情\n用户 / V3_SCOPE_X\n元素列表\n\n删除 1 项 · 在开头追加 1 项 · 保留其他元素\n\n修改前 · 记录快照\nB\n;\nC\n;\nA\n;\nX\n修改后 · 记录快照\n新的跨页值\n;\nB\n;\nC\n;\nX\n完整原始字符串\n\n恢复前需要审阅新的环境计划。\n\n恢复历史前值\n时间：\n2026-10-18T18:35:15.756417+00:00\n操作：\n应用环境方案\n描述：\n已执行并核验\n查看详情\n恢复历史前值\n时间：\n2026-10-18T18:35:13.968296+00:00\n操作：\n应用环境方案\n描述：\n已执行并核验\n查看详情\n恢复历史前值\n时间：\n2026-10-18T18:35:12.776980+00:00\n操作：\n应用环境方案\n描述：\n已执行并核验\n查看详情\n恢复历史前值",
+    "logs": []
+  }
+]

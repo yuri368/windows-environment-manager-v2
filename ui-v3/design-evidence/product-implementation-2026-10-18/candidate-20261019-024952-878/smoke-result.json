@@ -1,0 +1,43 @@
+{
+  "backend": "file",
+  "check": {
+    "status": "ok",
+    "engineHash": "a6292cf219547190579ef3b9b88f3ec2d4b402de4cb4f9e5fe3ee2477edf5d05",
+    "configuration": {
+      "id": "8dcf7d96-375a-48b2-a3a8-a64d84decb17",
+      "revision": 0,
+      "fileRevision": "missing",
+      "configPath": "H:\\Yuri368\\\u73af\u5883\u53d8\u91cf\u914d\u7f6eV3\\packaging_v3\\output\\20261019-024952-878\\smoke\\data\\workspaces\\63b0ce6f69eb48dd850663650176c510\\config.toml",
+      "fileConflict": false,
+      "validRevision": 0,
+      "draftRevision": 0,
+      "errors": []
+    }
+  },
+  "developerPathRemoved": true,
+  "starts": [
+    {
+      "attempt": 1,
+      "health": {
+        "status": "ok",
+        "product": "EnvManagerV3"
+      },
+      "mode": "isolated",
+      "workspaceId": "8dcf7d96-375a-48b2-a3a8-a64d84decb17",
+      "historyCount": 0,
+      "exitCode": 0
+    },
+    {
+      "attempt": 2,
+      "health": {
+        "status": "ok",
+        "product": "EnvManagerV3"
+      },
+      "mode": "isolated",
+      "workspaceId": "8dcf7d96-375a-48b2-a3a8-a64d84decb17",
+      "historyCount": 0,
+      "exitCode": 0
+    }
+  ],
+  "status": "passed"
+}

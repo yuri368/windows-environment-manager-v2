@@ -126,7 +126,7 @@ body { padding: 12px; font-size: 13px; line-height: 1.55; }
 .config-view-tabs { display: flex; gap: 4px; align-self: stretch; min-width: 0; }
 .editor-tabs .navtab { align-self: stretch; white-space: nowrap; }
 .editor-tabs .tag { margin-left: 8px; }
-.config-file-label { margin-left: auto; color: var(--sub); font-size: 12px; padding: 5px 0; }
+.config-file-label { margin-left: auto; min-width: 0; max-width: 100%; overflow-wrap: anywhere; color: var(--sub); font-size: 12px; padding: 5px 0; }
 .has-changes { color: var(--amber); }
 .running-value { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .running-value .vinput { flex: 1; min-width: 0; }

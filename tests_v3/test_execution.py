@@ -1302,6 +1302,33 @@ class ExecutorTests(unittest.TestCase):
                 finally:
                     service.close()
 
+    def test_resolved_failure_history_projects_resolution_without_rewriting_snapshots(self):
+        from envmanager_v3.service import Service
+        from tests_v3.browser_failure_acceptance import FaultFileEnvironment, seed
+        for resolution in ("restore_before", "accept_current"):
+            with self.subTest(resolution=resolution):
+                root = self.root / ("history-" + resolution)
+                service = Service(root, environment=FaultFileEnvironment(root / "environment.json"))
+                try:
+                    summary = seed(service, service.environment)
+                    operation_id = summary["operations"]["recoveryRequired"]["operationId"]
+                    stored_before = service.database.history()
+                    receipt = service.plan({"kind": "recovery", "operationId": operation_id, "resolution": resolution})
+                    reviewed = service.review(receipt["planId"], {k: receipt[k] for k in ("version", "digest")})
+                    result = service.execute(receipt["planId"], {**reviewed, "idempotencyKey": "resolve-history"})
+                    self.assertEqual(result["status"], "committed")
+                    projected = service.history_record(operation_id)
+                    self.assertEqual(projected["status"], "recovery_required")
+                    self.assertEqual(projected["resolutionStatus"], "compensated" if resolution == "restore_before" else "resolved_current")
+                    self.assertEqual(projected["resolvedBy"], result["operationId"])
+                    self.assertEqual(projected["action"], "原操作已恢复处理")
+                    self.assertEqual(service.recovery()["items"], [])
+                    stored_after = service.database.history()
+                    self.assertEqual(next(h for h in stored_after if h["operationId"] == operation_id),
+                                     next(h for h in stored_before if h["operationId"] == operation_id))
+                finally:
+                    service.close()
+
 
     def session_executor(self, receipt, configure=None, *, on_committed=None):
         events, sessions, received = [], [], []

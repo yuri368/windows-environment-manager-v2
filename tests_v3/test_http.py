@@ -149,6 +149,31 @@ class HTTPTests(unittest.TestCase):
                               401, "INVALID_TICKET")
         self.login()
 
+    def test_authenticated_bootstrap_restores_fresh_tab_csrf_without_new_ticket(self):
+        self.login()
+        original_csrf = self.csrf
+        self.csrf = None
+        status, headers, body = self.request("GET", h.API + "/bootstrap")
+        self.assertEqual(status, 200, body)
+        self.assertEqual(headers["X-CSRF-Token"], original_csrf)
+        self.assertEqual(headers["Cache-Control"], "no-store")
+        self.assertNotIn("Access-Control-Allow-Origin", headers)
+        self.assertEqual(json.loads(body), self.service.result)
+        self.assertEqual(self.service.calls, [("bootstrap", ())])
+        self.csrf = headers["X-CSRF-Token"]
+        self.assertEqual(self.request("POST", h.API + "/plans", {})[0], 200)
+
+    def test_rejected_bootstrap_never_discloses_csrf(self):
+        self.login()
+        for fields in ({"Cookie": None}, {"Cookie": h.COOKIE_NAME + "=wrong"},
+                       {"Origin": "https://evil.test"}, {"Sec-Fetch-Site": "cross-site"}):
+            with self.subTest(fields=fields):
+                status, headers, body = self.request("GET", h.API + "/bootstrap", headers=fields)
+                self.assertIn(status, (401, 403), body)
+                self.assertNotIn("X-CSRF-Token", headers)
+                self.assertNotIn(self.csrf.encode(), body)
+        self.assertFalse(self.service.calls)
+
     def test_ticket_exchange_exact_schema(self):
         for body in ({}, {"ticket": 4}, {"ticket": self.ticket, "after": "x"}):
             self.assert_error(self.request("POST", h.API + "/session/exchange", body),

@@ -1,0 +1,52 @@
+{
+  "jobId": "743b38d15a8940aea1cac977fecc9871",
+  "status": "Completed",
+  "completionConfirmed": true,
+  "exitCode": 0,
+  "boxName": "DefaultBox",
+  "submittedAt": "2026-10-18T18:25:14.4626234Z",
+  "startedAt": "2026-10-18T18:25:15.7469388+00:00",
+  "completedAt": "2026-10-18T18:28:43.6145468+00:00",
+  "error": null,
+  "actualBox": "DefaultBox",
+  "childBox": "DefaultBox",
+  "childBoxVerification": "Verified",
+  "details": {
+    "JobId": "743b38d15a8940aea1cac977fecc9871",
+    "BoxName": "DefaultBox",
+    "ActualBox": "DefaultBox",
+    "WorkerPid": 22608,
+    "ChildPid": 28144,
+    "ChildBox": "DefaultBox",
+    "ChildBoxVerification": "Verified",
+    "ChildCreatedAt": "2026-10-18T18:25:15.7440069+00:00",
+    "StartedAt": "2026-10-18T18:25:15.7469388+00:00",
+    "CompletedAt": "2026-10-18T18:28:43.6145468+00:00",
+    "Status": "Completed",
+    "ExitCode": 0,
+    "Error": null,
+    "Cleanup": null
+  },
+  "stdout": {
+    "text": "{\"status\": \"passed\", \"scope\": \"Sandboxie DefaultBox actual user Setup lifecycle\", \"installer\": \"H:\\\\Yuri368\\\\\\u73af\\u5883\\u53d8\\u91cf\\u914d\\u7f6eV3\\\\packaging_v3\\\\output\\\\20261019-022316-448\\\\EnvManagerV3-3.0.0-dev1-setup-user-x64.exe\", \"installerSha256\": \"5d68a53745d88a05c0633d12d2be790d0f9209b641033cce88f3f8456969178d\", \"root\": \"C:\\\\EnvManagerV3Acceptance\\\\20261019-user-lifecycle-3\", \"checks\": [\"actual user Setup and installed EXE File check\", \"actual second Setup uses backup and preserves durable data\", \"actual uninstall removes program files and preserves draft/history fixtures\", \"boxed User/System environment inventory unchanged\"], \"realUacTested\": false, \"cleanWindowsVmTested\": false, \"historyFixtureIsSynthetic\": true}\r\n",
+    "offset": 0,
+    "totalChars": 736,
+    "hasMore": false,
+    "file": "C:\\Sandbox\\Yuri368\\DefaultBox\\drive\\C\\CodexSandboxJobs\\743b38d15a8940aea1cac977fecc9871\\stdout.txt"
+  },
+  "stderr": {
+    "text": "Starting first-install\r\nChecking first-start\r\nStarting upgrade\r\nChecking after-upgrade\r\nStarting uninstall\r\n",
+    "offset": 0,
+    "totalChars": 108,
+    "hasMore": false,
+    "file": "C:\\Sandbox\\Yuri368\\DefaultBox\\drive\\C\\CodexSandboxJobs\\743b38d15a8940aea1cac977fecc9871\\stderr.txt"
+  },
+  "paths": {
+    "hostJobDirectory": "H:\\Yuri368\\ChatGPT-Bridge\\runs\\sandbox\\743b38d15a8940aea1cac977fecc9871",
+    "sandboxJobDirectory": "C:\\Sandbox\\Yuri368\\DefaultBox\\drive\\C\\CodexSandboxJobs\\743b38d15a8940aea1cac977fecc9871",
+    "request": "H:\\Yuri368\\ChatGPT-Bridge\\runs\\sandbox\\743b38d15a8940aea1cac977fecc9871\\request.json",
+    "response": "H:\\Yuri368\\ChatGPT-Bridge\\runs\\sandbox\\743b38d15a8940aea1cac977fecc9871\\response.json",
+    "result": "C:\\Sandbox\\Yuri368\\DefaultBox\\drive\\C\\CodexSandboxJobs\\743b38d15a8940aea1cac977fecc9871\\result.json"
+  },
+  "controllerExitCode": 0
+}

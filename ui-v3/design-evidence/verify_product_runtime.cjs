@@ -11,7 +11,7 @@ function initial(empty=false){
   const profileChoices={[id(2)]:id(3)};
   return {workspace:{id:id(1),revision:1,validRevision:1,draftRevision:1,errors:[],fileRevision:'disk-1',configPath:'managed/env.toml'},apps,workingApps:clone(apps),configurationBaseline:clone(apps),profileChoices,draftProfileChoices:clone(profileChoices),snapshots:[{scope:'User',name:'Path',exists:true,raw:'X;A',type:'REG_EXPAND_SZ',revision:'env-1',supported:true}],history:[],mode:'isolated',capabilities:{execute:true},recovery:[],uiDrafts:{}};
 }
-async function harness(empty=false,savedState=null){
+async function harness(empty=false,savedState=null,{freshTab=false}={}){
   let state=savedState?clone(savedState):initial(empty),w,seq=100,reviewCount=0,executeCount=0,loseExecution=false,rejectReview=false,updateReview=false,failEdit=false;
   const calls=[],errors=[],plans=new Map(),edits=new Map(),orders=new Map(),operations=new Map();
   const variable=()=>state.workingApps[0].profiles.find(p=>p.recordId===state.profileChoices[state.workingApps[0].recordId]).vars[0];
@@ -64,7 +64,8 @@ async function harness(empty=false,savedState=null){
     const route=url.replace('/api/v1',''),method=options.method||'GET',body=options.body?JSON.parse(options.body):null;calls.push({route,method,body,headers:options.headers,credentials:options.credentials});
     const ok=value=>({ok:true,json:async()=>clone(value),text:async()=>typeof value==='string'?value:JSON.stringify(value)});
     if(route==='/session/exchange')return ok({csrfToken:'test-csrf'});
-    if(route==='/bootstrap'||route==='/environment/refresh')return ok(state);
+    if(route==='/bootstrap')return {...ok(state),headers:{get:name=>name==='X-CSRF-Token'?'test-csrf':null}};
+    if(route==='/environment/refresh')return ok(state);
     if(route.endsWith('/draft'))return ok(draft(body));
     if(route.startsWith('/selections/')){const v=variable();if(route.endsWith('/restore')){v.source='自定义值';v.selectedRaw=v.custom=v.baselineValue;}else{v.source=body.source;v.custom=body.raw;v.selectedRaw=body.raw;v.dirty=true;}bump();syncRuntime();return ok(state);}
     if(route.endsWith('/save')){assert.equal(body.expectedDiskHash,state.workspace.fileRevision);assert.equal(state.workspace.errors.length,0);state.workspace.fileRevision='disk-'+(++seq);state.configurationBaseline=clone(state.workingApps);return ok(state);}
@@ -82,7 +83,7 @@ async function harness(empty=false,savedState=null){
   }
   const vc=new VirtualConsole();vc.on('jsdomError',error=>errors.push(error));
   const html=source('index.html').replace(/<script[^>]*src="([^"]+)"[^>]*><\/script>/g,(_,name)=>'<script>'+source(name).replace(/<\/script/gi,'<\\/script')+'</script>');
-  const dom=new JSDOM(html,{url:'http://127.0.0.1:8788/#ticket=test-ticket',runScripts:'dangerously',pretendToBeVisual:true,virtualConsole:vc,beforeParse(window){w=window;w.fetch=fetch;w.scrollTo=()=>{};w.confirm=()=>true;}});
+  const dom=new JSDOM(html,{url:'http://127.0.0.1:8788/'+(freshTab?'':'#ticket=test-ticket'),runScripts:'dangerously',pretendToBeVisual:true,virtualConsole:vc,beforeParse(window){w=window;w.fetch=fetch;w.scrollTo=()=>{};w.confirm=()=>true;}});
   await dom.window.productReady;
   return {w,dom,calls,errors,state:()=>state,set:(values)=>{({loseExecution=loseExecution,rejectReview=rejectReview,updateReview=updateReview,failEdit=failEdit}=values);},counts:()=>({reviewCount,executeCount}),q:s=>w.document.querySelector(s),run:s=>w.eval(s),close:()=>dom.window.close()};
 }
@@ -91,6 +92,8 @@ async function harness(empty=false,savedState=null){
   const h=await harness(),{w,q,run}=h;
   try{
     await check('bootstrap exchanges ticket, removes fragment and carries CSRF/cookie credentials',async()=>{assert.equal(w.location.hash,'');assert.equal(h.calls[0].route,'/session/exchange');assert(q('#varRows'));await run('refreshEnvironment()');const call=h.calls.find(c=>c.route==='/environment/refresh');assert.equal(call.credentials,'same-origin');assert.equal(call.headers['X-CSRF-Token'],'test-csrf');});
+    await check('fresh tab restores CSRF from authenticated bootstrap before mutation',async()=>{const peer=await harness(false,null,{freshTab:true});try{assert.equal(peer.calls[0].route,'/bootstrap');assert(!peer.calls.some(c=>c.route==='/session/exchange'));await peer.run('refreshEnvironment()');const call=peer.calls.find(c=>c.route==='/environment/refresh');assert.equal(call.credentials,'same-origin');assert.equal(call.headers['X-CSRF-Token'],'test-csrf');assert([...Array(peer.w.sessionStorage.length)].some((_,i)=>peer.w.sessionStorage.getItem(peer.w.sessionStorage.key(i))==='test-csrf'));assert.equal(peer.errors.length,0);}finally{peer.close();}});
+    await check('recovery actions precede collapsed raw audit and only request a reviewed preview',async()=>{const state=initial();state.recovery=[{operationId:id(900),status:'recovery_required',details:{errors:[{message:'<raw recovery & conflict>'}]}}];const peer=await harness(false,state);try{const notice=peer.q('#productRecovery'),record=notice.querySelector('details'),audit=record.querySelector('details');assert(audit&&!audit.open);assert.equal(audit.querySelector('pre').textContent,JSON.stringify(state.recovery[0].details,null,2));assert(!audit.querySelector('raw'));const actions=[...record.querySelectorAll('button')];assert.equal(actions.length,2);assert(actions.every(button=>button.parentElement===record));assert(actions[0].compareDocumentPosition(audit)&peer.w.Node.DOCUMENT_POSITION_FOLLOWING);actions[0].click();await tick();await peer.run('API.flush()');const plan=peer.calls.find(c=>c.route==='/plans'&&c.body.kind==='recovery');assert.deepEqual(plan.body,{kind:'recovery',operationId:id(900),resolution:'restore_before'});assert.equal(peer.counts().executeCount,0);}finally{peer.close();}});
     await check('rapid selection input is ordered and preserves textarea/caret during acknowledgement',async()=>{const input=q('.vinput');input.focus();input.value='B';input.dispatchEvent(new w.Event('input',{bubbles:true}));input.value='B;C';input.dispatchEvent(new w.Event('input',{bubbles:true}));input.setSelectionRange(2,2);await run('flushInputs()');assert.strictEqual(q('.vinput'),input);assert.equal(input.selectionStart,2);assert.equal(h.state().apps[0].profiles[0].vars[0].selectedRaw,'B;C');assert.deepEqual(h.calls.filter(c=>c.route.startsWith('/selections/')).map(c=>c.body.raw),['B','B;C']);});
     await check('preview renders authoritative receipt; review and execute require separate clicks',async()=>{await run("showPreview('应用','验收',[{app:0,profile:'稳定',varIdx:0}])");assert(q('[data-preview-index]'));await run('confirmPreview()');assert.equal(h.counts().executeCount,0);assert.equal(q('#confirmDialog').textContent,'执行已审阅计划');await run('confirmPreview()');assert.equal(h.counts().executeCount,1);assert(!q('#modal').classList.contains('open'));});
     await check('review replacement plan never executes in same click',async()=>{await run("showPreview('应用','更新验收',[{app:0,profile:'稳定',varIdx:0}])");h.set({updateReview:true});const before=h.counts().executeCount;await run('confirmPreview()');assert.equal(h.counts().executeCount,before);assert(q('#previewVersionStatus').textContent.includes('更新'));assert.equal(q('#confirmDialog').textContent,'审阅此计划');run('closeModal()');});
@@ -133,6 +136,17 @@ async function harness(empty=false,savedState=null){
         assert.equal(node.querySelectorAll('.is-before .diff-token').length,1);assert.equal(node.querySelectorAll('.is-after .diff-token').length,1);
         assert.equal(node.querySelector('.is-after [data-raw-value]').dataset.rawValue,afterRaw);
         if(index===1)assert(node.textContent.includes('整体待替换'));
+      }
+    });
+    await check('recovery and history restore receipts render exact states without scheme match metadata',async()=>{
+      assert.deepEqual(Array.from(run('Object.keys(MODE)')),['replace','+append','-append','append']);
+      for(const mode of ['recovery','history-restore'])for(const after of [{exists:true,raw:'A;A;; \r\n尾部 ',type:'REG_SZ'},{exists:false,raw:null,type:null}]){
+        const before={exists:true,raw:'B;B;; \r\n原文 ',type:'REG_EXPAND_SZ'},plan={targetKey:{scope:'User',name:'Path',canonicalName:'PATH'},mode,before,after,special:false,valid:true,issues:[],operations:[{type:'restore',action:'RECOVER_BEFORE'}]},frozen=JSON.stringify(plan),node=w.document.createElement('div');
+        node.innerHTML=w.previewRowMarkup({v:{name:'Path',mode},scope:'User',name:'Path',members:[],plan,before:before.raw,after:after.exists?after.raw:undefined,whole:false},'应用',0);
+        const parts=side=>[...node.querySelectorAll('.is-'+side+' [data-raw-value]')].map(e=>e.dataset.rawValue);
+        assert.deepEqual(parts('before'),before.raw.split(';'));assert.deepEqual(parts('after'),after.exists?after.raw.split(';'):[]);
+        const keys=side=>[...node.querySelectorAll('.is-'+side+' [data-related-key]')].map(e=>e.dataset.relatedKey);
+        assert(!keys('before').some(k=>keys('after').includes(k)));assert.equal(JSON.stringify(plan),frozen);
       }
     });
     await check('manual summary describes frozen operations including MOVE and type-only without whole replacement',async()=>{

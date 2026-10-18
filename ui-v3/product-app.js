@@ -91,7 +91,7 @@ function reviewSummaryMarkup(rows,kind,updated,version){
  const tone=blocked?'blocked':updated||retained?'retained':changed?'changed':'unchanged';
  if(kind==='应用'&&!blocked&&!updated&&!retained&&changed)return `<section class="review-summary is-compact" data-review-state="changed" aria-label="本次预览结论"><p class="review-compact-line"><strong>${rows.length} 个目标</strong><span aria-hidden="true">·</span><strong>${changed} 个有实际变更</strong><span aria-hidden="true">·</span><span>尚未应用</span></p></section>`;
  const title=kind!=='应用'?'撤销范围说明':blocked?'本次暂不能应用':updated?'预览已更新，请重新核对':retained?(changed?'可应用安全变更 · 部分删除将保留':'当前值不会改变 · 删除意图仍待处理'):changed?`已准备好 ${changed} 个目标的变更`:'当前值无需改变';
- const hint=kind!=='应用'?'撤销将依据历史贡献生成服务端计划。':blocked?'请先检查标记的目标；本批次不会执行任何变更。':updated?'本次尚未应用。查看更新后，需要再次确认。':retained?'只执行计划中的实际操作，未解决的删除意图继续保留。':changed?'核对下方当前值与目标结果，再审阅并执行。':'确认可记录本次方案选择，不会新增变量修改历史。';
+ const hint=kind!=='应用'?'撤销将依据历史贡献生成服务端计划。':blocked?'请先检查标记的目标；本批次不会执行任何变更。':updated?'本次尚未应用。查看更新后，需要再次确认。':retained?'只执行计划中的实际操作，未解决的删除意图继续保留。':changed?'核对下方当前值与目标结果，再审阅并执行。':rows.some(r=>r.plan?.mode==='recovery')?'确认将完成恢复对账，保留当前环境值。':rows.some(r=>r.plan?.mode==='history-restore')?'当前值已与历史前值一致。':'确认可记录本次方案选择，不会新增变量修改历史。';
  return `<section class="review-summary" data-review-state="${tone}" aria-label="本次预览结论"><div class="review-heading"><span class="review-symbol" aria-hidden="true">${blocked?'!':updated?'↻':retained?'!':changed?'→':'='}</span><div><h4>${title}</h4><p>${hint}</p>${blocked&&updated?`<p class="review-updated">预览已更新至版本 ${version}，尚未应用。</p>`:''}</div></div><div class="review-metrics"><span><b>${rows.length}</b> 个目标</span><span><b>${changed}</b> 个有实际变更</span><span><b>${unchanged}</b> 个值不变</span>${retained?`<span class="review-attention"><b>${retained}</b> 个含删除保留</span>`:''}${blocked?`<span class="review-attention"><b>${blocked}</b> 个阻塞</span>`:''}</div></section>`;
 }
 function reviewTargetNav(rows,kind){
@@ -321,12 +321,15 @@ function decorateValueStreams(root,{play=true}={}){
 }
 function previewRowMarkup(r,kind,index){
  const sources=r.members.map(m=>esc(workingApps[m.app]?.name||'手动编辑')+' / '+esc(m.profile)+(r.plan?.valid===false?' · '+esc(MODE[m.v.mode]||m.v.mode):'')).join('、');
- const meta=esc(r.members.length>1?'批量合并':MODE[r.v.mode]||(r.plan?.source==='windows-element-edit'?'手动编辑':r.v.mode));
+ const meta=esc(r.members.length>1?'批量合并':MODE[r.v.mode]||({'recovery':'恢复处理','history-restore':'历史恢复'})[r.v.mode]||(r.plan?.source==='windows-element-edit'?'手动编辑':r.v.mode));
  const state=reviewRowState(r,kind),target=reviewTargetKey(r);
  const manual=r.plan?.kind==='element-edit'||r.plan?.source==='windows-element-edit';
+ const snapshotRestore=['recovery','history-restore'].includes(r.plan?.mode);
  // Manual correspondence is the server's frozen occurrence audit. Scheme
  // comparisonMarkup intentionally treats replace plans as whole strings.
- const view=manual?{
+ // Restore receipts contain frozen before/after states, not scheme matching
+ // metadata. Without recorded element IDs the two sides stay independent.
+ const view=manual||snapshotRestore?{
    actual:WindowsElements.historyMarkup(r.plan.before.exists?r.plan.before.raw:undefined,{whole:!!r.plan.special,elements:r.plan.audit?.elements||[],side:'before'}),
    after:r.plan.valid===false?'<span class="invalid-result">编辑上下文或目标值存在冲突</span>':WindowsElements.historyMarkup(r.plan.after.exists?r.plan.after.raw:undefined,{whole:!!r.plan.special,elements:r.plan.audit?.elements||[],side:'after'})
  }:r.plan?WindowsElements.comparisonMarkup(r.plan):null;
@@ -960,8 +963,9 @@ function renderHistory(){
 function renderRecoveryNotice(){
   $('productRecovery')?.remove();if(!productState?.recovery?.length)return;
   const box=document.createElement('div');box.id='productRecovery';box.className='banner warn';box.innerHTML='<strong>有操作需要恢复处理</strong> ';
-  for(const record of productState.recovery){const details=document.createElement('details');const caption=document.createElement('summary');caption.textContent=record.operationId+' · '+record.status;details.append(caption);const pre=document.createElement('pre');pre.className='codevalue';pre.textContent=JSON.stringify(record.details,null,2);details.append(pre);
-    for(const [resolution,text]of [['restore_before','恢复操作前值'],['accept_current','接受当前实际值']]){const button=document.createElement('button');button.className='btn';button.textContent=text;button.onclick=()=>safely(openPlanPreview({kind:'recovery',operationId:record.operationId,resolution},'审阅恢复处理'));details.append(button);}box.append(details);
+  for(const record of productState.recovery){const details=document.createElement('details');const caption=document.createElement('summary');caption.textContent=record.operationId+' · '+record.status;details.append(caption);
+    for(const [resolution,text]of [['restore_before','恢复操作前值'],['accept_current','接受当前实际值']]){const button=document.createElement('button');button.className='btn';button.textContent=text;button.onclick=()=>safely(openPlanPreview({kind:'recovery',operationId:record.operationId,resolution},'审阅恢复处理'));details.append(button);}
+    const audit=document.createElement('details'),auditCaption=document.createElement('summary');auditCaption.textContent='查看原始恢复记录';audit.append(auditCaption);const pre=document.createElement('pre');pre.className='codevalue';pre.textContent=JSON.stringify(record.details,null,2);audit.append(pre);details.append(audit);box.append(details);
   }
   ($('screen').querySelector('.fullpage,.workscroll,.config-page')||$('screen')).prepend(box);
 }

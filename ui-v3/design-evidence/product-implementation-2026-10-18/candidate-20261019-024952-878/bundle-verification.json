@@ -1,0 +1,35 @@
+{
+  "status": "passed",
+  "currentSourceMatchesStaged": true,
+  "changedSourceFiles": [],
+  "errors": [],
+  "productionAssetsVerified": 15,
+  "licenseFilesVerified": 30,
+  "bundleFilesVerified": 115,
+  "v3Modules": [
+    "envmanager_v3",
+    "envmanager_v3.__main__",
+    "envmanager_v3.configuration",
+    "envmanager_v3.contributions",
+    "envmanager_v3.database",
+    "envmanager_v3.environment",
+    "envmanager_v3.environment_events",
+    "envmanager_v3.execution",
+    "envmanager_v3.http_server",
+    "envmanager_v3.native_ipc",
+    "envmanager_v3.planning",
+    "envmanager_v3.privileges",
+    "envmanager_v3.service",
+    "envmanager_v3.system_helper",
+    "envmanager_v3.upgrade",
+    "envmanager_v3.workspace"
+  ],
+  "backend": "file",
+  "hostInstallerExecuted": false,
+  "rulesSha256": "a6292cf219547190579ef3b9b88f3ec2d4b402de4cb4f9e5fe3ee2477edf5d05",
+  "peExecutionLevels": {
+    "EnvManagerV3.exe": "asInvoker",
+    "EnvManagerV3-3.0.0-dev1-setup-user-x64.exe": "asInvoker",
+    "EnvManagerV3-3.0.0-dev1-setup-machine-x64.exe": "asInvoker"
+  }
+}

@@ -12,6 +12,12 @@ window.ProductRuntime = (() => {
     if (method !== 'GET' && csrf) headers['X-CSRF-Token'] = csrf;
     const response = await fetch(prefix + path, {method, headers, credentials: 'same-origin', cache: 'no-store', ...(body === undefined ? {} : {body: JSON.stringify(body)})});
     if (!response.ok) { let data; try { data = await response.json(); } catch {} throw new ApiError(response.status, data); }
+    // A newly opened same-origin tab has the HttpOnly cookie, but its own
+    // sessionStorage. Only authenticated bootstrap may recover this token.
+    if (path === '/bootstrap' && method === 'GET') {
+      const token = response.headers?.get('X-CSRF-Token');
+      if (token) { csrf = token; sessionStorage.setItem(tokenKey, csrf); }
+    }
     return text ? response.text() : response.json();
   }
   async function connect() {

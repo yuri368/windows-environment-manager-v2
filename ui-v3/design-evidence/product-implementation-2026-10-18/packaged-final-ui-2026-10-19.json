@@ -1,0 +1,8 @@
+{
+  "candidate": "20261019-024952-878",
+  "backend": "file",
+  "url": "http://127.0.0.1:8788/",
+  "page": "Browser tab: 3, Title: \"环境变量方案管理器 V3\", URL: \"http://127.0.0.1:8788/\".\nThere has been no change in the accessibility tree.\nThe focused UI element is 13 button ⚙配置编辑器, ID: configBtn",
+  "logs": [],
+  "scope": "Frozen EXE serves the product UI; persisted validation workspace and drafts retained. No host Registry write."
+}

@@ -2,16 +2,18 @@
 
 本目录交付的是 **isolated smoke 候选包**。前端文件已冻结，打包使用当前 V3 源快照；System helper/原生 Windows 的完整生产验收不在本子任务通过范围。包能启动不代表产品或 Windows/UAC 验收通过。源码后续更新时必须重新构建，不能把首包改名当作正式发行。
 
-当前候选为 **`packaging_v3/output/20261019-022316-448`**，下面较早目录均为历史构建，不能代替此包。最新包加入原用户同步身份预检、静默卸载确认修复以及自定义排序摘要修正。完整 build.ps1 已 exit 0；115 包文件、15 生产资源、30 许可证、16 V3 模块、当前源码与 stage 无漂移。真正的 frozen EXE File 检查、两次鉴权启动/退出和升级锁/备份 smoke 均通过；没有执行宿主 Setup。
+当前候选为 **`packaging_v3/output/20261019-024952-878`**，下面较早目录均为历史构建，不能代替此包。最新包还包含新标签页 CSRF 恢复、恢复/历史恢复冻结预览、已处理恢复记录投影和窄屏配置路径换行修复。完整 build.ps1 已 exit 0；115 包文件、15 生产资源、30 许可证、16 V3 模块、当前源码与 stage 无漂移。真正的 frozen EXE File 检查、两次鉴权启动/退出和升级锁/备份 smoke 均通过；没有执行宿主 Setup。
 
 | 当前产物 | SHA256 |
 | --- | --- |
-| `dist/EnvManagerV3/EnvManagerV3.exe`，须整目录分发 | `e93a45c232951987d3b8fc20574775c92690fc08b536ae6b3c0d8f5fa11fc521` |
-| `EnvManagerV3-3.0.0-dev1-windows-x64.zip` | `9c4c107a3258d1d9678e4a7cd250326d10c88b24840b4daac257b6d9e13752ac` |
-| `EnvManagerV3-3.0.0-dev1-setup-user-x64.exe` | `5d68a53745d88a05c0633d12d2be790d0f9209b641033cce88f3f8456969178d` |
-| `EnvManagerV3-3.0.0-dev1-setup-machine-x64.exe` | `994f3186973c1b20ab8bd2286d5c91bbc2e043d87a9cc05f479207bc296dac04` |
+| `dist/EnvManagerV3/EnvManagerV3.exe`，须整目录分发 | `0738bfc8431f45485782ade445e969d5aa8fc187fe571dd3b60a5fe586336910` |
+| `EnvManagerV3-3.0.0-dev1-windows-x64.zip` | `01356d64d85ad86e32df5829e898d042f94cd290779436ce814d100dea6e707f` |
+| `EnvManagerV3-3.0.0-dev1-setup-user-x64.exe` | `fb212e43c48fc220295a0839ab216e54704220763fb23802897917fc4c79d5d7` |
+| `EnvManagerV3-3.0.0-dev1-setup-machine-x64.exe` | `1f60ab96cbebf4654ec0e2cc6204492fc730eb37c2cdef295c9c5ed9cc06accb` |
 
-源码输入：product-app.js `7d3d5cd275fa8a3ddc22e8b816e8760325f0c55138f5e966322c9e5c7f24fd1d`，upgrade.py `fe125e4b999fcaf1910e6d56d1404e6fc96e6b2ddf8362ce6220d06bd9c5ca7f`。详细证据见该目录 `build-result.json`、`bundle-verification.json`、`SHA256SUMS.txt`、`smoke/` 和 `upgrade-smoke/`。真实 DefaultBox 安装生命周期及其限制记录在 ACCEPTANCE.md；干净 Windows VM、System/UAC、机器 ACL 和多用户门槛仍未通过。
+源码输入：product-app.js `407289928c60fe1c00929d0dfbbd5400200afcf678919c4ed327501d6e1ff57a`，service.py `26c3948a80f62731c298c3a460c0d683ab380b3bc5548d0958c0ea389174450a`，upgrade.py `fe125e4b999fcaf1910e6d56d1404e6fc96e6b2ddf8362ce6220d06bd9c5ca7f`。详细证据见该目录 `build-result.json`、`bundle-verification.json`、`SHA256SUMS.txt`、`smoke/` 和 `upgrade-smoke/`。真实 DefaultBox 安装生命周期及其限制记录在 ACCEPTANCE.md；干净 Windows VM、System/UAC、机器 ACL 和多用户门槛仍未通过。
+
+`023956-534` 在构建期间源码因恢复 UI 验收继续修改，最终 source-match 核对失败；保留为诊断产物，不能交付为当前候选。`024527-428` 已通过构建及沙盒安装生命周期，随后发现恢复名称混入配置模式选项；当前 `024952-878` 已移除这两个非法选项并重新完整构建通过核对。
 
 ## 构建
 
