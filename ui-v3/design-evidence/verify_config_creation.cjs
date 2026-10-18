@@ -459,6 +459,21 @@ check('The first profile of a named app opens at the profile entry without movin
   input('#cfgCreateProfileName','就地方案');click('#cfgCreateSubmit');assert.ok(q('#cfgDraftProfile'));assert.deepEqual(unchanged(),before);
 });
 
+check('The add-variable entry and name field occupy the last slot in the same variable strip', () => {
+  setup();const before=unchanged(),strip=q('.cfg-variable-strip');
+  assert.ok(strip.contains(q('#cfgAddVariable')));assert.ok(strip.lastElementChild.contains(q('#cfgAddVariable')));
+  assert.ok(strip.lastElementChild.previousElementSibling.matches('.cfg-variable-select'));
+  click('#cfgAddVariable');const form=q('#cfgCreateForm');
+  assert.equal(form.parentElement,q('.cfg-variable-strip'));assert.equal(form.nextElementSibling,null);
+  assert.ok(form.previousElementSibling.matches('.cfg-variable-select'));
+  assert.equal(q('#cfgCreateSubmit').getAttribute('aria-label'),'添加变量');
+  assert.ok(q('#cfgCreateCancel').getAttribute('aria-label'));
+  input('#cfgCreateName','VARIABLE_NAME_WITH_A_LONG_READABLE_SUFFIX');assert.deepEqual(unchanged(),before);
+  q('#cfgCreateName').dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}));
+  assert.ok(q('.cfg-variable-strip').contains(q('#cfgAddVariable')));assert.equal(w.document.activeElement.id,'cfgAddVariable');
+  assert.deepEqual(unchanged(),before);
+});
+
 check('Config creation and rendering produce no JSDOM runtime errors', () => assert.deepEqual(runtimeErrors, []));
 console.log(JSON.stringify({passed: checks.filter(item => item.passed).length, total: checks.length, checks}, null, 2));
 if (checks.some(item => !item.passed)) process.exitCode = 1;

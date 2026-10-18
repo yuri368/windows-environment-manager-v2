@@ -30,9 +30,9 @@
 .cfg-scheme-heading h3, .cfg-scheme-heading > span { font-size: 12px; }
 
 /* Compact variable selectors; long names remain readable. */
-.cfg-variable-strip { display: flex; flex-wrap: wrap; gap: 4px; border: 0; padding: 2px 0; }
+.cfg-variable-strip { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 4px; border: 0; padding: 2px 0; }
 .cfg-variable-select {
-  flex: 0 1 auto; min-width: 120px; max-width: 100%; min-height: 34px;
+  flex: 0 1 auto; min-width: 0; max-width: 100%; min-height: 34px;
   padding: 5px 8px; border: 1px solid var(--cfg-edge); border-radius: 3px;
   background: var(--cfg-surface); color: var(--ink);
   transition: background-color 120ms ease-out, border-color 120ms ease-out;
@@ -96,15 +96,46 @@
 .cfg-switches .checklabel { min-height: 28px; gap: 6px; font-size: 12px; cursor: pointer; }
 .cfg-switches input[type=checkbox] { width: 16px; height: 16px; flex: none; accent-color: var(--cfg-accent); }
 
-/* Restore the original, locally expanded creation panels. */
+/* Creation is an editable list item, not a separate padded panel. */
 .cfg-create-form {
-  padding: 12px; border: 1px solid #d3e0d6; border-radius: 10px;
-  background: var(--cfg-surface); box-shadow: 0 4px 14px rgba(30,70,45,.06);
-  animation: cfg-panel-reveal 220ms cubic-bezier(.2,.7,.2,1);
+  display: inline-grid; grid-template-columns: minmax(0,auto) auto; align-items: center;
+  gap: 0 2px; width: fit-content; max-width: 100%; min-height: 34px;
+  margin: 0; padding: 0; border: 1px solid var(--cfg-edge); border-radius: 3px;
+  background: var(--cfg-surface); box-shadow: none; animation: none;
 }
-.cfg-navigation .cfg-create-form { padding: 9px; }
-.cfg-create-variable { max-width: 560px; }
-.cfg-create-fields .field label { font-size: 12px; color: var(--body); }
+.cfg-create-form:focus-within { border-color: var(--cfg-accent); background: var(--cfg-selected); }
+.cfg-create-form:has(input:focus-visible) { outline: 2px solid var(--cfg-accent); outline-offset: 2px; }
+.cfg-create-form .cfg-create-fields { display: block; grid-column: 1; grid-row: 1; min-width: 0; }
+.cfg-create-form .cfg-create-fields .field label {
+  position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+.cfg-create-form .cfg-create-fields input {
+  width: 100%; min-width: 0; min-height: 32px; height: 32px; padding: 5px 8px;
+  border: 0; border-radius: 3px; background: transparent; color: var(--ink); font-size: 13px; font-weight: 600;
+  box-shadow: none;
+}
+.cfg-create-form .cfg-create-fields input:focus { border: 0; background: transparent; box-shadow: none; }
+.cfg-create-form .cfg-create-fields input:focus-visible { outline: none; }
+.cfg-create-form .cfg-create-actions {
+  grid-column: 2; grid-row: 1; flex-wrap: nowrap; gap: 0; margin: 0; padding-right: 2px;
+}
+.cfg-create-form .cfg-create-actions > button {
+  width: 26px; min-width: 26px; min-height: 26px; height: 26px; padding: 0;
+  border: 0; border-radius: 2px; background: transparent; color: var(--cfg-accent);
+  font-size: 15px; line-height: 1; box-shadow: none; transform: none; filter: none;
+}
+.cfg-create-form .cfg-create-actions > button:hover:enabled { background: var(--cfg-selected); color: var(--cfg-accent); }
+.cfg-create-form .cfg-create-actions > button:active:enabled { background: #dbeade; }
+.cfg-create-form .cfg-create-error { grid-column: 1 / -1; grid-row: 2; min-height: 0; margin: 0; padding: 2px 6px; font-size: 12px; }
+.cfg-create-form .cfg-create-error:empty { display: none; }
+.cfg-create-form #cfgLocateScope { grid-column: 1 / -1; justify-self: start; }
+.cfg-navigation .cfg-create-form { width: 100%; grid-template-columns: minmax(0,1fr) auto; min-height: 32px; margin: 2px 0; padding: 0; }
+.cfg-navigation .cfg-create-form .cfg-create-fields input { height: 30px; min-height: 30px; }
+.cfg-create-variable { flex: 0 1 auto; min-width: 0; max-width: 100%; }
+.cfg-create-variable .cfg-create-fields input { width: 10ch; min-inline-size: 8ch; max-width: 100%; }
+@supports (field-sizing: content) {
+  .cfg-create-variable .cfg-create-fields input { field-sizing: content; width: auto; }
+}
 .cfg-text-action, .cfg-confirm {
   min-height: 30px; border-radius: 3px; font-size: 12px;
   transition: border-color 120ms ease-out, background-color 120ms ease-out;
@@ -117,24 +148,10 @@
 .cfg-confirm:disabled { cursor: default; }
 .cfg-create-error, .cfg-create-conflict { font-size: 12px; }
 .cfg-create-error { color: var(--cfg-error); }
-.cfg-create-form .cfg-create-fields :is(input,select), .cfg-choice-draft .field textarea {
-  border-color: #c3d3c7; border-radius: 8px; background: #fcfdfc;
-  transition: border-color 160ms ease-out, box-shadow 180ms ease-out, background-color 160ms ease-out;
+.cfg-variable-entry { display: inline-flex; flex: none; padding: 0; }
+.cfg-variable-entry .cfg-text-action {
+  min-height: 34px; padding: 5px 8px; border: 1px dashed var(--cfg-edge); border-radius: 3px;
 }
-.cfg-create-form .cfg-create-fields :is(input,select):focus, .cfg-choice-draft .field textarea:focus {
-  border-color: var(--cfg-accent); background: #fff; box-shadow: 0 0 0 3px rgba(47,122,88,.18);
-}
-.cfg-create-form .cfg-confirm {
-  border-radius: 8px; border-color: #276548; background: linear-gradient(180deg,#3a8a65,#2c7350);
-  box-shadow: 0 1px 2px rgba(30,70,45,.25);
-  transition: transform 160ms ease-out, box-shadow 180ms ease-out, filter 160ms ease-out;
-}
-.cfg-create-form .cfg-confirm:hover:enabled {
-  background: linear-gradient(180deg,#3a8a65,#2c7350); transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(30,70,45,.25); filter: brightness(1.05);
-}
-.cfg-create-form .cfg-confirm:active:enabled { transform: none; box-shadow: none; }
-.cfg-create-form .cfg-text-action { border-radius: 8px; }
 .cfg-container-draft { gap: 8px; }
 .cfg-container-draft > span { min-width: 0; overflow-wrap: anywhere; }
 .cfg-container-draft small { flex: none; font-size: 12px; font-weight: 400; color: var(--cfg-muted); }
@@ -222,7 +239,7 @@
 @media (max-width: 700px) {
   .cfg-editor-main { padding: 12px 12px 20px; }
   .cfg-navigation > .editor-left { gap: 12px; }
-  .cfg-variable-select { min-width: 0; flex: 1 1 calc(50% - 4px); }
+  .cfg-variable-select { min-width: 0; flex: 0 1 auto; }
   .cfg-inline-form { padding: 10px; }
   .cfg-choice-row { grid-template-columns: 20px minmax(0,1fr) 64px; gap: 6px; }
   .cfg-choice-actions { flex-direction: column; align-items: stretch; }

@@ -1,0 +1,62 @@
+{
+  "passed": 14,
+  "total": 14,
+  "checks": [
+    {
+      "name": "Variable attributes and choices are directly editable inside one center canvas",
+      "passed": true
+    },
+    {
+      "name": "Editing choice label/value updates one configuration field and workbench selection",
+      "passed": true
+    },
+    {
+      "name": "Choice add/remove/reorder preserve a selected candidate by explicit occurrence action",
+      "passed": true
+    },
+    {
+      "name": "V2 exact label/value uniqueness is validated without trimming values or changing case",
+      "passed": true
+    },
+    {
+      "name": "Default and choice text editing preserve untouched CRLF/CR and leading newlines",
+      "passed": true
+    },
+    {
+      "name": "editable gates runtime free input while default, saved and configured choices stay available",
+      "passed": true
+    },
+    {
+      "name": "Config reset covers choices and editable, leaves Windows/history unchanged",
+      "passed": true
+    },
+    {
+      "name": "V2 export uses app/profile tables and required fields without runtime metadata",
+      "passed": true
+    },
+    {
+      "name": "Uncommitted choice stays outside raw preview and export until confirmed",
+      "passed": true
+    },
+    {
+      "name": "V2 dual-scope variables serialize as one two-record array and Special consistency is enforced",
+      "passed": true
+    },
+    {
+      "name": "Restoring reordered choices keeps the same candidate and falls back when that choice was edited",
+      "passed": true
+    },
+    {
+      "name": "Workbench textarea edits preserve untouched raw line endings and leading newline",
+      "passed": true
+    },
+    {
+      "name": "TOML export escapes DEL while retaining the actual raw configuration value",
+      "passed": true
+    },
+    {
+      "name": "Config rendering and editing produce no JSDOM runtime errors",
+      "passed": true
+    }
+  ]
+}

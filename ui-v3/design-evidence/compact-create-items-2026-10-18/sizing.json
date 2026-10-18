@@ -1,0 +1,50 @@
+{
+  "variableGrowth": [
+    {
+      "length": 1,
+      "width": 121.46875,
+      "height": 34,
+      "top": 207.15625,
+      "previousTop": 207.15625,
+      "mainOverflow": false
+    },
+    {
+      "length": 34,
+      "width": 370.40625,
+      "height": 34,
+      "top": 207.15625,
+      "previousTop": 207.15625,
+      "mainOverflow": false
+    },
+    {
+      "length": 300,
+      "width": 1192.666748046875,
+      "height": 34,
+      "top": 245.15625,
+      "previousTop": 207.15625,
+      "mainOverflow": false
+    }
+  ],
+  "application": {
+    "formHeight": 32,
+    "itemHeight": 32
+  },
+  "profile": {
+    "formHeight": 32,
+    "itemHeight": 32
+  },
+  "gap": 4,
+  "narrowViewports": [
+    {
+      "width": 600,
+      "formHeight": 34,
+      "mainOverflow": false
+    },
+    {
+      "width": 391,
+      "formHeight": 34,
+      "mainOverflow": false
+    }
+  ],
+  "capturedConsoleErrors": []
+}
