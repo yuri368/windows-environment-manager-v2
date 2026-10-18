@@ -96,12 +96,14 @@
 .cfg-switches .checklabel { min-height: 28px; gap: 6px; font-size: 12px; cursor: pointer; }
 .cfg-switches input[type=checkbox] { width: 16px; height: 16px; flex: none; accent-color: var(--cfg-accent); }
 
-/* Inline creation stays distinct without another floating card. */
+/* Restore the original, locally expanded creation panels. */
 .cfg-create-form {
-  padding: 8px; border: 1px solid var(--cfg-edge); border-radius: 4px;
-  background: var(--cfg-surface); animation: cfg-appear 140ms ease-out;
+  padding: 12px; border: 1px solid #d3e0d6; border-radius: 10px;
+  background: var(--cfg-surface); box-shadow: 0 4px 14px rgba(30,70,45,.06);
+  animation: cfg-panel-reveal 220ms cubic-bezier(.2,.7,.2,1);
 }
-.cfg-create-variable { max-width: 600px; }
+.cfg-navigation .cfg-create-form { padding: 9px; }
+.cfg-create-variable { max-width: 560px; }
 .cfg-create-fields .field label { font-size: 12px; color: var(--body); }
 .cfg-text-action, .cfg-confirm {
   min-height: 30px; border-radius: 3px; font-size: 12px;
@@ -115,6 +117,24 @@
 .cfg-confirm:disabled { cursor: default; }
 .cfg-create-error, .cfg-create-conflict { font-size: 12px; }
 .cfg-create-error { color: var(--cfg-error); }
+.cfg-create-form .cfg-create-fields :is(input,select), .cfg-choice-draft .field textarea {
+  border-color: #c3d3c7; border-radius: 8px; background: #fcfdfc;
+  transition: border-color 160ms ease-out, box-shadow 180ms ease-out, background-color 160ms ease-out;
+}
+.cfg-create-form .cfg-create-fields :is(input,select):focus, .cfg-choice-draft .field textarea:focus {
+  border-color: var(--cfg-accent); background: #fff; box-shadow: 0 0 0 3px rgba(47,122,88,.18);
+}
+.cfg-create-form .cfg-confirm {
+  border-radius: 8px; border-color: #276548; background: linear-gradient(180deg,#3a8a65,#2c7350);
+  box-shadow: 0 1px 2px rgba(30,70,45,.25);
+  transition: transform 160ms ease-out, box-shadow 180ms ease-out, filter 160ms ease-out;
+}
+.cfg-create-form .cfg-confirm:hover:enabled {
+  background: linear-gradient(180deg,#3a8a65,#2c7350); transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(30,70,45,.25); filter: brightness(1.05);
+}
+.cfg-create-form .cfg-confirm:active:enabled { transform: none; box-shadow: none; }
+.cfg-create-form .cfg-text-action { border-radius: 8px; }
 .cfg-container-draft { gap: 8px; }
 .cfg-container-draft > span { min-width: 0; overflow-wrap: anywhere; }
 .cfg-container-draft small { flex: none; font-size: 12px; font-weight: 400; color: var(--cfg-muted); }
@@ -128,6 +148,7 @@
 .cfg-create-options > .cfg-pending-rules { margin-top: 4px; border: 0; padding: 8px 0; background: transparent; }
 .cfg-create-options .cfg-rules { padding-bottom: 4px; }
 @keyframes cfg-appear { from { opacity: 0; } to { opacity: 1; } }
+@keyframes cfg-panel-reveal { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
 /* Ordered candidates: full values, stable columns, visible actions. */
 .cfg-choice-list { border: 1px solid var(--cfg-divider); border-radius: 3px; }
@@ -149,9 +170,10 @@
 }
 .cfg-choice-actions button:disabled { opacity: .5; }
 .cfg-choice-draft {
-  margin-top: 8px; border: 1px dashed var(--cfg-edge); border-radius: 3px;
-  background: var(--cfg-canvas); animation: cfg-appear 140ms ease-out;
+  margin: 6px; border: 1px dashed #8fb89f; border-radius: 8px;
+  background: #f7fbf8; animation: cfg-panel-reveal 220ms cubic-bezier(.2,.7,.2,1);
 }
+.cfg-choice-draft .cfg-choice-actions button { border-radius: 6px; }
 .cfg-empty { padding: 8px; margin: 0; font-size: 12px; color: var(--cfg-muted); }
 
 /* Persistent change feedback; typing does not replay a decorative pulse. */

@@ -58,7 +58,10 @@ check('Add buttons open local creation rows and cancellation leaves all data unt
       for(const id of ['#cfgCreateName','#cfgScope','#cfgMode'])assert.ok(q(id));
       assert.equal(q('#cfgCreateOptions').open,false);
     }
-    else for(const id of ['#cfgCreateName','#cfgScope','#cfgMode'])assert.equal(q(id),null);
+    else {
+      for(const id of ['#cfgCreateName','#cfgScope','#cfgMode'])assert.equal(q('#cfgCreateForm').querySelector(id),null);
+      assert.ok(q('#cfgCreateForm').closest('.cfg-navigation'));assert.ok(q('#cfgDefault'));
+    }
     click('#cfgCreateCancel');
     assert.equal(q('#cfgCreateForm'), null);
     assert.deepEqual(unchanged(), before);
@@ -432,6 +435,28 @@ check('Variable creation requires only its name; optional properties stay collap
   assert.equal(ev('configVar().name'),'NAME_ONLY_HOME');assert.equal(ev('configVar().defaultValue'),'');
   assert.equal(ev('configVar().scope'),'User');assert.equal(ev('configVar().mode'),'replace');assert.ok(q('#cfgDefault'));
   assert.equal(q('#cfgCreateOptions'),null);assert.equal(unchanged().environment,before.environment);
+});
+
+check('App/profile name panels stay beside their entries and the current variable remains editable', () => {
+  setup();const environment=unchanged().environment;
+  for(const [button,field] of [['#cfgAddApp','#cfgCreateAppName'],['#cfgAddProfile','#cfgCreateProfileName']]){
+    click(button);input(field,'就地命名草稿');
+    assert.ok(q('#cfgCreateForm').closest('.editor-nav-group'));assert.equal(q('.cfg-editor-main #cfgCreateForm'),null);
+    assert.equal(q('.cfg-container-workspace'),null);assert.equal(q('#cfgName').textContent,'NODE_HOME');
+    input('#cfgDefault','原面板仍可编辑');assert.equal(ev('configVar().defaultValue'),'原面板仍可编辑');
+    change('#cfgMode','append');assert.equal(ev('configVar().mode'),'append');
+    assert.equal(q(field).value,'就地命名草稿');assert.equal(w.document.querySelectorAll('#cfgCreateForm').length,1);
+    click('#cfgCreateCancel');
+  }
+  assert.equal(unchanged().environment,environment);
+});
+
+check('The first profile of a named app opens at the profile entry without moving its form to the canvas', () => {
+  setup();const before=unchanged();click('#cfgAddApp');input('#cfgCreateAppName','就地新增应用');click('#cfgCreateSubmit');
+  click('#cfgDraftNext');assert.ok(q('#cfgCreateProfileName'));
+  assert.ok(q('#cfgCreateForm').closest('.cfg-navigation'));assert.equal(q('.cfg-editor-main #cfgCreateForm'),null);
+  assert.match(q('.cfg-page-heading').textContent,/就地新增应用/);assert.deepEqual(unchanged(),before);
+  input('#cfgCreateProfileName','就地方案');click('#cfgCreateSubmit');assert.ok(q('#cfgDraftProfile'));assert.deepEqual(unchanged(),before);
 });
 
 check('Config creation and rendering produce no JSDOM runtime errors', () => assert.deepEqual(runtimeErrors, []));

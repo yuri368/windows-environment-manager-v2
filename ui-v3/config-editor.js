@@ -122,7 +122,7 @@
       <section class="editor-nav-group"><div class="editor-section"><strong id="editorAppsHeading">应用</strong><span class="mini sub">${apps.length} 项</span><button type="button" class="cfg-text-action cfg-create-entry" id="cfgAddApp" aria-label="新增应用">${belongs(draft,'app')&&!atOrigin?'继续新增':'＋ 新增'}</button></div>${belongs(draft,'app')&&atOrigin&&draft.stage==='app-name' ? createForm(draft) : conflict('app')}<div class="editor-nav-list" data-editor-list="apps" aria-labelledby="editorAppsHeading">${apps.map((a, index) => `<button type="button" class="editor-item ${editor.app === index ? 'active' : ''}" data-editapp="${index}" aria-current="${editor.app === index}" title="${escape(a.name)}">${escape(a.name)}</button>`).join('')}</div></section>
       <section class="editor-nav-group"><div class="editor-section"><strong id="editorProfilesHeading">方案</strong><span class="mini sub">${app.profiles.length} 项</span><button type="button" class="cfg-text-action cfg-create-entry" id="cfgAddProfile" aria-label="新增方案">${belongs(draft,'profile',app)&&!atOrigin?'继续新增':'＋ 新增'}</button></div>${belongs(draft,'profile',app)&&atOrigin&&draft.stage==='profile-name' ? createForm(draft) : conflict('profile',app)}<div class="editor-nav-list" data-editor-list="profiles" aria-labelledby="editorProfilesHeading">${app.profiles.map(p => `<button type="button" class="editor-item ${profile.name === p.name ? 'active' : ''}" data-editplan="${escape(p.name)}" aria-current="${profile.name === p.name}" title="${escape(p.name)}">${escape(p.name)}${app.default === p.name ? ' · 默认' : ''}</button>`).join('')}</div></section>
       </aside></details><main class="editor-mid cfg-editor-main"><div class="cfg-page-heading"><div><h2>${escape(app.name)}</h2><p>${escape(profile.name)} · ${profile.vars.length} 项变量 · 默认方案 ${escape(app.default)}</p></div><select id="editorView" class="view-select" aria-label="配置方案显示范围"><option value="current" ${!editor.showAll ? 'selected' : ''}>当前方案</option><option value="all" ${editor.showAll ? 'selected' : ''}>全部方案</option></select></div>
-      <div class="cfg-variable-list">${visibleProfiles.map(p => `<section class="cfg-scheme-group" aria-label="${escape(p.name)}">${editor.showAll ? `<div class="cfg-scheme-heading"><h3>${escape(p.name)}</h3><span>${p.vars.length} 项变量${p.name === app.default ? ' · 默认方案' : ''}</span></div>` : ''}${p.vars.length ? `<div class="cfg-variable-strip" aria-label="${escape(p.name)}变量">${p.vars.map((v, index) => {const active = p.name === profile.name && index === editor.varIdx; return `<button type="button" class="cfg-variable-select ${active ? 'is-active' : ''}" data-tableplan="${escape(p.name)}" data-tablevar="${index}" aria-current="${active}" aria-expanded="${active}" ${active ? 'aria-controls="editorInspector"' : ''} title="${escape(v.name)} · ${v.scope === 'System' ? '系统' : '用户'} · ${escape(modeLabels[v.mode] || v.mode)}"><strong>${escape(v.name)}</strong><span class="cfg-variable-meta">${v.scope === 'System' ? '系统' : '用户'}</span></button>`;}).join('')}</div>` : '<p class="cfg-empty">此方案尚无变量。</p>'}<div class="cfg-variable-entry"><button type="button" class="cfg-text-action" ${!editor.showAll && p === profile ? 'id="cfgAddVariable"' : ''} data-add-variable="${escape(p.name)}">${belongs(draft,'variable',app,p)&&!atOrigin?'继续新增变量':'＋ 新增变量'}</button></div>${belongs(draft,'variable',app,p)&&atOrigin ? createForm(draft) : conflict('variable',app,p)}${p.name === profile.name ? (activeDraft ? draftRules : variable ? form(variable) : '') : ''}</section>`).join('')}</div><p class="cfg-page-note">默认值来源跟随配置修改；其他来源保留选定值。到工作台预览后再应用。</p>
+      <div class="cfg-variable-list">${visibleProfiles.map(p => `<section class="cfg-scheme-group" aria-label="${escape(p.name)}">${editor.showAll ? `<div class="cfg-scheme-heading"><h3>${escape(p.name)}</h3><span>${p.vars.length} 项变量${p.name === app.default ? ' · 默认方案' : ''}</span></div>` : ''}${p.vars.length ? `<div class="cfg-variable-strip" aria-label="${escape(p.name)}变量">${p.vars.map((v, index) => {const active = p.name === profile.name && index === editor.varIdx; return `<button type="button" class="cfg-variable-select ${active ? 'is-active' : ''}" data-tableplan="${escape(p.name)}" data-tablevar="${index}" aria-current="${active}" aria-expanded="${active}" ${active ? 'aria-controls="editorInspector"' : ''} title="${escape(v.name)} · ${v.scope === 'System' ? '系统' : '用户'} · ${escape(modeLabels[v.mode] || v.mode)}"><strong>${escape(v.name)}</strong><span class="cfg-variable-meta">${v.scope === 'System' ? '系统' : '用户'}</span></button>`;}).join('')}</div>` : '<p class="cfg-empty">此方案尚无变量。</p>'}<div class="cfg-variable-entry"><button type="button" class="cfg-text-action" ${!editor.showAll && p === profile ? 'id="cfgAddVariable"' : ''} data-add-variable="${escape(p.name)}">${belongs(draft,'variable',app,p)&&!atOrigin?'继续新增变量':'＋ 新增变量'}</button></div>${belongs(draft,'variable',app,p)&&atOrigin ? createForm(draft) : conflict('variable',app,p)}${p.name === profile.name ? (variableStep ? draftRules : variable ? form(variable) : '') : ''}</section>`).join('')}</div><p class="cfg-page-note">默认值来源跟随配置修改；其他来源保留选定值。到工作台预览后再应用。</p>
       </main></div>`;
     const find = id => root.querySelector(`[id="${id}"]`);
     // Named containers remain in this existing session draft until their first
@@ -133,20 +133,20 @@
     const appList = root.querySelector('[data-editor-list="apps"]'), profileList = root.querySelector('[data-editor-list="profiles"]');
     if (namedApp) appList.insertAdjacentHTML('beforeend',pendingButton('cfgDraftApp',draft.appName,containerDraft));
     if (namedProfile && (draft.kind === 'app' ? containerDraft : draft.app === app)) profileList.insertAdjacentHTML('beforeend',pendingButton('cfgDraftProfile',draft.profileName,containerDraft));
-    if (containerDraft) {
-      find('cfgCreateForm')?.remove();
+    if (containerDraft && (namedApp || namedProfile)) {
       const naming = ['app-name','profile-name'].includes(draft.stage);
       const title = draft.kind === 'app' ? (namedApp ? draft.appName : '新增应用') : app.name;
       root.querySelector('.cfg-navigation > summary').innerHTML=`应用与方案 <span>${escape(title)} / ${namedProfile ? escape(draft.profileName) : '新增草稿'}</span>`;
       const subtitle = namedProfile ? draft.profileName+' · 0 项变量 · 草稿' : draft.kind === 'app' && namedApp ? '尚无方案 · 草稿' : '先命名，再按需添加内容';
       const nextLabel = draft.stage === 'app-empty' ? '＋ 新增方案' : '＋ 新增变量';
       const nextId = draft.stage === 'app-empty' ? 'cfgDraftNext' : 'cfgAddVariable';
-      root.querySelector('.cfg-editor-main').innerHTML = `<div class="cfg-page-heading"><div><h2>${escape(title)}</h2><p>${escape(subtitle)}</p></div></div><section class="cfg-container-workspace" aria-label="未完成的配置草稿">${naming ? createForm(draft) : variableStep ? createForm(draft)+draftRules : `<h3>${escape(draft.stage === 'app-empty' ? '此应用尚无方案' : '此方案尚无变量')}</h3><p>可以稍后继续添加。</p><button type="button" class="cfg-text-action" id="${nextId}">${nextLabel}</button>`}<p class="cfg-hint">未完成的草稿仅在本页保留，不包含在导出文件中。添加首个变量后自动纳入配置。</p>${namedApp || namedProfile ? `<button type="button" class="cfg-text-action" id="cfgDraftDiscard">放弃此${draft.kind === 'app' ? '应用' : '方案'}草稿</button>` : ''}</section>`;
+      root.querySelector('.cfg-editor-main').innerHTML = `<div class="cfg-page-heading"><div><h2>${escape(title)}</h2><p>${escape(subtitle)}</p></div></div><section class="cfg-container-workspace" aria-label="未完成的配置草稿">${naming ? '<p class="cfg-container-message">为此应用添加方案。</p>' : variableStep ? createForm(draft)+draftRules : `<h3>${escape(draft.stage === 'app-empty' ? '此应用尚无方案' : '此方案尚无变量')}</h3><p>可以稍后继续添加。</p><button type="button" class="cfg-text-action" id="${nextId}">${nextLabel}</button>`}<p class="cfg-hint">未完成的草稿仅在本页保留，不包含在导出文件中。添加首个变量后自动纳入配置。</p>${namedApp || namedProfile ? `<button type="button" class="cfg-text-action" id="cfgDraftDiscard">放弃此${draft.kind === 'app' ? '应用' : '方案'}草稿</button>` : ''}</section>`;
       if (namedApp) {
         appList.querySelectorAll('[data-editapp]').forEach(node=>{node.classList.remove('active');node.setAttribute('aria-current','false');});
         profileList.innerHTML = namedProfile ? pendingButton('cfgDraftProfile',draft.profileName,true) : '';
         const heading=root.querySelector('#editorProfilesHeading').parentElement.querySelector('.mini');
         if(heading)heading.textContent=namedProfile?'1 项草稿':'0 项';
+        if(draft.stage === 'profile-name')profileList.insertAdjacentHTML('beforebegin',createForm(draft));
       } else if (namedProfile) {
         profileList.querySelectorAll('[data-editplan]').forEach(node=>{node.classList.remove('active');node.setAttribute('aria-current','false');});
       }
@@ -198,8 +198,8 @@
         } else {d.error='';find('cfgCreateError').textContent='';find('cfgLocateScope')?.remove();}
       };
       for(const [id,key] of [['cfgCreateAppName','appName'],['cfgCreateProfileName','profileName'],['cfgCreateName','name']])if(find(id))find(id).oninput=e=>{d[key]=e.target.value;d.error='';find('cfgCreateError').textContent='';if(key==='name')checkTarget();};
-      if(find('cfgScope'))find('cfgScope').onchange=e=>{d.scope=e.target.value;checkTarget();};
-      if(find('cfgMode'))find('cfgMode').onchange=e=>{d.mode=e.target.value;};
+      if(variableStep && find('cfgScope'))find('cfgScope').onchange=e=>{d.scope=e.target.value;checkTarget();};
+      if(variableStep && find('cfgMode'))find('cfgMode').onchange=e=>{d.mode=e.target.value;};
       const cancel=()=>{
         if (containerDraft && d.stage === 'variable') { d.stage='profile-empty';d.error='';refresh('cfgAddVariable'); }
         else if (d.kind === 'app' && d.stage === 'profile-name') { d.stage='app-empty';d.error='';refresh('cfgDraftNext'); }
@@ -243,7 +243,7 @@
         variableButtons[next]?.click();
       };
     });
-    if (variable && !activeDraft) {
+    if (variable && (!activeDraft || containerDraft && !namedApp && !namedProfile)) {
       const updateFeedback = () => {
         find('cfgSource').textContent = fact(variable.source);
         find('cfgSaved').textContent = fact(variable.savedValue);
