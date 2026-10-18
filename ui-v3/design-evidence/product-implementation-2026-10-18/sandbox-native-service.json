@@ -1,0 +1,27 @@
+{
+  "JobId": "b7c67bc82f4e45319ac5dad60c12333d",
+  "BoxName": "DefaultBox",
+  "Status": "Completed",
+  "ExitCode": 0,
+  "StdOut": "{\"status\": \"passed\", \"checks\": [\"review-bound-native-User-apply-raw-type-readback\", \"stable-occurrence-manual-edit-preserves-empty-CRLF\", \"restart-retains-identities-and-durable-native-history\", \"explicit-native-delete-readback-and-persistent-history\"], \"target\": \"ENV_MANAGER_V3_SERVICE_TEST_9475E6979685434A894262C0ABDFC940\", \"scope\": \"User\", \"notificationBroadcast\": \"injected-not-native\", \"systemWrites\": false, \"uac\": \"not-tested\"}\r\n",
+  "StdErr": "",
+  "Details": {
+    "JobId": "b7c67bc82f4e45319ac5dad60c12333d",
+    "BoxName": "DefaultBox",
+    "ActualBox": "DefaultBox",
+    "WorkerPid": 27340,
+    "ChildPid": 26304,
+    "ChildBox": "DefaultBox",
+    "ChildBoxVerification": "Verified",
+    "ChildCreatedAt": "2026-10-18T22:30:22.2374965+08:00",
+    "StartedAt": "2026-10-18T22:30:22.2402617+08:00",
+    "CompletedAt": "2026-10-18T22:30:26.7189994+08:00",
+    "Status": "Completed",
+    "ExitCode": 0,
+    "Error": null,
+    "Cleanup": null
+  },
+  "JobDirectory": "H:\\Yuri368\\ChatGPT-Bridge\\runs\\sandbox\\b7c67bc82f4e45319ac5dad60c12333d",
+  "SandboxJobDirectory": "C:\\Sandbox\\Yuri368\\DefaultBox\\drive\\C\\CodexSandboxJobs\\b7c67bc82f4e45319ac5dad60c12333d",
+  "LauncherPid": 14748
+}

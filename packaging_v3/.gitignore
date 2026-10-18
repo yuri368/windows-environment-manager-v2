@@ -1,0 +1,8 @@
+/.build-venv/
+/.pip-cache/
+/.pyinstaller-cache/
+/output/
+/tools/
+/wheelhouse/
+*.log
+/tmp*/

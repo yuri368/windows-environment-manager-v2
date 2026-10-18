@@ -1,0 +1,27 @@
+{
+  "JobId": "65eb6e0bac3a4711ae33bbe4fcb6633a",
+  "BoxName": "DefaultBox",
+  "Status": "Completed",
+  "ExitCode": 0,
+  "StdOut": "{\"status\": \"passed\", \"target\": \"ENV_MANAGER_V3_ISOLATED_TEST_C5D660946D824696AAEF8AADA0A9E205\", \"scope\": \"User\", \"checks\": [\"raw-and-type\", \"readback\", \"stale-rejected\", \"existing-empty\", \"delete-and-readback\"], \"notificationBroadcast\": false, \"systemScope\": \"not-tested\"}\r\n",
+  "StdErr": "",
+  "Details": {
+    "JobId": "65eb6e0bac3a4711ae33bbe4fcb6633a",
+    "BoxName": "DefaultBox",
+    "ActualBox": "DefaultBox",
+    "WorkerPid": 7180,
+    "ChildPid": 2600,
+    "ChildBox": "DefaultBox",
+    "ChildBoxVerification": "Verified",
+    "ChildCreatedAt": "2026-10-18T20:02:50.3674865+08:00",
+    "StartedAt": "2026-10-18T20:02:50.3698792+08:00",
+    "CompletedAt": "2026-10-18T20:02:51.4286394+08:00",
+    "Status": "Completed",
+    "ExitCode": 0,
+    "Error": null,
+    "Cleanup": null
+  },
+  "JobDirectory": "H:\\Yuri368\\ChatGPT-Bridge\\runs\\sandbox\\65eb6e0bac3a4711ae33bbe4fcb6633a",
+  "SandboxJobDirectory": "C:\\Sandbox\\Yuri368\\DefaultBox\\drive\\C\\CodexSandboxJobs\\65eb6e0bac3a4711ae33bbe4fcb6633a",
+  "LauncherPid": 21848
+}

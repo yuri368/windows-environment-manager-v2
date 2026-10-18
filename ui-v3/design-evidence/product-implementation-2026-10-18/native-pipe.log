@@ -1,0 +1,6 @@
+test_real_pipe_cross_process_pid_framing_and_ordinary_token (tests_v3.test_native_ipc.NativeOrdinaryPipeTests.test_real_pipe_cross_process_pid_framing_and_ordinary_token) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.156s
+
+OK

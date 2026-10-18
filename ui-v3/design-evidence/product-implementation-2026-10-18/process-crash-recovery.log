@@ -1,0 +1,6 @@
+test_abrupt_exit_reopens_durable_journal_and_never_replays_environment (tests_v3.test_process_recovery.ProcessRecoveryTests.test_abrupt_exit_reopens_durable_journal_and_never_replays_environment) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 3.706s
+
+OK

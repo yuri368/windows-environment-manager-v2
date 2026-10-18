@@ -18,7 +18,8 @@ var DemoPlan = (() => {
       target = { scope: separator < 0 ? undefined : target.slice(0, separator), name: separator < 0 ? target : target.slice(separator + 1) };
     }
     const name = target?.name ?? '';
-    return { scope: target?.scope, name, canonicalName: name.toUpperCase() };
+    const canonicalName = Array.from(name, c => c.toUpperCase().length === 1 ? c.toUpperCase() : c).join('');
+    return { scope: target?.scope, name, canonicalName };
   }
   function snapshotFor(options) {
     const snapshot = options.snapshot;

@@ -1,4 +1,11 @@
-# Current project boundary
+# Product implementation authorization — 2026-10-18
+
+- The owner accepted the V3 UI and explicitly requested an Astra implementation plan followed by a working product. This supersedes the earlier UI-only restriction for the new V3 product work; the historical demo contracts remain its required interaction semantics.
+- Build V3 independently beside the accepted web UI. The repository-root V2 `envmanager` implementation remains a reference and must not be copied into or modified for V3.
+- Production code may implement raw Windows environment adapters. Development and automated writes use a persistent file environment, mocks, or the explicitly named Sandboxie `DefaultBox`; do not execute host Registry writes during development.
+- A real environment commit must be bound to the exact reviewed plan, validate its before snapshots, retain a durable recovery record and verify the result. Host system-write acceptance requires the owner's concrete scope/backup/rollback confirmation.
+
+# Earlier browser-demo boundary
 
 - Current work is limited to the V3 browser demo and UI-only scope in docs/architecture/V3_THREE_VALUE_V3_3.txt (including its later unified-token and ghost-view revision); V3.2 still governs matched-selection edits.
 - Editor suggestion/adoption display follows docs/architecture/V3_EDITOR_STATES_V3_4.txt; suggestions do not determine an editor apply result.
