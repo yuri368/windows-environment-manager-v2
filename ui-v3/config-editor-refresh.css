@@ -1,90 +1,213 @@
-/* Config editor UI refresh layer: style and motion only. No markup or behavior dependencies.
-   Loaded after config-editor.css; delete this file and its <link> to revert. */
-.cfg-editor-shell {
-  --cfg-accent: #2f7a58; --cfg-accent-deep: #1d4f38; --cfg-accent-soft: #e6f2ea;
-  --cfg-edge: #d3e0d6; --cfg-card: #fff; --cfg-ease: cubic-bezier(.2,.7,.2,1);
-  --cfg-ring: 0 0 0 3px rgba(47,122,88,.18);
+/* Configuration workspace: presentation only, loaded after config-editor.css.
+   Keep source values, native controls and existing editor behavior intact. */
+.config-page {
+  --cfg-accent: var(--green, #286c51);
+  --cfg-selected: var(--green-soft, #eaf3ed);
+  --cfg-canvas: #f7faf8;
+  --cfg-surface: #fff;
+  --cfg-edge: var(--line2, #ccd7cf);
+  --cfg-divider: var(--line, #e4e9e5);
+  --cfg-input-edge: #b7c9bd;
+  --cfg-muted: #536b5c;
+  --cfg-edited: #865b16;
+  --cfg-edited-bg: #fffbf2;
+  --cfg-error: #9b3d36;
+  --cfg-error-bg: #fbeeea;
 }
-.cfg-editor-main { background: linear-gradient(180deg,#f7faf8 0,#f3f7f4 100%); }
 
-/* page heading */
-.cfg-page-heading h2 { font-size: 20px; letter-spacing: .01em; color: var(--cfg-accent-deep); }
-.cfg-page-heading h2::after { content:''; display:block; width:28px; height:3px; margin-top:5px; border-radius:2px; background:linear-gradient(90deg,var(--cfg-accent),#7fc29c); }
-.cfg-page-heading .view-select { border-radius: 8px; transition: border-color .16s, box-shadow .16s; }
-.cfg-page-heading .view-select:hover { border-color: var(--cfg-accent); }
+/* One navigation scroll surface; no short lists above unused space. */
+.cfg-navigation { background: var(--cfg-canvas); }
+.cfg-navigation .editor-section { margin-top: 8px; gap: 4px 6px; }
+.cfg-navigation .editor-section strong,
+.cfg-navigation .editor-section .mini { font-size: 12px; }
+.cfg-navigation .editor-item { min-height: 32px; padding: 6px 8px; font-size: 13px; }
+.cfg-navigation .editor-item.active { background: var(--cfg-selected); color: var(--cfg-accent); }
+.cfg-editor-main { padding: 12px 16px 20px; background: var(--cfg-canvas); }
+.cfg-page-heading { margin-bottom: 10px; }
+.cfg-page-heading h2 { font-size: 18px; font-weight: 600; }
+.cfg-page-heading p { font-size: 12px; color: var(--cfg-muted); }
+.cfg-page-heading .view-select { min-height: 32px; border-radius: 3px; font-size: 12px; }
+.cfg-scheme-heading h3, .cfg-scheme-heading > span { font-size: 12px; }
 
-/* variable picker: pill tabs */
-.cfg-variable-strip { display:flex; flex-wrap:wrap; gap:6px; border:0; padding:3px 0; }
-.cfg-variable-select { position:relative; flex:0 1 auto; min-width:120px; max-width:100%; min-height:36px; padding:6px 12px; border:1px solid var(--cfg-edge); border-radius:999px; background:var(--cfg-card); box-shadow:0 1px 0 rgba(30,70,45,.04); transition:background .16s, border-color .16s, box-shadow .2s var(--cfg-ease), transform .16s var(--cfg-ease); }
-.cfg-variable-select:hover { background:#f1f8f3; border-color:#a9c9b4; transform:translateY(-1px); box-shadow:0 3px 8px rgba(30,70,45,.08); }
-.cfg-variable-select:active { transform:translateY(0) scale(.98); }
-.cfg-variable-select.is-active { background:linear-gradient(180deg,#e9f5ed,#dcefe2); border-color:var(--cfg-accent); color:var(--cfg-accent-deep); box-shadow:inset 0 0 0 1px rgba(47,122,88,.25), 0 3px 10px rgba(47,122,88,.14); }
-.cfg-variable-meta { padding:1px 7px; border-radius:999px; background:rgba(47,122,88,.09); }
+/* Compact variable selectors; long names remain readable. */
+.cfg-variable-strip { display: flex; flex-wrap: wrap; gap: 4px; border: 0; padding: 2px 0; }
+.cfg-variable-select {
+  flex: 0 1 auto; min-width: 120px; max-width: 100%; min-height: 34px;
+  padding: 5px 8px; border: 1px solid var(--cfg-edge); border-radius: 3px;
+  background: var(--cfg-surface); color: var(--ink);
+  transition: background-color 120ms ease-out, border-color 120ms ease-out;
+}
+.cfg-variable-select > strong {
+  font-size: 13px; font-weight: 600; white-space: normal;
+  overflow: visible; overflow-wrap: anywhere; text-overflow: clip;
+}
+.cfg-variable-select:hover { background: var(--cfg-selected); border-color: var(--cfg-accent); }
+.cfg-variable-select.is-active {
+  background: var(--cfg-selected); border-color: var(--cfg-accent);
+  color: var(--cfg-accent); box-shadow: inset 0 -2px var(--cfg-accent);
+}
+.cfg-variable-meta { font-size: 12px; color: var(--cfg-muted); }
+.cfg-variable-entry { padding: 2px 0; }
 
-/* create entry */
-.cfg-variable-entry .cfg-text-action { border:1px dashed #a9c9b4; border-radius:999px; padding:4px 12px; transition:background .16s, border-color .16s, transform .16s var(--cfg-ease); }
-.cfg-variable-entry .cfg-text-action:hover { background:var(--cfg-accent-soft); border-style:solid; transform:translateY(-1px); }
-.cfg-create-form { padding:12px; border:1px solid var(--cfg-edge); border-radius:10px; background:var(--cfg-card); box-shadow:0 4px 14px rgba(30,70,45,.06); animation:cfg-rise 220ms var(--cfg-ease); }
-.cfg-navigation .cfg-create-form { padding:9px; }
-@keyframes cfg-rise { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:none } }
+/* One editing surface; hierarchy comes from fields and row alignment. */
+.cfg-inline-form {
+  margin-top: 8px; padding: 12px; border: 1px solid var(--cfg-divider);
+  border-radius: 4px; background: var(--cfg-surface);
+}
+.cfg-form-heading { padding-bottom: 8px; border-color: var(--cfg-divider); }
+.cfg-form-heading h3 { font: 600 15px/1.45 Consolas, 'Microsoft YaHei UI', monospace; }
+.cfg-facts { font-size: 12px; color: var(--cfg-muted); gap: 4px 16px; }
+.cfg-facts > span { align-items: baseline; }
+.cfg-facts strong {
+  max-width: none; white-space: pre-wrap; overflow: visible;
+  overflow-wrap: anywhere; text-overflow: clip;
+}
+.cfg-rules { grid-template-columns: minmax(120px,160px) minmax(150px,205px) minmax(0,1fr); }
+.cfg-inline-form .field label, .cfg-default-heading > label {
+  font-size: 12px; font-weight: 600; color: var(--body, #42594b);
+}
+.cfg-field-key { font-size: 11px; color: var(--cfg-muted); }
+.cfg-hint, .cfg-page-note { font-size: 12px; line-height: 1.5; color: var(--cfg-muted); }
+.cfg-section-heading h3 { font-size: 13px; }
+.cfg-count { font-size: 12px; }
 
-/* main form card */
-.cfg-inline-form { margin-top:12px; padding:16px 18px 14px; border:1px solid var(--cfg-edge); border-radius:12px; background:var(--cfg-card); box-shadow:0 1px 2px rgba(30,70,45,.05), 0 8px 24px rgba(30,70,45,.05); animation:cfg-rise 240ms var(--cfg-ease); }
-.cfg-form-heading { border-bottom:1px solid #e3ece5; padding-bottom:10px; }
-.cfg-form-heading h3 { font-size:16px; color:var(--cfg-accent-deep); font-family:Consolas,'Microsoft YaHei UI',monospace; letter-spacing:.01em; }
-.cfg-facts > span { padding:2px 8px; border-radius:999px; background:#f1f6f2; }
+.cfg-inline-form .field :is(input,select,textarea), .cfg-raw-input,
+.cfg-create-fields :is(input,select) {
+  border: 1px solid var(--cfg-input-edge); border-radius: 3px;
+  background: var(--cfg-surface); color: var(--ink); font-size: 13px;
+  transition: border-color 120ms ease-out, background-color 120ms ease-out;
+}
+.cfg-inline-form .field select, .cfg-create-fields :is(input,select) { min-height: 32px; }
+.cfg-inline-form .field :is(input,select,textarea):hover,
+.cfg-raw-input:hover, .cfg-create-fields :is(input,select):hover { border-color: var(--cfg-accent); }
+.cfg-inline-form .field :is(input,select,textarea):focus,
+.cfg-raw-input:focus, .cfg-create-fields :is(input,select):focus { border-color: var(--cfg-accent); }
+.cfg-inline-form .field textarea, .cfg-raw-input {
+  font-size: 13px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.cfg-choice-cell textarea { height: auto; min-height: 32px; max-height: none; }
+.cfg-raw-input { height: auto; min-height: 64px; max-height: none; }
+@supports (field-sizing: content) {
+  .cfg-choice-cell textarea, .cfg-raw-input { field-sizing: content; }
+}
 
-/* inputs */
-.cfg-inline-form .field :is(input,select,textarea), .cfg-raw-input, .cfg-create-fields input, .cfg-create-fields select { border-color:#c3d3c7; border-radius:8px; background:#fcfdfc; transition:border-color .16s, box-shadow .18s, background .16s; }
-.cfg-inline-form .field :is(input,select,textarea):hover, .cfg-raw-input:hover { border-color:#8fb89f; }
-.cfg-inline-form .field :is(input,select,textarea):focus, .cfg-raw-input:focus, .cfg-create-fields :is(input,select):focus { outline:0; border-color:var(--cfg-accent); background:#fff; box-shadow:var(--cfg-ring); }
-.cfg-editor-shell :is(button,input,select,textarea):focus-visible { outline:2px solid var(--cfg-accent); outline-offset:2px; }
-.cfg-inline-form .field :is(input,select,textarea):focus-visible, .cfg-raw-input:focus-visible { outline:0; }
-.cfg-inline-form .field label, .cfg-default-heading > label { font-weight:600; color:#3b5a47; }
+/* Native configuration checkboxes retain state and keyboard semantics. */
+.cfg-switches { gap: 4px 16px; }
+.cfg-switches .checklabel { min-height: 28px; gap: 6px; font-size: 12px; cursor: pointer; }
+.cfg-switches input[type=checkbox] { width: 16px; height: 16px; flex: none; accent-color: var(--cfg-accent); }
 
-/* checkboxes -> switches */
-.cfg-switches input[type=checkbox] { appearance:none; -webkit-appearance:none; flex:none; width:30px; height:17px; margin:0; border-radius:999px; background:#c9d6cd; position:relative; cursor:pointer; transition:background .2s; }
-.cfg-switches input[type=checkbox]::after { content:''; position:absolute; top:2px; left:2px; width:13px; height:13px; border-radius:50%; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.28); transition:transform .22s var(--cfg-ease); }
-.cfg-switches input[type=checkbox]:checked { background:var(--cfg-accent); }
-.cfg-switches input[type=checkbox]:checked::after { transform:translateX(13px); }
-.cfg-switches input[type=checkbox]:hover { filter:brightness(.96); }
-.cfg-switches .checklabel { cursor:pointer; }
+/* Inline creation stays distinct without another floating card. */
+.cfg-create-form {
+  padding: 8px; border: 1px solid var(--cfg-edge); border-radius: 4px;
+  background: var(--cfg-surface); animation: cfg-appear 140ms ease-out;
+}
+.cfg-create-variable { max-width: 600px; }
+.cfg-create-fields .field label { font-size: 12px; color: var(--body); }
+.cfg-text-action, .cfg-confirm {
+  min-height: 30px; border-radius: 3px; font-size: 12px;
+  transition: border-color 120ms ease-out, background-color 120ms ease-out;
+}
+.cfg-text-action:hover { border-color: var(--cfg-edge); background: var(--cfg-selected); }
+.cfg-confirm { background: var(--cfg-accent); border-color: var(--cfg-accent); color: #fff; }
+.cfg-confirm:hover:enabled { background: #205a43; }
+.cfg-confirm:active:enabled { background: #194a36; }
+.cfg-text-action:active:enabled { background: #dbeade; }
+.cfg-confirm:disabled { cursor: default; }
+.cfg-create-error, .cfg-create-conflict { font-size: 12px; }
+.cfg-create-error { color: var(--cfg-error); }
+@keyframes cfg-appear { from { opacity: 0; } to { opacity: 1; } }
 
-/* buttons */
-.cfg-confirm { border-radius:8px; background:linear-gradient(180deg,#3a8a65,#2c7350); border-color:#276548; box-shadow:0 1px 2px rgba(30,70,45,.25); transition:transform .16s var(--cfg-ease), box-shadow .18s, filter .16s; }
-.cfg-confirm:hover:enabled { transform:translateY(-1px); box-shadow:0 4px 10px rgba(30,70,45,.25); filter:brightness(1.05); }
-.cfg-confirm:active:enabled { transform:none; box-shadow:none; }
-.cfg-text-action { border-radius:8px; transition:background .16s, border-color .16s, color .16s; }
+/* Ordered candidates: full values, stable columns, visible actions. */
+.cfg-choice-list { border: 1px solid var(--cfg-divider); border-radius: 3px; }
+.cfg-choice-columns, .cfg-choice-row {
+  grid-template-columns: 28px minmax(100px,.7fr) minmax(160px,1.6fr) 132px;
+}
+.cfg-choice-columns {
+  min-height: 28px; padding: 3px 6px; background: var(--cfg-canvas);
+  font-size: 12px; color: var(--cfg-muted);
+}
+.cfg-choice-row { min-height: 40px; padding: 4px 6px; border-color: var(--cfg-divider); }
+.cfg-choice-row:hover { background: var(--cfg-canvas); }
+.cfg-choice-row:focus-within { background: var(--cfg-selected); }
+.cfg-choice-order { font-size: 12px; align-self: start; padding-top: 7px; }
+.cfg-choice-actions { opacity: 1; gap: 2px; }
+.cfg-choice-actions button {
+  min-height: 30px; padding: 4px 6px; border-radius: 3px; font-size: 12px;
+  transition: background-color 120ms ease-out, border-color 120ms ease-out;
+}
+.cfg-choice-actions button:disabled { opacity: .5; }
+.cfg-choice-draft {
+  margin-top: 8px; border: 1px dashed var(--cfg-edge); border-radius: 3px;
+  background: var(--cfg-canvas); animation: cfg-appear 140ms ease-out;
+}
+.cfg-empty { padding: 8px; margin: 0; font-size: 12px; color: var(--cfg-muted); }
 
-/* choice list */
-.cfg-choice-list { border:1px solid var(--cfg-edge); border-radius:10px; overflow:hidden; background:#fff; }
-.cfg-choice-columns { background:#eef5f0; border-bottom:1px solid var(--cfg-edge); letter-spacing:.04em; }
-.cfg-choice-row { border-top:0; border-bottom:1px solid #edf2ee; transition:background .16s, box-shadow .18s; }
-.cfg-choice-row:last-child { border-bottom:0; }
-.cfg-choice-row:hover, .cfg-choice-row:focus-within { background:#f6faf7; box-shadow:inset 3px 0 var(--cfg-accent); }
-.cfg-choice-order { width:22px; height:22px; line-height:22px; margin:auto; border-radius:50%; background:#edf3ee; font-weight:600; }
-.cfg-choice-actions { opacity:.55; transition:opacity .16s; }
-.cfg-choice-row:hover .cfg-choice-actions, .cfg-choice-row:focus-within .cfg-choice-actions { opacity:1; }
-.cfg-choice-actions button { border-radius:6px; transition:background .14s, border-color .14s, color .14s, transform .14s var(--cfg-ease); }
-.cfg-choice-actions button:active:enabled { transform:scale(.94); }
-.cfg-choice-draft { border:1px dashed #8fb89f; border-radius:8px; margin:6px; background:#f7fbf8; animation:cfg-rise 220ms var(--cfg-ease); }
-.cfg-empty { padding:14px; border:1px dashed var(--cfg-edge); border-radius:10px; text-align:center; background:#fafcfa; }
+/* Persistent change feedback; typing does not replay a decorative pulse. */
+.cfg-inline-form :is(input,select,textarea).is-config-edited {
+  background: var(--cfg-edited-bg); border-color: #c5a66d;
+}
+.cfg-inline-form label.is-config-edited::after,
+.cfg-choices.is-config-edited .cfg-section-heading h3::after { font-size: 12px; color: var(--cfg-edited); }
+.cfg-validation {
+  border: 1px solid #d9b5af; border-radius: 3px;
+  color: var(--cfg-error); background: var(--cfg-error-bg); font-size: 12px;
+}
+.config-page :is(button,input,select,textarea,summary):focus-visible {
+  outline: 2px solid var(--cfg-accent); outline-offset: 2px;
+}
+.cfg-editor-main, .cfg-navigation > .editor-left {
+  scrollbar-width: thin; scrollbar-color: #b7c9bd transparent;
+}
 
-/* edited state: amber accent, pulses once */
-.cfg-inline-form :is(input,select,textarea).is-config-edited { background:#fffaf0; border-color:#d9b77a; box-shadow:inset 3px 0 #e0b86a; animation:cfg-edited 520ms var(--cfg-ease); }
-.cfg-inline-form label.is-config-edited::after, .cfg-choices.is-config-edited .cfg-section-heading h3::after { padding:1px 6px; border-radius:999px; background:#fbefd6; }
-@keyframes cfg-edited { 0% { box-shadow:0 0 0 0 rgba(224,184,106,.55), inset 3px 0 #e0b86a } 100% { box-shadow:0 0 0 8px rgba(224,184,106,0), inset 3px 0 #e0b86a } }
-
-/* validation */
-.cfg-validation { border-left:3px solid #c9564c; border-radius:8px; animation:cfg-rise 200ms var(--cfg-ease); }
-
-/* scrollbars */
-.cfg-editor-main, .cfg-navigation > .editor-left { scrollbar-width:thin; scrollbar-color:#b7cdbd transparent; }
-
+@media (min-width: 701px) {
+  .cfg-navigation .editor-nav-list { max-height: none; overflow: visible; }
+  /* The desktop content stays available even if mobile left details closed. */
+  .cfg-navigation::details-content { content-visibility: visible; height: 100%; }
+}
+@supports not selector(details::details-content) {
+  @media (min-width: 701px) {
+    .cfg-navigation:not([open]) > summary {
+      display: list-item; margin-left: 24px; padding: 8px 8px 8px 0;
+      font-size: 12px; cursor: pointer;
+    }
+  }
+}
+@media (min-width: 1300px) and (max-width: 1439px) {
+  .cfg-inline-form { display: block; }
+  .cfg-default-block { margin-bottom: 12px; }
+}
+@media (max-width: 950px) {
+  .cfg-rules { grid-template-columns: minmax(110px,1fr) minmax(130px,1fr); }
+}
+@media (min-width: 701px) and (max-width: 1100px) {
+  .cfg-choice-columns, .cfg-choice-row {
+    grid-template-columns: 24px minmax(80px,.7fr) minmax(100px,1.4fr) 126px; gap: 6px;
+  }
+  .cfg-choice-actions button { padding: 4px 5px; }
+}
 @media (max-width: 700px) {
-  .cfg-inline-form { padding:12px; border-radius:10px; }
-  .cfg-variable-select { min-width:0; flex:1 1 calc(50% - 6px); }
+  .cfg-editor-main { padding: 12px 12px 20px; }
+  .cfg-navigation > .editor-left { gap: 12px; }
+  .cfg-variable-select { min-width: 0; flex: 1 1 calc(50% - 4px); }
+  .cfg-inline-form { padding: 10px; }
+  .cfg-choice-row { grid-template-columns: 20px minmax(0,1fr) 64px; gap: 6px; }
+  .cfg-choice-actions { flex-direction: column; align-items: stretch; }
+  .cfg-choice-actions button { min-height: 28px; }
+  .cfg-choice-draft .cfg-create-error { grid-column: 2 / -1; }
+}
+@media (max-width: 430px) {
+  .cfg-rules { grid-template-columns: minmax(0,1fr); }
+  .cfg-choice-row { grid-template-columns: 20px minmax(0,1fr); }
+  .cfg-choice-actions { flex-direction: row; flex-wrap: wrap; }
+  .cfg-switches { align-items: flex-start; flex-direction: column; }
+}
+@media (forced-colors: active) {
+  .cfg-variable-select.is-active { border-color: Highlight; border-width: 2px; box-shadow: none; }
+  .cfg-inline-form :is(input,select,textarea).is-config-edited { border: 2px dashed CanvasText; }
+  .config-page :is(button,input,select,textarea,summary):focus-visible { outline-color: Highlight; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .cfg-editor-shell *, .cfg-editor-shell *::before, .cfg-editor-shell *::after { animation:none !important; transition:none !important; }
+  .cfg-editor-shell *, .cfg-editor-shell *::before, .cfg-editor-shell *::after {
+    animation: none !important; transition: none !important; scroll-behavior: auto !important;
+  }
 }
