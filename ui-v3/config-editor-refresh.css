@@ -115,6 +115,18 @@
 .cfg-confirm:disabled { cursor: default; }
 .cfg-create-error, .cfg-create-conflict { font-size: 12px; }
 .cfg-create-error { color: var(--cfg-error); }
+.cfg-container-draft { gap: 8px; }
+.cfg-container-draft > span { min-width: 0; overflow-wrap: anywhere; }
+.cfg-container-draft small { flex: none; font-size: 12px; font-weight: 400; color: var(--cfg-muted); }
+.cfg-container-workspace { padding-top: 12px; border-top: 1px solid var(--cfg-divider); }
+.cfg-container-workspace h3 { margin: 0 0 4px; font-size: 14px; font-weight: 600; }
+.cfg-container-workspace > p { font-size: 13px; color: var(--cfg-muted); }
+.cfg-container-workspace > .cfg-hint { margin: 12px 0 4px; font-size: 12px; }
+.cfg-container-workspace > .cfg-create-form { max-width: 420px; }
+.cfg-create-options { margin: 6px 0 10px; }
+.cfg-create-options > summary { width: fit-content; padding: 4px 0; font-size: 12px; color: var(--cfg-muted); cursor: pointer; }
+.cfg-create-options > .cfg-pending-rules { margin-top: 4px; border: 0; padding: 8px 0; background: transparent; }
+.cfg-create-options .cfg-rules { padding-bottom: 4px; }
 @keyframes cfg-appear { from { opacity: 0; } to { opacity: 1; } }
 
 /* Ordered candidates: full values, stable columns, visible actions. */
