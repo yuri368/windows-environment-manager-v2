@@ -67,7 +67,7 @@ System 通道使用一次提升会话、对端进程身份绑定的本地 named 
 | C01–C04 配置与草稿 | 配置/HTTP/原文测试及真实浏览器已覆盖主要流程；有效工作区分离和重启后的配置差异已与冻结前端合并复验 |
 | E01–E02 原始环境状态 | File/mock 与 DefaultBox 原生 User 已验证；真实 VM System 类型与权限仍待验证 |
 | P01–P05 规则、排序和元素 UI | 共享规则与旧 UI 回归已执行；四撤销范围和多排序目标已补齐正式 UI/File 提交证据；主要窄屏编辑/预览状态已补查；原生拖动/IME 仍待验 |
-| R01–R04 连续性与刷新 | 可信审计、未知通知、ABA/重启、跨标签页原文/草稿保留及旧计划更新已有证据；真实 VM 睡眠/恢复和最终原生通知 UI 仍需验收 |
+| R01–R04 连续性与刷新 | 可信审计、未知通知、ABA/重启、跨标签页原文/草稿保留及旧计划更新已有证据；DefaultBox 原生通知正式 UI 已补验；真实 VM 睡眠/恢复及宿主通知仍待验 |
 | X01–X06 执行与恢复 | 故障注入与幂等已有测试；“仅值相等就标补偿”已修复，5 个实际子进程退出边界均通过；原生提升回执仍需真实 VM 验收 |
 | U01–U03 权限和 helper | 固定包/pipe/回执实现、mock 和普通用户真实 pipe 已验证；真实 UAC 成功/取消/其他管理员账户、父进程退出和 System 写入仍需隔离 Windows VM |
 | H01–H02 历史与撤销 | 贡献级共享/累计/重复、四撤销入口、批量提交和排序历史已验；补偿/部分意图/恢复历史与真实页面恢复对账已补验，原始记录未改写 |
@@ -82,3 +82,14 @@ System 通道使用一次提升会话、对端进程身份绑定的本地 named 
 最终冻结包 `024952-878` 另由自身 EXE 在 File 后端启动 8788 正式页面。工作区原始运行输入、配置草稿和 1 项未保存差异仍在；配置应用模式严格只有 replace/+append/-append/append，恢复标签不再进入下拉框。最终页面 error/warn 日志为空，截图 `packaged-final-editor-2026-10-19.png`。此为本机浏览器/File 验收，未执行宿主环境提交。
 
 最终候选 `024952-878` 的 DefaultBox 用户安装生命周期也已完成：job `c300f85b0abb400297ae580e03224b6b`，command/child Verified，Completed/exit 0，2026-10-18 18:53:14–18:56:40 UTC。实际首次安装、已安装 EXE/File 检查、第二次 Setup 升级及完整备份、静默卸载、原始未完成 TOML 和合成历史保留均通过，boxed User/System 清单前后相等。测试后已查询 FakeAdminRights=y、DropAdminRights=y；没有宿主 Setup 或宿主环境提交。工具原始结果 `sandbox-installer-lifecycle-latest.json`，安装日志保留在 `C:\Sandbox\Yuri368\DefaultBox\drive\C\EnvManagerV3Acceptance\20261019-user-lifecycle-5\`。本轮只补齐用户安装器沙盒范围，VM/System/UAC/多用户门槛仍未验证。前一候选同样通过的 job `761d83aa59f74577aa5e0ddfb240137f` 单列为历史证据 `sandbox-installer-lifecycle-024527.json`。
+
+
+## DefaultBox 原生通知正式页面补验（2026-10-19）
+
+在 Windows 11 IoT 企业版 LTSC 10.0.26100 / build 26100 上，通过 MCP 明确指定 DefaultBox 启动 `tests_v3/browser_native_acceptance.py`，job `00a85ea4367245618aed8e234e6c60bb` 的 worker/child 均 Verified，Completed/exit 0。fixture 还在导入环境适配器之前调用 SbieApi_QueryProcess 验证实际进程归属；宿主直接调用已观察到拒绝，且未创建数据目录。该工具是显式 opt-in 验收入口，不进入默认 unittest discover 或产品包。
+
+真实 Service 使用 WindowsEnvironment + 原生 RegistryChangeListener，正式浏览器页面显示 Windows 后端。仅创建原本不存在的 User 变量 `V3_UI_NATIVE_5939F1E64E27`，初值为带前后空白、空元素与 CRLF 的 ` A;B;;中文\r\n尾部 `。页面选择自定义来源并输入 ` B;草稿;;中文\n保留 `，焦点和 selectionStart/End 均在该输入。独立 sandbox 进程通知 fixture 改为 `外部;B;;中文 ` 后，页面未点击刷新、未 reload，即显示新 Windows 当前值及服务端预览；运行草稿原文、输入焦点、光标位置 13/13 均保留，error/warn 日志为空。该外部变化不通过 Service 自身 adapter，原生通知/long-poll/页面刷新链路实际参与。
+
+结束由 fixture finally 删除唯一测试变量，读回 absent；boxed User/System 完整清单哈希恢复一致。没有 System 或宿主 Registry 写入，也没有执行广播、睡眠/恢复或 UAC 测试，不能扩大为这些项目通过。FakeAdminRights/DropAdminRights 均保持 y，本轮未改沙盒配置。工具结果 `sandbox-browser-native-notification.json`，页面及输入证据 `browser-native-notification-2026-10-19.json`，截图 `product-native-notification-2026-10-19.png`。
+
+本轮仅新增验收脚本和文档，生产源码未改；对候选 `024952-878` 再执行 verify-bundle，currentSourceMatchesStaged=true，115 包文件、15 生产资源、30 许可证全部一致，原包 hash 继续有效。README 已补正式运行入口，RUNNING.md 已补候选包独立启动及 File 试用方式。原生 IME/拖动/DPI 需要可用的 Windows 桌面人工控制；当前工具只有浏览器 DOM 控制，未将 fill、合成事件或 viewport 仿真计作原生验收。

@@ -2,6 +2,18 @@
 
 本目录说明独立 V3 产品。`temp.html` 保留已接受的浏览器演示；正式入口是 `index.html`，由 `envmanager_v3` 本地服务加载。V2 的 `envmanager/` 不作为 V3 运行依赖。
 
+## 从候选包运行
+
+当前候选包和 SHA256 见 [BUILD.md](BUILD.md)。使用用户安装包可选择安装位置；便携 ZIP 解压后保留完整目录，运行其中的 `EnvManagerV3.exe`。包内已包含固定 Python/Node 运行时，正常启动会打开系统默认浏览器，不需要另开开发服务器。默认使用 Windows 后端，配置与历史位于下述用户数据目录。
+
+要使用同一候选包进行隔离试用，在解压目录打开 PowerShell：
+
+```powershell
+.\EnvManagerV3.exe --backend file --data-dir .\v3-isolated
+```
+
+此模式将环境值保存到该数据目录的 `environment.json`。首次没有配置时，通过页面的“导入配置”加载合法 TOML；安装器不自动导入或迁移 V2 数据。
+
 ## 从源码运行
 
 在项目根目录，使用 Python 3.13 和 Node.js，并安装 `requirements-v3.txt`：
@@ -39,4 +51,4 @@ Windows 环境页直接编辑原始值。普通变量保留重复项、空元素
 
 ## 当前验收边界
 
-构建方法与每个包的证据见 [BUILD.md](BUILD.md)，数据库版本与迁移备份见 [DATABASE.md](DATABASE.md)。产品完整验收以架构方案第 17 节矩阵及实际测试证据为准；File 模式、mock helper、Sandboxie 模拟管理员均不能代替真实 Windows UAC、干净虚拟机安装和原生 DPI 验收。
+构建方法与每个包的证据见 [BUILD.md](BUILD.md)，数据库版本与迁移备份见 [DATABASE.md](DATABASE.md)，当前通过项与缺口见 [ACCEPTANCE.md](ACCEPTANCE.md)。产品完整验收以架构方案第 17 节矩阵及实际测试证据为准；File 模式、mock helper、Sandboxie 模拟管理员均不能代替真实 Windows UAC、干净虚拟机安装和原生 DPI 验收。

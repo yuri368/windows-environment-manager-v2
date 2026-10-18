@@ -1,6 +1,12 @@
-# V3 Web UI Prototype
+# 环境变量方案管理器 V3
 
-此分支维护环境方案管理器的网页 UI 与展示交互。当前不是 V3 正式产品，未接入 Python、Windows 注册表或 WebView 桥接。
+V3 已实现独立 Python 本地服务、持久配置与草稿、冻结计划执行和恢复，并生成 Windows x64 候选安装包。界面沿用已接受的紧凑网页 UI，由本地服务提供。当前仍是候选版，干净 Windows VM、真实 System/UAC、多用户和原生 DPI/IME/拖动验收尚未完成。
+
+- [运行与数据说明](docs/product-v3/RUNNING.md)：安装包启动、源码隔离运行、配置/草稿/历史的位置与操作流程。
+- [构建与候选包](docs/product-v3/BUILD.md)：当前包、SHA256、依赖与许可证。
+- [实际验收记录](docs/product-v3/ACCEPTANCE.md)：File、DefaultBox 和真实浏览器证据，以及剩余门槛。
+
+正式页面入口为 `index.html`，通过 V3 EXE 或 `python -m envmanager_v3` 启动。`temp.html` 保留为历史浏览器演示，下面的示例数量和旧回归计数均属于演示阶段。
 
 ## 2026-10-16：执行前审阅与交互完善
 
@@ -10,7 +16,7 @@
 
 本轮完整回归 32 组、606 项通过，另有 Linux Chromium 无头浏览器 13 个流程通过。四轮 Astra 方案/复核、截图、复现脚本和实际测试日志见 [本轮交付报告](design-evidence/astra-polish-2026-10-16/REPORT.md)。这些结果验证浏览器演示，不代表真实 Win11、注册表或 UAC 已验收。
 
-## 查看界面
+## 查看历史演示
 
 下载或检出此分支，将 `ui-v3/` 的文件放在一起，用浏览器打开 `temp.html`。
 
