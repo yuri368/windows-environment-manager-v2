@@ -11,7 +11,14 @@ import subprocess
 import time
 
 
-def run(executable, evidence, *, python=False):
+def disk_path(path):
+    """Let the smoke harness inspect long output even when the helper cannot."""
+    if os.name == "nt" and not str(path).startswith("\\\\?\\"):
+        return Path("\\\\?\\" + os.path.abspath(path))
+    return path
+
+
+def run(executable, evidence, *, python=False, long_path_fixture=False):
     evidence.mkdir(parents=True, exist_ok=False)
     data = evidence / "operator-data"
     control = evidence / "lease-session"
@@ -46,9 +53,23 @@ def run(executable, evidence, *, python=False):
     with sqlite3.connect(data / "state.sqlite3") as db:
         db.execute("INSERT INTO settings VALUES(?,?)", ("upgrade-smoke-fixture", json.dumps({"raw": " A;;A;\r\n", "invalidDraft": "[unfinished"})))
 
+    long_relative = "workspaces/4610d63fa6f646a694dfba4e5564d583/backups/" + (
+        "config.toml.2829a7050112ff3c015eb13bd0ece023ea68dab75ba0d109e084e15306f36db2.dhmum0et.bak")
+    if long_path_fixture:
+        fixture = data / long_relative
+        shadow = data.with_name(data.name + ".upgrade-backups") / (".incomplete-" + "0" * 32) / "shadow" / long_relative
+        if not len(str(fixture)) < 260 < len(str(shadow)):
+            raise RuntimeError("Choose an evidence path with source <260 and shadow >260 characters")
+        disk_path(fixture.parent).mkdir(parents=True, exist_ok=True)
+        disk_path(fixture).write_bytes(b"# native upgrade long-path fixture\r\n[unfinished\r\n")
+        (evidence / "upgrade-smoke-paths.json").write_text(json.dumps({
+            "sourcePathLength": len(str(fixture)), "maxShadowPathLength": len(str(shadow)),
+            "relativePath": long_relative}, indent=2) + "\n", encoding="utf-8")
+
     def inventory():
-        return {p.relative_to(data).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
-                for p in data.rglob("*") if p.is_file() and not p.name.endswith((".lock", "-shm"))}
+        disk_data = disk_path(data)
+        return {p.relative_to(disk_data).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+                for p in disk_data.rglob("*") if p.is_file() and not p.name.endswith((".lock", "-shm"))}
 
     baseline = inventory()
     log = (evidence / "hold.log").open("w", encoding="utf-8")
@@ -72,10 +93,12 @@ def run(executable, evidence, *, python=False):
             raise RuntimeError("Second instance failed for an unexpected reason: " + blocked.stderr)
         checks.append("real product second instance blocked during upgrade")
         manifest = json.loads((Path(ready["backup_path"]) / "manifest.json").read_text(encoding="utf-8"))
-        for relative in ("workspaces/raw.toml", "recovery-evidence.bin"):
+        for relative in ("workspaces/raw.toml", "recovery-evidence.bin", *([long_relative] if long_path_fixture else [])):
             backup_file = Path(ready["backup_path"]) / "data" / relative
-            if hashlib.sha256(backup_file.read_bytes()).hexdigest() != baseline[relative]:
+            if hashlib.sha256(disk_path(backup_file).read_bytes()).hexdigest() != baseline[relative]:
                 raise RuntimeError(f"Backup content mismatch: {relative}")
+        if long_path_fixture:
+            checks.append("source <260 and shadow >260; exact config backup filename and bytes preserved")
         # Inspect the immutable snapshot without creating WAL/SHM sidecars in it.
         backup_db = Path(ready["backup_path"]) / "data" / "state.sqlite3"
         with sqlite3.connect(backup_db.as_uri() + "?mode=ro&immutable=1", uri=True) as db:
@@ -102,6 +125,9 @@ def run(executable, evidence, *, python=False):
         result = {"status": "passed", "scope": "isolated helper choreography; simulated program-file replacement",
                   "backend": "file", "hostInstallerExecuted": False, "nativeUacOrInstallAclTested": False,
                   "backupId": ready["backup_id"], "backupManifestSha256": ready["manifest_sha256"],
+                  "longPathFixture": long_path_fixture,
+                  "maxBackupPathLength": max(len(str(Path(ready["backup_path"]) / part / relative))
+                                             for part in ("shadow", "data") for relative in manifest["files"]),
                   "sourceFileCount": len(baseline), "checks": checks}
         (evidence / "upgrade-smoke-result.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
         print(json.dumps(result))
@@ -121,5 +147,6 @@ if __name__ == "__main__":
     parser.add_argument("--exe", type=Path, required=True)
     parser.add_argument("--evidence-dir", type=Path, required=True)
     parser.add_argument("--python", action="store_true")
+    parser.add_argument("--long-path-fixture", action="store_true")
     args = parser.parse_args()
-    run(args.exe.resolve(), args.evidence_dir.resolve(), python=args.python)
+    run(args.exe.resolve(), args.evidence_dir.resolve(), python=args.python, long_path_fixture=args.long_path_fixture)

@@ -17,6 +17,7 @@ import sqlite3
 import stat
 import time
 import uuid
+from urllib.parse import quote
 
 from . import __version__
 from .database import SCHEMA_VERSION, _inspect_schema
@@ -131,6 +132,14 @@ class _ParentProcess:
             self.handle = None
 
 
+def _io_path(path):
+    """Use Windows extended paths only at I/O boundaries, not in receipts."""
+    path = Path(path)
+    if os.name == "nt" and not str(path).startswith("\\\\?\\"):
+        return Path("\\\\?\\" + os.path.abspath(path))
+    return path
+
+
 def _sync_dir(path):
     if os.name != "nt":
         descriptor = os.open(path, os.O_RDONLY)
@@ -149,7 +158,7 @@ def _replace(source, destination):
         move = ctypes.WinDLL("kernel32", use_last_error=True).MoveFileExW
         move.argtypes = (wintypes.LPCWSTR, wintypes.LPCWSTR, wintypes.DWORD)
         move.restype = wintypes.BOOL
-        if not move(str(source), str(destination), 0x1 | 0x8):
+        if not move(str(_io_path(source)), str(_io_path(destination)), 0x1 | 0x8):
             raise ctypes.WinError(ctypes.get_last_error())
     else:
         os.replace(source, destination)
@@ -158,7 +167,7 @@ def _replace(source, destination):
 
 def _write_json(path, value):
     temporary = path.with_name(path.name + "." + uuid.uuid4().hex + ".tmp")
-    with temporary.open("x", encoding="utf-8", newline="\n") as stream:
+    with _io_path(temporary).open("x", encoding="utf-8", newline="\n") as stream:
         json.dump(value, stream, ensure_ascii=True, sort_keys=True, indent=2)
         stream.write("\n")
         stream.flush()
@@ -167,6 +176,7 @@ def _write_json(path, value):
 
 
 def _read_json(path, *, control=True):
+    path = _io_path(path)
     # Control messages are small and local, not an unbounded input stream.
     if control and path.stat().st_size > 1024 * 1024:
         raise UpgradeBlocked("INVALID_CONTROL", "Control JSON exceeds 1 MiB.")
@@ -180,11 +190,14 @@ def _local_path(value):
     # Refuse junctions/symlinks in every existing component, before resolve()
     # could hide them. Never traverse somebody else's data through a reparse.
     for part in (path, *path.parents):
-        if part.exists() or part.is_symlink():
-            info = part.lstat()
+        disk_part = _io_path(part)
+        if disk_part.exists() or disk_part.is_symlink():
+            info = disk_part.lstat()
             if stat.S_ISLNK(info.st_mode) or getattr(info, "st_file_attributes", 0) & 0x400:
                 raise UpgradeBlocked("REPARSE_POINT", f"Reparse point: {part}")
-    return path.resolve()
+    resolved = _io_path(path).resolve()
+    # Keep the public path convention for receipts and containment checks.
+    return Path(str(resolved).removeprefix("\\\\?\\")) if os.name == "nt" else resolved
 
 
 def _outside(path, source):
@@ -194,7 +207,7 @@ def _outside(path, source):
 
 def _hash(path, check=lambda: None):
     digest = hashlib.sha256()
-    with path.open("rb") as stream:
+    with _io_path(path).open("rb") as stream:
         while block := stream.read(1024 * 1024):
             check()
             digest.update(block)
@@ -203,6 +216,7 @@ def _hash(path, check=lambda: None):
 
 def _inventory(root, check):
     """Hash durable data, include empty directories, ignore only named transients."""
+    root = _io_path(root)
     files, directories, excluded = {}, [], []
 
     def visit(directory):
@@ -238,7 +252,7 @@ def _inventory(root, check):
 
 
 def _copy(source, destination, check):
-    with source.open("rb") as reader, destination.open("xb") as writer:
+    with _io_path(source).open("rb") as reader, _io_path(destination).open("xb") as writer:
         while block := reader.read(1024 * 1024):
             check()
             writer.write(block)
@@ -246,10 +260,19 @@ def _copy(source, destination, check):
         os.fsync(writer.fileno())
 
 
+def _sqlite_uri(path, *, readonly=False):
+    if os.name == "nt":
+        # as_uri() treats the extended prefix as an authority. Encode the
+        # native filename; SQLite decodes it before the Windows VFS opens it.
+        uri = "file:" + quote(str(_io_path(path)), safe="/:")
+        return uri + ("?mode=ro&" if readonly else "?") + "vfs=win32-longpath"
+    return path.as_uri() + ("?mode=ro" if readonly else "")
+
+
 def _sqlite_backup(shadow, destination, check, *, product_database=False):
     # Only the private shadow is opened with SQLite. This includes committed
     # WAL without creating/updating even a transient -shm in the user's tree.
-    with closing(sqlite3.connect(shadow.as_uri() + "?mode=ro", uri=True, timeout=0)) as source:
+    with closing(sqlite3.connect(_sqlite_uri(shadow, readonly=True), uri=True, timeout=0)) as source:
         source.set_progress_handler(lambda: (check(), 0)[1], 10000)
         version = source.execute("PRAGMA user_version").fetchone()[0]
         if product_database:
@@ -261,7 +284,7 @@ def _sqlite_backup(shadow, destination, check, *, product_database=False):
                     TERMINAL_EXECUTIONS).fetchall()
                 if pending:
                     raise UpgradeBlocked("UNFINISHED_EXECUTION", f"Resolve executions before upgrade: {pending!r}")
-        with closing(sqlite3.connect(destination)) as backup:
+        with closing(sqlite3.connect(_sqlite_uri(destination), uri=True)) as backup:
             backup.set_progress_handler(lambda: (check(), 0)[1], 10000)
             backup.execute("PRAGMA synchronous=FULL")
             source.backup(backup, pages=128, progress=lambda *_: check(), sleep=0.01)
@@ -269,7 +292,7 @@ def _sqlite_backup(shadow, destination, check, *, product_database=False):
                 raise UpgradeBlocked("SQLITE_INTEGRITY", f"Invalid SQLite backup: {destination.name}")
             if backup.execute("PRAGMA user_version").fetchone()[0] != version:
                 raise UpgradeBlocked("SQLITE_VERSION", "SQLite backup changed its schema version.")
-    with destination.open("r+b") as stream:
+    with _io_path(destination).open("r+b") as stream:
         os.fsync(stream.fileno())
     return {"user_version": version, "method": "sqlite3.Connection.backup",
             "committed_wal_included": True, "product_database": product_database}
@@ -303,8 +326,8 @@ class UpgradeSession:
         if not math.isfinite(lease_seconds) or not 0 < lease_seconds <= MAX_LEASE_SECONDS:
             raise UpgradeBlocked("INVALID_LEASE", f"Lease must be >0 and <= {MAX_LEASE_SECONDS} seconds.")
         self.data_dir = _local_path(data_dir)
-        self.source_data_existed = self.data_dir.exists()
-        if (self.source_data_existed and not self.data_dir.is_dir()) or (not self.source_data_existed and not allow_missing):
+        self.source_data_existed = _io_path(self.data_dir).exists()
+        if (self.source_data_existed and not _io_path(self.data_dir).is_dir()) or (not self.source_data_existed and not allow_missing):
             raise UpgradeBlocked("NO_DATA_DIRECTORY", "Existing user data directory required; do not infer an administrator's profile.")
         self.target_version = target_version
         self.backup_id = uuid.uuid4().hex
@@ -328,7 +351,7 @@ class UpgradeSession:
         # The lazy import also permits __main__ to dispatch to this module.
         from .__main__ import InstanceLock
         _local_path(self.data_dir / "instance.lock")
-        lock = InstanceLock(self.data_dir / "instance.lock")
+        lock = InstanceLock(_io_path(self.data_dir / "instance.lock"))
         try:
             lock.__enter__()
         except RuntimeError as error:
@@ -337,7 +360,7 @@ class UpgradeSession:
 
     def _lock_check(self):
         held = os.fstat(self._lock.file.fileno())
-        current = (self.data_dir / "instance.lock").stat()
+        current = _io_path(self.data_dir / "instance.lock").stat()
         if (held.st_dev, held.st_ino) != (current.st_dev, current.st_ino):
             raise UpgradeBlocked("LOCK_REPLACED", "Application instance lock file was replaced.")
 
@@ -410,14 +433,14 @@ def prepare_upgrade(data_dir, target_version, *, backup_root=None, lease_seconds
         session._acquire()
         session._time_check()
         before = _inventory(session.data_dir, session._time_check)
-        root.mkdir(parents=True, exist_ok=True)
-        staging.mkdir()
+        _io_path(root).mkdir(parents=True, exist_ok=True)
+        _io_path(staging).mkdir()
         shadow, payload = staging / "shadow", staging / "data"
-        shadow.mkdir()
-        payload.mkdir()
+        _io_path(shadow).mkdir()
+        _io_path(payload).mkdir()
         for relative in before["directories"]:
-            (shadow / relative).mkdir(parents=True, exist_ok=True)
-            (payload / relative).mkdir(parents=True, exist_ok=True)
+            _io_path(shadow / relative).mkdir(parents=True, exist_ok=True)
+            _io_path(payload / relative).mkdir(parents=True, exist_ok=True)
         inject("before_copy", session)
         for relative, info in before["files"].items():
             _copy(session.data_dir / relative, shadow / relative, session._time_check)
@@ -427,7 +450,7 @@ def prepare_upgrade(data_dir, target_version, *, backup_root=None, lease_seconds
         databases = set()
         for relative in before["files"]:
             path = shadow / relative
-            with path.open("rb") as stream:
+            with _io_path(path).open("rb") as stream:
                 magic = stream.read(16)
             if magic == b"SQLite format 3\x00" or path.suffix.lower() in (".sqlite3", ".sqlite", ".db"):
                 databases.add(relative)
@@ -474,7 +497,7 @@ def prepare_upgrade(data_dir, target_version, *, backup_root=None, lease_seconds
     except BaseException as error:
         session.close()
         artifact = session.backup_path or staging
-        if artifact.is_dir():
+        if _io_path(artifact).is_dir():
             try:
                 _write_json(artifact / "failure.json", _failure(error))
             except OSError:
