@@ -1,3 +1,20 @@
+# V3.0.0 正式版产物
+
+发布源生产提交 `188bdd4`，构建目录 `packaging_v3/output/20261019-163742-823`。两类安装器、完整便携 ZIP、115 个包文件、15 项生产资源与 30 份许可证校验通过，源码/stage 一致，冻结 File 启停与升级备份 helper 检查通过。正式产物未作代码签名。
+
+[正式版下载](https://github.com/yuri368/windows-environment-manager-v2/releases/tag/v3.0.0) · [最终审查与修复](RELEASE_3_0_0.md) · [构建证据](release-3.0.0-build.json) · [普通权限原生启动](release-3.0.0-runtime.json)
+
+| 产物 | SHA256 |
+| --- | --- |
+| `EnvManagerV3-3.0.0-windows-x64.zip` | `b024ae79062c9c48b11cfeffd2e8d37690ecbec0399ef3a35920f90757b5591d` |
+| `EnvManagerV3/EnvManagerV3.exe` | `977533de7df20c61eb7dcd4c621c73ba6090833aa17d89049d9ae865a84fa9ce` |
+| `EnvManagerV3-3.0.0-setup-user-x64.exe` | `3692128fb4851fb2b8d954bf62c983d0d4ed6d8c953efdec4d6c9d24e974d33c` |
+| `EnvManagerV3-3.0.0-setup-machine-x64.exe` | `a56ffeba01205e9c3b703615e2f104a241edc20b2050117f5b0116cf2ae8ce4f` |
+
+最终本地后端执行 506 项：505 通过、1 项 opt-in 检查跳过。真实 Windows 后端的正式便携包在移除开发 PATH 的普通权限进程中启动、鉴权读取并退出；历史 7、恢复 0，28 项环境原文/类型保持一致，没有准备或执行环境修改计划。正式版 machine 覆盖升级被 UAC 取消，没有执行，不能记为最终包已安装；此前候选安装与真实 User/System 提交保留各自版本化证据。干净 Windows VM 覆盖缺口继续披露。
+
+以下为候选阶段的历史构建记录，保留其原始哈希与当时状态。
+
 # V3 Windows x64 打包与隔离启动检查
 
 最新已构建并安装候选为 **`packaging_v3/output/20261019-130846-568`**，对应生产源码 `c37a732`，包含纵向整行拖动、pointer capture、普通/幽灵行统一移动反馈，以及松手时从当前显示位置连续落座的修复。完整构建 exit 0，115 个包文件、15 个生产资源、30 份许可证及源码/stage 一致性均核对通过；两类安装器已生成。负责人已在 8798 源码 File 页面实际鼠标确认“现在直接落在目标位置，正常”。

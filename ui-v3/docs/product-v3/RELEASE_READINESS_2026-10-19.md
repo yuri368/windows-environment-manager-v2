@@ -1,3 +1,5 @@
+> V3.0.0 发布阶段更新：负责人已明确授权最终审查后修复、合并并发布。Astra 发现的一项 P1 已在 `188bdd4` 修复并经定点、完整后端及跨平台 CI 验证。正式构建与普通权限原生只读启动证据见 [RELEASE_3_0_0.md](RELEASE_3_0_0.md)、[release-3.0.0-build.json](release-3.0.0-build.json)、[release-3.0.0-runtime.json](release-3.0.0-runtime.json)。最终 machine 安装被 UAC 取消，未执行。以下候选矩阵保留历史状态；干净 VM 等覆盖边界没有被此次发布授权变成已验证。
+
 # V3 release readiness evidence map — 2026-10-19
 
 This is a documentation-only evidence index for §17 and §18 of [`V3_PRODUCT_IMPLEMENTATION_2026-10-18.md`](../architecture/V3_PRODUCT_IMPLEMENTATION_2026-10-18.md). It records evidence already present in this source tree and the supplied acceptance state; it does not add acceptance results. Test filenames identify available coverage only. A filename is not proof that a test passed.
