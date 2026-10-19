@@ -11,7 +11,7 @@ function initial(empty=false){
   const profileChoices={[id(2)]:id(3)};
   return {workspace:{id:id(1),revision:1,validRevision:1,draftRevision:1,errors:[],fileRevision:'disk-1',configPath:'managed/env.toml'},apps,workingApps:clone(apps),configurationBaseline:clone(apps),profileChoices,draftProfileChoices:clone(profileChoices),snapshots:[{scope:'User',name:'Path',exists:true,raw:'X;A',type:'REG_EXPAND_SZ',revision:'env-1',supported:true}],history:[],mode:'isolated',capabilities:{execute:true},recovery:[],uiDrafts:{}};
 }
-async function harness(empty=false,savedState=null,{freshTab=false}={}){
+async function harness(empty=false,savedState=null,{freshTab=false,intercept=null}={}){
   let state=savedState?clone(savedState):initial(empty),w,seq=100,reviewCount=0,executeCount=0,loseExecution=false,rejectReview=false,updateReview=false,failEdit=false;
   const calls=[],errors=[],plans=new Map(),edits=new Map(),orders=new Map(),operations=new Map();
   const variable=()=>state.workingApps[0].profiles.find(p=>p.recordId===state.profileChoices[state.workingApps[0].recordId]).vars[0];
@@ -63,9 +63,11 @@ async function harness(empty=false,savedState=null,{freshTab=false}={}){
   async function fetch(url,options={}){
     const route=url.replace('/api/v1',''),method=options.method||'GET',body=options.body?JSON.parse(options.body):null;calls.push({route,method,body,headers:options.headers,credentials:options.credentials});
     const ok=value=>({ok:true,json:async()=>clone(value),text:async()=>typeof value==='string'?value:JSON.stringify(value)});
+    if(intercept){const response=await intercept({route,method,body,ok});if(response)return response;}
     if(route==='/session/exchange')return ok({csrfToken:'test-csrf'});
     if(route==='/bootstrap')return {...ok(state),headers:{get:name=>name==='X-CSRF-Token'?'test-csrf':null}};
     if(route==='/environment/refresh')return ok(state);
+    if(route==='/app/quit'){assert.equal(method,'POST');assert.deepEqual(body,{});return ok({status:'closing'});}
     if(route.endsWith('/draft'))return ok(draft(body));
     if(route.startsWith('/selections/')){const v=variable();if(route.endsWith('/restore')){v.source='自定义值';v.selectedRaw=v.custom=v.baselineValue;}else{v.source=body.source;v.custom=body.raw;v.selectedRaw=body.raw;v.dirty=true;}bump();syncRuntime();return ok(state);}
     if(route.endsWith('/save')){assert.equal(body.expectedDiskHash,state.workspace.fileRevision);assert.equal(state.workspace.errors.length,0);state.workspace.fileRevision='disk-'+(++seq);state.configurationBaseline=clone(state.workingApps);return ok(state);}
@@ -327,6 +329,101 @@ async function harness(empty=false,savedState=null,{freshTab=false}={}){
   }finally{native.close();}
   const empty=await harness(true);
   try{await check('empty workspace starts with only application name and persists naming draft',async()=>{assert.equal(empty.q('#emptyCreate').querySelectorAll('input').length,1);assert.equal(empty.q('#emptyCreate input').name,'appName');const input=empty.q('#emptyCreate input');input.value='新应用';input.dispatchEvent(new empty.w.Event('input',{bubbles:true}));empty.q('#emptyCreate').dispatchEvent(new empty.w.Event('submit',{bubbles:true,cancelable:true}));await tick();assert.equal(empty.q('#emptyCreate input').name,'profileName');assert.equal(empty.state().uiDrafts.emptyCreation.appName,'新应用');assert.equal(empty.state().apps.length,0);});assert.deepEqual(empty.errors,[]);}finally{empty.close();}
+  await check('toolbar exit confirmation can cancel without closing or disabling the workspace',async()=>{
+    const peer=await harness();try{
+      const input=peer.q('.vinput');let confirmations=0;peer.w.confirm=()=>{confirmations++;return false;};
+      assert.equal(peer.q('.toolbar #quitBtn').textContent,'退出');peer.q('#quitBtn').click();await tick();
+      assert.equal(confirmations,1);assert(!peer.calls.some(c=>c.route==='/app/quit'));
+      assert.strictEqual(peer.q('.vinput'),input);assert(!peer.q('#quitBtn').disabled);assert(!peer.q('#app').hasAttribute('inert'));assert(!peer.q('#closedTitle'));assert.deepEqual(peer.errors,[]);
+    }finally{peer.close();}
+  });
+  await check('exit waits for config and selection acknowledgements before authenticated quit, without applying or saving TOML',async()=>{
+    let release;const gate=new Promise(resolve=>release=resolve);
+    const peer=await harness(false,null,{intercept:async({route})=>{if(route.endsWith('/draft'))await gate;}});
+    try{
+      peer.run("go('config');setConfigProperty(configVar(),'defaultValue',' 草稿;;配置 ');go('workbench')");
+      const input=peer.q('.vinput');input.value=' A;A;;中文\r\n ';const selectedRaw=input.value;input.dispatchEvent(new peer.w.Event('input',{bubbles:true}));
+      const exiting=peer.run('requestQuit()');await tick();
+      assert(peer.q('#app').hasAttribute('inert'));assert(peer.q('#quitBtn').disabled);assert(!peer.q('#closedTitle'));assert(!peer.calls.some(c=>c.route==='/app/quit'));
+      peer.w.document.dispatchEvent(new peer.w.KeyboardEvent('keydown',{key:'s',ctrlKey:true,bubbles:true,cancelable:true}));
+      release();assert.equal(await exiting,true);
+      const quit=peer.calls.find(c=>c.route==='/app/quit'),last=peer.calls.at(-1);assert.strictEqual(quit,last);
+      assert.equal(quit.credentials,'same-origin');assert.equal(quit.headers['X-CSRF-Token'],'test-csrf');assert.deepEqual(quit.body,{});
+      assert(peer.calls.findIndex(c=>c.route.endsWith('/draft'))<peer.calls.indexOf(quit));assert(peer.calls.findIndex(c=>c.route.startsWith('/selections/'))<peer.calls.indexOf(quit));
+      assert.equal(peer.state().apps[0].profiles[0].vars[0].defaultValue,' 草稿;;配置 ');assert.equal(peer.state().workingApps[0].profiles[0].vars[0].selectedRaw,selectedRaw);
+      assert.equal(peer.state().workspace.fileRevision,'disk-1');assert(!peer.calls.some(c=>c.route.endsWith('/save')||c.route.endsWith('/execute')));
+      assert(peer.q('#closedTitle'));assert(peer.q('#screen').textContent.includes('重新启动'));assert.equal(peer.q('.nav').style.display,'none');assert.equal(peer.q('#footer').style.display,'none');assert(!peer.q('#modal').classList.contains('open'));assert.deepEqual(peer.errors,[]);
+    }finally{release();peer.close();}
+  });
+  await check('exit preserves a debounced emptyCreation naming draft without advancing or creating configuration',async()=>{
+    const peer=await harness(true);try{
+      const input=peer.q('#emptyCreate input');input.value=' 未完成应用名 ';input.dispatchEvent(new peer.w.Event('input',{bubbles:true}));
+      assert(!peer.state().uiDrafts.emptyCreation);assert.equal(await peer.run('requestQuit()'),true);
+      assert.equal(peer.state().uiDrafts.emptyCreation.appName,' 未完成应用名 ');assert.equal(peer.state().uiDrafts.emptyCreation.stage,0);assert.equal(peer.state().apps.length,0);
+      const quit=peer.calls.findIndex(c=>c.route==='/app/quit');assert(peer.calls.slice(0,quit).some(c=>c.route.endsWith('/draft')&&c.body.uiDrafts?.emptyCreation?.appName===' 未完成应用名 '));
+      const restarted=await harness(true,peer.state());try{assert.equal(restarted.q('#emptyCreate input').value,' 未完成应用名 ');assert.equal(restarted.q('#emptyCreate input').name,'appName');assert.equal(restarted.state().apps.length,0);}finally{restarted.close();}
+      assert.deepEqual(peer.errors,[]);
+    }finally{peer.close();}
+  });
+  await check('exit refuses an unfinished modal and a pending operation key without discarding either',async()=>{
+    const peer=await harness();try{
+      let confirmations=0;peer.w.confirm=()=>{confirmations++;return true;};
+      await peer.run("openWindowsElements('User','Path')");const dialog=peer.q('.element-dialog'),input=peer.q('.element-input');input.value='未完成元素草稿';input.dispatchEvent(new peer.w.Event('input',{bubbles:true}));
+      assert.equal(await peer.run('requestQuit()'),false);assert.strictEqual(peer.q('.element-dialog'),dialog);assert.equal(peer.q('.element-input').value,'未完成元素草稿');assert.equal(confirmations,0);
+      peer.run('closeModal()');peer.w.sessionStorage.setItem('envmanager-v3-operation','unknown-original-operation');
+      assert.equal(await peer.run('requestQuit()'),false);assert.equal(peer.w.ProductRuntime.pendingKey(),'unknown-original-operation');assert.equal(confirmations,0);
+      assert(!peer.calls.some(c=>c.route==='/app/quit'));assert.deepEqual(peer.errors,[]);
+    }finally{peer.close();}
+  });
+  await check('exit blocks an active execution until the original operation completes',async()=>{
+    let release;const gate=new Promise(resolve=>release=resolve);
+    const peer=await harness(false,null,{intercept:async({route})=>{if(route.endsWith('/execute'))await gate;}});
+    try{
+      await peer.run("showPreview('应用','执行中退出验收',[{app:0,profile:'稳定',varIdx:0}])");await peer.run('confirmPreview()');const executing=peer.run('confirmPreview()');await tick();
+      assert.equal(peer.run('activeExecutions'),1);assert(peer.w.ProductRuntime.pendingKey());assert.equal(await peer.run('requestQuit()'),false);assert(!peer.calls.some(c=>c.route==='/app/quit'));
+      release();await executing;assert.equal(peer.run('activeExecutions'),0);assert.equal(peer.w.ProductRuntime.pendingKey(),null);assert.equal(peer.counts().executeCount,1);assert.deepEqual(peer.errors,[]);
+    }finally{release();peer.close();}
+  });
+  await check('backend quit 409 leaves the UI open and supports immediate retry without another mutation',async()=>{
+    let attempts=0;const peer=await harness(false,null,{intercept:({route})=>{if(route==='/app/quit'&&++attempts===1)return {ok:false,status:409,json:async()=>({error:{code:'EXECUTION_BUSY',message:'操作尚未执行完成'}})};}});
+    try{
+      const input=peer.q('.vinput');assert.equal(await peer.run('requestQuit()'),false);assert.strictEqual(peer.q('.vinput'),input);assert(!peer.q('#closedTitle'));assert(!peer.q('#quitBtn').disabled);assert(!peer.q('#app').hasAttribute('inert'));assert(peer.q('#toast').textContent.includes('未确认退出'));
+      await peer.run('API.flush()');assert.equal(await peer.run('requestQuit()'),true);assert.equal(attempts,2);
+      assert.equal(peer.calls.filter(c=>c.method!=='GET'&&c.route!=='/session/exchange'&&c.route!=='/app/quit').length,0);assert(peer.q('#closedTitle'));assert.deepEqual(peer.errors,[]);
+    }finally{peer.close();}
+  });
+  await check('network failure and non-closing replies never claim exit or remove editing UI',async()=>{
+    for(const failure of ['network','wrong-status']){
+      const peer=await harness(false,null,{intercept:({route,ok})=>{if(route==='/app/quit'){if(failure==='network')throw new Error('offline fixture');return ok({status:'running'});}}});
+      try{const input=peer.q('.vinput');assert.equal(await peer.run('requestQuit()'),false);assert.strictEqual(peer.q('.vinput'),input);assert(!peer.q('#closedTitle'));assert(!peer.q('#quitBtn').disabled);assert(!peer.q('#app').hasAttribute('aria-busy'));await peer.run('API.flush()');assert.deepEqual(peer.errors,[]);}finally{peer.close();}
+    }
+  });
+  await check('pending mutation failure still blocks exit and retains raw input and the queue failure',async()=>{
+    const peer=await harness(false,null,{intercept:({route})=>{if(route.startsWith('/selections/'))return {ok:false,status:409,json:async()=>({error:{message:'selection conflict fixture'}})};}});
+    try{
+      const input=peer.q('.vinput');input.value=' 保留;;冲突输入 ';input.dispatchEvent(new peer.w.Event('input',{bubbles:true}));await tick();
+      assert.equal(await peer.run('requestQuit()'),false);assert(!peer.calls.some(c=>c.route==='/app/quit'));assert.strictEqual(peer.q('.vinput'),input);assert.equal(input.value,' 保留;;冲突输入 ');assert.equal(peer.run('pendingSelections.size'),1);
+      await assert.rejects(peer.run('API.flush()'),/selection conflict fixture/);assert(!peer.q('#closedTitle'));assert.deepEqual(peer.errors,[]);
+    }finally{peer.close();}
+  });
+  await check('late event, bootstrap, preview and editor replies cannot recreate mutation UI or restart polling after exit',async()=>{
+    const releases=[];let armed=false;const state=initial();state.mode='windows';state.eventCursor='events-0';
+    const peer=await harness(false,state,{intercept:async({route,ok})=>{
+      if(route.startsWith('/events?')){await new Promise(resolve=>releases.push(resolve));return ok({changed:true,cursor:'events-late'});}
+      if(armed&&['/bootstrap','/edit-sessions','/plans'].includes(route))await new Promise(resolve=>releases.push(resolve));
+    }});
+    try{
+      armed=true;
+      const pending=[peer.run("openWindowsElements('User','Path')"),peer.run("showPreview('应用','延迟预览',[{app:0,profile:'稳定',varIdx:0}])"),peer.run("(async()=>{const data=await API.request('/bootstrap');acceptBootstrap(data);render();renderOperationStatus();})().catch(report)")];
+      await tick();assert(peer.calls.some(c=>c.route==='/edit-sessions'));assert(peer.calls.some(c=>c.route==='/plans'));assert(peer.calls.some(c=>c.route.startsWith('/events?')));
+      const staleQuit=peer.q('#quitBtn'),staleRefresh=peer.q('#refreshBtn');assert.equal(await peer.run('requestQuit()'),true);const closedMarkup=peer.q('#screen').innerHTML,callCount=peer.calls.length;
+      releases.splice(0).forEach(resolve=>resolve());await Promise.all(pending);await tick();
+      peer.w.dispatchEvent(new peer.w.Event('focus'));peer.w.document.dispatchEvent(new peer.w.Event('visibilitychange'));peer.w.document.dispatchEvent(new peer.w.KeyboardEvent('keydown',{key:'s',ctrlKey:true,bubbles:true,cancelable:true}));staleQuit.click();staleRefresh.click();
+      await assert.rejects(peer.run('API.enqueue(()=>{window.staleTaskRan=true;})'),/已退出/);assert(!peer.w.staleTaskRan);
+      await new Promise(resolve=>setTimeout(resolve,300));assert.equal(peer.calls.length,callCount);assert.equal(peer.q('#screen').innerHTML,closedMarkup);assert(!peer.q('#modal').classList.contains('open'));assert.equal(peer.q('#modal').children.length,0);
+      assert(peer.run('environmentEventsStopped'));assert.equal(peer.run('environmentEventsTask'),null);assert.deepEqual(peer.errors,[]);
+    }finally{releases.splice(0).forEach(resolve=>resolve());peer.close();}
+  });
   await check('production shell preserves CSS order and contains no fixtures/inline scripts',async()=>{const html=source('index.html');assert(!html.includes('demo-configs'));assert(!/<script>/.test(html));const styles=s=>[...s.matchAll(/<link rel="stylesheet"[^>]+>/g)].map(m=>m[0]);assert.deepEqual(styles(html),styles(source('temp.html')));assert(!source('product-app.js').includes('function applyDemoPlan'));assert(!source('product-app.js').includes('reset(true)'));});
   console.log(`${count} product contract checks passed (JSDOM fixtures; real backend/browser acceptance is separate).`);
 })().catch(error=>{console.error(error);process.exitCode=1;});

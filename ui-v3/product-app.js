@@ -6,6 +6,7 @@ let apps=[],workingApps=[],draftProfileChoice={},windows={},checked=new Set(),se
 let lastDialogFocus = null, targetRevisions = {}, targetTypes = {}, planCache = new WeakMap();
 let configOriginals = new WeakMap();
 let configurationBaselineById=new Map();
+let quitPhase='open',activeExecutions=0;
 function appNow(i=selected){return workingApps[i]}
 function scheme(i=selected){return workingApps[i]?.profiles.find(p=>p.name===profileChoice[i])||workingApps[i]?.profiles[0]}
 function choiceValue(choice,fallback){return choice===undefined?fallback:typeof choice==='string'?choice:choice.value}
@@ -144,8 +145,8 @@ function hasPendingValue(v){return value(v)!==v.baselineValue}
 function dirty(p){return p.vars.filter(hasPendingValue).length}
 function dir(i){return `--icon-bg:${workingApps[i].iconBg};--icon-fg:${workingApps[i].iconFg}`}
 function curProfile(){return scheme()}
-function notify(t){const el=$('toast');el.textContent=t;el.classList.remove('on');void el.offsetWidth;el.classList.add('on');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('on'),2600)}
-function go(view){if(screen==='config'&&view!=='config')ConfigEditor.suspendDraft(editor);screen=view;closeDropdowns();closeModal();render();enterFx();(view==='config'?$('configBtn'):document.querySelector('[data-view="'+view+'"]'))?.focus()}
+function notify(t){if(quitPhase==='closed')return;const el=$('toast');el.textContent=t;el.classList.remove('on');void el.offsetWidth;el.classList.add('on');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('on'),2600)}
+function go(view){if(quitPhase!=='open')return;if(screen==='config'&&view!=='config')ConfigEditor.suspendDraft(editor);screen=view;closeDropdowns();closeModal();render();enterFx();(view==='config'?$('configBtn'):document.querySelector('[data-view="'+view+'"]'))?.focus()}
 function renderAcceptedUI(){document.querySelectorAll('[data-view]').forEach(b=>{b.classList.toggle('active',b.dataset.view===screen);if(b.dataset.view===screen)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});$('configBtn').classList.toggle('active',screen==='config');if(screen==='config')$('configBtn').setAttribute('aria-current','page');else $('configBtn').removeAttribute('aria-current');$('footer').style.display=screen==='config'?'none':'';if(screen==='workbench')renderWorkbench();else if(screen==='windows')renderWindows();else if(screen==='history')renderHistory();else renderConfig();positionInk();refreshPreview()}
 function bindListKeys(root,selector){
  root.onkeydown=e=>{
@@ -555,6 +556,7 @@ document.addEventListener('keydown', e => {
   else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
 });
 function refreshVisibleState(){
+ if(quitPhase==='closed')return;
  if(screen==='workbench'&&$('varRows')){
   if(renderedWorkingRevision!==productState.workspace.validRevision){renderWorkbench();refreshPreview();return;}
   renderInspector();renderAppList();renderOverview();renderFooter();
@@ -567,12 +569,27 @@ function refreshVisibleState(){
 
 // Production state: facts arrive from the service; local edits remain intact
 // until the corresponding queued mutation has been acknowledged.
-const API=window.ProductRuntime;
+// Keep transport/auth intact. Fence late responses and queued continuations so
+// an acknowledged quit cannot send another mutation or rebuild the old UI.
+async function withLivePage(task){
+ if(quitPhase==='closed')throw new Error('应用已退出，请重新启动。');
+ const result=await task();
+ if(quitPhase==='closed')throw new Error('应用已退出，请重新启动。');
+ return result;
+}
+const runtime=window.ProductRuntime;
+const API={...runtime,
+ request:(path,options)=>withLivePage(()=>{if(quitPhase==='requesting'&&path!=='/app/quit')throw new Error('正在退出，请等待确认。');return runtime.request(path,options);}),
+ enqueue:task=>withLivePage(()=>{if(quitPhase==='requesting')throw new Error('正在退出，请等待确认。');return runtime.enqueue(()=>withLivePage(task));}),
+ flush:()=>withLivePage(()=>runtime.flush()),
+ resume:()=>withLivePage(()=>runtime.resume()),
+ execute:async(...args)=>{if(quitPhase!=='open')throw new Error('正在退出，不能开始执行。');activeExecutions++;try{return await withLivePage(()=>runtime.execute(...args));}finally{activeExecutions--;}}
+};
 let productState=null,configVersion=0,configAckVersion=0,draftTimer=null,draftNeeded=false,draftPromise=null;
 let selectionSequence=0,projectionEpoch=0,projectionTimer=null,refreshPromise=null,refreshTimer=null;
 let previewSequence=0,manualReview=null,booted=false;
 const pendingSelections=new Map(),projections=new Map();
-function report(error){notify(error?.message||String(error));console.error(error);}
+function report(error){if(quitPhase==='closed')return;notify(error?.message||String(error));console.error(error);}
 function safely(promise){Promise.resolve(promise).catch(report);}
 function beginSelectedEdit(){/* Baselines are captured exclusively by Workspace.select. */}
 function mkVar(v,i){return {id:i,name:v[0],scope:v[1],mode:v[2],defaultValue:v[3],savedValue:null,source:'默认值',custom:null,choices:[],editable:true,special:!!v[4]?.special,baselineValue:v[3],matchBaseline:null,removalState:null,dirty:false};}
@@ -617,6 +634,7 @@ function mergeApps(localApps,incoming,{preserveConfig=false}={}){
   return mergeNodes(localApps,incoming,'profiles');
 }
 function acceptBootstrap(data,{replace=false,preserveConfig=configVersion>configAckVersion,importDraft=false}={}){
+  if(quitPhase==='closed')return;
   if(!data?.workspace||!Array.isArray(data.apps)||!Array.isArray(data.workingApps)||!Array.isArray(data.configurationBaseline)||!Array.isArray(data.snapshots))throw new Error('服务端 bootstrap 数据不完整。');
   if(productState&&data.workspace.id===productState.workspace.id&&data.workspace.revision<productState.workspace.revision)return;
   const selectedId=workingApps[selected]?.recordId,editorId=apps[editor.app]?.recordId;
@@ -650,13 +668,14 @@ function acceptBootstrap(data,{replace=false,preserveConfig=configVersion>config
   renderConfigurationNotice();
 }
 function scheduleDraft(){
-  if(!productState)return;
+  if(!productState||quitPhase==='closed')return;
   draftNeeded=true;configVersion++;projections.clear();projectionEpoch++;
   if(modalAction){modalAction.reviewToken=null;modalAction.invalidated=true;}
   clearTimeout(draftTimer);draftTimer=setTimeout(()=>safely(persistDraft()),180);
 }
 async function persistDraft(){
   clearTimeout(draftTimer);
+  if(quitPhase==='closed')return;
   if(!draftNeeded)return draftPromise;
   draftNeeded=false;
   const version=configVersion,tree=clone(apps),uiDrafts=configSession(),choices=choicesDTO();
@@ -731,13 +750,14 @@ function demoPlan(v){
   return DemoPlan.build({target:{scope:v.scope,name:v.name},mode:v.mode,whole:v.special,snapshot:demoSnapshot(v),selectedRaw:value(v),baseline:v.matchBaseline,removalState:v.removalState,protectedValues:protectedSelections([v])});
 }
 function scheduleProjection(){
+  if(quitPhase!=='open')return;
   clearTimeout(projectionTimer);projectionTimer=setTimeout(async()=>{
-    if(!booted||draftNeeded||pendingSelections.size||modalAction)return;
+    if(quitPhase!=='open'||!booted||draftNeeded||pendingSelections.size||modalAction)return;
     const epoch=projectionEpoch;
     try{
       await API.flush();
       for(const a of workingApps)for(const p of a.profiles)for(const v of p.vars){
-        if(epoch!==projectionEpoch||modalAction)return;
+        if(quitPhase!=='open'||epoch!==projectionEpoch||modalAction)return;
         if(unsupportedTarget(v))continue;
         const receipt=await API.request('/plans',{method:'POST',body:{kind:'apply',recordIds:[v.recordId]}});
         if(epoch!==projectionEpoch)return;
@@ -760,7 +780,7 @@ function renderInspector(){
   }
 }
 function render(){
-  if(!productState)return;
+  if(!productState||quitPhase==='closed')return;
   if(!(screen==='config'?apps:workingApps).length&&(screen==='workbench'||screen==='config')){renderEmpty();return;}
   renderAcceptedUI();renderRecoveryNotice();renderConfigurationNotice();
 }
@@ -779,12 +799,14 @@ function renderConfig(){
   $('downloadToml').classList.remove('primary');
   updateConfigStatus();
 }
-let emptyCreation=null,emptyTimer=null;
+let emptyCreation=null,emptyTimer=null,emptyCreationNeeded=false;
 function persistEmptyCreation(){
-  clearTimeout(emptyTimer);const saved=clone(emptyCreation);
-  return API.enqueue(async()=>{const data=await API.request('/workspaces/'+productState.workspace.id+'/draft',{method:'PATCH',body:{uiDrafts:{...productState.uiDrafts,emptyCreation:saved},expectedRevision:productState.workspace.revision}});acceptBootstrap(data);});
+  if(quitPhase==='closed')return Promise.resolve();
+  clearTimeout(emptyTimer);emptyTimer=null;emptyCreationNeeded=true;const saved=clone(emptyCreation);
+  return API.enqueue(async()=>{const data=await API.request('/workspaces/'+productState.workspace.id+'/draft',{method:'PATCH',body:{uiDrafts:{...productState.uiDrafts,emptyCreation:saved},expectedRevision:productState.workspace.revision}});acceptBootstrap(data);if(JSON.stringify(saved)===JSON.stringify(emptyCreation))emptyCreationNeeded=false;});
 }
 function renderEmpty(){
+  if(quitPhase==='closed')return;
   document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===screen));
   $('configBtn').classList.toggle('active',screen==='config');$('footer').style.display='';
   emptyCreation??=clone(productState.uiDrafts?.emptyCreation||{stage:0,appName:'',profileName:'',name:'',scope:'User',mode:'replace'});
@@ -793,14 +815,14 @@ function renderEmpty(){
   const form=$('emptyCreate');form.elements[field].value=d[field]||'';if(stage===2){form.elements.scope.value=d.scope||'User';form.elements.mode.value=d.mode||'replace';}
   const capture=()=>Object.assign(d,Object.fromEntries(new FormData(form)));
   $('emptyImport').onclick=importFile;
-  form.oninput=()=>{capture();clearTimeout(emptyTimer);emptyTimer=setTimeout(()=>safely(persistEmptyCreation()),180);};
+  form.oninput=()=>{capture();emptyCreationNeeded=true;clearTimeout(emptyTimer);emptyTimer=setTimeout(()=>safely(persistEmptyCreation()),180);};
   form.onchange=form.oninput;
   if($('emptyBack'))$('emptyBack').onclick=()=>{capture();d.stage=stage-1;safely(persistEmptyCreation());renderEmpty();};
   $('emptyCancel').onclick=()=>{emptyCreation={stage:0,appName:'',profileName:'',name:'',scope:'User',mode:'replace'};safely(persistEmptyCreation());renderEmpty();};
   form.onsubmit=async e=>{e.preventDefault();capture();if(!d[field]?.trim())return;
-    if(stage<2){d.stage=stage+1;await persistEmptyCreation();renderEmpty();$('emptyCreate').querySelector('input').focus();return;}
+    if(stage<2){d.stage=stage+1;try{await persistEmptyCreation();if(quitPhase!=='open')return;renderEmpty();$('emptyCreate').querySelector('input').focus();}catch(error){report(error);}return;}
     const result=createConfigEntry('app',d);if(!result.ok){$('emptyError').textContent=result.error;return;}
-    try{emptyCreation=null;clearTimeout(emptyTimer);await flushInputs();screen='config';render();}catch(error){report(error);}
+    try{emptyCreation=null;emptyCreationNeeded=false;clearTimeout(emptyTimer);await flushInputs();screen='config';render();}catch(error){report(error);}
   };
   $('footer').innerHTML='<div class="footer-summary"><strong>配置与 Windows 环境独立</strong><small>创建配置后仍需审阅环境计划。</small></div>';renderRecoveryNotice();renderConfigurationNotice();
 }
@@ -823,12 +845,13 @@ function rowsFromReceipt(receipt){
 async function showPreview(kind,title,targets){return openPlanPreview({kind:kind==='撤销'?'undo':'apply',recordIds:targetRecordIds(targets)},title,targets);}
 async function openPlanPreview(intent,title,targets=[]){
   const seq=++previewSequence;
-  try{await flushInputs();if(intent.kind==='apply'&&workingApps.some(a=>a.profiles.some(p=>p.vars.some(v=>intent.recordIds?.includes(v.recordId)&&unsupportedTarget(v)))))throw new Error('计划包含不支持的原生类型，只读，不能应用。');const receipt=await API.request('/plans',{method:'POST',body:intent});if(seq!==previewSequence)return;
+  try{await flushInputs();if(quitPhase!=='open')return;if(intent.kind==='apply'&&workingApps.some(a=>a.profiles.some(p=>p.vars.some(v=>intent.recordIds?.includes(v.recordId)&&unsupportedTarget(v)))))throw new Error('计划包含不支持的原生类型，只读，不能应用。');const receipt=await API.request('/plans',{method:'POST',body:intent});if(quitPhase!=='open'||seq!==previewSequence)return;
     lastDialogFocus=document.activeElement;closeDropdowns();modalAction={intent,title,kind:intent.kind==='undo'?'撤销':'应用',targets,receipt,rows:rowsFromReceipt(receipt),version:receipt.version,reviewToken:null,renderedRevision:productState.workspace.revision};
     mountPreview();
   }catch(error){if(manualReview)restoreManual(false);report(error);}
 }
 function mountPreview(){
+  if(quitPhase!=='open')return;
   $('modal').innerHTML='<div class="dialog preview-dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle" aria-describedby="previewMeta previewDecisionHint"><div class="dialoghead"><div><h3 id="dialogTitle" tabindex="-1"></h3><p id="previewMeta"></p><span id="previewVersionStatus" role="status" aria-live="polite"></span></div><button class="close" id="closeDialog" aria-label="关闭">×</button></div><div class="dialogbody"></div><div class="dialogfoot"><p id="previewDecisionHint"></p><button class="btn" id="cancelDialog">取消</button><button class="btn primary" id="confirmDialog">审阅此计划</button></div></div>';
   $('modal').classList.add('open');$('closeDialog').onclick=closeModal;$('cancelDialog').onclick=closeModal;$('confirmDialog').onclick=()=>safely(confirmPreview());renderPreview();$('dialogTitle').focus();
 }
@@ -899,7 +922,7 @@ async function openOrdering(action,row){
     $('modal').innerHTML=`<div class="dialog element-dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialoghead"><div><h3 id="dialogTitle">${esc(row.name)} · 自定义排序</h3><p>完整保留所有元素及原文；确认后重新生成服务端计划。</p></div></div><div class="dialogbody"><ol class="element-list">${ordered.map((r,i)=>`<li class="element-row" data-order-id="${esc(r.id)}"><span class="element-order">${i+1}</span><code>${r.value===''?'（空元素）':esc(r.value)}</code><button class="textbtn" data-move="${i}" data-step="-1" ${i===0?'disabled':''}>上移</button><button class="textbtn" data-move="${i}" data-step="1" ${i===ordered.length-1?'disabled':''}>下移</button></li>`).join('')}</ol><p id="orderError" role="status"></p></div><div class="dialogfoot"><button class="btn" id="cancelOrder">取消排序</button><button class="btn primary" id="saveOrder">确认排序并更新预览</button></div></div>`;
     $('cancelOrder').onclick=mountPreview;
     $('modal').querySelectorAll('[data-move]').forEach(b=>b.onclick=()=>{const i=+b.dataset.move,j=i+(+b.dataset.step);[ordered[i],ordered[j]]=[ordered[j],ordered[i]];draw();$('modal').querySelectorAll('[data-order-id]')[j].querySelector('button:not(:disabled)')?.focus();});
-    $('saveOrder').onclick=async()=>{const button=$('saveOrder');button.disabled=true;try{await API.request('/order-sessions/'+session.sessionId,{method:'PATCH',body:{order:ordered.map(r=>r.id),expectedRevision:session.revision}});action.orderSessions??={};action.orderSessions[row.scope+'|'+ConfigFormat.matchName(row.name)]=session.sessionId;const {orderSessionId,...intent}=action.intent;action.intent={...intent,orderSessionIds:Object.values(action.orderSessions)};const receipt=await API.request('/plans',{method:'POST',body:action.intent});mountPreview();replacePreview(action,receipt);}catch(error){$('orderError').textContent=error.message;button.disabled=false;}};
+    $('saveOrder').onclick=async()=>{const button=$('saveOrder');button.disabled=true;try{await API.request('/order-sessions/'+session.sessionId,{method:'PATCH',body:{order:ordered.map(r=>r.id),expectedRevision:session.revision}});if(quitPhase!=='open'||modalAction!==action)return;action.orderSessions??={};action.orderSessions[row.scope+'|'+ConfigFormat.matchName(row.name)]=session.sessionId;const {orderSessionId,...intent}=action.intent;action.intent={...intent,orderSessionIds:Object.values(action.orderSessions)};const receipt=await API.request('/plans',{method:'POST',body:action.intent});if(quitPhase!=='open'||modalAction!==action)return;mountPreview();replacePreview(action,receipt);}catch(error){if(quitPhase==='closed'||!$('orderError'))return;$('orderError').textContent=error.message;button.disabled=false;}};
   };draw();$('cancelOrder').focus();
 }
 function restoreManual(verified){
@@ -909,7 +932,8 @@ function restoreManual(verified){
 async function openWindowsElements(scope,name,selectedValues=[],whole=false,mode=null,appendValues=null,appendEntries=null,selectionPlan=null,create=false){
   try{
     if(unsupportedTarget({scope,name}))throw new Error('不支持的类型，只读；不能打开元素编辑器。');
-    await flushInputs();const session=await API.request('/edit-sessions',{method:'POST',body:{scope,name,source:screen==='windows'?'windows':'workbench',...(create?{create:true}:{})}});
+    await flushInputs();if(quitPhase!=='open')return;const session=await API.request('/edit-sessions',{method:'POST',body:{scope,name,source:screen==='windows'?'windows':'workbench',...(create?{create:true}:{})}});
+    if(quitPhase!=='open')return;
     let server=session;const ids=new Map();lastDialogFocus=document.activeElement;
     WindowsElements.open({container:$('modal'),name,scope,raw:session.snapshot.exists?session.snapshot.raw:undefined,snapshot:session.snapshot,registryType:session.type,whole:session.whole,selectedValues,selectionPlan,
       showSuggestions:!!selectionPlan,appendValues:[],close:closeModal,currentSnapshot:()=>demoSnapshot({scope,name}),
@@ -948,6 +972,7 @@ function renderWindows(){
   });
 }
 function showCreateWindows(){
+  if(quitPhase!=='open')return;
   lastDialogFocus=document.activeElement;$('modal').innerHTML='<div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><form id="createWindowsForm"><div class="dialoghead"><h3 id="dialogTitle">新增 Windows 变量</h3></div><div class="dialogbody field"><label>作用域<select name="scope"><option>User</option><option>System</option></select></label><label>变量名<input name="name" required></label><p>值与类型在元素编辑器中设置，随后审阅执行。</p></div><div class="dialogfoot"><button type="button" id="cancelDialog" class="btn">取消</button><button class="btn primary">继续编辑</button></div></form></div>';$('modal').classList.add('open');$('cancelDialog').onclick=closeModal;
   $('createWindowsForm').onsubmit=e=>{e.preventDefault();const fields=Object.fromEntries(new FormData(e.currentTarget));safely(openWindowsElements(fields.scope,fields.name,[],false,null,null,null,null,true));};$('createWindowsForm').elements.name.focus();
 }
@@ -970,6 +995,7 @@ function renderRecoveryNotice(){
   ($('screen').querySelector('.fullpage,.workscroll,.config-page')||$('screen')).prepend(box);
 }
 function renderOperationStatus(){
+  if(quitPhase==='closed')return;
   $('operationStatus')?.remove();if(!API.pendingKey())return;
   const button=document.createElement('button');button.id='operationStatus';button.className='tool';button.textContent='查询待确认操作';button.onclick=()=>safely(resumeOperation());document.querySelector('.toolbar').prepend(button);
 }
@@ -982,12 +1008,69 @@ async function resumeOperation(){
   notify('原操作状态：'+result.status);renderOperationStatus();
 }
 async function refreshEnvironment(){
+  if(quitPhase!=='open')return;
   if(refreshPromise)return refreshPromise;
-  refreshPromise=(async()=>{await flushInputs();const data=await API.enqueue(()=>API.request('/environment/refresh',{method:'POST',body:{}}));acceptBootstrap(data);refreshVisibleState();
+  refreshPromise=(async()=>{await flushInputs();if(quitPhase!=='open')return;const data=await API.enqueue(()=>API.request('/environment/refresh',{method:'POST',body:{}}));acceptBootstrap(data);refreshVisibleState();
     if(modalAction&&!modalAction.busy){modalAction.reviewToken=null;modalAction.invalidated=true;refreshPreview();}
   })();
   try{await refreshPromise;}finally{refreshPromise=null;}
 }
+
+function quitBlockedReason(){
+  if(API.pendingKey()||activeExecutions||modalAction?.busy)return '操作尚未完成或结果待确认，请先等待执行结束并查询原操作。';
+  if(modalAction||manualReview||$('modal').classList.contains('open'))return '请先完成或取消当前对话框，再退出；编辑草稿不会被自动丢弃。';
+  return null;
+}
+function showClosedPage(){
+  quitPhase='closed';booted=false;previewSequence++;projectionEpoch++;
+  environmentEventsStopped=true;
+  if(environmentEventsWake)environmentEventsWake();
+  for(const timer of [draftTimer,emptyTimer,projectionTimer,refreshTimer,environmentEventsTimer,toastTimer,enterFx.t])clearTimeout(timer);
+  draftTimer=emptyTimer=projectionTimer=refreshTimer=environmentEventsTimer=toastTimer=null;
+  document.removeEventListener('visibilitychange',wakeEnvironmentEvents);
+  window.removeEventListener('resize',positionInk);
+  document.querySelectorAll('#app button,#app input,#app select,#app textarea,#modal button').forEach(control=>{control.disabled=true;});
+  WindowsElements.dismiss();$('modal').classList.remove('open');$('modal').replaceChildren();
+  $('toast').classList.remove('on');$('toast').textContent='';
+  document.querySelector('.nav').style.display='none';$('footer').style.display='none';
+  document.querySelector('.prototype-mark').textContent='已退出';
+  $('screen').innerHTML='<section class="fullpage"><div class="pageh"><div><h2 id="closedTitle" tabindex="-1">应用已退出</h2><p>当前草稿已保留。可关闭此标签页；需要继续使用时，请从桌面或开始菜单重新启动环境变量方案管理器。</p></div></div></section>';
+  $('app').removeAttribute('inert');$('app').removeAttribute('aria-busy');$('closedTitle').focus();
+}
+async function requestQuit(){
+  if(quitPhase!=='open')return false;
+  if(!booted){notify('服务尚未连接，无法确认退出。');return false;}
+  const blocked=quitBlockedReason();if(blocked){notify(blocked);return false;}
+  if(!window.confirm('退出环境变量方案管理器？\n当前配置、选定值和名称草稿会保留；尚未应用的更改不会写入 Windows 环境。'))return false;
+  quitPhase='flushing';previewSequence++;projectionEpoch++;
+  $('app').setAttribute('inert','');$('app').setAttribute('aria-busy','true');
+  $('quitBtn').disabled=true;$('quitBtn').textContent='正在退出…';
+  clearTimeout(emptyTimer);clearTimeout(projectionTimer);clearTimeout(refreshTimer);
+  try{
+    // Include the config editor's already queued session-capture microtask.
+    await Promise.resolve();await flushInputs();
+    if(emptyCreation!==null&&emptyCreationNeeded)await persistEmptyCreation();
+    await API.flush();
+    if(pendingPreparedChoices.size)throw new Error('部分方案选择尚未保存，请先处理保存错误。');
+    const reason=quitBlockedReason();if(reason)throw new Error(reason);
+    // Lifecycle rejection must not poison the serialized draft-mutation queue.
+    // Inputs are inert and new queued work is fenced from this point onward.
+    quitPhase='requesting';
+    const result=await API.request('/app/quit',{method:'POST',body:{}});
+    if(result?.status!=='closing')throw new Error('服务未确认关闭，当前页面保留。');
+    showClosedPage();return true;
+  }catch(error){
+    quitPhase='open';$('app').removeAttribute('inert');$('app').removeAttribute('aria-busy');
+    $('quitBtn').disabled=false;$('quitBtn').textContent='退出';
+    notify('未确认退出：'+(error?.message||String(error))+' 可检查后重试。');
+    scheduleProjection();wakeEnvironmentEvents();return false;
+  }
+}
+// Inert blocks native interaction. Capture also covers keyboard shortcuts and
+// synthetic events while flushing, and stale handlers after acknowledged exit.
+for(const type of ['click','input','change','submit','keydown'])document.addEventListener(type,event=>{
+  if(quitPhase!=='open'){event.preventDefault();event.stopImmediatePropagation();}
+},true);
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){closeModal();closeDropdowns();}
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();if(!$('modal').classList.contains('open'))safely(saveConfiguration());}
@@ -1000,6 +1083,7 @@ for(const event of ['input','change','click'])$('screen').addEventListener(event
 let environmentEventsTask=null,environmentEventsStopped=false,environmentEventCursor=null;
 let environmentEventsWake=null,environmentEventsTimer=null,environmentEventsNeedRefresh=false;
 function wakeEnvironmentEvents(){
+  if(quitPhase!=='open')return;
   if(environmentEventsWake)environmentEventsWake();
   startEnvironmentEvents();
 }
@@ -1011,12 +1095,12 @@ function waitEnvironmentEvents(ms){
   });
 }
 function startEnvironmentEvents(){
-  if(!booted||environmentEventsStopped||environmentEventsTask||productState?.mode!=='windows')return;
+  if(quitPhase!=='open'||!booted||environmentEventsStopped||environmentEventsTask||productState?.mode!=='windows')return;
   environmentEventCursor??=productState.eventCursor;
   if(typeof environmentEventCursor!=='string'||!environmentEventCursor)return;
   environmentEventsTask=(async()=>{
     let backoff=1000;
-    while(!environmentEventsStopped&&productState?.mode==='windows'){
+    while(quitPhase==='open'&&!environmentEventsStopped&&productState?.mode==='windows'){
       if(document.hidden){await waitEnvironmentEvents();continue;}
       const started=Date.now();
       try{
@@ -1029,7 +1113,7 @@ function startEnvironmentEvents(){
         const result=await API.request('/events?after='+encodeURIComponent(environmentEventCursor)+'&timeout=20');
         // API.request has no abort option. A pending read may finish after
         // pagehide; discard its result and schedule no further work.
-        if(environmentEventsStopped)break;
+        if(quitPhase!=='open'||environmentEventsStopped)break;
         if(result.closing){environmentEventsStopped=true;break;}
         if(typeof result.cursor!=='string'||!result.cursor)throw new Error('环境通知游标无效。');
         environmentEventCursor=result.cursor;
@@ -1056,8 +1140,9 @@ window.addEventListener('pagehide',()=>{
   if(environmentEventsWake)environmentEventsWake();
   clearTimeout(refreshTimer);refreshTimer=null;
 });
-window.addEventListener('focus',()=>{if(!booted||environmentEventsStopped)return;wakeEnvironmentEvents();clearTimeout(refreshTimer);refreshTimer=setTimeout(()=>safely(refreshEnvironment()),200);});
+window.addEventListener('focus',()=>{if(quitPhase!=='open'||!booted||environmentEventsStopped)return;wakeEnvironmentEvents();clearTimeout(refreshTimer);refreshTimer=setTimeout(()=>safely(refreshEnvironment()),200);});
 $('refreshBtn').onclick=()=>safely(refreshEnvironment());$('configBtn').onclick=()=>go('config');$('resetBtn').onclick=importFile;
+$('quitBtn').onclick=()=>safely(requestQuit());
 document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>go(b.dataset.view));
 document.addEventListener('click',e=>{if(!e.target.closest('#planField')&&!e.target.closest('.btndrop'))closeDropdowns();});
 $('modal').onclick=e=>{if(e.target===$('modal'))closeModal();};
