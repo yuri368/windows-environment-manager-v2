@@ -1,0 +1,78 @@
+{
+  "date": "2026-10-19",
+  "sourceCommit": "c37a73217074d7b163120fbe3a5247ea04a96b60",
+  "candidate": "20261019-130846-568",
+  "buildExitCode": 0,
+  "artifacts": {
+    "EnvManagerV3-3.0.0-dev1-windows-x64.zip": "7f17f8340b3d09d95ce9d603ff669a9fe5058143e2582a06cd12962b52bdcae9",
+    "EnvManagerV3/EnvManagerV3.exe": "38322e9aba2df26b92537db749740b791235f58df6c82f272f11cc836f8eca65",
+    "EnvManagerV3-3.0.0-dev1-setup-user-x64.exe": "5b9e0e9b53ff6e172f4b9a4e11f45c0455ab4df05ab1a1c1099049425db566dc",
+    "EnvManagerV3-3.0.0-dev1-setup-machine-x64.exe": "588b6ede21f24fecdeadeb3b4e9d69b2c8b4f9261b3a54a78250a704a489660f"
+  },
+  "signed": false,
+  "installerBuilt": true,
+  "bundleVerification": {
+    "status": "passed",
+    "currentSourceMatchesStaged": true,
+    "errors": [],
+    "productionAssetsVerified": 15,
+    "licenseFilesVerified": 30,
+    "bundleFilesVerified": 115,
+    "v3Modules": [
+      "envmanager_v3",
+      "envmanager_v3.__main__",
+      "envmanager_v3.configuration",
+      "envmanager_v3.contributions",
+      "envmanager_v3.database",
+      "envmanager_v3.environment",
+      "envmanager_v3.environment_events",
+      "envmanager_v3.execution",
+      "envmanager_v3.http_server",
+      "envmanager_v3.instance_control",
+      "envmanager_v3.native_ipc",
+      "envmanager_v3.planning",
+      "envmanager_v3.privileges",
+      "envmanager_v3.service",
+      "envmanager_v3.system_helper",
+      "envmanager_v3.upgrade",
+      "envmanager_v3.workspace"
+    ],
+    "rulesSha256": "e7444cc31ff5845adcf0ebae1169f69c2e863cf9224d28fe4f7c2ec6f8118732"
+  },
+  "isolatedLaunch": {
+    "status": "passed",
+    "backend": "file",
+    "developerPathRemoved": true,
+    "starts": 2,
+    "allExitZero": true
+  },
+  "upgradeHelper": {
+    "status": "passed",
+    "scope": "isolated helper choreography; simulated program-file replacement",
+    "backend": "file",
+    "hostInstallerExecuted": false,
+    "checks": [
+      "synchronous check-user passed before any product data/session creation",
+      "fresh status handshake before replacement",
+      "real product second instance blocked during upgrade",
+      "real SQLite backup and raw draft/recovery bytes preserved",
+      "lease stayed live and blocked product across simulated replacement",
+      "finish installed released lock; source data unchanged; product reopened"
+    ]
+  },
+  "localRegression": {
+    "backendExecuted": 504,
+    "backendPassed": 503,
+    "backendSkipped": 1,
+    "skipReason": "Opt-in ordinary-user local pipe test",
+    "fullUiNpmExitCode": 0,
+    "elementChecks": 36,
+    "productContractChecks": 43
+  },
+  "frozenProductLifecycle": "frozen-product-lifecycle-20261019.json",
+  "nativeVisualAcceptance": "Pending owner feedback on the continuous drop landing revision; earlier pointer/ghost feedback was normal except release replay.",
+  "installed": false,
+  "cleanWindowsVmValidated": false,
+  "publicReleaseCreated": false,
+  "scope": "Build and tests write only C. Lifecycle executes the frozen EXE using FileEnvironment; no host environment mutations."
+}

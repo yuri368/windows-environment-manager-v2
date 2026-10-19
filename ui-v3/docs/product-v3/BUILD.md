@@ -1,5 +1,18 @@
 # V3 Windows x64 打包与隔离启动检查
 
+最新构建候选为 **`packaging_v3/output/20261019-130846-568`**，对应生产源码 `c37a732`，包含纵向整行拖动、pointer capture、普通/幽灵行统一移动反馈，以及松手时从当前显示位置连续落座的修复。完整构建 exit 0，115 个包文件、15 个生产资源、30 份许可证及源码/stage 一致性均核对通过；两类安装器已生成。此候选尚未安装，松手动画仍待负责人实际鼠标反馈。
+
+| 最新构建产物 | SHA256 |
+| --- | --- |
+| `dist/EnvManagerV3/EnvManagerV3.exe`，须整目录分发 | `38322e9aba2df26b92537db749740b791235f58df6c82f272f11cc836f8eca65` |
+| `EnvManagerV3-3.0.0-dev1-windows-x64.zip` | `7f17f8340b3d09d95ce9d603ff669a9fe5058143e2582a06cd12962b52bdcae9` |
+| `EnvManagerV3-3.0.0-dev1-setup-user-x64.exe` | `5b9e0e9b53ff6e172f4b9a4e11f45c0455ab4df05ab1a1c1099049425db566dc` |
+| `EnvManagerV3-3.0.0-dev1-setup-machine-x64.exe` | `588b6ede21f24fecdeadeb3b4e9d69b2c8b4f9261b3a54a78250a704a489660f` |
+
+本地完整后端回归 504 项执行、503 通过、1 项 opt-in 普通用户 pipe 检查默认跳过；完整 UI npm 回归、36 项元素检查及 43 项产品 runtime 检查通过。新 EXE 在移除开发 runtime PATH 后的 File 启停和升级 helper smoke 均通过；额外三次冻结程序启动验证 TOML 导入、非法原文草稿保留、纠正后条件保存、审阅绑定执行、重复确认仅一条历史及重启持久化。导入源文件字节未改变，所有临时产品数据位于独立 C 盘目录。证据见 [`candidate-20261019-130846.json`](candidate-20261019-130846.json) 和 [`frozen-product-lifecycle-20261019.json`](frozen-product-lifecycle-20261019.json)。这些 File/JSDOM 检查不冒充真实 Registry、鼠标动画或干净 VM 安装验收。
+
+## 上一已安装候选
+
 最新已构建并安装的候选为 **`packaging_v3/output/20261019-122936-875`**，对应生产代码 `aab1f62`，包含单实例重开、安全退出及不透明整行拖动浮层。完整构建 exit 0，两类 Setup、独立 File 启停、升级 helper、115 包文件、15 生产资源、30 许可证以及源码/stage 一致性核对均通过。此包在 C 盘差分系统中已完成机器覆盖升级、20 份数据文件哈希保留、真实 User/System 两临时变量提交及历史还原，完整 28 项环境原文/类型还原核对一致，见 [`latest-native-20261019.json`](latest-native-20261019.json)。
 
 该包不包含后续的纵向拖动、pointer capture、统一移动反馈及幽灵行拖动修复；这些修改在源码测试页验收中，尚未重新打包，不记为已通过原生拖动验收。过程见 `drag-feedback-20261019.json`。
