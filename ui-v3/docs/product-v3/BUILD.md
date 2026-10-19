@@ -1,8 +1,17 @@
 # V3 Windows x64 打包与隔离启动检查
 
-本目录交付的是 **isolated smoke 候选包**。前端文件已冻结，打包使用当前 V3 源快照；System helper/原生 Windows 的完整生产验收不在本子任务通过范围。包能启动不代表产品或 Windows/UAC 验收通过。源码后续更新时必须重新构建，不能把首包改名当作正式发行。
+当前原生修复候选为 **`packaging_v3/output/20261019-105247-728`**，本次只在 C 盘副本构建，完整路径为 `C:\EnvManagerV3Acceptance\20261019-child-native\source\packaging_v3\output\20261019-105247-728`。修复 machine 安装器 ACL 参数 ABI、控制邮箱身份和升级备份长路径。两类安装包、独立 File 启动、升级 helper、frozen 长路径回归及源码/stage 一致性核对均通过；真实 machine 同版本重装已通过。验收边界及失败记录见 [原生验收报告](NATIVE_ACCEPTANCE_2026-10-19.md)。它仍是未签名候选，尚不代表全部生产门槛完成。
 
-当前候选为 **`packaging_v3/output/20261019-024952-878`**，下面较早目录均为历史构建，不能代替此包。最新包还包含新标签页 CSRF 恢复、恢复/历史恢复冻结预览、已处理恢复记录投影和窄屏配置路径换行修复。完整 build.ps1 已 exit 0；115 包文件、15 生产资源、30 许可证、16 V3 模块、当前源码与 stage 无漂移。真正的 frozen EXE File 检查、两次鉴权启动/退出和升级锁/备份 smoke 均通过；没有执行宿主 Setup。
+| 当前原生产物 | SHA256 |
+| --- | --- |
+| `dist/EnvManagerV3/EnvManagerV3.exe`，须整目录分发 | `4b11c2b840a6d7cac8cc3649ee178f4b30dec3ca3031393726a985a3950f4f79` |
+| `EnvManagerV3-3.0.0-dev1-windows-x64.zip` | `653cabfffa4bb820ff0b9efe83f9b36f3fd273fb2395e92dfcb4d3e9eeb0feda` |
+| `EnvManagerV3-3.0.0-dev1-setup-user-x64.exe` | `f68686525a316a1d978c738d68a758c12f719f50b65d974a8f949cf198881463` |
+| `EnvManagerV3-3.0.0-dev1-setup-machine-x64.exe` | `62500aab0633cace6808075294442b69fb1a7d076c4ce0ec49c92c799168bd3d` |
+
+## 较早候选记录
+
+较早候选 **`packaging_v3/output/20261019-024952-878`** 包含新标签页 CSRF 恢复、恢复/历史恢复冻结预览、已处理恢复记录投影和窄屏配置路径换行修复。当时完整 build.ps1 已 exit 0；115 包文件、15 生产资源、30 许可证、16 V3 模块、源码与 stage 无漂移。真正的 frozen EXE File 检查、两次鉴权启动/退出和升级锁/备份 smoke 均通过。下面保留其原始哈希和当时范围，不代替本页最新候选。
 
 | 当前产物 | SHA256 |
 | --- | --- |
