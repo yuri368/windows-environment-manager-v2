@@ -705,7 +705,9 @@ class Service:
             current = self.environment.read(scope, target["name"])
             expected = target.get("verifiedAfter") or target["before"]
             if any(current.get(k) != expected.get(k) for k in ("exists", "raw", "type", "revision")):
-                raise ServiceError("UNDO_CONFLICT", "当前值已变化，不能用旧历史覆盖。", details={"snapshot": current}, status=409)
+                message = ("当前值已变化，不能用旧历史覆盖。" if value_state(current) != value_state(expected)
+                           else "无法确认当前值自该历史执行后持续未变（例如服务已重启），不能直接恢复旧历史。请按当前快照新建编辑计划并重新审阅。")
+                raise ServiceError("UNDO_CONFLICT", message, details={"snapshot": current}, status=409)
             before = value_state(target["before"])
             whole = target["plan"].get("special", False)
             for protected in self.work.protected(scope, target["name"], target.get("members", [])):

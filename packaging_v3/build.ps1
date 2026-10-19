@@ -27,6 +27,7 @@ function Invoke-Checked([string]$Program, [string[]]$Arguments) {
 }
 
 if (-not $IsWindows -and $env:OS -ne 'Windows_NT') { throw 'Windows x64 build only.' }
+if ($IsccPath) { $IsccPath = (Resolve-Path -LiteralPath $IsccPath).Path }
 if (-not $NodePath) { $NodePath = (Get-Command node.exe -ErrorAction Stop).Source }
 $NodePath = (Resolve-Path -LiteralPath $NodePath).Path
 if (-not (Test-Path -LiteralPath $venvPython)) {
