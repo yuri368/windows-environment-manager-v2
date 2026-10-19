@@ -39,7 +39,18 @@
     "servedSourceSha256": "1206f8982b3dc8198ca83633b3afd1c2b9c7ad2d0ab8ca17bec59904d12ccece",
     "servedCssSha256": "cf19a54f6f80b4ba3cde37c6524856243ce8ac32756e286558a5bb61abf95756",
     "sourceDeploymentChecked": true,
+    "manualResult": "owner-reported-normal-except-release-replay",
+    "scope": "Isolated File backend; automated checks do not prove native drag smoothness or visual appearance.",
+    "ownerFeedback": "看起来正常；松手后先回到原位置，再重复播放从原位置到目标位置的移动。"
+  },
+  "continuousLandingRevision": {
+    "implementation": "Capture current lifted-row and neighbour positions before cleanup; reuse those positions for drop FLIP; keep a position-neutral landing ring instead of replaying move/settle transforms.",
+    "automated": "Full UI npm regression exit 0; 36 element checks including pointer/native release, already-settled lift and ghost landing; 43 product runtime checks passed.",
+    "freshPage": "http://127.0.0.1:8798/",
+    "servedSourceSha256": "be5fa81239c58e647a86d47c84718d8d157cc747f1a7125d2de128405a7d969d",
+    "servedCssSha256": "943b7b66e151e5d9e578392032e3f110eb24690298cd0ac6ca0e133bba75ccf6",
+    "sourceDeploymentChecked": true,
     "manualResult": "pending-owner-feedback",
-    "scope": "Isolated File backend; automated checks do not prove native drag smoothness or visual appearance."
+    "scope": "File backend; JSDOM animation keyframe verification is not native visual acceptance."
   }
 }

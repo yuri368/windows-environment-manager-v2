@@ -127,6 +127,22 @@
       "passed": true
     },
     {
+      "name": "pointer release continues from the visible lifted row instead of replaying its opening position",
+      "passed": true
+    },
+    {
+      "name": "native release continues from the visible lifted row instead of replaying its opening position",
+      "passed": true
+    },
+    {
+      "name": "An already settled lift stays at the destination on release without a second movement animation",
+      "passed": true
+    },
+    {
+      "name": "Ghost release also lands from its current visible position while preserving removal and movement feedback",
+      "passed": true
+    },
+    {
       "name": "Shared component and additional stylesheet are local; no UI runtime errors",
       "passed": true
     }

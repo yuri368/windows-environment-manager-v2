@@ -19,7 +19,10 @@ var WindowsElements = (() => {
   function leaveDragPreview(event){
     if(dragPreview&&!event.relatedTarget&&[document,document.documentElement,document.body].includes(event.target))dragPreview.hidden=true;
   }
-  function clearDragPreview(){
+  function clearDragPreview(event){
+    // Native drop dispatch first reaches the document capture listener.
+    // Keep the displayed positions before that listener removes the lift.
+    if(event?.type==='drop'&&session&&dragPreview)session.dragLanding=layoutSnapshot(session.container,null,session.dragging);
     const cleanup=pointerCleanup;pointerCleanup=null;cleanup?.();
     dragLayout?.clear();dragLayout=null;
     document.removeEventListener('dragover',moveDragPreview,true);
@@ -534,7 +537,7 @@ var WindowsElements = (() => {
     setTimeout(()=>token.classList.remove(name),700);
   }
   const fxKey=element=>(element.closest('#elementPreview')?'p':'l')+element.dataset.elementId;
-  function layoutSnapshot(root,fx) {
+  function layoutSnapshot(root,fx,liftedId) {
     const positions=new Map(),shards=[];
     if(fx?.kind==='remove'&&fx.id!=null){
       const live=root.querySelector(`#elementList > .element-row[data-element-id="${fx.id}"]`);
@@ -547,6 +550,9 @@ var WindowsElements = (() => {
     root.querySelectorAll('#elementList > [data-element-id], #elementPreview [data-element-id]').forEach(element=>{
       const rect=element.getBoundingClientRect();positions.set(fxKey(element),{x:rect.left,y:rect.top});
     });
+    if(liftedId!=null&&dragPreview){
+      const rect=dragPreview.getBoundingClientRect();positions.set('l'+liftedId,{x:rect.left,y:rect.top});
+    }
     return {positions,shards,scroll:root.querySelector('.elements-body')?.scrollTop??0};
   }
   // FLIP: rows and preview tokens glide from their old position, and the touched element gets a landing mark.
@@ -578,7 +584,7 @@ var WindowsElements = (() => {
     if(fx.kind==='remove'&&canAnimate()&&(root.querySelector('.elements-body')?.scrollTop??0)===before.scroll){
       before.shards.forEach(shard=>{const target=[...root.querySelectorAll('#elementList > [data-element-id]')].find(element=>fxKey(element)===shard.key);if(target)playBreak(shard,target);});
     }
-    const names={move:'fx-move',enter:'fx-enter',remove:'fx-remove',restore:'fx-restore'};
+    const names={move:'fx-move',drop:'fx-drop',enter:'fx-enter',remove:'fx-remove',restore:'fx-restore'};
     const marked=fx.id==null?[]:[...root.querySelectorAll(`#elementList > [data-element-id="${fx.id}"], #elementPreview [data-element-id="${fx.id}"]`)];
     if(names[fx.kind]){
       marked.forEach(element=>{element.classList.add(names[fx.kind]);setTimeout(()=>element.classList.remove(names[fx.kind]),900);});
@@ -763,10 +769,10 @@ var WindowsElements = (() => {
     const beforeIndex=session.originalRows.findIndex(original=>original.id===row.id);
     return `<div class="element-ghost-row${displayMoved(row.id)?' is-moved':''}" data-element-id="${row.id}" draggable="${!session.whole}" data-duplicate-value="${escapeRaw(row.value)}"><span class="element-order" title="原始位置：第 ${beforeIndex+1} 项">${displayIndex+1}</span><span class="element-ghost-body"><span class="element-ghost-value" data-raw-value="${escape(row.value)}">${row.value===''?'<span class="empty-element">（空元素）</span>':escape(row.value)}</span><span class="element-ghost-state">${valueHint(row.value,session.whole)}${statusBadge('removed','本次编辑已移除')}${displayMoved(row.id)?statusBadge('moved','幽灵移动'):''}<span class="element-ghost-note">仅展示痕迹 · 不写入结果</span></span></span>${elementActionsMarkup(row.id,displayIndex,total,true)}</div>`;
   }
-  function renderRows(focusId) {
+  function renderRows(focusId,dragLanding) {
     clearDragPreview();
     const root=session.container;
-    const fx=session.fx,prefer=session.focusPrefer||'up',before=fx?layoutSnapshot(root,fx):null;
+    const fx=session.fx,prefer=session.focusPrefer||'up',before=dragLanding??(fx?layoutSnapshot(root,fx):null);
     // Adopting/undoing a suggestion keeps keyboard focus on that suggestion's button (re-created by update()).
     const keepSuggestion=session.suggestFx?{...session.suggestFx}:null;
     session.fx=null;session.focusPrefer=null;
@@ -834,7 +840,7 @@ var WindowsElements = (() => {
       const beginDrag=(e,preservePointer=false)=>{if(!preservePointer)clearDragPreview();clearDrop();session.dragging=id;if(e.dataTransfer){e.dataTransfer.setData('text/plain',String(id));e.dataTransfer.effectAllowed='move';}
         list.querySelectorAll('[data-element-id]').forEach(row=>{row.getAnimations?.().forEach(animation=>animation.cancel());row.classList.remove('fx-move');});
         dragPositions=[...list.querySelectorAll(':scope > [data-element-id]')].map(row=>({id:Number(row.dataset.elementId),height:row.getBoundingClientRect().height}));
-        dragHeight=element.getBoundingClientRect().height;dragSlot=session.displayOrder.indexOf(id);session.dragTarget=undefined;
+        dragHeight=element.getBoundingClientRect().height;dragSlot=session.displayOrder.indexOf(id);session.dragTarget=undefined;session.dragLanding=null;
         startRowDragPreview(element,e);dragSource=element;
         dragLayout={clear:clearDrop,preview:(top,listTop)=>{
           const remaining=dragPositions.filter(row=>row.id!==id),relativeTop=top-listTop;
@@ -854,7 +860,7 @@ var WindowsElements = (() => {
         }};
         element.classList.add('is-dragging');list.classList.add('is-dragging-list');};
       element.ondragstart=e=>{if(pointerCleanup||session.whole||e.target.matches('input,textarea,button')){e.preventDefault();return;}beginDrag(e);};
-      element.ondragend=()=>{if(session)session.dragging=null;clearDragPreview();clearDrop();};
+      element.ondragend=()=>{if(session){session.dragging=null;session.dragLanding=null;}clearDragPreview();clearDrop();};
       const handle=element.querySelector('.element-order');
       handle.addEventListener('pointerdown',down=>{
         if(session.whole||down.button!==0||down.isPrimary===false)return;
@@ -865,9 +871,10 @@ var WindowsElements = (() => {
           if(!session||session!==editingSession){clearDragPreview();return;}
           if(started&&!cancel&&event)moveDragPreview(event);
           const target=session.dragTarget;
+          const landing=started&&!cancel?layoutSnapshot(root,null,id):null;
           if(started)session.dragging=null;
           clearDragPreview();clearDrop();
-          if(started&&!cancel&&target!==undefined&&target!==id)dropBefore(id,target);
+          if(started&&!cancel&&target!==undefined&&target!==id)dropBefore(id,target,landing);
         };
         const pointerMove=event=>{
           if(event.pointerId!==pointerId)return;
@@ -891,11 +898,12 @@ var WindowsElements = (() => {
       });
     });
     // Dropping always inserts the dragged element before the target (V3.6); the end strip appends after the last visible row.
-    const dropBefore=(dragged,targetId)=>{
+    const dropBefore=(dragged,targetId,landing=session.dragLanding)=>{
+      session.dragLanding=null;
       const from=session.displayOrder.indexOf(dragged);if(from<0)return false;
       const order=session.displayOrder.filter(id=>id!==dragged);
       const to=targetId===null?order.length:order.indexOf(targetId);if(to<0||to===from)return false;
-      order.splice(to,0,dragged);session.displayOrder=order;syncRowsToDisplayOrder();session.fx={kind:'move',id:dragged};renderRows(dragged);return true;
+      order.splice(to,0,dragged);session.displayOrder=order;syncRowsToDisplayOrder();session.fx={kind:'drop',id:dragged};renderRows(dragged,landing);return true;
     };
     // Animated neighbours expose empty list space. It remains a valid drop
     // surface even when no row is directly underneath the lifted element.

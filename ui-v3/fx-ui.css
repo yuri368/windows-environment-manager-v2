@@ -70,6 +70,11 @@
 
 /* 落下：轻微“落座”后停稳（与既有落点环叠加） */
 .element-row.fx-move { animation: landRing .8s ease-out, dropSettle .36s var(--ease-out); }
+/* A released lift already moved on screen. Its FLIP starts at that visible
+   position; only a ring remains, with no second translate/scale animation. */
+.element-row.fx-drop { z-index: 3; animation: landRing .8s ease-out; }
+.element-ghost-row.fx-drop { z-index: 3; animation: ghostLand .8s ease-out; }
+#elementPreview .diff-token.fx-drop { z-index: 3; animation: tokenLand .8s ease-out; }
 @keyframes dropSettle { 0% { transform: translateY(-5px) scale(1.012); } 55% { transform: translateY(1px) scale(.998); } 100% { transform: none; } }
 
 @media (prefers-reduced-motion: reduce) {

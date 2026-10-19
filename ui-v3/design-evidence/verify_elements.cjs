@@ -160,6 +160,20 @@ function dragFixture(test,original=' A ;A;;中文\r\n值'){
   finally{w.WindowsElements.dismiss();root.classList.remove('open');root.replaceChildren();style.remove();}
 }
 function rootPath(){return path.resolve(__dirname,'..');}
+function landingAnimationFixture(run){
+  const prototype=w.Element.prototype,bounds=prototype.getBoundingClientRect,animate=prototype.animate,calls=[];
+  prototype.getBoundingClientRect=function(){
+    if(this.parentElement?.id==='elementList'&&this.hasAttribute('data-element-id')){
+      const siblings=[...this.parentElement.querySelectorAll(':scope > [data-element-id]')],index=siblings.indexOf(this);
+      const height=this.classList.contains('element-ghost-row')?96:132.25;
+      const top=80+siblings.slice(0,index).reduce((sum,node)=>sum+(node.classList.contains('element-ghost-row')?96:132.25),0);
+      return {left:120,top,width:724.5,height,bottom:top+height,right:844.5};
+    }
+    return bounds.call(this);
+  };
+  prototype.animate=function(frames,options){calls.push({element:this,frames,options});return {cancel(){}};};
+  try{run(calls);}finally{prototype.getBoundingClientRect=bounds;if(animate)prototype.animate=animate;else delete prototype.animate;}
+}
 check('Opaque full-row overlay preserves dimensions, live controls and hotspot while native drag bitmap is blank',()=>dragFixture(({root,rows,ids,start,original})=>{
   const source=rows()[3],input=source.querySelector('textarea'),beforeIds=ids(),beforeMarkup=source.innerHTML;
   input.id='live-drag-control';input.name='original-control';input.value=' 当前输入\n A;;A; 中文 ';input.style.height='94px';
@@ -369,6 +383,34 @@ check('A ghost can be pointer-dragged with both comparison markers while its del
   assert.equal(rows().at(-1).querySelector('textarea').value,' 删除前的草稿\n中文 ');
   assert.match(root.querySelector('#elementSerialized').textContent,/删除前的草稿/);assert.equal(root.querySelector('[data-legend-count="ghost-moved"]').textContent,'0');
 }));
+for(const mechanism of ['pointer','native'])check(`${mechanism} release continues from the visible lifted row instead of replaying its opening position`,()=>dragFixture(({root,rows,ids,pointer,start})=>landingAnimationFixture(calls=>{
+  const before=ids(),id=before.at(-1),source=rows().at(-1);let drag;
+  if(mechanism==='pointer'){drag=pointer(source);drag.send('pointermove',140,85);}
+  else{start(source);doc.dispatchEvent(new w.MouseEvent('dragover',{clientX:140,clientY:85,bubbles:true}));}
+  // Simulate a softly-following lift still 32px below its final slot at release.
+  const clone=doc.querySelector('.element-drag-preview');clone.getBoundingClientRect=()=>({left:120,top:112,width:724.5,height:132.25,bottom:244.25,right:844.5});
+  if(mechanism==='pointer')drag.send('pointerup',140,85);else rows()[0].dispatchEvent(new w.Event('drop',{bubbles:true,cancelable:true}));
+  assert.deepEqual(ids(),[id,...before.slice(0,-1)]);
+  const landed=rows()[0],motion=calls.find(call=>call.element===landed);assert(motion,'the short remaining distance eases into the slot');
+  assert.equal(motion.frames[0].transform,'translate(0px,32px)');assert.equal(motion.frames[1].transform,'translate(0,0)');
+  assert(landed.classList.contains('fx-drop'));assert(!landed.classList.contains('fx-move'));assert(!doc.querySelector('.element-drag-preview'));
+  assert.equal(root.querySelector('[data-legend-count="moved"]').textContent,'4');
+})));
+check('An already settled lift stays at the destination on release without a second movement animation',()=>dragFixture(({root,rows,ids,pointer})=>landingAnimationFixture(calls=>{
+  const before=ids(),drag=pointer(rows().at(-1));drag.send('pointermove',140,85);
+  doc.querySelector('.element-drag-preview').getBoundingClientRect=()=>({left:120,top:80,width:724.5,height:132.25,bottom:212.25,right:844.5});
+  drag.send('pointerup',140,85);assert.deepEqual(ids(),[before.at(-1),...before.slice(0,-1)]);
+  assert(!calls.some(call=>call.element===rows()[0]));assert(rows()[0].classList.contains('fx-drop'));
+})));
+check('Ghost release also lands from its current visible position while preserving removal and movement feedback',()=>dragFixture(({root,rows,ids,pointer})=>landingAnimationFixture(calls=>{
+  const before=ids(),id=before[1];rows()[1].querySelector('[data-delete]').click();calls.length=0;
+  const ghost=root.querySelector(`.element-ghost-row[data-element-id="${id}"]`),drag=pointer(ghost);drag.send('pointermove',140,2000);
+  doc.querySelector('.element-drag-preview').getBoundingClientRect=()=>({left:120,top:465.75,width:724.5,height:96,bottom:561.75,right:844.5});
+  drag.send('pointerup',140,2000);
+  const landed=root.querySelector(`.element-ghost-row[data-element-id="${id}"]`),motion=calls.find(call=>call.element===landed);assert(motion);
+  assert.equal(motion.frames[0].transform,'translate(0px,-11px)');assert(landed.classList.contains('fx-drop'));assert(!landed.classList.contains('fx-move'));
+  assert.equal(landed.querySelector('.diff-label.is-moved').textContent,'幽灵移动');assert(landed.querySelector('.diff-label.is-removed'));
+})));
 check('Shared component and additional stylesheet are local; no UI runtime errors', () => {
   assert.deepEqual(errors, []);
   for (const name of ['windows-elements.js', 'elements-ui.css']) assert.ok(fs.existsSync(path.join(root, name)));
