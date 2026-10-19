@@ -36,6 +36,7 @@ class LaunchTests(unittest.TestCase):
         self.server = self.server_factory.return_value
         self.server.launch_url = "http://127.0.0.1:12345/#ticket=test"
         self.browser = self.enterContext(patch.object(launch.webbrowser, "open"))
+        self.controller = self.enterContext(patch.object(launch, "InstanceController"))
 
     def test_default_windows_check_is_mocked_and_never_falls_back(self):
         self.enterContext(patch.object(launch, "os", SimpleNamespace(name="nt", environ=os.environ)))
@@ -118,6 +119,44 @@ class LaunchTests(unittest.TestCase):
         self.browser.assert_not_called()
         self.server.server_close.assert_called_once_with()
         self.service.close.assert_called_once_with()
+        self.controller.assert_not_called()
+
+    def test_normal_second_launch_hands_off_before_any_adapter_or_service(self):
+        with launch.InstanceLock(self.root / "data" / "instance.lock"), patch.object(launch, "request_existing") as request:
+            self.assertEqual(launch.main(self.args + ["--backend", "file"]), 0)
+        request.assert_called_once()
+        self.file.assert_not_called()
+        self.factory.assert_not_called()
+        self.server_factory.assert_not_called()
+        self.browser.assert_not_called()
+        self.assertEqual(json.loads(self.stdout.getvalue()), {"status": "reopened", "backend": "file"})
+
+    def test_check_and_no_browser_second_launch_never_contact_controller(self):
+        with launch.InstanceLock(self.root / "data" / "instance.lock"), patch.object(launch, "request_existing") as request:
+            for flag in ("--check", "--no-browser"):
+                self.assertEqual(launch.main(self.args + ["--backend", "file", flag]), 1)
+        request.assert_not_called()
+        self.file.assert_not_called()
+        self.factory.assert_not_called()
+
+    def test_failed_handoff_never_falls_back_or_opens_a_browser(self):
+        with launch.InstanceLock(self.root / "data" / "instance.lock"), patch.object(launch, "request_existing", side_effect=RuntimeError("INSTANCE_CONFIG_MISMATCH")) as request:
+            self.assertEqual(launch.main(self.args + ["--backend", "file"]), 1)
+        request.assert_called_once()
+        self.factory.assert_not_called()
+        self.file.assert_not_called()
+        self.browser.assert_not_called()
+
+    def test_default_windows_normal_reopen_keeps_windows_backend_without_adapter(self):
+        self.enterContext(patch.object(launch, "os", SimpleNamespace(name="nt", environ=os.environ)))
+        lock = self.enterContext(patch.object(launch, "InstanceLock"))
+        lock.return_value.__enter__.side_effect = launch.InstanceBusy("active")
+        with patch.object(launch, "request_existing") as request:
+            self.assertEqual(launch.main(self.args), 0)
+        request.assert_called_once()
+        self.windows.assert_not_called()
+        self.file.assert_not_called()
+        self.factory.assert_not_called()
 
     def test_bind_error_closes_service_without_browser_or_fallback(self):
         self.server_factory.side_effect = OSError("address-in-use")

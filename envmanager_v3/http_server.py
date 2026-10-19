@@ -20,6 +20,7 @@ import re
 import secrets
 import socket
 import threading
+import time
 from urllib.parse import parse_qsl, unquote, urlsplit
 
 
@@ -130,14 +131,26 @@ class _LocalServer(ThreadingHTTPServer):
         self.service = service
         self.assets = assets.resolve()
         self._session_lock = threading.Lock()
-        self._ticket = secrets.token_urlsafe(32)
+        self._tickets = {}
+        self._authenticated = False
         self._session = secrets.token_urlsafe(32)
         self._csrf = secrets.token_urlsafe(32)
         self._slots = threading.BoundedSemaphore(32)
         super().__init__(("127.0.0.1", port), _Handler)
         self.authority = f"127.0.0.1:{self.server_port}"
         self.origin = f"http://{self.authority}"
-        self.launch_url = f"{self.origin}/#ticket={self._ticket}"
+        self.launch_url = self.new_launch_url()
+
+    def new_launch_url(self):
+        """Native controller only: a short-lived grant, without rotating cookie/CSRF."""
+        with self._session_lock:
+            now = time.monotonic()
+            self._tickets = {ticket: expiry for ticket, expiry in self._tickets.items() if expiry > now}
+            if len(self._tickets) >= 32:
+                raise RuntimeError("Too many pending page-open tickets; wait for expiry.")
+            ticket = secrets.token_urlsafe(32)
+            self._tickets[ticket] = now + 60
+        return f"{self.origin}/#ticket={ticket}"
 
     def process_request(self, request, client_address):
         if not self._slots.acquire(blocking=False):
@@ -271,7 +284,7 @@ class _Handler(BaseHTTPRequestHandler):
             raise _HTTPError(401, "AUTH_REQUIRED", "A local session is required.") from None
         item = cookie.get(COOKIE_NAME)
         with self.server._session_lock:
-            valid = self.server._ticket is None and item is not None and secrets.compare_digest(
+            valid = self.server._authenticated and item is not None and secrets.compare_digest(
                 item.value.encode("utf-8"), self.server._session.encode("ascii")
             )
         if not valid:
@@ -308,10 +321,11 @@ class _Handler(BaseHTTPRequestHandler):
         if set(body) != {"ticket"} or not isinstance(body["ticket"], str):
             raise _HTTPError(400, "INVALID_JSON", "Exchange requires only a string ticket.")
         with self.server._session_lock:
-            ticket = self.server._ticket
-            if ticket is None or not secrets.compare_digest(body["ticket"].encode("utf-8"), ticket.encode("ascii")):
+            ticket = body["ticket"]
+            expiry = self.server._tickets.pop(ticket, None)
+            if expiry is None or expiry <= time.monotonic():
                 raise _HTTPError(401, "INVALID_TICKET", "Startup ticket is invalid or already used.")
-            self.server._ticket = None
+            self.server._authenticated = True
         cookie = f"{COOKIE_NAME}={self.server._session}; Path=/; HttpOnly; SameSite=Strict"
         self._json(200, {"csrfToken": self.server._csrf}, (("Set-Cookie", cookie),))
 

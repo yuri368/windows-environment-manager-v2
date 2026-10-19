@@ -150,6 +150,38 @@ class HTTPTests(unittest.TestCase):
                               401, "INVALID_TICKET")
         self.login()
 
+    def test_reopen_tickets_are_independent_one_use_and_preserve_cookie_and_csrf(self):
+        self.login()
+        cookie, csrf = self.cookie, self.csrf
+        tickets = [urlsplit(self.server.new_launch_url()).fragment.removeprefix("ticket=") for _ in range(2)]
+        self.assertEqual(len(set(tickets + [self.ticket])), 3)
+        # Issuing a new grant must not temporarily invalidate an existing tab.
+        self.assertEqual(self.request("GET", h.API + "/bootstrap")[0], 200)
+        for ticket in tickets:
+            status, headers, body = self.request("POST", h.API + "/session/exchange", {"ticket": ticket})
+            self.assertEqual(status, 200, body)
+            self.assertEqual(headers["Set-Cookie"].split(";", 1)[0], cookie)
+            self.assertEqual(json.loads(body)["csrfToken"], csrf)
+            self.assert_error(self.request("POST", h.API + "/session/exchange", {"ticket": ticket}),
+                              401, "INVALID_TICKET")
+        self.assertEqual(self.request("POST", h.API + "/plans", {})[0], 200)
+
+    def test_launch_tickets_expire_without_invalidating_authenticated_tabs(self):
+        self.login()
+        with mock.patch.object(h.time, "monotonic", return_value=100):
+            ticket = urlsplit(self.server.new_launch_url()).fragment.removeprefix("ticket=")
+        with mock.patch.object(h.time, "monotonic", return_value=161):
+            self.assert_error(self.request("POST", h.API + "/session/exchange", {"ticket": ticket}),
+                              401, "INVALID_TICKET")
+        self.assertEqual(self.request("GET", h.API + "/bootstrap")[0], 200)
+
+    def test_control_is_not_exposed_as_http_route(self):
+        self.login()
+        for path in ("/instance/open", "/instance/status", "/session/open"):
+            self.assert_error(self.request("POST", h.API + path, {"url": "https://evil.test"}),
+                              404, "NOT_FOUND")
+        self.assertFalse(self.service.calls)
+
     def test_authenticated_bootstrap_restores_fresh_tab_csrf_without_new_ticket(self):
         self.login()
         original_csrf = self.csrf

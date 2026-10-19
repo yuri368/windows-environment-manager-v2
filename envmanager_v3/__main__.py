@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import argparse
+from contextlib import nullcontext
+import errno
 import json
 import os
 from pathlib import Path
@@ -11,11 +13,16 @@ import webbrowser
 from .environment import FileEnvironment, WindowsEnvironment
 from .http_server import create_server
 from .service import Service
+from .instance_control import InstanceController, configuration, request_existing
 
 
 def assets_directory():
     root = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent.parent))
     return root / "ui-v3" if (root / "ui-v3" / "demo-plan.js").is_file() else root
+
+
+class InstanceBusy(RuntimeError):
+    pass
 
 
 class InstanceLock:
@@ -34,16 +41,21 @@ class InstanceLock:
                 self.file.write(b"0")
                 self.file.flush()
             self.file.seek(0)
-            if os.name == "nt":
-                import msvcrt
-                msvcrt.locking(self.file.fileno(), msvcrt.LK_NBLCK, 1)
-            else:
-                import fcntl
-                fcntl.flock(self.file, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except OSError as error:
+            try:
+                if os.name == "nt":
+                    import msvcrt
+                    msvcrt.locking(self.file.fileno(), msvcrt.LK_NBLCK, 1)
+                else:
+                    import fcntl
+                    fcntl.flock(self.file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except OSError as error:
+                if error.errno in (errno.EACCES, errno.EAGAIN, errno.EDEADLK):
+                    raise InstanceBusy("此数据目录已有 V3 实例运行。") from error
+                raise
+        except (OSError, InstanceBusy):
             if self.file:
                 self.file.close()
-            raise RuntimeError("此数据目录已有 V3 实例运行，请返回原页面。") from error
+            raise
         return self
 
     def __exit__(self, *_):
@@ -75,7 +87,16 @@ def main(argv=None):
     if args.backend == "windows" and os.name != "nt":
         parser.error("Windows 后端只支持 Windows。隔离开发使用 --backend file。")
     try:
-        with InstanceLock(data_dir / "instance.lock"):
+        lock = InstanceLock(data_dir / "instance.lock")
+        try:
+            lock.__enter__()
+        except InstanceBusy:
+            if args.check or args.no_browser:
+                raise
+            request_existing(data_dir, configuration(args))
+            print(json.dumps({"status": "reopened", "backend": args.backend}), flush=True)
+            return 0
+        try:
             environment = WindowsEnvironment() if args.backend == "windows" else FileEnvironment(args.environment_file or data_dir / "environment.json")
             service = Service(data_dir, environment=environment, assets=args.assets,
                               monitor_environment=args.backend == "windows" and not args.check)
@@ -88,16 +109,21 @@ def main(argv=None):
                     raise RuntimeError("正式界面 index.html 缺失；不会自动回退到演示页面。")
                 server = create_server(service, args.assets, args.port)
                 try:
-                    print(json.dumps({"status": "listening", "url": server.launch_url, "backend": args.backend}, ensure_ascii=True), flush=True)
-                    if not args.no_browser:
-                        webbrowser.open(server.launch_url)
-                    server.serve_forever()
+                    controller = (InstanceController(data_dir, configuration(args), server, webbrowser.open, lock)
+                                  if not args.no_browser else nullcontext())
+                    with controller:
+                        print(json.dumps({"status": "listening", "url": server.launch_url, "backend": args.backend}, ensure_ascii=True), flush=True)
+                        if not args.no_browser:
+                            webbrowser.open(server.launch_url)
+                        server.serve_forever()
                 except KeyboardInterrupt:
                     pass
                 finally:
                     server.server_close()
             finally:
                 service.close()
+        finally:
+            lock.__exit__(None, None, None)
     except Exception as error:
         print(str(error), file=sys.stderr)
         return 1
