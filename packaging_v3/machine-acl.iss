@@ -28,7 +28,8 @@ function CreateSecureDirectory(Path: String; var Attributes: TSecurityAttributes
   external 'CreateDirectoryW@kernel32.dll stdcall';
 function FreeLocal(PointerValue: DWORD_PTR): DWORD_PTR;
   external 'LocalFree@kernel32.dll stdcall';
-function CopyText(var Dest: String; Source: DWORD_PTR; Count: Integer): DWORD_PTR;
+{ LPWSTR is the string buffer itself, not a pointer to the Pascal string slot. }
+function CopyText(Dest: String; Source: DWORD_PTR; Count: Integer): DWORD_PTR;
   external 'lstrcpynW@kernel32.dll stdcall';
 
 procedure RequireNoReparse(Path: String);
@@ -51,6 +52,7 @@ function SecurityText(Path: String): String;
 var
   SD, Text: DWORD_PTR;
   Length: DWORD;
+  Terminator: Integer;
 begin
   SD := 0;
   Text := 0;
@@ -61,8 +63,10 @@ begin
       RaiseException('Cannot serialize protected directory ACL: ' + Path);
     try
       Result := StringOfChar(#0, Length);
-      CopyText(Result, Text, Length);
-      SetLength(Result, Length - 1);
+      if CopyText(Result, Text, Length) = 0 then RaiseException('Cannot copy security descriptor text.');
+      Terminator := Pos(#0, Result);
+      if Terminator = 0 then RaiseException('Security descriptor text is not null-terminated.');
+      SetLength(Result, Terminator - 1);
     finally
       FreeLocal(Text);
     end;
@@ -75,6 +79,7 @@ function CanonicalSDDL(Text: String): String;
 var
   SD, Canonical: DWORD_PTR;
   Length: DWORD;
+  Terminator: Integer;
 begin
   SD := 0;
   if not StringToSD(Text, 1, SD, 0) then RaiseException('Invalid installer security descriptor.');
@@ -84,8 +89,10 @@ begin
       RaiseException('Cannot canonicalize installer security descriptor.');
     try
       Result := StringOfChar(#0, Length);
-      CopyText(Result, Canonical, Length);
-      SetLength(Result, Length - 1);
+      if CopyText(Result, Canonical, Length) = 0 then RaiseException('Cannot copy canonical security text.');
+      Terminator := Pos(#0, Result);
+      if Terminator = 0 then RaiseException('Canonical security text is not null-terminated.');
+      SetLength(Result, Terminator - 1);
     finally
       FreeLocal(Canonical);
     end;

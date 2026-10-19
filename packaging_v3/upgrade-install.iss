@@ -39,7 +39,14 @@ var
 begin
   Params := '--upgrade-helper ' + Action + ' --session-dir ' + AddQuotes(UpgradeSessionDir) + ' --timeout 10';
   if Outcome <> '' then Params := Params + ' --outcome ' + Outcome;
-  Result := Exec(UpgradeExe, Params, ExtractFileDir(UpgradeExe), SW_HIDE, ewWaitUntilTerminated, ExitCode);
+#ifdef MachineInstall
+  { The lock holder owns the user mailbox. Elevated-created request files can
+    be unreadable to it; keep both halves under the original user's token. }
+  Result := ExecAsOriginalUser(UpgradeExe, Params, ExtractFileDir(UpgradeExe), SW_HIDE, ewWaitUntilTerminated, ExitCode);
+#else
+  Result := ExecAndLogOutput(UpgradeExe, Params, ExtractFileDir(UpgradeExe), SW_HIDE, ewWaitUntilTerminated, ExitCode, nil);
+#endif
+  Log('Upgrade control ' + Action + ' exit/status: ' + IntToStr(ExitCode));
   Result := Result and (ExitCode = 0);
 end;
 
