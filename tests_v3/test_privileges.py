@@ -216,6 +216,34 @@ class CoreTests(Base):
         self.assertEqual(result["errors"][0]["code"], "READBACK_MISMATCH")
         self.assertEqual(self.environment.read("System", "A")["raw"], "old")
 
+    def _assert_external_destination_race(self, after):
+        from tests_v3.test_environment import FakeWinreg
+        registry = FakeWinreg()
+        registry.rows["System"] = [("A", "old", registry.REG_SZ)]
+        environment = WindowsEnvironment(registry, notifier=lambda: True)
+        real_append = h._Journal.append
+        def race(journal, event, **data):
+            real_append(journal, event, **data)
+            if event == "write_intent":
+                # External mutation after helper preflight, before adapter CAS.
+                registry.rows["System"] = ([] if after is None else [("A", after, registry.REG_SZ)])
+        with mock.patch.object(h._Journal, "append", new=race):
+            result = self.execute(envelope([plan(after=after)]), environment)
+        self.assertEqual(result["status"], "recovery_required")
+        self.assertEqual(result["targets"][0]["status"], "recovery_required")
+        self.assertEqual(result["errors"][0]["code"], "CONFLICT")
+        self.assertIn("COMPENSATION_CONFLICT", [error["code"] for error in result["errors"]])
+        self.assertEqual([call for call in registry.calls if call[0] in ("set", "delete")], [])
+        actual = environment.read("System", "A")
+        self.assertEqual(actual["exists"], after is not None)
+        self.assertEqual(actual["raw"], after)
+
+    def test_rejected_write_preserves_external_value_equal_to_planned_after(self):
+        self._assert_external_destination_race("new")
+
+    def test_rejected_delete_does_not_recreate_externally_deleted_value(self):
+        self._assert_external_destination_race(None)
+
     def test_final_readback_detects_earlier_target_changed_during_notification(self):
         def notify():
             self.environment.write("System", "A", "external")
@@ -301,7 +329,7 @@ class CoreTests(Base):
         self.assertEqual(self.environment.read("System", "A")["type"], "REG_SZ")
         self.assertFalse(self.environment.read("System", "New")["exists"])
 
-    def test_failed_later_write_conditionally_compensates_prior_and_uncertain_write(self):
+    def test_failed_later_write_compensates_confirmed_prior_but_retains_uncertain_write(self):
         request = envelope([plan(), plan("B", "before-b", "after-b")])
         original = self.environment.write
         def fail_after_write(scope, name, raw, *args, **kwargs):
@@ -311,10 +339,11 @@ class CoreTests(Base):
             return value
         with mock.patch.object(self.environment, "write", side_effect=fail_after_write):
             result = self.execute(request)
-        self.assertEqual(result["status"], "compensated")
+        self.assertEqual(result["status"], "recovery_required")
         self.assertEqual(self.environment.read("System", "A")["raw"], "old")
-        self.assertEqual(self.environment.read("System", "B")["raw"], "before-b")
-        self.assertEqual([item["status"] for item in result["targets"]], ["compensated"] * 2)
+        self.assertEqual(self.environment.read("System", "B")["raw"], "after-b")
+        self.assertEqual([item["status"] for item in result["targets"]],
+                         ["compensated", "recovery_required"])
 
     def test_compensation_preserves_external_new_values(self):
         request = envelope([plan(), plan("B", "before-b", "after-b")])

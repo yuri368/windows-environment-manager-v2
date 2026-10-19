@@ -156,17 +156,17 @@ def _apply(environment, name, desired, current, *, journal=None, index=None, tar
             journal.append("type_deleted", index=index, snapshot=verified)
             journal.append("type_create_intent", index=index, expected=verified, desired=desired, compensation=compensation)
             current = verified
-        environment.write("System", name, desired["raw"], desired["type"], expected=current)
+        return environment.write("System", name, desired["raw"], desired["type"], expected=current)
     else:
-        environment.delete("System", name, expected=current)
+        return environment.delete("System", name, expected=current)
 
 
 def execute_helper_request(request, environment, *, journal_path, journal_factory=None, source_snapshots=None,
                            approved_type_changes=False):
     """Injectable execution core. journal_path is selected by trusted code only.
 
-    Every mutation follows a durable intent. Failures compensate only values
-    still equal to this request's after; other writers' new values are retained.
+    Every mutation follows a durable intent. Failures compensate only snapshots
+    confirmed by this helper's writes; equal external values are retained too.
     restore failures retain completed restorations instead of rolling forward.
     """
     request = validate_request(request, allow_type_change=approved_type_changes)
@@ -183,6 +183,7 @@ def execute_helper_request(request, environment, *, journal_path, journal_factor
         return (_same(actual, plan[source_key]) and (source_snapshots is None
                 or actual.get("revision") == source_snapshots[index].get("revision")))
     attempted = []
+    written_snapshots = {}
     try:
         journal.append("prepared", request=request)
         # Entire System batch is preflighted before the first write.
@@ -205,10 +206,13 @@ def execute_helper_request(request, environment, *, journal_path, journal_factor
                 continue
             journal.append("write_intent", index=index, expected=actual, desired=desired)
             attempted.append(index)  # Include a write that raises after making its side effect.
-            _apply(environment, name, desired, actual, journal=journal, index=index,
-                   target=result["targets"][index], compensation=restore)
+            written_snapshots[index] = _apply(environment, name, desired, actual, journal=journal, index=index,
+                                              target=result["targets"][index], compensation=restore)
             verified = environment.read("System", name)
-            if not _same(verified, desired):
+            written = written_snapshots[index]
+            if (not _same(verified, desired) or not isinstance(written, dict)
+                    or not _same(verified, written) or not written.get("revision")
+                    or verified.get("revision") != written["revision"]):
                 raise ElevationError("READBACK_MISMATCH", "System write could not be verified.",
                                      {"index": index, "current": verified})
             result["targets"][index].update(status="compensated" if restore else "committed",
@@ -235,7 +239,7 @@ def execute_helper_request(request, environment, *, journal_path, journal_factor
             for index in reversed(attempted):
                 plan, target = plans[index], result["targets"][index]
                 try:
-                    own_after = target.get("result")
+                    own_after = written_snapshots.get(index)
                     actual = environment.read("System", plan["name"])
                     target["result"] = actual
                     if restore:
@@ -254,12 +258,12 @@ def execute_helper_request(request, environment, *, journal_path, journal_factor
                     intermediate = target.get("intermediate")
                     own_absent = (isinstance(intermediate, dict) and _same(actual, intermediate)
                                   and actual.get("revision") == intermediate.get("revision"))
-                    if not _same(actual, plan["after"]) and not own_absent:
+                    own_written = (isinstance(own_after, dict) and bool(own_after.get("revision"))
+                                   and _same(actual, own_after) and _same(actual, plan["after"])
+                                   and actual.get("revision") == own_after["revision"])
+                    if not own_written and not own_absent:
                         raise ElevationError("COMPENSATION_CONFLICT", "External value preserved during compensation.",
                                              {"index": index, "current": actual})
-                    if (target.get("status") == "committed" and isinstance(own_after, dict)
-                            and actual.get("revision") != own_after.get("revision")):
-                        raise ElevationError("COMPENSATION_CONFLICT", "Helper's verified revision changed; external value retained.")
                     journal.append("compensate_intent", index=index, expected=actual, desired=plan["before"])
                     _apply(environment, plan["name"], plan["before"], actual, journal=journal,
                            index=index, target=target, compensation=True)
