@@ -1,0 +1,38 @@
+{
+  "testedCommit": "604884a16480faa803620fa801331dadf20d2b4b",
+  "runId": 39192586479,
+  "url": "https://github.com/yuri368/windows-environment-manager-v2/actions/runs/39192586479",
+  "status": "completed",
+  "conclusion": "success",
+  "windows": {
+    "jobId": 117868413222,
+    "tests": 491,
+    "passed": 490,
+    "skipped": 1,
+    "seconds": 127.673,
+    "productContractChecks": 34,
+    "excerpt": "2026-10-19T03:03:14.1906892Z Ran 491 tests in 127.673s\r\n2026-10-19T03:03:14.1907377Z OK (skipped=1)\r\n2026-10-19T03:03:16.7291046Z 34 product contract checks passed (JSDOM fixtures; real backend/browser acceptance is separate).\r"
+  },
+  "ubuntu": {
+    "jobId": 117868412920,
+    "tests": 491,
+    "passed": 481,
+    "skipped": 10,
+    "seconds": 38.461,
+    "productContractChecks": 34,
+    "excerpt": "2026-10-19T03:01:03.5173791Z test_allowed_identity_returns_passed_without_creating_state (test_upgrade.CheckUserTests.test_allowed_identity_returns_passed_without_creating_state) ... ok\n2026-10-19T03:01:10.4214803Z Ran 491 tests in 38.461s\n2026-10-19T03:01:10.4215073Z OK (skipped=10)\n2026-10-19T03:01:12.4631112Z 34 product contract checks passed (JSDOM fixtures; real backend/browser acceptance is separate)."
+  },
+  "otherRuns": [
+    {
+      "id": 39192586524,
+      "name": "V3 UI prototype checks",
+      "conclusion": "success"
+    },
+    {
+      "id": 39192586507,
+      "name": "Python tests (V2)",
+      "conclusion": "success"
+    }
+  ],
+  "scope": "File/mock automated checks; native UAC and installer evidence recorded separately"
+}

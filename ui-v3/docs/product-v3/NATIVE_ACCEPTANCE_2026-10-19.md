@@ -62,6 +62,12 @@
 
 生命周期结束后再次全量只读核对，28 项环境变量与初始值和类型完全一致，两个临时目标均不存在，LongPathsEnabled 仍为 0。经裁剪的真实结果集中在 `native-acceptance-20261019.json`；该文件同时保留升级修复前失败和修复后成功，不能只取最后一条当作所有尝试都成功。
 
+## 修复后的远端完整回归
+
+源码与报告提交 `604884a16480faa803620fa801331dadf20d2b4b` 的 [V3 product checks 39192586479](https://github.com/yuri368/windows-environment-manager-v2/actions/runs/39192586479) 已 success。Windows：491 项执行、490 通过、1 项 opt-in 跳过，127.673 秒，新增 3 项长路径测试均通过；Ubuntu：491 项执行、481 通过、10 项平台/opt-in 跳过，38.461 秒。两平台的产品 JSDOM 契约均 34/34。旧 UI run 39192586524、V2 run 39192586507 同样 success。摘要及原始结果行见 `ci-native-fixes-20261019.json`，完整日志在对应 GitHub run。
+
+此记录归档后只更新文档，没有再改生产或 packaging 输入；不能将 CI 的 File/mock 通过扩大为升级后实际 Windows 服务启动、干净 VM 或多用户验收通过。
+
 ## 尚不能扩大声称通过的范围
 
 本轮操作系统包含开发工具，尚不能证明干净系统无开发 runtime 的安装生命周期；多登录用户、使用另一个管理员凭据的 UAC、断电恢复、原生 IME/拖动/DPI 和完整 §18 门槛仍须对应实测。旧沙盒结果或这次成功取消不能替代这些证据。
