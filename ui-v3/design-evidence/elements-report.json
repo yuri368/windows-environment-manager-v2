@@ -1,5 +1,6 @@
 {
   "verification": "JSDOM UI event checks only; native dragging, visual rendering and Windows integration not verified",
+  "nativeAcceptance": "Previous native full-row bitmap failed user verification; the opaque DOM overlay awaits new manual verification.",
   "checks": [
     {
       "name": "Highlight preserves exact raw text, empty and duplicate elements, and escapes markup",
@@ -66,11 +67,15 @@
       "passed": true
     },
     {
-      "name": "Native drag image keeps the measured full row, live multiline value, badges, controls and mouse grab point",
+      "name": "Opaque full-row overlay preserves dimensions, live controls and hotspot while native drag bitmap is blank",
       "passed": true
     },
     {
       "name": "Drag image cleanup covers replacement, normal/no-op row drops, end drops and dismiss without changing occurrence identity",
+      "passed": true
+    },
+    {
+      "name": "Overlay document/source tracking detaches on external drop, next drag, render, dragend and dismiss",
       "passed": true
     },
     {

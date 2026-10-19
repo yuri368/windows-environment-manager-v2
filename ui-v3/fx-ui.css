@@ -26,9 +26,11 @@
 .element-ghost-row.fx-remove > .element-ghost-body .element-ghost-value { animation: strikeIn .5s .34s ease-out backwards; }
 
 /* ---------- ② 拖放 ---------- */
-/* Native setDragImage captures the current full row at its measured size.
-   Keep the paint-only copy offscreen; the browser moves its image with the mouse. */
-.element-row.element-drag-preview { position: fixed; left: -9999px; top: 0; margin: 0; box-sizing: border-box; pointer-events: none; transform: none !important; box-shadow: inset 4px 0 0 var(--rail), 0 3px 9px #203c291a; }
+/* A full-size opaque DOM row follows native DND coordinates without easing.
+   The 1px transparent canvas suppresses the browser's translucent drag bitmap. */
+.element-row.element-drag-preview { position: fixed; z-index: 450; margin: 0; box-sizing: border-box; pointer-events: none; opacity: 1; transform: none !important; box-shadow: inset 4px 0 0 var(--rail), 0 3px 9px #203c291a; }
+.element-drag-preview[hidden] { display: none; }
+.element-drag-native { position: fixed; left: 0; top: 0; width: 1px; height: 1px; pointer-events: none; }
 .element-drag-preview, .element-drag-preview * { animation: none !important; transition: none !important; }
 
 /* 原位：变成一个虚线“空穴”，内容淡出，表示“这里空出来了” */

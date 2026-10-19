@@ -3,12 +3,28 @@ var WindowsElements = (() => {
   const escape = text => String(text ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const escapeRaw = value => escape(value).replace(/\r/g,'&#13;');
   let session = null, sequence = 0;
-  let dragPreview=null,dragSource=null;
-  function clearDragPreview(){
-    dragPreview?.remove();dragPreview=null;
-    if(dragSource){dragSource.classList.remove('is-dragging');dragSource.parentElement?.classList.remove('is-dragging-list');dragSource=null;}
+  let dragPreview=null,dragSource=null,dragNativeImage=null,dragHotspot=null;
+  function moveDragPreview(event){
+    if(!dragPreview||!Number.isFinite(event.clientX)||!Number.isFinite(event.clientY))return;
+    // Some engines emit a final source drag sample at (0,0). Do not jump there.
+    if(event.clientX===0&&event.clientY===0)return;
+    dragPreview.hidden=false;
+    dragPreview.style.left=(event.clientX-dragHotspot.x)+'px';
+    dragPreview.style.top=(event.clientY-dragHotspot.y)+'px';
   }
-  function setRowDragImage(element,event){
+  function leaveDragPreview(event){
+    if(dragPreview&&!event.relatedTarget&&[document,document.documentElement,document.body].includes(event.target))dragPreview.hidden=true;
+  }
+  function clearDragPreview(){
+    document.removeEventListener('dragover',moveDragPreview,true);
+    document.removeEventListener('dragleave',leaveDragPreview,true);
+    document.removeEventListener('drop',clearDragPreview,true);
+    document.removeEventListener('dragend',clearDragPreview,true);
+    dragPreview?.remove();dragPreview=null;
+    dragNativeImage?.remove();dragNativeImage=null;dragHotspot=null;
+    if(dragSource){dragSource.removeEventListener('drag',moveDragPreview);dragSource.classList.remove('is-dragging');dragSource.parentElement?.classList.remove('is-dragging-list');dragSource=null;}
+  }
+  function startRowDragPreview(element,event){
     if(typeof event.dataTransfer.setDragImage!=='function')return;
     const rect=element.getBoundingClientRect(),preview=element.cloneNode(true);
     const sourceNodes=[element,...element.querySelectorAll('*')],nodes=[preview,...preview.querySelectorAll('*')];
@@ -28,11 +44,21 @@ var WindowsElements = (() => {
     // becomes a placeholder. Inline textarea sizing is already cloned above.
     const style=getComputedStyle(element);
     for(const property of ['font-family','font-size','font-weight','font-style','line-height','letter-spacing','color','grid-template-columns','grid-template-rows','border-bottom-width','border-bottom-style','border-bottom-color'])preview.style.setProperty(property,style.getPropertyValue(property));
-    Object.assign(preview.style,{width:rect.width+'px',minWidth:rect.width+'px',maxWidth:rect.width+'px',height:rect.height+'px',minHeight:rect.height+'px',maxHeight:rect.height+'px'});
+    Object.assign(preview.style,{left:rect.left+'px',top:rect.top+'px',width:rect.width+'px',minWidth:rect.width+'px',maxWidth:rect.width+'px',height:rect.height+'px',minHeight:rect.height+'px',maxHeight:rect.height+'px'});
     preview.classList.add('element-drag-preview');preview.setAttribute('aria-hidden','true');preview.setAttribute('inert','');
     document.body.appendChild(preview);dragPreview=preview;
-    const x=Math.max(0,Math.min(rect.width,event.clientX-rect.left)),y=Math.max(0,Math.min(rect.height,event.clientY-rect.top));
-    try{event.dataTransfer.setDragImage(preview,x,y);}catch{preview.remove();dragPreview=null;}
+    dragHotspot={x:Math.max(0,Math.min(rect.width,event.clientX-rect.left)),y:Math.max(0,Math.min(rect.height,event.clientY-rect.top))};
+    dragSource=element;
+    // Suppress the OS/browser's translucent drag bitmap. The opaque DOM row
+    // above the modal is the only visible lifted row; ordering stays native DND.
+    const blank=document.createElement('canvas');blank.width=blank.height=1;blank.className='element-drag-native';blank.setAttribute('aria-hidden','true');blank.setAttribute('inert','');
+    document.body.appendChild(blank);dragNativeImage=blank;
+    try{event.dataTransfer.setDragImage(blank,0,0);}catch{clearDragPreview();return;}
+    document.addEventListener('dragover',moveDragPreview,true);
+    element.addEventListener('drag',moveDragPreview);
+    document.addEventListener('dragleave',leaveDragPreview,true);
+    document.addEventListener('drop',clearDragPreview,true);
+    document.addEventListener('dragend',clearDragPreview,true);
   }
   const normalized = value => value.trim();
   const matches = (raw,values,whole) => DemoPlan.matches(raw,values,whole);
@@ -783,7 +809,7 @@ var WindowsElements = (() => {
     root.querySelectorAll('.element-row').forEach(element=>{
       const id=Number(element.dataset.elementId);
       element.ondragstart=e=>{if(session.whole||e.target.matches('input,textarea,button')){e.preventDefault();return;}clearDragPreview();clearDrop();session.dragging=id;e.dataTransfer.setData('text/plain',String(id));e.dataTransfer.effectAllowed='move';
-        setRowDragImage(element,e);dragSource=element;element.classList.add('is-dragging');list.classList.add('is-dragging-list');};
+        startRowDragPreview(element,e);dragSource=element;element.classList.add('is-dragging');list.classList.add('is-dragging-list');};
       element.ondragend=()=>{if(session)session.dragging=null;clearDragPreview();clearDrop();};
     });
     // Dropping always inserts the dragged element before the target (V3.6); the end strip appends after the last visible row.

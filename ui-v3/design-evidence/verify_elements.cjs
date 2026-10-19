@@ -140,22 +140,31 @@ function dragFixture(test){
     const rect={left:120,top:80,width:724.5,height:132.25};row.getBoundingClientRect=()=>rect;
     let image;const data={effectAllowed:'',setData(type,value){this.payload=[type,value];},setDragImage(node,hotX,hotY){image={node,x:hotX,y:hotY};}};
     const event=new w.MouseEvent('dragstart',{bubbles:true,cancelable:true,clientX:rect.left+x,clientY:rect.top+y});Object.defineProperty(event,'dataTransfer',{value:data});row.dispatchEvent(event);
-    return {...image,data,rect};
+    return {node:doc.querySelector('.element-drag-preview'),nativeImage:image,data,rect};
   };
   try{test({root,rows,ids,start,original});assert.equal(w.eval('JSON.stringify({apps,windows,history})'),before);}
   finally{w.WindowsElements.dismiss();root.classList.remove('open');root.replaceChildren();style.remove();}
 }
 function rootPath(){return path.resolve(__dirname,'..');}
-check('Native drag image keeps the measured full row, live multiline value, badges, controls and mouse grab point',()=>dragFixture(({root,rows,ids,start,original})=>{
+check('Opaque full-row overlay preserves dimensions, live controls and hotspot while native drag bitmap is blank',()=>dragFixture(({root,rows,ids,start,original})=>{
   const source=rows()[3],input=source.querySelector('textarea'),beforeIds=ids(),beforeMarkup=source.innerHTML;
   input.id='live-drag-control';input.name='original-control';input.value=' 当前输入\n A;;A; 中文 ';input.style.height='94px';
   source.classList.add('is-replaced','is-link-source','fx-move');
   const states=source.querySelector('.element-states').textContent,buttons=[...source.querySelectorAll('button')].map(b=>({title:b.title,disabled:b.disabled}));
-  const {node,x,y,data,rect}=start(source,71,65);
-  assert.equal(x,71);assert.equal(y,65);assert.deepEqual(data.payload,['text/plain',source.dataset.elementId]);assert.equal(data.effectAllowed,'move');
+  const {node,nativeImage,data,rect}=start(source,71,65);
+  assert.notStrictEqual(nativeImage.node,node);assert.equal(nativeImage.node.tagName,'CANVAS');assert.equal(nativeImage.node.width,1);assert.equal(nativeImage.node.height,1);assert.equal(nativeImage.x,0);assert.equal(nativeImage.y,0);assert.equal(nativeImage.node.childNodes.length,0);
+  assert.deepEqual(data.payload,['text/plain',source.dataset.elementId]);assert.equal(data.effectAllowed,'move');
   assert(node.classList.contains('element-row'));assert(node.classList.contains('element-drag-preview'));assert(node.classList.contains('is-replaced'));assert(!node.matches('.is-dragging,.is-link-source,.fx-move'));
   assert.equal(node.style.width,rect.width+'px');assert.equal(node.style.height,rect.height+'px');assert.equal(node.style.minWidth,node.style.width);assert.equal(node.style.maxWidth,node.style.width);assert.equal(node.style.minHeight,node.style.height);assert.equal(node.style.maxHeight,node.style.height);
-  assert.equal(w.getComputedStyle(node).boxSizing,'border-box');assert.equal(w.getComputedStyle(node).transform,'none');assert.equal(w.getComputedStyle(node).pointerEvents,'none');
+  assert.equal(w.getComputedStyle(node).boxSizing,'border-box');assert.equal(w.getComputedStyle(node).transform,'none');assert.equal(w.getComputedStyle(node).pointerEvents,'none');assert.equal(w.getComputedStyle(node).position,'fixed');assert.equal(w.getComputedStyle(node).zIndex,'450');assert.equal(w.getComputedStyle(node).opacity,'1');
+  assert.equal(node.style.left,rect.left+'px');assert.equal(node.style.top,rect.top+'px');
+  doc.dispatchEvent(new w.MouseEvent('dragover',{clientX:400,clientY:300,bubbles:true}));assert.equal(node.style.left,'329px');assert.equal(node.style.top,'235px');
+  source.dispatchEvent(new w.MouseEvent('drag',{clientX:500,clientY:360,bubbles:true}));assert.equal(node.style.left,'429px');assert.equal(node.style.top,'295px');
+  source.dispatchEvent(new w.MouseEvent('drag',{clientX:0,clientY:0,bubbles:true}));assert.equal(node.style.left,'429px');assert.equal(node.style.top,'295px');
+  doc.documentElement.dispatchEvent(new w.MouseEvent('dragleave',{bubbles:true,relatedTarget:null}));assert(node.hidden);
+  doc.dispatchEvent(new w.MouseEvent('dragover',{clientX:0,clientY:250,bubbles:true}));assert(!node.hidden);assert.equal(node.style.left,'-71px');assert.equal(node.style.top,'185px');
+  // Tracking is coordinate-based, independent of decorative/reduced-motion animations.
+  const media=w.matchMedia;w.matchMedia=()=>({matches:true});try{source.dispatchEvent(new w.MouseEvent('drag',{clientX:600,clientY:400,bubbles:true}));assert.equal(node.style.left,'529px');assert.equal(node.style.top,'335px');}finally{w.matchMedia=media;}
   assert.equal(node.querySelector('textarea').value,input.value);assert.equal(node.querySelector('textarea').textContent,input.value);assert.equal(node.querySelector('textarea').style.height,'94px');
   assert.equal(node.querySelector('.element-order').textContent,source.querySelector('.element-order').textContent);assert.equal(node.querySelector('.element-states').textContent,states);
   assert.deepEqual([...node.querySelectorAll('button')].map(b=>({title:b.title,disabled:b.disabled})),buttons);
@@ -164,7 +173,7 @@ check('Native drag image keeps the measured full row, live multiline value, badg
   assert([...node.querySelectorAll('button,textarea')].every(el=>el.tabIndex===-1&&el.onclick===null&&el.oninput===null));assert.equal(doc.querySelectorAll('#live-drag-control').length,1);
   assert.strictEqual(rows()[3],source);assert(source.classList.contains('is-dragging'));assert.equal(source.getBoundingClientRect().width,rect.width);assert.equal(source.getBoundingClientRect().height,rect.height);assert.deepEqual(ids(),beforeIds);
   assert.equal(root.querySelector('#elementSerialized').textContent,original);assert.equal(root.querySelector('#applyElements').disabled,true);
-  source.dispatchEvent(new w.Event('dragend',{bubbles:true}));assert(!doc.querySelector('.element-drag-preview'));assert(!source.classList.contains('is-dragging'));assert(!root.querySelector('#elementList').classList.contains('is-dragging-list'));
+  source.dispatchEvent(new w.Event('dragend',{bubbles:true}));assert(!doc.querySelector('.element-drag-preview'));assert(!nativeImage.node.isConnected);assert(!source.classList.contains('is-dragging'));assert(!root.querySelector('#elementList').classList.contains('is-dragging-list'));
   assert.notEqual(source.innerHTML,beforeMarkup);assert.equal(input.value,' 当前输入\n A;;A; 中文 ');
 }));
 check('Drag image cleanup covers replacement, normal/no-op row drops, end drops and dismiss without changing occurrence identity',()=>dragFixture(({root,rows,ids,start,original})=>{
@@ -174,8 +183,25 @@ check('Drag image cleanup covers replacement, normal/no-op row drops, end drops 
   const last=rows().at(-1),endImage=start(last).node;root.querySelector('.element-drop-end').dispatchEvent(new w.Event('drop',{bubbles:true,cancelable:true}));assert(!endImage.isConnected);assert.deepEqual(ids(),before);
   const moved=start(rows()[0]).node;rows()[3].dispatchEvent(new w.Event('drop',{bubbles:true,cancelable:true}));assert(!moved.isConnected);assert.deepEqual(ids(),[before[1],before[2],before[0],before[3]]);
   start(rows().find(row=>row.dataset.elementId===before[0]));rows()[0].dispatchEvent(new w.Event('drop',{bubbles:true,cancelable:true}));assert.deepEqual(ids(),before);assert.equal(root.querySelector('#elementSerialized').textContent,original);
-  const ending=start(rows()[0],999,-20);assert.equal(ending.x,ending.rect.width);assert.equal(ending.y,0);
+  const ending=start(rows()[0],999,-20);doc.dispatchEvent(new w.MouseEvent('dragover',{clientX:900,clientY:200,bubbles:true}));assert.equal(ending.node.style.left,(900-ending.rect.width)+'px');assert.equal(ending.node.style.top,'200px');
   w.WindowsElements.dismiss();assert(!ending.node.isConnected);assert(!root.querySelector('.is-dragging'));assert(!root.querySelector('#elementList').classList.contains('is-dragging-list'));assert(!doc.querySelector('.drag-card'));
+}));
+check('Overlay document/source tracking detaches on external drop, next drag, render, dragend and dismiss',()=>dragFixture(({root,rows,start})=>{
+  const types=['dragover','dragleave','drop','dragend'],hooks=new Map(types.map(type=>[type,new Set()]));
+  const add=doc.addEventListener,remove=doc.removeEventListener;
+  doc.addEventListener=function(type,handler,options){if(hooks.has(type)&&options===true)hooks.get(type).add(handler);return add.call(this,type,handler,options);};
+  doc.removeEventListener=function(type,handler,options){if(hooks.has(type)&&options===true)hooks.get(type).delete(handler);return remove.call(this,type,handler,options);};
+  const active=()=>assert(types.every(type=>hooks.get(type).size===1));
+  const cleared=()=>{assert(types.every(type=>hooks.get(type).size===0));assert(!doc.querySelector('.element-drag-preview,.element-drag-native'));};
+  try{
+    const oldSource=rows()[0],first=start(oldSource),second=start(rows()[1]);active();assert(!first.node.isConnected);assert(!first.nativeImage.node.isConnected);
+    oldSource.dispatchEvent(new w.MouseEvent('drag',{clientX:800,clientY:600,bubbles:true}));assert.equal(second.node.style.left,'120px');assert.equal(second.node.style.top,'80px');
+    doc.body.dispatchEvent(new w.Event('drop',{bubbles:true,cancelable:true}));cleared();
+    start(rows()[0]);active();root.querySelector('[data-move-down]').click();cleared();
+    const ended=start(rows()[0]);active();rows()[0].dispatchEvent(new w.Event('dragend',{bubbles:true}));cleared();
+    const position=ended.node.style.left;doc.dispatchEvent(new w.MouseEvent('dragover',{clientX:700,clientY:700,bubbles:true}));assert.equal(ended.node.style.left,position);
+    start(rows()[0]);active();w.WindowsElements.dismiss();cleared();
+  }finally{w.WindowsElements.dismiss();doc.addEventListener=add;doc.removeEventListener=remove;}
 }));
 check('Shared component and additional stylesheet are local; no UI runtime errors', () => {
   assert.deepEqual(errors, []);
@@ -183,6 +209,6 @@ check('Shared component and additional stylesheet are local; no UI runtime error
   assert.match(html, /src="windows-elements\.js(?:\?v=[a-f0-9]{12})?"/);
   assert.match(html, /href="elements-ui\.css(?:\?v=[a-f0-9]{12})?"/);
 });
-const report = { verification: 'JSDOM UI event checks only; native dragging, visual rendering and Windows integration not verified', checks };
+const report = { verification: 'JSDOM UI event checks only; native dragging, visual rendering and Windows integration not verified', nativeAcceptance: 'Previous native full-row bitmap failed user verification; the opaque DOM overlay awaits new manual verification.', checks };
 fs.writeFileSync(path.join(__dirname, 'elements-report.json'), JSON.stringify(report, null, 2) + '\n');
 console.log(JSON.stringify(report, null, 2)); w.close();
