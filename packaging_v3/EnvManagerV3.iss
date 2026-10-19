@@ -13,15 +13,15 @@ DefaultDirName={commonpf64}\EnvManagerV3
 DisableDirPage=yes
 UsePreviousAppDir=no
 PrivilegesRequired=admin
-OutputBaseFilename=EnvManagerV3-3.0.0-dev1-setup-machine-x64
+OutputBaseFilename=EnvManagerV3-3.0.0-setup-machine-x64
 #else
 AppId={{7263F5F6-5A39-40BB-B7CC-7DC45D8AE431}
 AppName=Environment Manager V3
 DefaultDirName={localappdata}\Programs\EnvManagerV3
 PrivilegesRequired=lowest
-OutputBaseFilename=EnvManagerV3-3.0.0-dev1-setup-user-x64
+OutputBaseFilename=EnvManagerV3-3.0.0-setup-user-x64
 #endif
-AppVersion=3.0.0-dev1
+AppVersion=3.0.0
 PrivilegesRequiredOverridesAllowed=
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible

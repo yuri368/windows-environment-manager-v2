@@ -139,7 +139,7 @@ def finalize(bundle, output, installer=None):
            name.lower().endswith((".sqlite3", ".sqlite3-wal", ".sqlite3-shm")) for name in files):
         raise RuntimeError("Unexpected V2/test/user-data content in bundle")
     save(output / "bundle-files.sha256.json", files)
-    archive = output / "EnvManagerV3-3.0.0-dev1-windows-x64.zip"
+    archive = output / "EnvManagerV3-3.0.0-windows-x64.zip"
     with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED) as z:
         for name in files:
             z.write(bundle / name, "EnvManagerV3/" + name)

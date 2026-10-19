@@ -1,6 +1,6 @@
 { New-bundle offline helper. Never run an installed old EXE or the Windows backend. }
 const
-  UpgradeVersion = '3.0.0.dev1';
+  UpgradeVersion = '3.0.0';
   UpgradeWaitMS = 120000;
 var
   UpgradeExe, UpgradeSessionDir: String;

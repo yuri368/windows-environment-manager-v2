@@ -74,7 +74,7 @@ def run(executable, evidence, *, python=False, long_path_fixture=False):
     baseline = inventory()
     log = (evidence / "hold.log").open("w", encoding="utf-8")
     hold = subprocess.Popen(prefix + ["--upgrade-helper", "hold", "--require-unelevated", "--data-dir", str(data),
-                            "--target-version", "3.0.0.dev1", "--session-dir", str(control), "--lease-seconds", "120",
+                            "--target-version", "3.0.0", "--session-dir", str(control), "--lease-seconds", "120",
                             "--parent-pid", str(os.getpid()), "--prepare-timeout", "30"],
                             stdout=log, stderr=subprocess.STDOUT, env=env)
     checks = ["synchronous check-user passed before any product data/session creation"]

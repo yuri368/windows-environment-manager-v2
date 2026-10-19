@@ -77,7 +77,7 @@ try {
         foreach ($mode in $modes) {
             $iss = if ($mode -eq 'Machine') { 'EnvManagerV3-machine.iss' } else { 'EnvManagerV3.iss' }
             Invoke-Checked $IsccPath @('/Qp', "/DBundleDir=$bundle", "/DOutputDir=$runRoot", (Join-Path $buildRoot $iss))
-            $installer = Join-Path $runRoot ("EnvManagerV3-3.0.0-dev1-setup-{0}-x64.exe" -f $mode.ToLowerInvariant())
+            $installer = Join-Path $runRoot ("EnvManagerV3-3.0.0-setup-{0}-x64.exe" -f $mode.ToLowerInvariant())
             $finalizeArguments += @('--installer', $installer)
         }
         Invoke-Checked $venvPython $finalizeArguments
