@@ -1,0 +1,83 @@
+{
+  "passed": 19,
+  "total": 19,
+  "scope": "JSDOM state and focus checks; actual scroll geometry requires browser verification",
+  "checks": [
+    {
+      "name": "Empty-search recovery preserves current application, checked batch and all content",
+      "passed": true
+    },
+    {
+      "name": "Clearing text preserves matching filter and batch selection",
+      "passed": true
+    },
+    {
+      "name": "Escape clears search but composing Escape does not discard IME input",
+      "passed": true
+    },
+    {
+      "name": "Locating filtered-out current app resets only view filters and focuses its button",
+      "passed": true
+    },
+    {
+      "name": "Application list keys move focus without changing selection or content",
+      "passed": true
+    },
+    {
+      "name": "Application rerender and checkbox rerender preserve list scroll",
+      "passed": true
+    },
+    {
+      "name": "Zero mismatches offers a reversible return to all variables",
+      "passed": true
+    },
+    {
+      "name": "Compare disclosure keeps aria-expanded, controls and visibility consistent",
+      "passed": true
+    },
+    {
+      "name": "Config tabs have one active tab stop and a named panel",
+      "passed": true
+    },
+    {
+      "name": "Config arrow and Home/End navigation preserve content and focus the new tab",
+      "passed": true
+    },
+    {
+      "name": "Config app and scheme lists support focus-only keys",
+      "passed": true
+    },
+    {
+      "name": "Config same-variable refresh retains the unified canvas and sidebar scroll",
+      "passed": true
+    },
+    {
+      "name": "Config variable switch retains navigation and expands exactly one inline form",
+      "passed": true
+    },
+    {
+      "name": "New config app or profile starts at top without resetting application list scroll",
+      "passed": true
+    },
+    {
+      "name": "Copy reports success only after Clipboard write resolves",
+      "passed": true
+    },
+    {
+      "name": "Clipboard rejection keeps copy button available and displays recovery message",
+      "passed": true
+    },
+    {
+      "name": "Pending copy keeps its original text and never marks a replacement view copied",
+      "passed": true
+    },
+    {
+      "name": "Leaving config while copy is pending produces no false copy failure",
+      "passed": true
+    },
+    {
+      "name": "No runtime errors in navigation/recovery workflows",
+      "passed": true
+    }
+  ]
+}

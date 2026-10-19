@@ -1,0 +1,15 @@
+{
+  "testedCommit": "aab1f625ae0d4d2698a935afa21038982956bf71",
+  "runId": 39199726440,
+  "conclusion": "success",
+  "verifiedUsing": "Public GitHub REST workflow and job status endpoints",
+  "jobs": [
+    {"jobId": 117890000180, "platform": "windows", "conclusion": "success"},
+    {"jobId": 117890000400, "platform": "ubuntu", "conclusion": "success"}
+  ],
+  "otherWorkflows": [
+    {"runId": 39199726377, "name": "V3 UI prototype checks", "conclusion": "success"},
+    {"runId": 39199726437, "name": "Python tests", "conclusion": "success"}
+  ],
+  "scope": "Automated workflow completion only. The owner requested further drag behavior changes; this is not native visual acceptance. Full decoded job logs were not retrieved for this run."
+}

@@ -1,0 +1,140 @@
+{
+  "verification": "DOM-only: JSDOM events, selected-occurrence ratios, readonly candidate semantics, raw text and serialization; browser appearance and Windows integration not verified",
+  "total": 33,
+  "passed": 33,
+  "failed": 0,
+  "checks": [
+    {
+      "name": "selectionInfo reports matched and missing selected occurrences with preserved raw slices",
+      "passed": true
+    },
+    {
+      "name": "Duplicate selected occurrences contribute individually without consuming actual occurrences",
+      "passed": true
+    },
+    {
+      "name": "Multiple selected values flatten to occurrence indexes and preserve duplicate missing candidates",
+      "passed": true
+    },
+    {
+      "name": "Blank selected slices retain their raw text and indexes but are excluded from denominator",
+      "passed": true
+    },
+    {
+      "name": "Matching trims only whitespace and preserves case, slash and unexpanded reference distinctions",
+      "passed": true
+    },
+    {
+      "name": "Undefined actual values expose all valid selected elements as missing",
+      "passed": true
+    },
+    {
+      "name": "Whole values use independent exact matching and never split semicolons",
+      "passed": true
+    },
+    {
+      "name": "Maven Path custom source marks missing desired value and leaves existing actual text intact",
+      "passed": true
+    },
+    {
+      "name": "Python Path two selected values report partial 1/2 and expose only the missing value",
+      "passed": true
+    },
+    {
+      "name": "+append marks pending desired slices and displays separate readonly actual candidates",
+      "passed": true
+    },
+    {
+      "name": "-append marks pending desired slices and displays separate readonly actual candidates",
+      "passed": true
+    },
+    {
+      "name": "append marks pending desired slices and displays separate readonly actual candidates",
+      "passed": true
+    },
+    {
+      "name": "Partial, full and zero append matches distinguish 1/2, 2/2 and 0/2",
+      "passed": true
+    },
+    {
+      "name": "Replace retains whole item mismatch with extra actual elements despite desired ratio 2/2",
+      "passed": true
+    },
+    {
+      "name": "Whole editor preserves semicolon string with no pending candidate or misleading 0/0",
+      "passed": true
+    },
+    {
+      "name": "Empty selected values preserve raw blank slices without 0/0 detection or append candidates",
+      "passed": true
+    },
+    {
+      "name": "Pending candidates retain raw whitespace and escape markup without creating active DOM",
+      "passed": true
+    },
+    {
+      "name": "Dialog candidates are separate from live rows, stable IDs, duplicates and serialized result",
+      "passed": true
+    },
+    {
+      "name": "Readonly guidance cannot change dirty state, apply state or persisted demo values",
+      "passed": true
+    },
+    {
+      "name": "Manually adding a missing element removes guidance and apply serializes only actual live rows",
+      "passed": true
+    },
+    {
+      "name": "Editing a live row to missing value updates guidance and restoring recomputes from original rows",
+      "passed": true
+    },
+    {
+      "name": "Deleting a matched element makes it a candidate while deletion ghosts remain excluded",
+      "passed": true
+    },
+    {
+      "name": "Cancel discards live edits and reopening has no latent insertion of pending candidates",
+      "passed": true
+    },
+    {
+      "name": "Applying an unrelated live edit never implicitly appends pending candidates",
+      "passed": true
+    },
+    {
+      "name": "Undefined actual editor starts with no live rows and cannot apply readonly candidates",
+      "passed": true
+    },
+    {
+      "name": "Matching preserves raw live rows; definite append candidates contain only the first normalized occurrence",
+      "passed": true
+    },
+    {
+      "name": "Same target name keeps User and System candidates isolated",
+      "passed": true
+    },
+    {
+      "name": "Windows snapshot and direct editors ignore conflicting and append scheme requests in both scopes",
+      "passed": true
+    },
+    {
+      "name": "Source switching refreshes desired guidance and newly opened dialog selection",
+      "passed": true
+    },
+    {
+      "name": "options.appendValues supports readonly guidance independent of highlight selectedValues",
+      "passed": true
+    },
+    {
+      "name": "Explicit appendValues in a whole-string session still cannot create split candidates",
+      "passed": true
+    },
+    {
+      "name": "Missing append context and replace/whole contexts do not generate editor candidates",
+      "passed": true
+    },
+    {
+      "name": "Append feedback workflows emit no JSDOM runtime errors",
+      "passed": true
+    }
+  ]
+}

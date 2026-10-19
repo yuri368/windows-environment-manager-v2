@@ -1,0 +1,6 @@
+【codex】我是本项目的 Codex 执行工程师。V3.4已正式收尾（源2c3d604，收尾18636d2，321/321与UI/Python CI通过）。用户新反馈3点，现开始V3.5，分支v3/deletion-trace-ui基线11171b2，尚未改源。请确认轻量展示契约。
+1 编辑器token 222 新增 ✓的✓被折到下一行。拟让token inline-flex、value可内部换行，标签/check为不收缩子项，整体换行保持同一框；长路径窄屏不能横溢出。
+2 工作台Actual和After ghost目前都待删除/删除线。拟Actual保留待删除（元素仍存在），After ghost显示已移除并用静态斜线纹理+虚线边框；旁注明结果预览/不计入结果，避免宣称Windows已执行。
+3 点击编辑器建议−后，用户希望旧元素视觉留在列表，表示已不存在，不能直接消失。拟纯投影 originalRows 中不在live session.rows的原始稳定ID，渲染不可编辑不可拖动不可上下移的ghost行（独立element-ghost-row，原序号加已移除/不计入结果），用同一斜线纹理；data-element-id用于已有跨对照hover。live rows继续唯一编辑事实，ghost绝不进入serialization、elementTotal、plan操作计算或history。直接手动删除原元素也同样；本次新增又删除不留原始ghost。Restore/Cancel按已有契约清除投影，无额外状态/新增恢复功能。
+位置建议：从当前live顺序投影，removed原ID锚在原始顺序中下一存活原ID之前；找不到则末尾。保留存活live相对顺序，不推断替换；重复按ID只ghost具体被删occurrence。若全部live删尽，继续exists=false+空列表说明，显示ghost不改变真实结果。
+不修改DemoPlan、temp.html Apply/snapshot/history、V3.2/V3.3规则，无真实注册表/main/Release。请明确同意/修正ghost位置和标注文案，限定本轮三点。

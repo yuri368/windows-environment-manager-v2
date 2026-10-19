@@ -1,0 +1,86 @@
+[
+  {
+    "case": "普通：CR 后 Enter",
+    "visible": "A\n\nB",
+    "saved": {
+      "raw": "A\n\nB",
+      "after": "A\n\nB",
+      "operations": [
+        {
+          "type": "replace",
+          "action": "REPLACE",
+          "elementId": 1,
+          "before": "A\rB",
+          "after": "A\n\nB",
+          "beforeIndex": 0,
+          "afterIndex": 0
+        }
+      ]
+    },
+    "reopened": "A\n\nB",
+    "pass": true
+  },
+  {
+    "case": "普通：删除 CR/LF 中间文字",
+    "visible": "A\n\nB",
+    "saved": {
+      "raw": "A\n\nB",
+      "after": "A\n\nB",
+      "operations": [
+        {
+          "type": "replace",
+          "action": "REPLACE",
+          "elementId": 3,
+          "before": "A\rX\nB",
+          "after": "A\n\nB",
+          "beforeIndex": 0,
+          "afterIndex": 0
+        }
+      ]
+    },
+    "reopened": "A\n\nB",
+    "pass": true
+  },
+  {
+    "case": "整体：CR 后 Enter",
+    "visible": "A\n\nB",
+    "saved": {
+      "raw": "A\n\nB",
+      "after": "A\n\nB",
+      "operations": [
+        {
+          "type": "replace",
+          "action": "REPLACE",
+          "elementId": 5,
+          "before": "A\rB",
+          "after": "A\n\nB",
+          "beforeIndex": 0,
+          "afterIndex": 0
+        }
+      ]
+    },
+    "reopened": "A\n\nB",
+    "pass": true
+  },
+  {
+    "case": "整体：删除 CR/LF 中间文字",
+    "visible": "A\n\nB",
+    "saved": {
+      "raw": "A\n\nB",
+      "after": "A\n\nB",
+      "operations": [
+        {
+          "type": "replace",
+          "action": "REPLACE",
+          "elementId": 7,
+          "before": "A\rX\nB",
+          "after": "A\n\nB",
+          "beforeIndex": 0,
+          "afterIndex": 0
+        }
+      ]
+    },
+    "reopened": "A\n\nB",
+    "pass": true
+  }
+]

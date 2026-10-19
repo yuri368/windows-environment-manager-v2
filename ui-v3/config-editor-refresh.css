@@ -1,0 +1,275 @@
+/* Configuration workspace: presentation only, loaded after config-editor.css.
+   Keep source values, native controls and existing editor behavior intact. */
+.config-page {
+  --cfg-accent: var(--green, #286c51);
+  --cfg-selected: var(--green-soft, #eaf3ed);
+  --cfg-canvas: #f7faf8;
+  --cfg-surface: #fff;
+  --cfg-edge: var(--line2, #ccd7cf);
+  --cfg-divider: var(--line, #e4e9e5);
+  --cfg-input-edge: #b7c9bd;
+  --cfg-muted: #536b5c;
+  --cfg-edited: #865b16;
+  --cfg-edited-bg: #fffbf2;
+  --cfg-error: #9b3d36;
+  --cfg-error-bg: #fbeeea;
+}
+
+/* One navigation scroll surface; no short lists above unused space. */
+.cfg-navigation { background: var(--cfg-canvas); }
+.cfg-navigation .editor-section { margin-top: 8px; gap: 4px 6px; }
+.cfg-navigation .editor-section strong,
+.cfg-navigation .editor-section .mini { font-size: 12px; }
+.cfg-navigation .editor-item { min-height: 32px; padding: 6px 8px; font-size: 13px; }
+.cfg-navigation .editor-item.active { background: var(--cfg-selected); color: var(--cfg-accent); }
+.cfg-editor-main { padding: 12px 16px 20px; background: var(--cfg-canvas); }
+.cfg-page-heading { margin-bottom: 10px; }
+.cfg-page-heading h2 { font-size: 18px; font-weight: 600; }
+.cfg-page-heading p { font-size: 12px; color: var(--cfg-muted); }
+.cfg-page-heading .view-select { min-height: 32px; border-radius: 3px; font-size: 12px; }
+.cfg-scheme-heading h3, .cfg-scheme-heading > span { font-size: 12px; }
+
+/* Compact variable selectors; long names remain readable. */
+.cfg-variable-strip { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 4px; border: 0; padding: 2px 0; }
+.cfg-variable-select {
+  flex: 0 1 auto; min-width: 0; max-width: 100%; min-height: 34px;
+  padding: 5px 8px; border: 1px solid var(--cfg-edge); border-radius: 3px;
+  background: var(--cfg-surface); color: var(--ink);
+  transition: background-color 120ms ease-out, border-color 120ms ease-out;
+}
+.cfg-variable-select > strong {
+  font-size: 13px; font-weight: 600; white-space: normal;
+  overflow: visible; overflow-wrap: anywhere; text-overflow: clip;
+}
+.cfg-variable-select:hover { background: var(--cfg-selected); border-color: var(--cfg-accent); }
+.cfg-variable-select.is-active {
+  background: var(--cfg-selected); border-color: var(--cfg-accent);
+  color: var(--cfg-accent); box-shadow: inset 0 -2px var(--cfg-accent);
+}
+.cfg-variable-meta { font-size: 12px; color: var(--cfg-muted); }
+.cfg-variable-entry { padding: 2px 0; }
+
+/* One editing surface; hierarchy comes from fields and row alignment. */
+.cfg-inline-form {
+  margin-top: 8px; padding: 12px; border: 1px solid var(--cfg-divider);
+  border-radius: 4px; background: var(--cfg-surface);
+}
+.cfg-form-heading { padding-bottom: 8px; border-color: var(--cfg-divider); }
+.cfg-form-heading h3 { font: 600 15px/1.45 Consolas, 'Microsoft YaHei UI', monospace; }
+.cfg-facts { font-size: 12px; color: var(--cfg-muted); gap: 4px 16px; }
+.cfg-facts > span { align-items: baseline; }
+.cfg-facts strong {
+  max-width: none; white-space: pre-wrap; overflow: visible;
+  overflow-wrap: anywhere; text-overflow: clip;
+}
+.cfg-rules { grid-template-columns: minmax(120px,160px) minmax(150px,205px) minmax(0,1fr); }
+.cfg-inline-form .field label, .cfg-default-heading > label {
+  font-size: 12px; font-weight: 600; color: var(--body, #42594b);
+}
+.cfg-field-key { font-size: 11px; color: var(--cfg-muted); }
+.cfg-hint, .cfg-page-note { font-size: 12px; line-height: 1.5; color: var(--cfg-muted); }
+.cfg-section-heading h3 { font-size: 13px; }
+.cfg-count { font-size: 12px; }
+
+.cfg-inline-form .field :is(input,select,textarea), .cfg-raw-input,
+.cfg-create-fields :is(input,select) {
+  border: 1px solid var(--cfg-input-edge); border-radius: 3px;
+  background: var(--cfg-surface); color: var(--ink); font-size: 13px;
+  transition: border-color 120ms ease-out, background-color 120ms ease-out;
+}
+.cfg-inline-form .field select, .cfg-create-fields :is(input,select) { min-height: 32px; }
+.cfg-inline-form .field :is(input,select,textarea):hover,
+.cfg-raw-input:hover, .cfg-create-fields :is(input,select):hover { border-color: var(--cfg-accent); }
+.cfg-inline-form .field :is(input,select,textarea):focus,
+.cfg-raw-input:focus, .cfg-create-fields :is(input,select):focus { border-color: var(--cfg-accent); }
+.cfg-inline-form .field textarea, .cfg-raw-input {
+  font-size: 13px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.cfg-choice-cell textarea { height: auto; min-height: 32px; max-height: none; }
+.cfg-raw-input { height: auto; min-height: 64px; max-height: none; }
+@supports (field-sizing: content) {
+  .cfg-choice-cell textarea, .cfg-raw-input { field-sizing: content; }
+}
+
+/* Native configuration checkboxes retain state and keyboard semantics. */
+.cfg-switches { gap: 4px 16px; }
+.cfg-switches .checklabel { min-height: 28px; gap: 6px; font-size: 12px; cursor: pointer; }
+.cfg-switches input[type=checkbox] { width: 16px; height: 16px; flex: none; accent-color: var(--cfg-accent); }
+
+/* Creation is an editable list item, not a separate padded panel. */
+.cfg-create-form {
+  display: inline-grid; grid-template-columns: minmax(0,auto) auto; align-items: center;
+  gap: 0 2px; width: fit-content; max-width: 100%; min-height: 34px;
+  margin: 0; padding: 0; border: 1px solid var(--cfg-edge); border-radius: 3px;
+  background: var(--cfg-surface); box-shadow: none; animation: none;
+}
+.cfg-create-form:focus-within { border-color: var(--cfg-accent); background: var(--cfg-selected); }
+.cfg-create-form:has(input:focus-visible) { outline: 2px solid var(--cfg-accent); outline-offset: -2px; }
+.cfg-create-form .cfg-create-fields { display: block; grid-column: 1; grid-row: 1; min-width: 0; }
+.cfg-create-form .cfg-create-fields .field label {
+  position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+.cfg-create-form .cfg-create-fields input {
+  width: 100%; min-width: 0; min-height: 32px; height: 32px; padding: 5px 8px;
+  border: 0; border-radius: 3px; background: transparent; color: var(--ink); font-size: 13px; font-weight: 600;
+  box-shadow: none;
+}
+.cfg-create-form .cfg-create-fields input:focus { border: 0; background: transparent; box-shadow: none; }
+.cfg-create-form .cfg-create-fields input:focus-visible { outline: none; }
+.cfg-create-form .cfg-create-actions {
+  grid-column: 2; grid-row: 1; flex-wrap: nowrap; gap: 0; margin: 0; padding-right: 2px;
+}
+.cfg-create-form .cfg-create-actions > button {
+  width: 26px; min-width: 26px; min-height: 26px; height: 26px; padding: 0;
+  border: 0; border-radius: 2px; background: transparent; color: var(--cfg-accent);
+  font-size: 15px; line-height: 1; box-shadow: none; transform: none; filter: none;
+}
+.cfg-create-form .cfg-create-actions > button:hover:enabled { background: var(--cfg-selected); color: var(--cfg-accent); }
+.cfg-create-form .cfg-create-actions > button:active:enabled { background: #dbeade; }
+.cfg-create-form .cfg-create-error { grid-column: 1 / -1; grid-row: 2; min-height: 0; margin: 0; padding: 2px 6px; font-size: 12px; }
+.cfg-create-form .cfg-create-error:empty { display: none; }
+.cfg-create-form #cfgLocateScope { grid-column: 1 / -1; justify-self: start; }
+.cfg-navigation .cfg-create-form { width: 100%; grid-template-columns: minmax(0,1fr) auto; min-height: 32px; margin: 2px 0; padding: 0; }
+.cfg-navigation .cfg-create-form .cfg-create-fields input { height: 30px; min-height: 30px; }
+.cfg-create-variable { flex: 0 1 auto; min-width: 0; max-width: 100%; }
+.cfg-create-variable .cfg-create-fields input { width: 10ch; min-inline-size: 8ch; max-width: 100%; }
+@supports (field-sizing: content) {
+  .cfg-create-variable .cfg-create-fields input { field-sizing: content; width: auto; }
+}
+.cfg-text-action, .cfg-confirm {
+  min-height: 30px; border-radius: 3px; font-size: 12px;
+  transition: border-color 120ms ease-out, background-color 120ms ease-out;
+}
+.cfg-text-action:hover { border-color: var(--cfg-edge); background: var(--cfg-selected); }
+.cfg-confirm { background: var(--cfg-accent); border-color: var(--cfg-accent); color: #fff; }
+.cfg-confirm:hover:enabled { background: #205a43; }
+.cfg-confirm:active:enabled { background: #194a36; }
+.cfg-text-action:active:enabled { background: #dbeade; }
+.cfg-confirm:disabled { cursor: default; }
+.cfg-create-error, .cfg-create-conflict { font-size: 12px; }
+.cfg-create-error { color: var(--cfg-error); }
+.cfg-variable-entry { display: inline-flex; flex: none; padding: 0; }
+.cfg-variable-entry .cfg-text-action {
+  min-height: 34px; padding: 5px 8px; border: 1px dashed var(--cfg-edge); border-radius: 3px;
+}
+.cfg-container-draft { gap: 8px; }
+.cfg-container-draft > span { min-width: 0; overflow-wrap: anywhere; }
+.cfg-container-draft small { flex: none; font-size: 12px; font-weight: 400; color: var(--cfg-muted); }
+.cfg-container-workspace { padding-top: 12px; border-top: 1px solid var(--cfg-divider); }
+.cfg-container-workspace h3 { margin: 0 0 4px; font-size: 14px; font-weight: 600; }
+.cfg-container-workspace > p { font-size: 13px; color: var(--cfg-muted); }
+.cfg-container-workspace > .cfg-hint { margin: 12px 0 4px; font-size: 12px; }
+.cfg-container-workspace > .cfg-create-form { max-width: 420px; }
+.cfg-create-options { margin: 6px 0 10px; }
+.cfg-create-options > summary { width: fit-content; padding: 4px 0; font-size: 12px; color: var(--cfg-muted); cursor: pointer; }
+.cfg-create-options > .cfg-pending-rules { margin-top: 4px; border: 0; padding: 8px 0; background: transparent; }
+.cfg-create-options .cfg-rules { padding-bottom: 4px; }
+@keyframes cfg-appear { from { opacity: 0; } to { opacity: 1; } }
+@keyframes cfg-panel-reveal { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* Ordered candidates: full values, stable columns, visible actions. */
+.cfg-choice-list { border: 1px solid var(--cfg-divider); border-radius: 3px; }
+.cfg-choice-columns, .cfg-choice-row {
+  grid-template-columns: 28px minmax(100px,.7fr) minmax(160px,1.6fr) 132px;
+}
+.cfg-choice-columns {
+  min-height: 28px; padding: 3px 6px; background: var(--cfg-canvas);
+  font-size: 12px; color: var(--cfg-muted);
+}
+.cfg-choice-row { min-height: 40px; padding: 4px 6px; border-color: var(--cfg-divider); }
+.cfg-choice-row:hover { background: var(--cfg-canvas); }
+.cfg-choice-row:focus-within { background: var(--cfg-selected); }
+.cfg-choice-order { font-size: 12px; align-self: start; padding-top: 7px; }
+.cfg-choice-actions { opacity: 1; gap: 2px; }
+.cfg-choice-actions button {
+  min-height: 30px; padding: 4px 6px; border-radius: 3px; font-size: 12px;
+  transition: background-color 120ms ease-out, border-color 120ms ease-out;
+}
+.cfg-choice-actions button:disabled { opacity: .5; }
+.cfg-choice-draft {
+  margin: 0; min-height: 36px; padding: 3px 6px; border: 0; border-top: 1px solid var(--cfg-divider); border-radius: 0;
+  background: var(--cfg-surface); animation: none;
+}
+.cfg-choice-draft .cfg-choice-cell .field label {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+.cfg-choice-draft .cfg-choice-cell textarea { min-height: 28px; height: auto; padding: 3px 6px; }
+.cfg-choice-draft .cfg-choice-order { padding-top: 4px; }
+.cfg-choice-draft .cfg-choice-actions button { min-height: 28px; padding: 3px 5px; border-radius: 3px; }
+.cfg-choice-draft .cfg-create-error { min-height: 0; margin: 0; }
+.cfg-choice-draft .cfg-create-error:empty { display: none; }
+.cfg-empty { padding: 8px; margin: 0; font-size: 12px; color: var(--cfg-muted); }
+
+/* Persistent change feedback; typing does not replay a decorative pulse. */
+.cfg-inline-form :is(input,select,textarea).is-config-edited {
+  background: var(--cfg-edited-bg); border-color: #c5a66d;
+}
+.cfg-inline-form label.is-config-edited::after,
+.cfg-choices.is-config-edited .cfg-section-heading h3::after { font-size: 12px; color: var(--cfg-edited); }
+.cfg-validation {
+  border: 1px solid #d9b5af; border-radius: 3px;
+  color: var(--cfg-error); background: var(--cfg-error-bg); font-size: 12px;
+}
+.config-page :is(button,input,select,textarea,summary):focus-visible {
+  outline: 2px solid var(--cfg-accent); outline-offset: 2px;
+}
+/* Keep keyboard feedback inside compact rows, clear of neighbouring items. */
+.config-page .cfg-navigation .editor-item:focus-visible,
+.config-page .cfg-create-form button:focus-visible { outline-offset: -2px; }
+.cfg-editor-main, .cfg-navigation > .editor-left {
+  scrollbar-width: thin; scrollbar-color: #b7c9bd transparent;
+}
+
+@media (min-width: 701px) {
+  .cfg-navigation .editor-nav-list { max-height: none; overflow: visible; }
+  /* The desktop content stays available even if mobile left details closed. */
+  .cfg-navigation::details-content { content-visibility: visible; height: 100%; }
+}
+@supports not selector(details::details-content) {
+  @media (min-width: 701px) {
+    .cfg-navigation:not([open]) > summary {
+      display: list-item; margin-left: 24px; padding: 8px 8px 8px 0;
+      font-size: 12px; cursor: pointer;
+    }
+  }
+}
+@media (min-width: 1300px) and (max-width: 1439px) {
+  .cfg-inline-form { display: block; }
+  .cfg-default-block { margin-bottom: 12px; }
+}
+@media (max-width: 950px) {
+  .cfg-rules { grid-template-columns: minmax(110px,1fr) minmax(130px,1fr); }
+}
+@media (min-width: 701px) and (max-width: 1100px) {
+  .cfg-choice-columns, .cfg-choice-row {
+    grid-template-columns: 24px minmax(80px,.7fr) minmax(100px,1.4fr) 126px; gap: 6px;
+  }
+  .cfg-choice-actions button { padding: 4px 5px; }
+}
+@media (max-width: 700px) {
+  .cfg-editor-main { padding: 12px 12px 20px; }
+  .cfg-navigation > .editor-left { gap: 12px; }
+  .cfg-variable-select { min-width: 0; flex: 0 1 auto; }
+  .cfg-inline-form { padding: 10px; }
+  .cfg-choice-row { grid-template-columns: 20px minmax(0,1fr) 64px; gap: 6px; }
+  .cfg-choice-actions { flex-direction: column; align-items: stretch; }
+  .cfg-choice-actions button { min-height: 28px; }
+  .cfg-choice-draft .cfg-create-error { grid-column: 2 / -1; }
+}
+@media (max-width: 430px) {
+  .cfg-rules { grid-template-columns: minmax(0,1fr); }
+  .cfg-choice-row { grid-template-columns: 20px minmax(0,1fr); }
+  .cfg-choice-actions { flex-direction: row; flex-wrap: wrap; }
+  .cfg-switches { align-items: flex-start; flex-direction: column; }
+}
+@media (forced-colors: active) {
+  .cfg-variable-select.is-active { border-color: Highlight; border-width: 2px; box-shadow: none; }
+  .cfg-inline-form :is(input,select,textarea).is-config-edited { border: 2px dashed CanvasText; }
+  .config-page :is(button,input,select,textarea,summary):focus-visible { outline-color: Highlight; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cfg-editor-shell *, .cfg-editor-shell *::before, .cfg-editor-shell *::after {
+    animation: none !important; transition: none !important; scroll-behavior: auto !important;
+  }
+}

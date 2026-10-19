@@ -1,0 +1,172 @@
+{
+  "items": [
+    {
+      "cellWidth": 20.99609375,
+      "family": "\"Microsoft YaHei UI\", \"PingFang SC\", \"Segoe UI\", sans-serif",
+      "font": "11.5px",
+      "gap": "5px",
+      "height": 21.9921875,
+      "iconWidth": 11.9921875,
+      "padding": "0px 8px 0px 0px",
+      "radius": "5px",
+      "text": "新增0",
+      "weight": "400"
+    },
+    {
+      "cellWidth": 20.99609375,
+      "family": "\"Microsoft YaHei UI\", \"PingFang SC\", \"Segoe UI\", sans-serif",
+      "font": "11.5px",
+      "gap": "5px",
+      "height": 21.9921875,
+      "iconWidth": 11.9921875,
+      "padding": "0px 8px 0px 0px",
+      "radius": "5px",
+      "text": "手动新增0",
+      "weight": "400"
+    },
+    {
+      "cellWidth": 20.99609375,
+      "family": "\"Microsoft YaHei UI\", \"PingFang SC\", \"Segoe UI\", sans-serif",
+      "font": "11.5px",
+      "gap": "5px",
+      "height": 21.9921875,
+      "iconWidth": 11.9921875,
+      "padding": "0px 8px 0px 0px",
+      "radius": "5px",
+      "text": "替换0",
+      "weight": "400"
+    },
+    {
+      "cellWidth": 20.99609375,
+      "family": "\"Microsoft YaHei UI\", \"PingFang SC\", \"Segoe UI\", sans-serif",
+      "font": "11.5px",
+      "gap": "5px",
+      "height": 21.9921875,
+      "iconWidth": 11.9921875,
+      "padding": "0px 8px 0px 0px",
+      "radius": "5px",
+      "text": "移动2",
+      "weight": "400"
+    },
+    {
+      "cellWidth": 20.99609375,
+      "family": "\"Microsoft YaHei UI\", \"PingFang SC\", \"Segoe UI\", sans-serif",
+      "font": "11.5px",
+      "gap": "5px",
+      "height": 21.9921875,
+      "iconWidth": 11.9921875,
+      "padding": "0px 8px 0px 0px",
+      "radius": "5px",
+      "text": "删除0",
+      "weight": "400"
+    },
+    {
+      "cellWidth": 20.99609375,
+      "family": "\"Microsoft YaHei UI\", \"PingFang SC\", \"Segoe UI\", sans-serif",
+      "font": "11.5px",
+      "gap": "5px",
+      "height": 21.9921875,
+      "iconWidth": 11.9921875,
+      "padding": "0px 8px 0px 0px",
+      "radius": "5px",
+      "text": "重复0",
+      "weight": "400"
+    },
+    {
+      "cellWidth": 20.99609375,
+      "family": "\"Microsoft YaHei UI\", \"PingFang SC\", \"Segoe UI\", sans-serif",
+      "font": "11.5px",
+      "gap": "5px",
+      "height": 21.9921875,
+      "iconWidth": 11.9921875,
+      "padding": "0px 8px 0px 0px",
+      "radius": "5px",
+      "text": "空元素0",
+      "weight": "400"
+    },
+    {
+      "cellWidth": 20.99609375,
+      "family": "\"Microsoft YaHei UI\", \"PingFang SC\", \"Segoe UI\", sans-serif",
+      "font": "11.5px",
+      "gap": "5px",
+      "height": 21.9921875,
+      "iconWidth": 11.9921875,
+      "padding": "0px 8px 0px 0px",
+      "radius": "5px",
+      "text": "匹配1",
+      "weight": "400"
+    },
+    {
+      "cellWidth": 20.99609375,
+      "family": "\"Microsoft YaHei UI\", \"PingFang SC\", \"Segoe UI\", sans-serif",
+      "font": "11.5px",
+      "gap": "5px",
+      "height": 21.9921875,
+      "iconWidth": 11.9921875,
+      "padding": "0px 8px 0px 0px",
+      "radius": "5px",
+      "text": "匹配",
+      "weight": "400"
+    },
+    {
+      "cellWidth": 20.99609375,
+      "family": "\"Microsoft YaHei UI\", \"PingFang SC\", \"Segoe UI\", sans-serif",
+      "font": "11.5px",
+      "gap": "5px",
+      "height": 21.9921875,
+      "iconWidth": 11.9921875,
+      "padding": "0px 8px 0px 0px",
+      "radius": "5px",
+      "text": "移动",
+      "weight": "400"
+    },
+    {
+      "cellWidth": 20.99609375,
+      "family": "\"Microsoft YaHei UI\", \"PingFang SC\", \"Segoe UI\", sans-serif",
+      "font": "11.5px",
+      "gap": "5px",
+      "height": 21.9921875,
+      "iconWidth": 11.9921875,
+      "padding": "0px 8px 0px 0px",
+      "radius": "5px",
+      "text": "移动",
+      "weight": "400"
+    },
+    {
+      "cellWidth": 20.99609375,
+      "family": "\"Microsoft YaHei UI\", \"PingFang SC\", \"Segoe UI\", sans-serif",
+      "font": "11.5px",
+      "gap": "5px",
+      "height": 21.9921875,
+      "iconWidth": 11.9921875,
+      "padding": "0px 8px 0px 0px",
+      "radius": "5px",
+      "text": "移动",
+      "weight": "400"
+    },
+    {
+      "cellWidth": 20.99609375,
+      "family": "\"Microsoft YaHei UI\", \"PingFang SC\", \"Segoe UI\", sans-serif",
+      "font": "11.5px",
+      "gap": "5px",
+      "height": 21.9921875,
+      "iconWidth": 11.9921875,
+      "padding": "0px 8px 0px 0px",
+      "radius": "5px",
+      "text": "匹配",
+      "weight": "400"
+    },
+    {
+      "cellWidth": 20.99609375,
+      "family": "\"Microsoft YaHei UI\", \"PingFang SC\", \"Segoe UI\", sans-serif",
+      "font": "11.5px",
+      "gap": "5px",
+      "height": 21.9921875,
+      "iconWidth": 11.9921875,
+      "padding": "0px 8px 0px 0px",
+      "radius": "5px",
+      "text": "移动",
+      "weight": "400"
+    }
+  ]
+}

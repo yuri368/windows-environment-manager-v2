@@ -1,0 +1,46 @@
+{
+  "version": "3.0.0",
+  "runtimeSourceCommit": "188bdd4eec8126209dada2c8d2c4d73b3d2715ff",
+  "build": "20261019-163742-823",
+  "buildExitCode": 0,
+  "artifacts": {
+    "EnvManagerV3-3.0.0-windows-x64.zip": "b024ae79062c9c48b11cfeffd2e8d37690ecbec0399ef3a35920f90757b5591d",
+    "EnvManagerV3/EnvManagerV3.exe": "977533de7df20c61eb7dcd4c621c73ba6090833aa17d89049d9ae865a84fa9ce",
+    "EnvManagerV3-3.0.0-setup-user-x64.exe": "3692128fb4851fb2b8d954bf62c983d0d4ed6d8c953efdec4d6c9d24e974d33c",
+    "EnvManagerV3-3.0.0-setup-machine-x64.exe": "a56ffeba01205e9c3b703615e2f104a241edc20b2050117f5b0116cf2ae8ce4f"
+  },
+  "signed": false,
+  "bundleVerification": {
+    "status": "passed",
+    "currentSourceMatchesStaged": true,
+    "errors": [],
+    "productionAssetsVerified": 15,
+    "licenseFilesVerified": 30,
+    "bundleFilesVerified": 115,
+    "rulesSha256": "e7444cc31ff5845adcf0ebae1169f69c2e863cf9224d28fe4f7c2ec6f8118732"
+  },
+  "tests": {
+    "backendExecuted": 506,
+    "backendPassed": 505,
+    "backendSkipped": 1,
+    "backendSeconds": 87.198,
+    "targetedExecuted": 99,
+    "targetedPassed": 98,
+    "targetedSkipped": 1
+  },
+  "finalReview": {
+    "astraModel": "gpt-6-astra",
+    "astraBaseline": "8e7f8d9",
+    "p1Finding": "Rejected System writes could compensate external states equal to after",
+    "fixedAt": "188bdd4",
+    "verification": "WindowsEnvironment/FakeWinreg concurrent equal-value and external-delete regressions; Sol read-only closure review found no blocker"
+  },
+  "cleanWindowsVmValidated": false,
+  "nativeRuntimeEvidence": "release-3.0.0-runtime.json",
+  "finalMachineInstall": {
+    "status": "cancelled_by_uac",
+    "installerExecuted": false,
+    "previousInstalledCandidate": "20261019-130846-568",
+    "backupRetained": true
+  }
+}

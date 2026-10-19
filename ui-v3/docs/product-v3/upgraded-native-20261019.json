@@ -1,0 +1,71 @@
+{
+  "Scope": "Installed rebuilt runtime, actual Windows adapter and user-confirmed UAC",
+  "RuntimeSHA256": "4b11c2b840a6d7cac8cc3649ee178f4b30dec3ca3031393726a985a3950f4f79",
+  "Evidence": {
+    "restart-verification.json": {
+      "Timestamp": "2026-10-19T11:12:51.3244991+08:00",
+      "InstalledRuntimeSHA256": "4B11C2B840A6D7CAC8CC3649EE178F4B30DEC3CA3031393726A985A3950F4F79",
+      "HistoryBefore": 5,
+      "HistoryAfter": 5,
+      "ExactHistoryPreserved": true,
+      "RecoveryCount": 0,
+      "Monitoring": {
+        "running": true,
+        "closed": false,
+        "scopes": {
+          "User": true,
+          "System": true
+        },
+        "errors": {},
+        "callback_error": null
+      },
+      "RestartedServicePID": 2708
+    },
+    "environment-restored-verification.json": {
+      "Timestamp": "2026-10-19T11:11:56.8477138+08:00",
+      "BeforeCount": 28,
+      "AfterCount": 28,
+      "ExactRawTypeInventoryMatch": true,
+      "DisposableTargetsAbsent": true
+    },
+    "apply-readback-verification.json": {
+      "OperationId": "1de75edf1a2f4bb5963d2d0bf4fcc9bb",
+      "Status": "committed",
+      "Targets": [
+        {
+          "Scope": "User",
+          "Name": "V3_ACCEPTANCE_20261019_USER",
+          "Exists": true,
+          "Type": "ExpandString",
+          "RawMatches": true,
+          "UTF16Length": 13
+        },
+        {
+          "Scope": "System",
+          "Name": "V3_ACCEPTANCE_20261019_SYSTEM",
+          "Exists": true,
+          "Type": "ExpandString",
+          "RawMatches": true,
+          "UTF16Length": 37
+        }
+      ],
+      "WarningCount": 0,
+      "ErrorCount": 0,
+      "InstalledExeSHA256": "4B11C2B840A6D7CAC8CC3649EE178F4B30DEC3CA3031393726A985A3950F4F79"
+    }
+  },
+  "Restore": {
+    "OperationId": "10d36d8f97d54a76955158e620e80ebf",
+    "Status": "committed",
+    "WarningCount": 0,
+    "ErrorCount": 0
+  },
+  "NativePipe": {
+    "Test": "tests_v3.test_native_ipc.NativeOrdinaryPipeTests.test_real_pipe_cross_process_pid_framing_and_ordinary_token",
+    "Tests": 1,
+    "Passed": 1,
+    "Skipped": 0,
+    "Seconds": 0.146,
+    "Scope": "ordinary local token, cross-process kernel peer PID, 150000 character message; no UAC or Registry write"
+  }
+}

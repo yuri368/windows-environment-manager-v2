@@ -1,0 +1,40 @@
+{
+  "testedCommit": "31d573260d33bb7cf5ca4d05ead97f020b497954",
+  "runId": 39197441713,
+  "conclusion": "success",
+  "jobs": [
+    {
+      "job": {
+        "id": 117883145656,
+        "name": "V3 product (ubuntu-latest)",
+        "conclusion": "success"
+      },
+      "lines": [
+        "2026-10-19T04:02:37.3121183Z Ran 504 tests in 41.435s",
+        "2026-10-19T04:02:37.3121651Z OK (skipped=10)",
+        "2026-10-19T04:02:39.3493929Z PASS production shell preserves CSS order and contains no fixtures/inline scripts",
+        "2026-10-19T04:02:39.3495628Z 34 product contract checks passed (JSDOM fixtures; real backend/browser acceptance is separate)."
+      ]
+    },
+    {
+      "job": {
+        "id": 117883145825,
+        "name": "V3 product (windows-latest)",
+        "conclusion": "success"
+      },
+      "lines": [
+        "2026-10-19T04:04:12.3416889Z Ran 504 tests in 112.295s\r",
+        "2026-10-19T04:04:12.3417159Z OK (skipped=1)\r",
+        "2026-10-19T04:04:14.7496376Z PASS production shell preserves CSS order and contains no fixtures/inline scripts\r",
+        "2026-10-19T04:04:14.7497585Z 34 product contract checks passed (JSDOM fixtures; real backend/browser acceptance is separate).\r"
+      ]
+    }
+  ],
+  "localRegression": {
+    "tests": 504,
+    "skipped": 1,
+    "seconds": 102.569,
+    "result": "OK"
+  },
+  "scope": "Single-instance implementation included; pending frontend quit button not covered."
+}

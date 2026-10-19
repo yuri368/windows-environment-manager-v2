@@ -1,0 +1,26 @@
+{
+  "commit": "0aa41e613bbdd077c7c199c18389725fa12fedaf",
+  "note": "Git stores LF via .gitattributes; local source-hashes.json includes original local CRLF. SHA256 below hashes exact Git blob UTF-8 content, so local byte hashes can differ.",
+  "files": [
+    {
+      "file": "temp.html",
+      "sha256": "0aa25c95bd7a54d26d4ac2fb381e0214113e2826d61fb7eef8ca937f7138a4e0",
+      "blob": "91fbb544996d3e56cb1a599a35a250b43b23ccd6"
+    },
+    {
+      "file": "windows-elements.js",
+      "sha256": "1c2e941842bfc878b53b657e92d631c60e99050b59567afaff0a3921544f484d",
+      "blob": "b42ed2dadda11522dd2f1464491a8d19b7057de5"
+    },
+    {
+      "file": "demo-plan.js",
+      "sha256": "950e4f532eaa9a43444ef10ff8b2ba819981ccbbc32202a6a19bf06f669d4bc4",
+      "blob": "21ded9b9d8fdcbb4513ddc61cdb3add6b75e42e9"
+    },
+    {
+      "file": "elements-ui.css",
+      "sha256": "708d27af03c76b167c2613f7ebd6588c865ae56509b507afa2ecfb6d6ea7ba74",
+      "blob": "4170e1d3216efae3b3d94c8f5f1a7306a29dc67e"
+    }
+  ]
+}

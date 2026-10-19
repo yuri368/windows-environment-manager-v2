@@ -1,0 +1,1593 @@
+Codex final source review, product commit 0aa41e613bbdd077c7c199c18389725fa12fedaf
+Baseline 13d87d5. Scope approved in same ChatGPT conversation.
+DemoPlan unchanged SHA256 950e4f532eaa9a43444ef10ff8b2ba819981ccbbc32202a6a19bf06f669d4bc4
+
+CONTRACT
+Windows environment snapshot boundary — 2026-10-15
+Owner requirement: Windows environment page mainly shows current snapshot and direct editing. Scheme additions/removals/conflicts belong to workbench and scheme preview.
+
+Windows inventory renders raw snapshot values through textContent, preserves raw whitespace/CRLF/empty slices and escapes HTML by construction. Existing empty strings display （空字符串）; absent variables remain absent.
+No selected scheme/value, checked batch, planned match highlighting, pending additions/removals or plan conflicts are read/rendered by this page.
+Its direct editor receives the target/snapshot and empty selected values, with no selection plan, append entries or replacement expectation. Scheme suggestions and scheme-match legend are hidden. Manual edits, add/remove/restore/move, structural empty/duplicate hints, snapshot validation and existing Apply/Audit/History remain.
+Special is static scope + case-insensitive name metadata read across all app/profile declarations. Same-key consistency is the existing configuration invariant; this patch adds no conflict resolution. It protects whole command strings containing semicolons. Undeclared variables use ordinary element editing. Current profile, selected values and checked state do not choose Special.
+Workbench editor and preview retain all scheme analyses. Its replace-entry guard remains. No new toggle/model or DemoPlan/V2/Registry change.
+Presentation option showSuggestions=false hides only proposal UI/match legend; normal explicitly provided scheme context keeps prior editor behavior.
+
+Acceptance: primary and Git mirror each pass 25 scripts / 487 checks, including new 25-check snapshot suite. Three old Windows-overlay assertions now test the new snapshot boundary; workbench analysis tests remain.
+Browser: independent new localhost QA tab, original user tab preserved. Verified dirty Maven input does not appear as Windows suggestion, direct PATH change updates snapshot while Maven draft remains, workbench suggestion remains after explicit baseline recheck, Special semicolon stays one string, empty string is one existing row.
+Viewport simulation request 980x760 produced effective CSS viewport 1307x1013 at DPR0.75; this is simulation only. Native zoom and Windows DPI are not tested.
+GPT approved scope before implementation. Final source review/CI is recorded in the accompanying evidence report.
+
+
+DIFF
+diff --git a/ui-v3/design-evidence/verify_adopt_pending.cjs b/ui-v3/design-evidence/verify_adopt_pending.cjs
+index da7bf68..7ae9cde 100644
+--- a/ui-v3/design-evidence/verify_adopt_pending.cjs
++++ b/ui-v3/design-evidence/verify_adopt_pending.cjs
+@@ -234,7 +234,7 @@ try {
+       assert.equal(host.querySelector('button,input,textarea,[data-element-id],[data-delete],[data-move-up],[data-move-down]'),null);
+     }
+   });
+-  check('Windows environment same-target specs retain mixed directions and scope isolation; parent guidance stays readonly', () => {
++  check('Windows direct editing ignores mixed scheme directions and preserves scope isolation', () => {
+     fixture({actual:'U;;U',desired:' FRONT ',mode:'+append',name:'ADOPT_TEST'});
+     w.eval(`{
+       curProfile().vars.push(mkVar(['ADOPT_TEST','User','-append',' BACK '],1));
+@@ -246,18 +246,16 @@ try {
+     }`);
+     for (const target of ['User|ADOPT_TEST','System|ADOPT_TEST']) {
+       const host = q(`[data-windows-value="${target}"]`).parentElement;
+-      assert.equal(host.querySelector('.pending-additions button'),null);
++      assert.equal(host.querySelector('.pending-additions'),null);
+     }
+     const before = persisted(); q('[data-windows-edit="User|ADOPT_TEST"]').click();
+-    assert.deepEqual(pending(),[' FRONT ',' BACK ','CUSTOM']);
+-    button(0).click(); button(1).click(); button(2).click();
+-    assert.deepEqual(values(),[' FRONT ','U','','U',' BACK ','CUSTOM']);
+-    assert.equal(persisted(),before); q('#applyElements').click();
+-    assert.equal(w.eval("windows['User|ADOPT_TEST']"),' FRONT ;U;;U; BACK ;CUSTOM');
++    assert.deepEqual(pending(),[]);assert.deepEqual(values(),['U','','U']);
++    assert.equal(q('#pendingElements').hidden,true);assert.equal(persisted(),before);
++    assert.equal(q('#applyElements').disabled,true);cancel();
+     assert.equal(w.eval("windows['System|ADOPT_TEST']"),'S');
+     q('[data-windows-edit="System|ADOPT_TEST"]').click();
+-    assert.deepEqual(pending(),['SYS_FRONT','SYS_BACK']); button(0).click(); button(1).click();
+-    assert.deepEqual(values(),['SYS_FRONT','S','SYS_BACK']); cancel();
++    assert.deepEqual(pending(),[]);assert.deepEqual(values(),['S']);
++    assert.equal(q('#pendingElements').hidden,true);cancel();
+     assert.equal(w.eval("windows['System|ADOPT_TEST']"),'S');
+   });
+   check('Adoption workflows emit no JSDOM runtime errors', () => assert.deepEqual(errors,[]));
+diff --git a/ui-v3/design-evidence/verify_append_feedback.cjs b/ui-v3/design-evidence/verify_append_feedback.cjs
+index 52a9cc8..d379187 100644
+--- a/ui-v3/design-evidence/verify_append_feedback.cjs
++++ b/ui-v3/design-evidence/verify_append_feedback.cjs
+@@ -279,7 +279,7 @@ try {
+     edit(rows()[0].dataset.elementId, 'C'); q('#applyElements').click();
+     assert.equal(w.eval("windows['User|PATH']"), 'A'); assert.equal(w.eval("windows['System|PATH']"), 'C');
+   });
+-  check('Windows target conflicts suppress executable candidates while isolated System append remains available', () => {
++  check('Windows snapshot and direct editors ignore conflicting and append scheme requests in both scopes', () => {
+     fixture({name:'APPEND_TEST',actual:'A',desired:'A;B'});
+     w.eval(`{
+       curProfile().vars.push(mkVar(['APPEND_TEST','User','replace','A;C'],1));
+@@ -290,12 +290,12 @@ try {
+     const system = q('[data-windows-value="System|APPEND_TEST"]');
+     assert.equal(user.textContent, 'A'); assert.equal(system.textContent, 'D');
+     assert.equal(user.querySelector('.pending-additions'), null);
+-    assert.deepEqual(rawValues(user.parentElement.querySelector('.pending-additions')), []);assert.match(user.parentElement.textContent,/目标计划冲突/);
+-    assert.deepEqual(rawValues(system.parentElement.querySelector('.pending-additions')), ['A']);
++    assert.deepEqual(rawValues(user.parentElement.querySelector('.pending-additions')), []);assert.doesNotMatch(user.parentElement.textContent,/目标计划冲突/);
++    assert.deepEqual(rawValues(system.parentElement.querySelector('.pending-additions')), []);
+     q('[data-windows-edit="User|APPEND_TEST"]').click();
+     assert.deepEqual(candidates(), []); assert.equal(serialized(), 'A'); cancel();
+     q('[data-windows-edit="System|APPEND_TEST"]').click();
+-    assert.deepEqual(candidates(), ['A']); assert.equal(serialized(), 'D'); cancel();
++    assert.deepEqual(candidates(), []); assert.equal(serialized(), 'D'); cancel();
+   });
+   check('Source switching refreshes desired guidance and newly opened dialog selection', () => {
+     fixture(); assert.deepEqual(inspectorCandidates(), ['B']);
+diff --git a/ui-v3/design-evidence/verify_elements.cjs b/ui-v3/design-evidence/verify_elements.cjs
+index d89e49d..1ef77e9 100644
+--- a/ui-v3/design-evidence/verify_elements.cjs
++++ b/ui-v3/design-evidence/verify_elements.cjs
+@@ -58,9 +58,9 @@ check('Edit, move, add and delete stay in draft; cancel restores focus and snaps
+ check('Explicit workbench edit button provides a discoverable alternative', () => {
+   q('#editWindowsElements').click(); assert.ok(q('.element-dialog')); cancel();
+ });
+-check('Windows table highlights prepared schemes and shares the same editor', () => {
++check('Windows table shows snapshot without scheme highlights and shares the direct editor', () => {
+   q('[data-view="windows"]').click(); const el = q('[data-windows-value="User|PATH"]');
+-  assert.equal(el.textContent, raw()); assert.equal(el.querySelectorAll('mark').length, 9);
++  assert.equal(el.textContent, raw()); assert.equal(el.querySelectorAll('mark').length, 0);
+   dbl(el); assert.ok(q('.element-dialog')); assert.equal(values().join(';'), raw()); cancel();
+   q('[data-windows-edit="User|PATH"]').click(); assert.ok(q('.element-dialog')); cancel();
+ });
+diff --git a/ui-v3/package.json b/ui-v3/package.json
+index 127d860..07164b4 100644
+--- a/ui-v3/package.json
++++ b/ui-v3/package.json
+@@ -4,7 +4,7 @@
+   "private": true,
+   "description": "UI demo only. No runtime dependencies or Windows integration.",
+   "scripts": {
+-    "test": "node design-evidence/verify_demo_plan.cjs && node design-evidence/verify_dom.cjs && node design-evidence/verify_elements.cjs && node design-evidence/verify_interactions.cjs && node design-evidence/verify_examples.cjs && node design-evidence/verify_change_states.cjs && node design-evidence/verify_element_feedback.cjs && node design-evidence/verify_append_feedback.cjs && node design-evidence/verify_adopt_pending.cjs && node design-evidence/verify_history_sidebar.cjs && node design-evidence/verify_overall_audit.cjs && node design-evidence/verify_unified_plan.cjs && node design-evidence/verify_matched_baseline.cjs && node design-evidence/verify_matched_workflow.cjs && node design-evidence/verify_three_value_compare.cjs && node design-evidence/verify_editor_suggestion_states.cjs && node design-evidence/verify_deletion_trace_ui.cjs && node design-evidence/verify_editor_order_toggle.cjs && node design-evidence/verify_removal_suggestion_toggle.cjs && node design-evidence/verify_claude_ui_repairs.cjs && node design-evidence/verify_gui_feedback.cjs && node design-evidence/verify_suggestion_manual_edit.cjs && node design-evidence/verify_display_movement.cjs && node design-evidence/verify_gui_followups.cjs"
++    "test": "node design-evidence/verify_demo_plan.cjs && node design-evidence/verify_dom.cjs && node design-evidence/verify_elements.cjs && node design-evidence/verify_interactions.cjs && node design-evidence/verify_examples.cjs && node design-evidence/verify_change_states.cjs && node design-evidence/verify_element_feedback.cjs && node design-evidence/verify_append_feedback.cjs && node design-evidence/verify_adopt_pending.cjs && node design-evidence/verify_history_sidebar.cjs && node design-evidence/verify_overall_audit.cjs && node design-evidence/verify_unified_plan.cjs && node design-evidence/verify_matched_baseline.cjs && node design-evidence/verify_matched_workflow.cjs && node design-evidence/verify_three_value_compare.cjs && node design-evidence/verify_editor_suggestion_states.cjs && node design-evidence/verify_deletion_trace_ui.cjs && node design-evidence/verify_editor_order_toggle.cjs && node design-evidence/verify_removal_suggestion_toggle.cjs && node design-evidence/verify_claude_ui_repairs.cjs && node design-evidence/verify_gui_feedback.cjs && node design-evidence/verify_suggestion_manual_edit.cjs && node design-evidence/verify_display_movement.cjs && node design-evidence/verify_gui_followups.cjs && node design-evidence/verify_windows_snapshot.cjs"
+   },
+   "devDependencies": {
+     "jsdom": "26.1.0"
+diff --git a/ui-v3/temp.html b/ui-v3/temp.html
+index 311090d..91fbb54 100644
+--- a/ui-v3/temp.html
++++ b/ui-v3/temp.html
+@@ -32,7 +32,7 @@
+ </div><div class="backdrop" id="modal"></div><div class="toast" id="toast" role="status" aria-live="polite"></div>
+ <script src="demo-configs.js"></script>
+ <script src="demo-plan.js"></script>
+-<script src="windows-elements.js?v=8b6a4a3749b2"></script>
++<script src="windows-elements.js?v=1c2e941842bf"></script>
+ <script>
+ 'use strict';
+ const initialApps=[
+@@ -256,7 +256,7 @@ function openWindowsElements(scope,name,selectedValues=[],whole=false,mode=null,
+  if(screen==='workbench'&&(mode==='replace'||curProfile().vars[focusedVariable]?.mode==='replace'))return;
+  lastDialogFocus=document.activeElement;
+  const variable={scope,name},target=key(variable),snapshot=demoSnapshot(variable);
+- WindowsElements.open({container:$('modal'),name,scope,raw:windows[target],snapshot,selectionPlan,selectedValues,whole,appendValues:whole?[]:appendValues??(isAppendMode(mode)?selectedValues:[]),appendEntries:whole?null:appendEntries??(isAppendMode(mode)?selectedValues.map(value=>({value,mode})):null),replacementExpected:(whole||mode==='replace')&&selectedValues.length===1&&windows[target]!==undefined&&windows[target]!==selectedValues[0],
++ WindowsElements.open({container:$('modal'),name,scope,raw:windows[target],snapshot,selectionPlan,selectedValues,whole,showSuggestions:mode!==null||selectionPlan!==null||appendValues!==null||appendEntries!==null,appendValues:whole?[]:appendValues??(isAppendMode(mode)?selectedValues:[]),appendEntries:whole?null:appendEntries??(isAppendMode(mode)?selectedValues.map(value=>({value,mode})):null),replacementExpected:(whole||mode==='replace')&&selectedValues.length===1&&windows[target]!==undefined&&windows[target]!==selectedValues[0],
+    registryType:snapshot.type,close:closeModal,
+    onApply:(raw,audit,plan)=>{
+      if(!sameSnapshot(plan,variable)){render();notify('当前值已变化，本次编辑已失效；请重新打开元素编辑器。');return;}
+@@ -303,23 +303,26 @@ function confirmPreview(){
+ }
+ function renderWindows() {
+   const items=Object.keys(windows).sort();
+-  const targetsFor=k=>apps.flatMap((a,i)=>scheme(i).vars.map((v,j)=>({app:i,profile:scheme(i).name,varIdx:j,v}))).filter(t=>key(t.v)===k);
+-  const specsFor=k=>targetsFor(k).map(t=>t.v),plans=new Map(items.map(k=>[k,recordsFor(targetsFor(k),'应用')[0]?.plan]));
+-  $('screen').innerHTML=`<div class="fullpage" style="width:100%"><div class="pageh"><div><h2>Windows 环境</h2><p>演示快照 · 双击变量值打开元素列表</p></div><span class="tag neutral">${items.length} 项变量</span></div>
+-    <table class="outline-table"><thead><tr><th style="width:130px">作用域</th><th style="width:155px">变量</th><th>模拟当前值</th><th style="width:86px">操作</th></tr></thead><tbody>${items.map(k=>{
+-      const specs=specsFor(k), whole=specs.some(v=>v.special);
+-      return `<tr><td><span class="scope-chip" data-scope="${k.startsWith('User')?'user':'system'}">${k.startsWith('User')?'用户':'系统'}</span></td><td><strong>${esc(k.split('|')[1])}</strong></td><td><div class="codevalue inspect-editable" tabindex="0" role="button" aria-label="编辑 ${esc(k.split('|')[1])} 元素" title="双击打开元素列表（演示）" data-windows-value="${esc(k)}">${WindowsElements.highlight(windows[k],specs.map(value),whole,false,plans.get(k))}</div>${WindowsElements.pendingMarkup(windows[k],specs.filter(v=>isAppendMode(v.mode)).map(value),whole,false,[],plans.get(k))}</td><td><button class="textbtn" data-windows-edit="${esc(k)}">编辑</button></td></tr>`;
+-    }).join('')}</tbody></table><div class="helpnote match-legend"><span class="legend-swatch"></span>高亮为当前准备方案中的匹配元素</div></div>`;
++  // Special is static variable metadata shared across profiles, not a selected scheme's plan.
++  const wholeFor=k=>apps.some(a=>a.profiles.some(p=>p.vars.some(v=>key(v)===k&&v.special)));
++  $('screen').innerHTML=`<div class="fullpage" style="width:100%"><div class="pageh"><div><h2>Windows 环境</h2><p>当前演示快照 · 双击变量值直接编辑</p></div><span class="tag neutral">${items.length} 项变量</span></div>
++    <table class="outline-table"><thead><tr><th style="width:130px">作用域</th><th style="width:155px">变量</th><th>模拟当前值</th><th style="width:86px">操作</th></tr></thead><tbody>${items.map(k=>
++      `<tr><td><span class="scope-chip" data-scope="${k.startsWith('User')?'user':'system'}">${k.startsWith('User')?'用户':'系统'}</span></td><td><strong>${esc(k.split('|')[1])}</strong></td><td><div class="codevalue inspect-editable" tabindex="0" role="button" aria-label="编辑 ${esc(k.split('|')[1])} 元素" title="双击直接编辑当前值（演示）" data-windows-value="${esc(k)}"></div></td><td><button class="textbtn" data-windows-edit="${esc(k)}">编辑</button></td></tr>`
++    ).join('')}</tbody></table></div>`;
+   const open=k=>{
+-    const [scope,name]=k.split('|'),specs=specsFor(k),appendSpecs=specs.filter(v=>isAppendMode(v.mode));
+-    openWindowsElements(scope,name,specs.map(value),specs.some(v=>v.special),null,appendSpecs.map(value),appendSpecs.map(v=>({value:value(v),mode:v.mode})),plans.get(k));
++    const [scope,name]=k.split('|');
++    openWindowsElements(scope,name,[],wholeFor(k));
+   };
+   document.querySelectorAll('[data-windows-value]').forEach(el=>{
++    const raw=windows[el.dataset.windowsValue];
++    // textContent preserves the snapshot verbatim, including CRLF, without HTML parsing.
++    if(raw==='')el.innerHTML='<span class="empty-element">（空字符串）</span>';
++    else el.textContent=raw;
+     el.ondblclick=()=>open(el.dataset.windowsValue);
+     el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open(el.dataset.windowsValue)}};
+   });
+   document.querySelectorAll('[data-windows-edit]').forEach(button=>button.onclick=()=>open(button.dataset.windowsEdit));
+-  $('footer').innerHTML=`<div class="footer-summary"><strong>Windows 环境（演示）</strong><small>元素编辑与应用只更新本页数据</small></div><button class="btn" id="toWork">返回工作台</button>`;
++  $('footer').innerHTML=`<div class="footer-summary"><strong>Windows 环境（演示）</strong><small>当前快照与直接编辑 · 确认后仅更新演示数据</small></div><button class="btn" id="toWork">返回工作台</button>`;
+   $('toWork').onclick=()=>go('workbench');
+ }
+ function changeCountText(counts){return [['added','新增'],['removed','删除'],['replaced','替换'],['moved','移动']].filter(([kind])=>counts[kind]).map(([kind,label])=>`${label} ${counts[kind]}`).join(' · ')||'整体值修改'}
+diff --git a/ui-v3/windows-elements.js b/ui-v3/windows-elements.js
+index 9771b18..b42ed2d 100644
+--- a/ui-v3/windows-elements.js
++++ b/ui-v3/windows-elements.js
+@@ -474,7 +474,7 @@ var WindowsElements = (() => {
+       const kind=String(operation.type||operation.action).toLowerCase(),key=kind==='insert'?'add':kind;
+       if(key in operationCounts)operationCounts[key]++;
+     }
+-    const hasSuggestions=!session.whole&&candidates.valid!==false&&((candidates.operations||[]).some(op=>!op.adopted)||(candidates.issues||[]).length>0);
++    const hasSuggestions=session.showSuggestions!==false&&!session.whole&&candidates.valid!==false&&((candidates.operations||[]).some(op=>!op.adopted)||(candidates.issues||[]).length>0);
+     const structureChanged=JSON.stringify(session.rows.map(row=>({id:row.id,value:row.value})))!==JSON.stringify(session.originalRows)
+       ||session.displayOrder.some((id,index)=>id!==session.originalRows[index]?.id)||session.displayOrder.length!==session.originalRows.length;
+     root.querySelector('#elementTotal').textContent=`有效${session.whole?'字符串':'元素'} ${session.rows.length} · 已移除 ${session.originalRows.filter(row=>!session.rows.some(live=>live.id===row.id)).length}`;
+@@ -484,9 +484,10 @@ var WindowsElements = (() => {
+     root.querySelector('#elementStatus').textContent=changed?`本次编辑：新增 ${additions.added} · 手动新增 ${additions.manualAdded} · 删除 ${operationCounts.remove} · 替换 ${operationCounts.replace} · 展示移动：移动 ${movement.moved} · 幽灵移动 ${movement['ghost-moved']} · 确认后生效`:`本次编辑：0 项变化${hasSuggestions?' · 有尚未采纳的方案建议':''}${structureChanged?' · 结果值未改变':''} · 展示移动：移动 ${movement.moved} · 幽灵移动 ${movement['ghost-moved']}`;
+     root.querySelectorAll('[data-element-id]').forEach(el=>{if(!el.classList.contains('element-row'))return;const row=session.rows.find(row=>row.id===Number(el.dataset.elementId));if(row)paintRow(el,row);});
+     const pending = root.querySelector('#pendingElements');
+-    pending.innerHTML = pendingMarkup(raw,session.appendValues,session.whole,true,session.appendModes,candidates);
++    pending.innerHTML = session.showSuggestions===false?'':pendingMarkup(raw,session.appendValues,session.whole,true,session.appendModes,candidates);
+     pending.hidden = !pending.innerHTML;
+     paintLegend();
++    root.querySelector('.legend-match').hidden=session.showSuggestions===false;
+     applySuggestionFx(pending);
+     session.suggestionButtons=new Set(pending.querySelectorAll('[data-add-pending],[data-remove-pending]'));
+     const editingSession=session;
+
+
+FULL SOURCE temp.html
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>环境变量方案管理器 · Compact 工作台 · 界面原型</title>
+<style>
+:root{--bg:#edf0ed;--white:#fff;--surface:#fcfdfb;--rail:#f6f8f6;--line:#e3e9e3;--line2:#d7e0d8;--ink:#22342a;--body:#405247;--sub:#75867b;--faint:#9ca9a0;--green:#286c51;--green-dark:#1d583f;--green-soft:#e7f2ea;--amber:#a77330;--amber-soft:#fbf2e5;--red:#b3584e;--red-soft:#f9edea;--shadow:0 14px 45px #1e38231b}
+*{box-sizing:border-box}html,body{height:100%;margin:0}body{display:flex;align-items:center;justify-content:center;font:12.5px/1.48 'Microsoft YaHei UI','PingFang SC','Segoe UI',sans-serif;background:var(--bg);color:var(--ink);padding:16px}button,input,select,textarea{font:inherit;color:inherit}button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.44}input,textarea,select{outline:none}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:2px solid #7cad8f;outline-offset:2px}
+#app{width:100%;max-width:1330px;height:min(780px,calc(100vh - 32px));min-height:585px;margin:auto;display:flex;flex-direction:column;border:1px solid #d5ded5;border-radius:10px;background:var(--white);overflow:hidden;box-shadow:var(--shadow)}
+.chrome{height:36px;flex:none;background:#f8faf8;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 12px;gap:9px}.logo{width:20px;height:20px;background:var(--green);color:#fff;border-radius:5px;display:grid;place-items:center;font-weight:800;font-size:14px}.chrome strong{font-size:12px;font-weight:650}.chrome .sub{font-size:11px;margin-left:4px}.wincontrol{margin-left:auto;display:flex;align-items:center;gap:0;color:#68796e}.wincontrol span{width:36px;text-align:center;font-size:14px}
+.nav{height:46px;border-bottom:1px solid var(--line);flex:none;display:flex;align-items:center;gap:4px;padding:0 17px}.brand{font-weight:730;font-size:15px;letter-spacing:-.2px;margin-right:18px}.navtabs{align-self:stretch;display:flex;gap:2px}.navtab{border:0;background:transparent;padding:0 12px;font-size:12px;color:#6c7b71;position:relative}.navtab:hover,.tool:hover{background:#f2f6f2}.navtab.active{font-weight:650;color:var(--green)}.navtab.active:after{position:absolute;content:'';bottom:0;height:2px;background:var(--green);left:10px;right:10px}.toolbar{display:flex;margin-left:auto;align-items:center;gap:3px}.tool{border:0;background:none;color:#53685a;border-radius:5px;padding:7px 10px;font-size:12px;white-space:nowrap}.tool .ico{margin-right:5px;color:#839489}.tool.active{color:var(--green)}
+.main{min-height:0;flex:1;display:flex;position:relative}.sidebar{width:264px;flex:none;display:flex;flex-direction:column;background:var(--rail);border-right:1px solid var(--line);min-height:0}.sidehead{padding:13px 12px 6px}.sidecaption{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}.sidecaption strong{font-size:13px}.sub{color:var(--sub)}.mini{font-size:11px}.search{height:31px;display:flex;align-items:center;gap:8px;border:1px solid var(--line2);background:white;border-radius:5px;padding:0 9px;color:#819386}.search input{border:0;background:transparent;flex:1;width:100%;min-width:0;font-size:12px}.search input::placeholder{color:#9faea3}.filters{display:flex;gap:3px;margin-top:9px}.filter{border:0;background:transparent;border-radius:4px;padding:5px 8px;color:var(--sub);font-size:11px;flex:1;white-space:nowrap}.filter.active{background:#e1ede4;color:var(--green);font-weight:650}.batchbar{padding:6px 12px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);color:var(--sub);font-size:11px}.textbtn{border:0;background:none;padding:3px 5px;color:var(--green);font-size:11px}.textbtn:hover{text-decoration:underline}.applist{overflow:auto;min-height:0;flex:1;padding:5px 7px 10px}.appitem{min-height:49px;display:grid;grid-template-columns:16px 22px minmax(0,1fr) 39px;gap:8px;align-items:center;border-radius:5px;padding:5px 7px;border:1px solid transparent;cursor:pointer}.appitem:hover{background:#ebf1eb}.appitem.active{background:#e6efe7;border-color:#daeadc;box-shadow:inset 2px 0 var(--green)}.appcheck{width:15px;height:15px;accent-color:var(--green);cursor:pointer;margin:0}.appicon{height:21px;width:21px;display:grid;place-items:center;border-radius:5px;font-size:11px;font-weight:800;background:var(--icon-bg,#e8ede8);color:var(--icon-fg,#486257)}.apptext{min-width:0}.apptext b{font-size:12.5px;font-weight:630;display:block;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}.apptext small{font-size:10.5px;color:#829186;display:block;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;margin-top:1px}.appstat{font-size:11px;color:var(--green);text-align:right;font-weight:620}.appstat.warn{color:var(--amber)}.appstat small{font-size:10px;display:block;color:#9fa9a1;font-weight:400}.sidefoot{flex:none;border-top:1px solid var(--line);padding:10px 13px;color:#88988c;font-size:10.5px;line-height:1.6}
+.workspace{min-width:0;min-height:0;flex:1;display:flex;flex-direction:column}.workscroll{flex:1;overflow:auto;min-height:0}.overview{padding:17px 23px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:22px}.eyebrow{font-size:10.5px;color:#94a297;margin-bottom:4px}.titleline{display:flex;align-items:center;gap:10px}.bigicon{width:29px;height:29px;border-radius:7px;display:grid;place-items:center;background:var(--icon-bg,#edf3ee);color:var(--icon-fg,var(--green));font-weight:770;font-size:16px}.app-title{font-size:19px;letter-spacing:-.45px;font-weight:700}.meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:11px;color:#74867a}.meta strong{font-weight:600;color:#475e4c}.meta .sep{width:3px;height:3px;background:#c3cdc5;border-radius:50%}.tag{display:inline-flex;align-items:center;gap:5px;padding:2px 7px;background:#ebf4ec;border-radius:4px;color:var(--green);font-size:10.5px;font-weight:600;white-space:nowrap}.tag.warn{background:var(--amber-soft);color:var(--amber)}.tag.neutral{background:#f0f2f0;color:#697c6b}.tag.dirty{background:#fff4e6;color:#a4702a}.plan-side{display:flex;align-items:center;gap:9px;flex:none}.plan-field{position:relative}.plan-field label{display:block;color:#88998c;font-size:10.5px;margin-bottom:4px}.plan-button{border:1px solid #cadbce;border-radius:5px;background:white;padding:0 10px;height:31px;width:166px;display:flex;align-items:center;justify-content:space-between;text-align:left}.plan-button:hover{border-color:#85a991}.dropdown{position:absolute;right:0;top:calc(100% + 5px);z-index:40;width:269px;max-height:290px;overflow:auto;padding:5px;border:1px solid var(--line2);background:#fff;border-radius:7px;box-shadow:0 12px 32px #1e3c2a24;display:none}.dropdown.show{display:block}.drophelp{font-size:10.5px;color:#93a196;padding:7px 8px;border-bottom:1px solid var(--line);margin-bottom:4px}.option{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px;text-align:left;width:100%;background:none;border:0;border-radius:4px;font-size:12px}.option:hover,.option.active{background:#edf4ee}.option .state{font-size:10.5px;color:var(--sub)}
+.content{padding:17px 22px 22px}.sectionbar{display:flex;align-items:center;justify-content:space-between;gap:9px;margin-bottom:11px}.sectionbar h2{font-size:13px;font-weight:690;margin:0}.sectionbar h2 small{font-size:10.5px;color:#97a49b;font-weight:400;margin-left:8px}.sectionright{display:flex;gap:14px;align-items:center}.checklabel{font-size:11px;color:#7c8c81;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}.checklabel input{width:13px;height:13px;accent-color:var(--green)}.tablebox{border:1px solid var(--line);border-radius:6px;overflow-x:auto}.vartable{width:100%;border-collapse:collapse;table-layout:fixed;min-width:690px}.vartable th{text-align:left;height:32px;background:#f8faf8;color:#829185;font-weight:500;font-size:10.5px;padding:0 11px;border-bottom:1px solid var(--line)}.vartable td{height:51px;border-bottom:1px solid #eaf0eb;padding:7px 11px;font-size:12px;vertical-align:middle}.vartable tr:last-child td{border-bottom:0}.vartable tbody tr:hover{background:#fbfdfb}.vartable tbody tr.sel{box-shadow:inset 2px 0 var(--green);background:#f7fbf7}.vartable th:nth-child(1){width:17%}.vartable th:nth-child(2){width:14%}.vartable th:nth-child(3){width:13%}.vartable th:nth-child(4){width:38%}.vartable th:nth-child(5){width:10%}.vartable th:nth-child(6){width:8%}.vname{font-weight:660}.scope{font-size:11px;color:#5f7463}.scope span{color:#a0aaa0;margin-left:4px}.source{width:100%;height:29px;border:1px solid #d7e3d8;background:white;border-radius:4px;font-size:11px;padding:0 5px}.vinput{height:29px;width:100%;border:1px solid #dee8df;border-radius:4px;font:11.5px 'Cascadia Code',Consolas,'Microsoft YaHei UI',monospace;padding:0 8px;background:#fff;color:#3c5845;text-overflow:ellipsis}.vinput.modified{border-color:#d9b78a;background:#fffcf7}.result{font-size:11px;color:var(--green);white-space:nowrap}.result.warn{color:var(--amber)}.actmini{border:0;padding:4px 5px;border-radius:4px;background:transparent;color:#58735d;font-size:11px}.actmini:hover{background:#eaf2eb}.empty{padding:25px;text-align:center;color:#8a9b8e;font-size:12px}.inspect{margin-top:12px;border:1px solid var(--line);border-radius:6px;overflow:hidden}.inspecthead{height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;background:#fcfdfc;border-bottom:1px solid var(--line)}.inspecthead strong{font-size:11.5px}.inspectbody{padding:12px 15px;display:grid;grid-template-columns:1fr 1fr;gap:18px}.inspectbody .k{font-size:10.5px;color:#91a093;margin-bottom:6px}.codevalue{font:11.5px/1.6 'Cascadia Code',Consolas,monospace;color:#456452;word-break:break-all}.inspector-meta{font-size:10.5px;color:#92a096;margin-top:5px}.helpnote{font-size:10.5px;color:#93a296;margin-top:12px}
+.footer{height:52px;flex:none;background:#fafcfa;border-top:1px solid var(--line);display:flex;align-items:center;gap:12px;padding:0 16px}.footer-summary{margin-right:auto;min-width:0}.footer-summary strong{display:block;font-size:11.5px;font-weight:620;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.footer-summary small{display:block;font-size:10.5px;color:#92a196;margin-top:2px}.btn{background:#fff;border:1px solid var(--line2);color:#41584a;border-radius:5px;height:31px;padding:0 12px;font-size:11.5px;white-space:nowrap}.btn:hover{border-color:#9ab6a2;background:#fbfdfb}.btn.primary{background:var(--green);border-color:var(--green);color:#fff;font-weight:650;padding:0 17px}.btn.primary:hover{background:var(--green-dark)}.btn.danger{color:var(--red)}.btndrop{position:relative}
+.fullpage{flex:1;overflow:auto;padding:20px 24px}.pageh{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:17px}.pageh h2{font-size:17px;margin:0 0 3px}.pageh p{font-size:11px;margin:0;color:var(--sub)}.outline-table{width:100%;border:1px solid var(--line);border-collapse:separate;border-spacing:0;border-radius:6px;overflow:hidden;background:#fff}.outline-table th{background:#f8faf8;color:#7f9184;font-size:11px;font-weight:500;text-align:left;height:34px;padding:0 12px;border-bottom:1px solid var(--line)}.outline-table td{padding:11px 12px;border-bottom:1px solid var(--line);font-size:12px}.outline-table tr:last-child td{border-bottom:0}.outline-table tr:hover td{background:#fcfefc}.kbd{font:11px Consolas,monospace;background:#f2f5f2;border:1px solid #e1e8e1;border-radius:3px;padding:1px 4px}
+.editor-shell{display:flex;flex:1;min-height:0}.editor-left{width:216px;flex:none;background:var(--rail);border-right:1px solid var(--line);padding:12px;overflow:auto}.editor-left .search{margin-bottom:11px}.editor-section{display:flex;justify-content:space-between;align-items:center;margin-top:12px;margin-bottom:6px}.editor-section strong{font-size:11px}.editor-item{width:100%;border:0;background:none;display:flex;align-items:center;justify-content:space-between;text-align:left;padding:7px 9px;border-radius:4px;font-size:12px}.editor-item:hover{background:#edf3ee}.editor-item.active{background:#e4f0e7;color:var(--green);font-weight:650}.editor-mid{min-width:0;flex:1;overflow:auto;padding:15px 18px}.editor-mid h2{font-size:17px;margin:1px 0 3px}.editor-mid .littlemeta{font-size:11px;color:var(--sub);margin-bottom:15px}.editor-right{width:310px;flex:none;border-left:1px solid var(--line);padding:14px 15px;overflow:auto}.editor-right h3{font-size:13px;margin:0 0 13px}.field{margin-bottom:12px}.field label{display:block;font-size:10.5px;color:#72867a;margin-bottom:5px}.field input,.field select,.field textarea{display:block;width:100%;border:1px solid #d9e4db;border-radius:4px;background:white;font-size:11.5px;padding:7px 8px}.field select{height:30px;padding:4px 8px}.field textarea{resize:vertical;min-height:52px;font:11.5px/1.5 Consolas,'Microsoft YaHei UI',monospace}.editor-table{width:100%;border-collapse:collapse;border:1px solid var(--line)}.editor-table th{font-weight:500;color:#86968a;text-align:left;background:#f8faf8;padding:10px 8px;font-size:10.5px}.editor-table td{border-top:1px solid var(--line);padding:10px 8px;font-size:11.5px;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.editor-table tr{cursor:pointer}.editor-table tr.active{background:#eaf3eb}.editor-table tr:hover{background:#f4f8f4}.edfooter{height:48px;border-top:1px solid var(--line);background:#fafcf9;display:flex;align-items:center;gap:8px;padding:0 15px;flex:none}.edfooter span{margin-right:auto;font-size:11px;color:var(--sub)}.codetext{width:100%;min-height:380px;padding:16px;background:#f8faf8;border:1px solid var(--line);border-radius:6px;white-space:pre;overflow:auto;font:11.5px/1.7 Consolas,monospace;color:#304b3b}
+.backdrop{position:fixed;inset:0;background:#17281c77;z-index:100;display:none;align-items:center;justify-content:center;padding:15px}.backdrop.open{display:flex}.dialog{width:min(690px,100%);max-height:87vh;overflow:auto;border:1px solid #dbe6db;border-radius:10px;background:white;box-shadow:0 20px 80px #13241944}.dialoghead{padding:17px 20px 11px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px;align-items:start}.dialoghead h3{font-size:15px;margin:0 0 5px}.dialoghead p{font-size:11px;color:var(--sub);margin:0}.close{border:0;background:transparent;font-size:19px;color:#819186;padding:0 3px}.dialogbody{padding:13px 20px;max-height:55vh;overflow:auto}.diffrow{border:1px solid var(--line);border-radius:5px;padding:10px 12px;margin-bottom:8px}.diffrow .k{font-size:11.5px;font-weight:650;margin-bottom:7px}.diffrow .pair{display:grid;grid-template-columns:70px minmax(0,1fr);gap:7px;font:11px/1.6 Consolas,'Microsoft YaHei UI',monospace;word-break:break-all;margin-top:4px}.diffrow .pair span:first-child{font-family:'Microsoft YaHei UI';color:#89998b}.diffrow .pair.add{color:var(--green)}.diffrow .pair.del{color:#a16a34}.dialogfoot{border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;background:#fafcfb}.banner{background:#f4f8f3;border:1px solid #e4eee5;color:#66816d;font-size:11px;padding:9px 11px;border-radius:5px;margin-bottom:12px}.banner.warn{background:var(--amber-soft);border-color:#ebd8b9;color:#936a33}.toast{position:fixed;bottom:77px;right:33px;z-index:200;background:#284935;color:#fff;padding:10px 15px;border-radius:6px;box-shadow:0 10px 30px #0003;opacity:0;transform:translateY(9px);transition:.16s;pointer-events:none;font-size:11.5px}.toast.on{opacity:1;transform:none}
+@media(max-width:1100px){body{padding:0}#app{height:100vh;border:0;border-radius:0}.sidebar{width:233px}.content{padding:15px 13px}.overview{padding:15px 14px}.editor-right{width:265px}.editor-left{width:185px}.toolbar .ico{display:none}.tool{padding:7px 6px}}
+@media(max-width:860px){.brand{display:none}.sidebar{width:190px}.navtab{padding:0 7px}.appitem{grid-template-columns:15px minmax(0,1fr) 31px;gap:6px}.appicon{display:none}.tag{padding:2px 4px}.overview{align-items:flex-start;flex-wrap:wrap}.plan-side{margin-left:39px}.editor-right{width:240px}.editor-left{width:155px}.toolbar .tool{font-size:11px}}
+</style>
+<link rel="stylesheet" href="ui-polish.css">
+<link rel="stylesheet" href="elements-ui.css?v=708d27af03c7">
+<link rel="stylesheet" href="shell-ui.css?v=180c0987749f">
+<link rel="stylesheet" href="fx-ui.css">
+</head>
+<body><div id="app">
+<header class="chrome"><span class="logo">≋</span><strong>环境变量方案管理器</strong><span class="sub mini">Compact UI · 交互演示</span><span class="prototype-mark">本地演示 · 未连接系统</span></header>
+<nav class="nav"><div class="brand">环境方案</div><div class="navtabs"><button class="navtab active" data-view="workbench">工作台</button><button class="navtab" data-view="windows">Windows 环境</button><button class="navtab" data-view="history">历史</button><i class="nav-ink" aria-hidden="true"></i></div><div class="toolbar"><button class="tool" id="refreshBtn"><span class="ico">↻</span>刷新检测</button><button class="tool" id="configBtn"><span class="ico">⚙</span>配置编辑器</button><button class="tool" id="resetBtn" title="恢复为最初的演示数据">重置演示</button></div></nav>
+<div id="screen" class="main"></div>
+<footer class="footer" id="footer"></footer>
+</div><div class="backdrop" id="modal"></div><div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="demo-configs.js"></script>
+<script src="demo-plan.js"></script>
+<script src="windows-elements.js?v=1c2e941842bf"></script>
+<script>
+'use strict';
+const initialApps=[
+ {name:'Java',icon:'J',iconBg:'#f4ece6',iconFg:'#a65d3b',active:'JDK8',default:'JDK8',profiles:[{name:'JDK8',vars:[['JAVA_HOME','User','replace','H:\\ProgramFiles\\DevTools\\Java\\jdk1.8.0_202'],['Path','User','+append','%JAVA_HOME%\\bin']]},{name:'JDK17',vars:[['JAVA_HOME','User','replace','H:\\ProgramFiles\\DevTools\\Java\\jdk-17'],['Path','User','+append','%JAVA_HOME%\\bin']]}]},
+ {name:'Python',icon:'Py',iconBg:'#ebf0f7',iconFg:'#3979a8',active:'Python313',default:'Python313',profiles:[{name:'Python313',vars:[['PYTHON_HOME','User','replace','H:\\ProgramFiles\\Python313'],['Path','User','-append','%PYTHON_HOME%;%PYTHON_HOME%\\Scripts']]},{name:'Python311',vars:[['PYTHON_HOME','User','replace','H:\\ProgramFiles\\Python311'],['Path','User','-append','%PYTHON_HOME%;%PYTHON_HOME%\\Scripts']]}]},
+ {name:'Maven',icon:'M',iconBg:'#f4ebec',iconFg:'#ab5b5c',active:'3.9.11',default:'3.9.11',profiles:[{name:'3.9.11',vars:[['MAVEN_HOME','User','replace','H:\\ProgramFiles\\DevTools\\Maven\\apache-maven-3.9.11'],['Path','User','+append','%MAVEN_HOME%\\bin']]},{name:'3.3.3',vars:[['MAVEN_HOME','User','replace','H:\\ProgramFiles\\DevTools\\Maven\\apache-maven-3.3.3'],['Path','User','+append','%MAVEN_HOME%\\bin']]}]},
+ {name:'Hadoop',icon:'H',iconBg:'#f5f1df',iconFg:'#a38a26',active:null,default:'2.9.2',profiles:[{name:'2.9.2',vars:[['HADOOP_HOME','User','replace','H:\\ProgramFiles\\Hadoop\\2.9.2'],['Path','User','+append','%HADOOP_HOME%\\bin']]}]},
+ {name:'Scala',icon:'S',iconBg:'#f5e9e9',iconFg:'#b54e4e',active:null,default:'2.12.15',profiles:[{name:'2.12.15',vars:[['SCALA_HOME','User','replace','H:\\ProgramFiles\\Scala\\2.12.15'],['Path','User','+append','%SCALA_HOME%\\bin']]}]},
+ {name:'Git',icon:'G',iconBg:'#fbede7',iconFg:'#c66746',active:'Portable',default:'Portable',profiles:[{name:'Portable',vars:[['Path','User','-append','H:\\ProgramFiles\\PortableGit\\cmd']]}]},
+ {name:'VSCode',icon:'V',iconBg:'#eaf1fa',iconFg:'#3a80ae',active:'Insiders',default:'Insiders',profiles:[{name:'Insiders',vars:[['Path','User','-append','H:\\ProgramFiles\\VSCode\\bin']]}]}
+];
+initialApps.push(...extraDemoApps);
+const clone=x=>JSON.parse(JSON.stringify(x));
+const MODE={'replace':'替换','+append':'前置','-append':'后置','append':'自定义排序'};
+const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+let apps=[],windows={},checked=new Set(),selected=2,profileChoice={},filter='all',search='',onlyMismatch=false,compareShown=true,focusedVariable=0,screen='workbench',modalAction=null,revision=0,history=[],editor={app:2,profile:'3.9.11',varIdx:0,tab:'visual'},toastTimer=null;
+let lastDialogFocus = null, targetRevisions = {}, targetTypes = {}, planCache = new WeakMap();
+function mkVar(v,i){return {id:i,name:v[0],scope:v[1],mode:v[2],defaultValue:v[3],savedValue:v[4]?.savedValue??null,source:'默认值',custom:null,choices:[...(v[4]?.choices||[])],special:!!v[4]?.special,baselineValue:v[3],matchBaseline:null,dirty:false}}
+function reset(quiet=false){apps=clone(initialApps).map(a=>({...a,profiles:a.profiles.map(p=>({...p,vars:p.vars.map(mkVar)}))}));windows={'User|JAVA_HOME':'H:\\ProgramFiles\\DevTools\\Java\\jdk1.8.0_202','User|PYTHON_HOME':'H:\\ProgramFiles\\Python313','User|MAVEN_HOME':'H:\\ProgramFiles\\DevTools\\Maven\\apache-maven-3.9.11','User|PATH':['%JAVA_HOME%\\bin','%PYTHON_HOME%;%PYTHON_HOME%\\Scripts','%MAVEN_HOME%\\bin','H:\\ProgramFiles\\PortableGit\\cmd','H:\\ProgramFiles\\VSCode\\bin'].join(';')};Object.assign(windows,extraDemoWindows);windows['User|PATH']+=';'+extraDemoUserPath.join(';');checked=new Set();selected=2;profileChoice={};apps.forEach((a,i)=>profileChoice[i]=a.default);filter='all';search='';onlyMismatch=false;compareShown=true;focusedVariable=0;history=[{when:'演示初始快照',action:'打开演示环境',detail:'模拟 Windows 数据已载入'}];revision=0;targetRevisions={};targetTypes={};planCache=new WeakMap();Object.keys(removalMemo).forEach(k=>delete removalMemo[k]);editor={app:2,profile:'3.9.11',varIdx:0,tab:'visual'};screen='workbench';render();if(!quiet)notify('已恢复演示初始状态')}
+function appNow(i=selected){return apps[i]}
+function scheme(i=selected){return apps[i].profiles.find(p=>p.name===profileChoice[i])||apps[i].profiles[0]}
+function value(v){if(v.source.startsWith('候选值 '))return v.choices[Number(v.source.slice(4))-1]??v.defaultValue;return v.source==='自定义值'?v.custom??'':v.source==='已保存值'?v.savedValue??v.defaultValue:v.source==='候选值'?v.choices[0]??v.defaultValue:v.defaultValue}
+function key(v){return v.scope+'|'+v.name.toUpperCase()}
+function demoSnapshot(v,raw){
+ const current=arguments.length>1?raw:windows[key(v)];
+ return {exists:current!==undefined,raw:current===undefined?null:current,type:targetTypes[key(v)]||(v.name.toUpperCase()==='PATH'?'REG_EXPAND_SZ':'REG_SZ'),revision:targetRevisions[key(v)]||0};
+}
+function variableOwner(v){
+ for(let app=0;app<apps.length;app++)for(const p of apps[app].profiles){const varIdx=p.vars.indexOf(v);if(varIdx>=0)return {app,profile:p.name,varIdx};}
+ return null;
+}
+function protectedSelections(vars){
+ const excluded=new Set(vars),target=key(vars[0]);
+ return apps.flatMap((a,i)=>scheme(i).vars).filter(v=>!excluded.has(v)&&key(v)===target).map(value);
+}
+function planContextSignature(vars){return JSON.stringify(vars.map(v=>[key(v),v.mode,v.special,value(v),v.matchBaseline]));}
+function demoPlan(v,actualRaw){
+ const snapshot=arguments.length>1?demoSnapshot(v,actualRaw):demoSnapshot(v),protectedValues=protectedSelections([v]);
+ const signature=JSON.stringify([snapshot,v.scope,v.name,v.mode,v.special,value(v),v.matchBaseline,protectedValues]),cached=planCache.get(v);
+ if(cached?.signature===signature)return cached.plan;
+ const plan=DemoPlan.build({target:{scope:v.scope,name:v.name},mode:v.mode,whole:v.special,snapshot,selectedRaw:value(v),baseline:v.matchBaseline,protectedValues});
+ planCache.set(v,{signature,plan});return plan;
+}
+function beginSelectedEdit(v,raw){
+ if(raw===value(v)||v.matchBaseline||v.special||!isAppendMode(v.mode))return;
+ v.matchBaseline=DemoPlan.captureBaseline({target:{scope:v.scope,name:v.name},mode:v.mode,whole:v.special,snapshot:demoSnapshot(v),selectedRaw:value(v),owner:variableOwner(v)});
+}
+function selectionEdit(v){return DemoPlan.selectionChange({target:{scope:v.scope,name:v.name},beforeRaw:v.matchBaseline?.selectedRaw??v.baselineValue,afterRaw:value(v),whole:v.special})}
+function setSelectedValue(v,raw){beginSelectedEdit(v,raw);v.custom=raw;v.source='自定义值';v.dirty=hasPendingValue(v)}
+function restoreSelectedValue(v){
+ const original=v.matchBaseline?.selectedRaw??v.baselineValue;
+ v.custom=original;v.source='自定义值';v.matchBaseline=null;v.dirty=hasPendingValue(v);render();
+}
+function rebaseSelectedValue(v){
+ if(!v.matchBaseline)return;
+ const original=v.matchBaseline.selectedRaw;
+ v.matchBaseline=DemoPlan.captureBaseline({target:{scope:v.scope,name:v.name},mode:v.mode,whole:v.special,snapshot:demoSnapshot(v),selectedRaw:original,owner:variableOwner(v)});
+ render();
+}
+function confirmRebase(v){
+ lastDialogFocus=document.activeElement;
+ const previous=v.matchBaseline?.snapshot,now=demoSnapshot(v);
+ $('modal').innerHTML=`<div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialoghead"><h3 id="dialogTitle">重新检测编辑基线</h3><button class="close" id="closeDialog" aria-label="关闭">×</button></div><div class="dialogbody"><p>保留当前输入，重新核对编辑前的选定值在最新快照中匹配了哪些元素。重建后仍需重新预览确认。</p><div class="pair del"><span>原快照</span><span>${historyValue(previous?.exists?previous.raw:undefined)}</span></div><div class="pair add"><span>当前快照</span><span>${historyValue(now.exists?now.raw:undefined)}</span></div></div><div class="dialogfoot"><button class="btn" id="cancelDialog">取消</button><button class="btn primary" id="confirmRebase">确认重新检测</button></div></div>`;
+ $('modal').classList.add('open');$('closeDialog').onclick=closeModal;$('cancelDialog').onclick=closeModal;
+ $('confirmRebase').onclick=()=>{closeModal();rebaseSelectedValue(v);notify('已重新建立编辑基线，请重新预览确认。')};$('closeDialog').focus();
+}
+function planSummary(plan){
+ if(plan.valid===false)return '编辑基线或目标冲突，请重新检测后预览。';
+ if(!plan.operations.length)return '';
+ if(plan.kind!=='append')return '应用时整体替换当前值。';
+ const removes=plan.operations.filter(op=>op.type==='remove'),inserts=plan.operations.filter(op=>op.type==='insert');
+ return [removes.length?`删除 ${removes.length} 项`:'',inserts.length?`在${inserts.every(op=>op.position==='head')?'开头':inserts.every(op=>op.position==='tail')?'末尾':'各方案指定位置'}追加 ${inserts.length} 项`:'','保留其他元素'].filter(Boolean).join(' · ');
+}
+function itemMatched(v){return demoPlan(v).matchResult.satisfied}
+const isAppendMode=mode=>['+append','-append','append'].includes(mode);
+function detectionText(v){
+  const result=demoPlan(v).matchResult,m=result.satisfied,info={total:result.totalCount,matched:result.matchedCount};
+  if(v.special||!info.total)return m?'✓ 匹配':'! 不匹配';
+  const ratio=`${info.matched}/${info.total}`;
+  if(m)return `✓ 匹配 ${ratio}`;
+  if(info.matched===info.total)return `! 存在额外差异 · 元素 ${ratio}`;
+  return info.matched?`! 部分匹配 ${ratio}`:`! 不匹配 ${ratio}`;
+}
+function matchCount(p){return p.vars.filter(v=>itemMatched(v)).length}
+function status(p){const n=matchCount(p);return n===p.vars.length?'完全匹配':n===0?'未匹配':'部分匹配'}
+function colorStatus(p){return matchCount(p)===p.vars.length?'':'warn'}
+/* 外壳展示层（只读 plan，不改任何规则）：状态种类 → 图标/配色；文字内容保持原样，仅给首个符号套上插槽 */
+function kindOf(v){const r=demoPlan(v).matchResult;if(r.satisfied)return 'match';if(v.special||!r.totalCount)return 'none';if(r.matchedCount===r.totalCount)return 'extra';return r.matchedCount?'partial':'none'}
+function appKind(p){const n=matchCount(p);return n===p.vars.length?'match':n?'partial':'none'}
+function glyphed(text){const m=/^([✓!])\s(.*)$/s.exec(text);return m?`<span class="rs-glyph" aria-hidden="true">${m[1]}</span> <span class="rs-text">${esc(m[2])}</span>`:esc(text)}
+function retrigger(el,cls){if(!el)return;el.classList.remove(cls);void el.offsetWidth;el.classList.add(cls)}
+const ringMemo={},removalMemo={};let ringBooted=false;
+/* 对照区：新出现的“待删除 / 结果排除”元素播放一次入场效果；同一变量首次展示与重复重绘不播放 */
+function playRemovalFx(){
+  const id=selected+'|'+profileChoice[selected]+'|'+focusedVariable,tokens=[...document.querySelectorAll('#compareActual .diff-token.is-removed,#compareAfter .diff-token.is-removed')],now=new Set(tokens.map(t=>t.dataset.relatedKey)),prev=removalMemo[id];
+  removalMemo[id]=now;if(!prev)return;
+  tokens.forEach(t=>{if(prev.has(t.dataset.relatedKey))return;const cls=t.classList.contains('is-ghost')?'fx-cut-in':'fx-lock-in';t.classList.add(cls);setTimeout(()=>t.classList.remove(cls),1100)});
+}
+function enterFx(){const s=$('screen');retrigger(s,'is-entering');clearTimeout(enterFx.t);enterFx.t=setTimeout(()=>s.classList.remove('is-entering'),900)}
+function positionInk(){const ink=document.querySelector('.nav-ink'),tab=document.querySelector('.navtabs .navtab.active');if(!ink)return;if(!tab){ink.style.opacity='0';return}ink.style.opacity='1';ink.style.width=(tab.offsetWidth-20)+'px';ink.style.transform=`translateX(${tab.offsetLeft+10}px)`}
+window.addEventListener('resize',positionInk);
+function hasPendingValue(v){return value(v)!==v.baselineValue}
+function dirty(p){return p.vars.filter(hasPendingValue).length}
+function dir(i){return `--icon-bg:${apps[i].iconBg};--icon-fg:${apps[i].iconFg}`}
+function curProfile(){return scheme()}
+function notify(t){const el=$('toast');el.textContent=t;el.classList.remove('on');void el.offsetWidth;el.classList.add('on');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('on'),2600)}
+function go(view){screen=view;closeDropdowns();closeModal();render();enterFx();(view==='config'?$('configBtn'):document.querySelector('[data-view="'+view+'"]'))?.focus()}
+function render(){document.querySelectorAll('[data-view]').forEach(b=>{b.classList.toggle('active',b.dataset.view===screen);if(b.dataset.view===screen)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});$('configBtn').classList.toggle('active',screen==='config');if(screen==='config')$('configBtn').setAttribute('aria-current','page');else $('configBtn').removeAttribute('aria-current');$('footer').style.display=screen==='config'?'none':'';if(screen==='workbench')renderWorkbench();else if(screen==='windows')renderWindows();else if(screen==='history')renderHistory();else renderConfig();positionInk()}
+function renderWorkbench(){
+ $('screen').innerHTML=`<aside class="sidebar"><div class="sidehead"><div class="sidecaption"><strong>应用</strong><span class="sub mini" id="selectionCounter"></span></div><div class="search"><span>⌕</span><input id="appSearch" placeholder="搜索应用或方案…" value="${esc(search)}" aria-label="搜索应用"></div><div class="filters"><button class="filter" data-filter="all">全部</button><button class="filter" data-filter="matched">已匹配</button><button class="filter" data-filter="unmatched">需配置</button></div></div><div class="batchbar"><span>批量选择</span><span><button class="textbtn" id="selectAll" title="选择当前搜索与筛选结果；保留已有勾选">全选可见</button><button class="textbtn" id="selectNone">清空</button></span></div><div class="applist" id="applist"></div><div class="sidefoot">☑ 勾选用于批量操作；点击应用行查看详情。<br>切换方案不会直接修改 Windows。</div></aside><section class="workspace"><div class="workscroll"><div class="overview" id="overview"></div><div class="content"><div class="sectionbar"><h2>环境变量 <small id="varTotal"></small></h2><div class="sectionright"><label class="checklabel"><input id="onlyMismatch" type="checkbox" ${onlyMismatch?'checked':''}>仅看未匹配</label><button class="textbtn" id="compareToggle">${compareShown?'收起':'展开'} Windows 对照</button></div></div><div class="tablebox"><table class="vartable"><thead><tr><th>变量</th><th>作用域 / 模式</th><th>值来源</th><th>当前选定值</th><th>检测</th><th>操作</th></tr></thead><tbody id="varRows"></tbody></table></div><div class="inspect" id="inspect" ${compareShown?'':'hidden'}><div class="inspecthead"><strong id="inspectTitle">Windows 值对照</strong><span class="mini sub">元素编辑 · 离线演示</span></div><div class="inspectbody value-comparison"><section class="selection-pane"><div class="inspect-value-heading"><div class="k">当前选定值</div><div id="compareActions" class="comparison-actions"></div></div><div class="codevalue value-box" id="compareDesired"></div><div class="inspector-meta" id="compareLabel"></div></section><div class="comparison-pair"><section><div class="inspect-value-heading"><div class="k">Windows 当前值</div><button class="textbtn" id="editWindowsElements">编辑元素</button></div><div class="codevalue value-box inspect-editable" id="compareActual" tabindex="0" role="button" aria-label="打开 Windows 值元素编辑器" title="双击打开元素列表（演示）"></div></section><section class="result-pane"><div class="inspect-value-heading"><div class="k">应用后的值</div><div class="pane-tally" id="compareTally" aria-label="结果构成"></div><span class="mini sub">预览 · 尚未应用</span></div><div class="codevalue value-box" id="compareAfter" aria-live="polite"></div></section></div><div class="comparison-serialized"><span class="k">最终写入字符串 · 不含删除项</span><pre id="compareSerialized"></pre></div><div class="comparison-footer"><span class="inspector-meta" id="compareResult"></span><span class="inspector-meta" id="compareSummary"></span></div><div id="compareNotice" aria-live="polite"></div><p class="comparison-hint">悬停或聚焦色框，可对照同一元素。</p></div></div><div class="helpnote">ⓘ 此页面为交互设计原型。输入与方案切换只修改演示选定值，预览确认也只更新模拟数据。</div></div></div></section>`;
+ $('appSearch').addEventListener('input',e=>{search=e.target.value;renderAppList()});$('selectAll').onclick=()=>{visibleApps().forEach(i=>checked.add(i));renderAppList();renderFooter()};$('selectNone').onclick=()=>{checked.clear();renderAppList();renderFooter()};document.querySelectorAll('[data-filter]').forEach(el=>el.onclick=()=>{filter=el.dataset.filter;renderAppList()});$('onlyMismatch').onchange=e=>{onlyMismatch=e.target.checked;renderRows()};$('compareToggle').onclick=()=>{compareShown=!compareShown;$('inspect').hidden=!compareShown;$('compareToggle').textContent=(compareShown?'收起':'展开')+' Windows 对照'};renderAppList();renderOverview();renderRows();renderFooter()
+}
+function visibleApps(){
+ const q=search.trim().toLowerCase();
+ return apps.map((_,i)=>i).filter(i=>{const a=apps[i],p=scheme(i),n=matchCount(p);return (a.name+' '+a.profiles.map(x=>x.name).join(' ')).toLowerCase().includes(q)&&(filter!=='matched'||n===p.vars.length)&&(filter!=='unmatched'||n!==p.vars.length)});
+}
+function renderAppList(){
+ const visible=visibleApps(),hidden=[...checked].filter(i=>!visible.includes(i)).length,total=apps.length;
+ const fully=apps.filter((a,i)=>matchCount(scheme(i))===scheme(i).vars.length).length;
+ $('selectionCounter').textContent=`已选 ${checked.size} / ${total}${hidden?' · 其中 '+hidden+' 个在当前筛选中隐藏':''}`;
+ $('selectAll').disabled=!visible.length;
+ document.querySelectorAll('[data-filter]').forEach(b=>{const n=b.dataset.filter==='all'?total:b.dataset.filter==='matched'?fully:total-fully;b.textContent=({all:'全部',matched:'已匹配',unmatched:'需配置'})[b.dataset.filter]+` ${n}`;b.classList.toggle('active',b.dataset.filter===filter);b.setAttribute('aria-pressed',String(b.dataset.filter===filter))});
+ $('applist').innerHTML=visible.map(i=>{const a=apps[i],p=scheme(i),n=matchCount(p);const pct=Math.round(n/Math.max(p.vars.length,1)*100),prev=ringMemo[i],from=prev===undefined?(ringBooted?pct:0):prev;ringMemo[i]=pct;return `<div class="appitem ${selected===i?'active':''}${from!==pct?' sweep':''}" data-kind="${appKind(p)}" style="--p:${pct};--p0:${from}" data-app="${i}" tabindex="-1" role="group" aria-label="${esc(a.name)}" aria-current="${selected===i?'page':'false'}"><input class="appcheck" type="checkbox" data-check="${i}" ${checked.has(i)?'checked':''} aria-label="批量选择${esc(a.name)}"><button class="appselect" data-app-select="${i}" aria-label="查看${esc(a.name)}" aria-pressed="${selected===i}"><span class="appicon" style="${dir(i)}">${esc(a.icon)}</span><span class="apptext"><b>${esc(a.name)}</b><small title="${esc(p.name)}">${esc(p.name)}${dirty(p)?' · 有待应用修改':''}</small></span><span class="appstat ${colorStatus(p)}"><span class="stat-top"><span class="rs-glyph" aria-hidden="true">${n===p.vars.length?'✓':'!'}</span> ${n}/${p.vars.length}</span><small>${n===p.vars.length?'匹配':'需配置'}</small><span class="pips" aria-hidden="true">${p.vars.slice(0,10).map(x=>`<i class="${itemMatched(x)?'on':''}"></i>`).join('')}</span></span></button></div>`}).join('')||'<div class="empty">没有符合条件的应用</div>';ringBooted=true;
+ $('applist').querySelectorAll('[data-app]').forEach(row=>{
+  const i=+row.dataset.app,choose=()=>{selected=i;focusedVariable=0;onlyMismatch=false;renderWorkbench();enterFx();document.querySelector('[data-app-select="'+i+'"]')?.focus()};
+  row.addEventListener('click',e=>{if(!e.target.closest('[data-check]'))choose()});
+  row.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target===row){e.preventDefault();choose()}});
+  row.querySelector('[data-check]').addEventListener('change',e=>{e.stopPropagation();if(e.target.checked)checked.add(i);else checked.delete(i);renderAppList();renderFooter();document.querySelector('[data-check="'+i+'"]')?.focus()});
+ });
+}
+function renderOverview(){const a=appNow(),p=curProfile(),n=matchCount(p);$('overview').innerHTML=`<div style="min-width:0"><div class="eyebrow">应用 / ${esc(a.name)}</div><div class="titleline"><div class="bigicon" data-kind="${appKind(p)}" style="${dir(selected)};--p:${Math.round(n/Math.max(p.vars.length,1)*100)}">${esc(a.icon)}</div><div class="app-title">${esc(a.name)}</div><span class="tag ${colorStatus(p)}" data-kind="${appKind(p)}"><span class="rs-glyph" aria-hidden="true">${n===p.vars.length?'✓':'!'}</span> Windows · ${status(p)} ${n}/${p.vars.length}</span></div><div class="meta"><span>最近应用：<strong>${esc(a.active||'无')}</strong></span><span class="sep"></span><span>默认方案：<strong>${esc(a.default)}</strong></span>${dirty(p)?'<span class="tag dirty">● 有待应用修改</span>':''}</div>${a.description?`<p class="demo-description">${esc(a.description)}</p>`:''}</div><div class="plan-side"><div class="plan-field" id="planField"><label>准备使用的方案</label><button class="plan-button" id="planButton" aria-expanded="false" aria-controls="planMenu" aria-haspopup="true"><span>${esc(p.name)}</span><span class="sub">⌄</span></button><div class="dropdown" id="planMenu"><div class="drophelp">准备方案 · 仅更新待应用值</div>${a.profiles.map(opt=>`<button class="option ${opt.name===p.name?'active':''}" data-plan="${esc(opt.name)}"><span>${opt.name===p.name?'✓ ':''}${esc(opt.name)}${a.default===opt.name?' · 默认':''}</span><span class="state ${colorStatus(opt)}">${matchCount(opt)}/${opt.vars.length}</span></button>`).join('')}</div></div></div>`;
+ $('planButton').onclick=()=>{const menu=$('planMenu'),open=!menu.classList.contains('show');closeDropdowns();menu.classList.toggle('show',open);$('planButton').setAttribute('aria-expanded',String(open));if(open){const selectedButton=menu.querySelector('.option.active')||menu.querySelector('.option');selectedButton?.focus()}};bindDropdownKeyboard('planButton','planMenu','[data-plan]');$('planMenu').querySelectorAll('[data-plan]').forEach(btn=>btn.onclick=()=>{profileChoice[selected]=btn.dataset.plan;focusedVariable=0;closeDropdowns();renderWorkbench();enterFx();$('planButton')?.focus()})}
+function closeDropdowns() {
+ document.querySelectorAll('.dropdown.show').forEach(menu=>{
+  const trigger=menu.id==='planMenu'?$('planButton'):menu.id==='revokeMenu'?$('revokeButton'):null;
+  const ownsFocus=menu.contains(document.activeElement);menu.classList.remove('show');
+  trigger?.setAttribute('aria-expanded','false');if(ownsFocus)trigger?.focus();
+ });
+}
+function bindDropdownKeyboard(triggerId,menuId,selector) {
+ const trigger=$(triggerId),menu=$(menuId);
+ trigger.onkeydown=e=>{if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();if(!menu.classList.contains('show'))trigger.click()}};
+ menu.onkeydown=e=>{
+  const items=[...menu.querySelectorAll(selector)],current=items.indexOf(document.activeElement);
+  if(['ArrowDown','ArrowUp','Home','End'].includes(e.key)){
+   e.preventDefault();const index=e.key==='Home'?0:e.key==='End'?items.length-1:(current+(e.key==='ArrowDown'?1:-1)+items.length)%items.length;items[index]?.focus();
+  }else if(e.key==='Escape'){e.preventDefault();closeDropdowns();trigger.focus()}
+ };
+}
+function renderRows() {
+  const p=curProfile(),n=dirty(p);
+  $('varTotal').textContent=`${p.vars.length} 项${n?' · '+n+' 项待应用':''}`;
+  const ids=p.vars.map((v,i)=>i).filter(i=>!onlyMismatch||!itemMatched(p.vars[i]));
+  $('varRows').innerHTML=ids.length?ids.map(i=>{
+    const v=p.vars[i],m=itemMatched(v),pending=hasPendingValue(v);
+    const src=['默认值',...(v.savedValue!==null?['已保存值']:[]),...v.choices.map((_,index)=>'候选值 '+(index+1)),'自定义值'];
+    return `<tr class="${focusedVariable===i?'sel':''}" data-row="${i}" data-kind="${kindOf(v)}" style="--i:${Math.min(ids.indexOf(i),10)}"><td><span class="vname">${esc(v.name)}</span></td><td><span class="scope" data-mode="${esc(v.mode)}">${v.scope==='User'?'用户':'系统'} <span>· ${MODE[v.mode]||v.mode}</span></span></td><td><select class="source ${v.source==='自定义值'?'is-custom':''}" aria-label="${esc(v.name)} 值来源">${src.map(source=>`<option ${v.source===source?'selected':''}>${esc(source)}</option>`).join('')}</select></td><td><div class="running-value"><input class="vinput ${pending?'modified':''}" aria-label="${esc(v.name)} 当前选定值" value="${esc(value(v))}" title="${esc(value(v))}" spellcheck="false"><span class="pending-state" ${pending?'':'hidden'} title="与初始或最近模拟应用的选定值不同；Windows 检测独立计算">待应用</span></div></td><td><span class="result ${m?'':'warn'}" data-kind="${kindOf(v)}" title="比例按选定的非空元素逐项统计；重复项分别计数，不要求当前值具有相同副本数量；空元素保留但不计比例。替换模式还需核对额外内容。">${glyphed(detectionText(v))}</span></td><td><button class="actmini" title="查看历史操作撤销范围；不会恢复当前输入" data-undo="${i}">撤销预览</button></td></tr>`;
+  }).join(''):`<tr><td colspan="6" class="empty">${onlyMismatch?'当前方案没有未匹配的变量':'暂无变量'}</td></tr>`;
+  $('varRows').querySelectorAll('[data-row]').forEach(tr=>{
+    const i=+tr.dataset.row,v=p.vars[i],inp=tr.querySelector('.vinput'),src=tr.querySelector('.source');
+    tr.onclick=e=>{if(e.target.closest('button,select,input'))return;focusedVariable=i;renderRows();};
+    const focusVariable=()=>{focusedVariable=i;$('varRows').querySelectorAll('tr').forEach(row=>row.classList.remove('sel'));tr.classList.add('sel');renderInspector();};
+    inp.onfocus=focusVariable;src.onfocus=focusVariable;
+    inp.onchange=()=>{if(onlyMismatch&&itemMatched(v)){renderRows();$('onlyMismatch')?.focus()}};
+    inp.oninput=e=>{
+      setSelectedValue(v,e.target.value);src.value='自定义值';
+      inp.classList.toggle('modified',v.dirty);inp.title=value(v);tr.querySelector('.pending-state').hidden=!v.dirty;
+      const m=itemMatched(v),result=tr.querySelector('.result'),kind=kindOf(v),changed=result.dataset.kind!==kind;result.innerHTML=glyphed(detectionText(v));result.classList.toggle('warn',!m);result.dataset.kind=kind;tr.dataset.kind=kind;src.classList.toggle('is-custom',true);if(changed){retrigger(tr,'stamp');retrigger(result,'stamp')}
+      renderInspector();renderFooter();renderAppList();renderOverview();
+      const count=dirty(p);$('varTotal').textContent=`${p.vars.length} 项${count?' · '+count+' 项待应用':''}`;
+    };
+    src.onchange=e=>{
+      const prev=value(v);v.matchBaseline=null;v.source=e.target.value;if(v.source==='自定义值'&&v.custom===null)v.custom=prev;
+      v.dirty=hasPendingValue(v);focusedVariable=i;renderRows();renderFooter();renderAppList();renderOverview();
+      ($('varRows').querySelector('[data-row="'+i+'"] .source')||$('onlyMismatch'))?.focus();
+    };
+    tr.querySelector('[data-undo]').onclick=()=>showPreview('撤销','单项撤销',[{app:selected,profile:p.name,varIdx:i}]);
+  });
+  renderInspector();
+}
+function renderInspector() {
+  const v=curProfile().vars[focusedVariable]||curProfile().vars[0];if(!v)return;
+  $('inspectTitle').textContent='Windows 值对照 · '+v.name;
+  $('inspect').querySelector('.inspecthead .mini').textContent=v.mode==='replace'?'整值替换 · 离线演示':'元素编辑 · 离线演示';
+  const plan=demoPlan(v),view=WindowsElements.comparisonMarkup(plan);
+  $('compareDesired').innerHTML=view.selected;$('compareActual').innerHTML=view.actual;$('compareAfter').innerHTML=view.after;$('compareTally').innerHTML=view.tally||'';
+  $('compareSerialized').textContent=plan.valid===false?'计划已失效，需要重新检测并预览':plan.after.exists?(plan.after.raw===''?'（空字符串）':plan.after.raw):'（不存在）';
+  $('compareLabel').textContent=(selectionEdit(v)?'选定值已修改 · ':'')+(v.scope==='User'?'用户':'系统')+' · '+MODE[v.mode]+' · '+v.source;
+  $('compareResult').textContent=detectionText(v);$('compareSummary').textContent=planSummary(plan)||'无需改变当前值';
+  $('compareActions').innerHTML=v.matchBaseline?'<button class="textbtn" id="restoreSelectedEdit">恢复编辑</button>'+(plan.valid===false?'<button class="textbtn" id="rebaseSelectedEdit">重新检测编辑基线</button>':''):'';
+  if($('restoreSelectedEdit'))$('restoreSelectedEdit').onclick=()=>restoreSelectedValue(v);
+  if($('rebaseSelectedEdit'))$('rebaseSelectedEdit').onclick=()=>confirmRebase(v);
+  const stale=plan.issues?.some(issue=>issue.reason==='stale'),notice=$('compareNotice');
+  notice.innerHTML=stale&&v.matchBaseline?'<details class="stale-snapshot-values"><summary>查看原快照与当前快照</summary><span class="sub mini">原快照</span><pre>'+historyValue(v.matchBaseline.snapshot.exists?v.matchBaseline.snapshot.raw:undefined)+'</pre><span class="sub mini">当前快照</span><pre>'+historyValue(plan.beforeRaw)+'</pre></details>':'';
+  notice.hidden=!notice.innerHTML;
+  const editable=v.mode!=='replace',actual=$('compareActual'),editButton=$('editWindowsElements');
+  const open=()=>openWindowsElements(v.scope,v.name,[value(v)],v.special,v.mode,null,null,plan);
+  editButton.hidden=!editable;editButton.onclick=editable?open:null;
+  actual.classList.toggle('inspect-editable',editable);
+  for(const [attribute,content] of [['role','button'],['tabindex','0'],['aria-label','打开 Windows 值元素编辑器'],['title','双击打开元素列表（演示）']]){
+    if(editable)actual.setAttribute(attribute,content);else actual.removeAttribute(attribute);
+  }
+  actual.ondblclick=editable?open:null;
+  actual.onkeydown=editable?e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open()}}:null;
+  WindowsElements.bindComparison($('inspect').querySelector('.value-comparison'));
+  playRemovalFx();
+}
+function sameSnapshot(plan,v){
+ const now=demoSnapshot(v);
+ return now.exists===plan.before.exists&&now.raw===plan.before.raw&&now.type===plan.before.type&&now.revision===plan.baseRevision;
+}
+function applyDemoPlan(plan){
+ const k=plan.targetKey.scope+'|'+plan.targetKey.canonicalName;
+ if(plan.after.exists)windows[k]=plan.after.raw;else delete windows[k];
+ targetTypes[k]=plan.after.type;targetRevisions[k]=(targetRevisions[k]||0)+1;
+}
+function historyChangeFromPlan(plan,extra={}){
+ return Object.freeze({...plan.audit,...extra,scope:plan.targetKey.scope,name:plan.targetKey.name,before:plan.beforeRaw,after:plan.afterRaw,whole:plan.special,mode:plan.mode,operations:plan.operations,plan,unchanged:!plan.operations.length});
+}
+function openWindowsElements(scope,name,selectedValues=[],whole=false,mode=null,appendValues=null,appendEntries=null,selectionPlan=null) {
+ if(screen==='workbench'&&(mode==='replace'||curProfile().vars[focusedVariable]?.mode==='replace'))return;
+ lastDialogFocus=document.activeElement;
+ const variable={scope,name},target=key(variable),snapshot=demoSnapshot(variable);
+ WindowsElements.open({container:$('modal'),name,scope,raw:windows[target],snapshot,selectionPlan,selectedValues,whole,showSuggestions:mode!==null||selectionPlan!==null||appendValues!==null||appendEntries!==null,appendValues:whole?[]:appendValues??(isAppendMode(mode)?selectedValues:[]),appendEntries:whole?null:appendEntries??(isAppendMode(mode)?selectedValues.map(value=>({value,mode})):null),replacementExpected:(whole||mode==='replace')&&selectedValues.length===1&&windows[target]!==undefined&&windows[target]!==selectedValues[0],
+   registryType:snapshot.type,close:closeModal,
+   onApply:(raw,audit,plan)=>{
+     if(!sameSnapshot(plan,variable)){render();notify('当前值已变化，本次编辑已失效；请重新打开元素编辑器。');return;}
+     if(!plan.operations.length)return;
+     applyDemoPlan(plan);revision++;
+     const change=historyChangeFromPlan(plan),counts=plan.audit.counts;
+     history.unshift(Object.freeze({when:new Date().toLocaleString('zh-CN'),action:'编辑演示变量',detail:`${scope==='User'?'用户':'系统'} / ${name} · ${whole?'整体值修改':changeCountText(counts)} · 仅更新页面数据`,changes:Object.freeze([change])}));
+     render();
+     const returnTo=screen==='windows'?[...document.querySelectorAll('[data-windows-edit]')].find(el=>el.dataset.windowsEdit===target):$('editWindowsElements');
+     returnTo?.focus();notify('元素修改已应用到演示数据');
+   }
+ });
+}
+function renderFooter(){if(screen!=='workbench')return;const names=checked.size?[...checked].map(i=>apps[i].name+' / '+scheme(i).name).join('、'):appNow().name+' / '+curProfile().name;const dirtyN=apps.reduce((n,a)=>n+a.profiles.reduce((k,p)=>k+dirty(p),0),0);$('footer').innerHTML=`<div class="footer-summary"><strong>${checked.size?'批量 · 已选 '+checked.size+' 个应用':'单应用 · '+esc(names)}</strong><small>${dirtyN?`${dirtyN} 项待应用修改 · `:''}演示状态 · 不连接 Windows 注册表</small></div><div class="btndrop"><button class="btn" id="revokeButton" title="预览历史操作的撤销范围；演示不执行恢复" aria-expanded="false" aria-controls="revokeMenu" aria-haspopup="true">撤销配置 ⌄</button><div class="dropdown" id="revokeMenu" style="top:auto;bottom:calc(100% + 6px);width:235px"><button class="option" data-revoke="var">撤销当前变量</button><button class="option" data-revoke="scheme">撤销当前方案</button><button class="option" data-revoke="app">撤销当前应用全部方案</button><button class="option" data-revoke="batch">撤销已勾选方案</button></div></div><button class="btn primary" id="previewButton">预览并应用 →</button>`;$('previewButton').onclick=()=>{const ids=checked.size?[...checked]:[selected];showPreview('应用',checked.size?'批量方案预览':'单应用方案预览',ids.flatMap(i=>scheme(i).vars.map((v,j)=>({app:i,profile:scheme(i).name,varIdx:j}))))};$('revokeButton').onclick=()=>{const dd=$('revokeMenu'),op=!dd.classList.contains('show');closeDropdowns();dd.classList.toggle('show',op);$('revokeButton').setAttribute('aria-expanded',String(op));if(op)dd.querySelector('[data-revoke]')?.focus()};bindDropdownKeyboard('revokeButton','revokeMenu','[data-revoke]');$('revokeMenu').querySelectorAll('[data-revoke]').forEach(b=>b.onclick=()=>{let mode=b.dataset.revoke,targets=[];if(mode==='batch'){if(!checked.size)return notify('请先勾选应用');targets=[...checked].flatMap(i=>scheme(i).vars.map((v,j)=>({app:i,profile:scheme(i).name,varIdx:j})))}else if(mode==='var')targets=[{app:selected,profile:scheme().name,varIdx:focusedVariable}];else if(mode==='scheme')targets=scheme().vars.map((v,j)=>({app:selected,profile:scheme().name,varIdx:j}));else targets=appNow().profiles.flatMap(p=>p.vars.map((v,j)=>({app:selected,profile:p.name,varIdx:j})));showPreview('撤销',b.textContent,targets)})}
+function newValue(v,actual){
+ return demoPlan(v,actual).afterRaw;
+}
+function recordsFor(targets,kind){
+ const groups=new Map();
+ for(const t of targets){const v=apps[t.app].profiles.find(p=>p.name===t.profile).vars[t.varIdx],k=key(v);if(!groups.has(k))groups.set(k,[]);groups.get(k).push({...t,v,selectedRaw:value(v)});}
+ return [...groups.values()].map(members=>{
+  const first=members[0],v=first.v,vars=members.map(m=>m.v),protectedValues=protectedSelections(vars),snapshot=demoSnapshot(v);
+  const plan=kind!=='应用'?null:members.length===1?demoPlan(v):DemoPlan.buildBatch({target:{scope:v.scope,name:v.name},snapshot,requests:members.map(m=>({id:m.app+'|'+m.profile+'|'+m.varIdx,mode:m.v.mode,whole:m.v.special,selectedRaw:m.selectedRaw,baseline:m.v.matchBaseline})),protectedValues});
+  return Object.freeze({...first,members:Object.freeze(members.map(Object.freeze)),before:snapshot.exists?snapshot.raw:undefined,after:plan?plan.afterRaw:'（撤销后值需由真实操作日志计算）',plan,baseSnapshot:Object.freeze(snapshot),selectionSignature:planContextSignature(vars),protectionSignature:JSON.stringify(protectedValues),scope:v.scope,name:v.name,mode:v.mode,whole:v.special});
+ });
+}
+function showPreview(kind,title,targets){lastDialogFocus=document.activeElement?.closest('#revokeMenu')?$('revokeButton'):document.activeElement;closeDropdowns();const rows=recordsFor(targets,kind);modalAction={kind,targets,rows};const replacements=new Map();rows.forEach(r=>{if(kind!=='应用'||r.v.mode!=='replace'&&!r.v.special)return;const k=key(r.v);const s=replacements.get(k)||new Set();s.add(value(r.v));replacements.set(k,s)});const conflict=[...replacements.values()].some(s=>s.size>1);const invalidPlan=rows.some(r=>r.plan?.valid===false);modalAction.conflict=conflict||invalidPlan;const needsOrdering=rows.some(r=>kind==='应用'&&r.members.some(m=>m.v.mode==='append'));modalAction.needsOrdering=needsOrdering;const unchanged=rows.filter(r=>r.after===r.before).length;$('modal').innerHTML=`<div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialoghead"><div><h3 id="dialogTitle">${esc(title)}</h3><p>${targets.length} 条变量记录 · ${rows.length} 个目标 · ${unchanged} 条无需变化 · ${kind==='应用'?'将模拟应用到浏览器内存':'演示撤销流程与操作范围'}</p></div><button class="close" id="closeDialog" aria-label="关闭">×</button></div><div class="dialogbody">${needsOrdering?'<div class="banner warn">所选方案包含 append 自定义排序模式。本原型不实现完整排序确认，因此禁止模拟应用；正式应用必须先确认合并后的元素顺序。</div>':''}${invalidPlan?'<div class="banner warn">编辑基线已失效，或同一目标值存在冲突。本次不能确认；请返回对照区重新检测编辑基线。</div>':''}${conflict?'<div class="banner warn">检测到相同 Windows 环境变量的目标值存在冲突，演示中禁止确认。真实程序必须交由专门的共享冲突分析引擎处理。</div>':`<div class="banner">这是离线 UI 原型。${kind==='应用'?'确认后只更新页面中的模拟 Windows 环境。':'不具备真正的撤销日志，不会伪造精确的撤销结果。'}</div>`}${rows.map(r=>`<div class="diffrow"><div class="k">${r.members.map(m=>esc(apps[m.app].name)+' / '+esc(m.profile)).join('、')} · ${esc(r.v.name)} <span class="sub mini">${r.v.scope==='User'?'用户':'系统'} · ${esc(r.members.length>1?'批量合并':MODE[r.v.mode])}</span></div><div class="pair del"><span>模拟当前</span><span>${esc(r.before===undefined?'（不存在）':r.before)}</span></div><div class="pair add"><span>${kind==='应用'?'目标结果':'操作说明'}</span><span>${esc(r.after===undefined?'（不存在）':r.after===''?'（空字符串）':r.after)}</span></div>${r.plan&&planSummary(r.plan)?`<p class="plan-summary">${esc(planSummary(r.plan))}</p>`:''}</div>`).join('')}</div><div class="dialogfoot"><button class="btn" id="cancelDialog">取消</button><button class="btn primary" id="confirmDialog" ${conflict||invalidPlan||needsOrdering||kind==='撤销'?'disabled':''}>${kind==='应用'?'模拟确认应用':'需要真实操作日志'}</button></div></div>`;$('modal').classList.add('open');$('closeDialog').onclick=closeModal;$('cancelDialog').onclick=closeModal;$('confirmDialog').onclick=confirmPreview;$('closeDialog').focus()}
+function closeModal(){const wasOpen=$('modal').classList.contains('open');$('modal').classList.remove('open');modalAction=null;WindowsElements.dismiss();if(wasOpen&&lastDialogFocus?.isConnected)lastDialogFocus.focus();lastDialogFocus=null}
+function confirmPreview(){
+ if(!modalAction||modalAction.kind!=='应用'||modalAction.conflict||modalAction.needsOrdering)return;
+ const {targets,rows}=modalAction;
+ const stale=rows.some(r=>{
+   const now=demoSnapshot(r.v),base=r.baseSnapshot;
+   return planContextSignature(r.members.map(m=>m.v))!==r.selectionSignature||JSON.stringify(protectedSelections(r.members.map(m=>m.v)))!==r.protectionSignature||r.plan.valid===false||now.exists!==base.exists||now.raw!==base.raw||now.type!==base.type||now.revision!==base.revision;
+ });
+ if(stale){closeModal();render();notify('预览已失效，当前值或选定值已变化；请重新预览确认。');return;}
+ const changes=Object.freeze(rows.map(r=>historyChangeFromPlan(r.plan,{app:r.members.map(m=>apps[m.app].name).join('、'),profile:r.members.map(m=>m.profile).join('、')})));
+ for(const r of rows){
+   if(r.plan.operations.length)applyDemoPlan(r.plan);
+   for(const m of r.members){m.v.savedValue=m.selectedRaw;m.v.baselineValue=m.selectedRaw;m.v.matchBaseline=null;m.v.dirty=false;apps[m.app].active=m.profile;}
+ }
+ if(changes.some(c=>!c.unchanged))history.unshift(Object.freeze({when:new Date().toLocaleString('zh-CN'),action:'模拟应用',detail:`${new Set(targets.map(t=>apps[t.app].name)).size} 个应用，${targets.length} 项变量 · ${changes.filter(c=>!c.unchanged).length} 条修改`,changes}));
+ revision++;closeModal();render();notify('已模拟应用到页面数据，未写入 Windows');
+}
+function renderWindows() {
+  const items=Object.keys(windows).sort();
+  // Special is static variable metadata shared across profiles, not a selected scheme's plan.
+  const wholeFor=k=>apps.some(a=>a.profiles.some(p=>p.vars.some(v=>key(v)===k&&v.special)));
+  $('screen').innerHTML=`<div class="fullpage" style="width:100%"><div class="pageh"><div><h2>Windows 环境</h2><p>当前演示快照 · 双击变量值直接编辑</p></div><span class="tag neutral">${items.length} 项变量</span></div>
+    <table class="outline-table"><thead><tr><th style="width:130px">作用域</th><th style="width:155px">变量</th><th>模拟当前值</th><th style="width:86px">操作</th></tr></thead><tbody>${items.map(k=>
+      `<tr><td><span class="scope-chip" data-scope="${k.startsWith('User')?'user':'system'}">${k.startsWith('User')?'用户':'系统'}</span></td><td><strong>${esc(k.split('|')[1])}</strong></td><td><div class="codevalue inspect-editable" tabindex="0" role="button" aria-label="编辑 ${esc(k.split('|')[1])} 元素" title="双击直接编辑当前值（演示）" data-windows-value="${esc(k)}"></div></td><td><button class="textbtn" data-windows-edit="${esc(k)}">编辑</button></td></tr>`
+    ).join('')}</tbody></table></div>`;
+  const open=k=>{
+    const [scope,name]=k.split('|');
+    openWindowsElements(scope,name,[],wholeFor(k));
+  };
+  document.querySelectorAll('[data-windows-value]').forEach(el=>{
+    const raw=windows[el.dataset.windowsValue];
+    // textContent preserves the snapshot verbatim, including CRLF, without HTML parsing.
+    if(raw==='')el.innerHTML='<span class="empty-element">（空字符串）</span>';
+    else el.textContent=raw;
+    el.ondblclick=()=>open(el.dataset.windowsValue);
+    el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open(el.dataset.windowsValue)}};
+  });
+  document.querySelectorAll('[data-windows-edit]').forEach(button=>button.onclick=()=>open(button.dataset.windowsEdit));
+  $('footer').innerHTML=`<div class="footer-summary"><strong>Windows 环境（演示）</strong><small>当前快照与直接编辑 · 确认后仅更新演示数据</small></div><button class="btn" id="toWork">返回工作台</button>`;
+  $('toWork').onclick=()=>go('workbench');
+}
+function changeCountText(counts){return [['added','新增'],['removed','删除'],['replaced','替换'],['moved','移动']].filter(([kind])=>counts[kind]).map(([kind,label])=>`${label} ${counts[kind]}`).join(' · ')||'整体值修改'}
+function historyValue(raw){return raw===undefined?'（不存在）':raw===''?'（空字符串）':esc(raw)}
+function historyElementValue(raw){return raw===undefined?'—':raw===''?'（空元素）':esc(raw)}
+function historyChangeMarkup(c){
+  const changed=c.whole?[]:(c.elements||[]).filter(e=>e.added||e.removed||e.replaced||e.moved);
+  return `<section class="history-change"><div class="history-change-heading"><strong>${c.scope==='User'?'用户':'系统'} / ${esc(c.name)}</strong><span class="sub mini">${c.whole?'整体值':'元素列表'}${c.mode?' · '+esc(c.mode==='batch'?'批量合并':MODE[c.mode]||'元素编辑'):''}${c.unchanged?' · 无需变化':''}</span></div>
+    ${c.app?`<p class="history-source">来源：${esc(c.app)} / ${esc(c.profile)}</p>`:''}
+    ${!c.elements&&c.operations?.length?`<p class="history-counts">${esc(planSummary(c.plan))}</p>`:''}
+    ${c.counts&&!c.whole?`<p class="history-counts">${esc(changeCountText(c.counts))} <span class="sub mini">同一元素可同时计入替换与移动</span></p>`:''}
+    <div class="history-values"><div><span class="k">修改前</span><pre class="history-before">${historyValue(c.before)}</pre></div><div><span class="k">修改后</span><pre class="history-after">${historyValue(c.after)}</pre></div></div>
+    ${changed.length?`<table class="history-element-table"><thead><tr><th>位置（原 → 新）</th><th>状态</th><th>原元素</th><th>新元素</th></tr></thead><tbody>${changed.map(e=>`<tr><td>${e.beforeIndex===null?'—':e.beforeIndex+1} → ${e.afterIndex===null?'—':e.afterIndex+1}</td><td>${[['added','新增'],['removed','删除'],['replaced','替换'],['moved','移动']].filter(([kind])=>e[kind]).map(([kind,label])=>`<span class="diff-label is-${kind}">${label}</span>`).join('')}</td><td><code>${historyElementValue(e.before)}</code></td><td><code>${historyElementValue(e.after)}</code></td></tr>`).join('')}</tbody></table>`:''}
+  </section>`;
+}
+function renderHistory(){
+  $('screen').innerHTML=`<div class="fullpage history-page" style="width:100%"><div class="pageh"><div><h2>操作历史</h2><p>本次浏览器会话中的模拟记录 · 展开查看修改前后与元素变化</p></div><span class="tag neutral">${history.length} 条记录</span></div><table class="outline-table"><thead><tr><th style="width:190px">时间</th><th style="width:160px">操作</th><th>描述与详情</th></tr></thead><tbody>${history.map(h=>`<tr><td><span class="time-dot" aria-hidden="true"></span>${esc(h.when)}</td><td><span class="act-chip">${esc(h.action)}</span></td><td>${h.changes?.length?`<details class="history-details"><summary>${esc(h.detail)}<span class="history-expand">查看详情</span></summary><div class="history-detail-body">${h.changes.map(historyChangeMarkup).join('')}<p class="sub mini">仅更新本页演示数据；此记录不提供真实环境恢复。</p></div></details>`:esc(h.detail)}</td></tr>`).join('')}</tbody></table></div>`;
+  $('footer').innerHTML=`<div class="footer-summary"><strong>模拟操作日志</strong><small>这里不代表真实软件的可撤销历史</small></div><button class="btn" id="toWork">返回工作台</button>`;$('toWork').onclick=()=>go('workbench');
+}
+function configProfile(){const a=apps[editor.app];return a.profiles.find(p=>p.name===editor.profile)||a.profiles[0]}
+function configVar(){return configProfile().vars[editor.varIdx]||configProfile().vars[0]}
+const CONFIG_FIELDS = [['defaultValue','默认值'],['scope','作用域'],['mode','模式'],['special','整体处理']];
+function configChanges() {
+  return apps.flatMap((a,i)=>a.profiles.flatMap(p=>p.vars.flatMap((v,j)=>{
+    const m=initialApps[i].profiles.find(x=>x.name===p.name).vars[j];
+    const original={defaultValue:m[3],scope:m[1],mode:m[2],special:!!m[4]?.special};
+    return CONFIG_FIELDS.filter(([field])=>v[field]!==original[field]).map(([field,label])=>({app:a.name,profile:p.name,name:v.name,field,label,before:original[field],after:v[field]}));
+  })));
+}
+function updateConfigStatus() {
+  const count=configChanges().length;
+  if ($('configStatus')) { $('configStatus').textContent=count?`配置修改 · ${count} 项属性修改 · 仅本页保留`:'配置修改未修改 · 编辑不会更改真实文件';$('configStatus').classList.toggle('has-changes',count>0); }
+  if ($('cancelConfig')) $('cancelConfig').disabled=count===0;
+  const badge=$('configDraftBadge');
+  if (badge) { badge.hidden=!count; badge.textContent=`${count} 项属性修改`; }
+}
+function restoreConfig() {
+  apps.forEach((a,i)=>a.profiles.forEach(p=>p.vars.forEach((v,j)=>{
+    const m=initialApps[i].profiles.find(x=>x.name===p.name).vars[j];
+    const contextChanged=v.scope!==m[1]||v.mode!==m[2]||v.special!==!!m[4]?.special||(v.source==='默认值'&&v.defaultValue!==m[3]);
+    Object.assign(v,{defaultValue:m[3],scope:m[1],mode:m[2],special:!!m[4]?.special});if(contextChanged)v.matchBaseline=null;v.dirty=hasPendingValue(v);
+  })));
+  renderConfig();$('downloadToml').focus();notify('已还原配置修改，页面环境快照未改变');
+}
+function renderConfig() {
+  $('screen').innerHTML=`<div class="config-page"><div class="editor-tabs"><button class="navtab ${editor.tab==='visual'?'active':''}" data-edtab="visual" aria-current="${editor.tab==='visual'?'page':'false'}">可视化</button><button class="navtab ${editor.tab==='raw'?'active':''}" data-edtab="raw" aria-current="${editor.tab==='raw'?'page':'false'}">示例 TOML</button><button class="navtab ${editor.tab==='diff'?'active':''}" data-edtab="diff" aria-current="${editor.tab==='diff'?'page':'false'}">修改差异</button><span id="configDraftBadge" class="tag dirty" hidden></span><span class="config-file-label">env.toml · 演示配置</span></div><div id="editorbody" class="editor-body"></div><div class="edfooter"><span id="configStatus" role="status"></span><button class="btn" id="cancelConfig" title="还原全部方案的默认值、作用域、模式及整体处理属性">还原配置修改</button><button class="btn primary" id="downloadToml">导出 TOML 文件 ↓</button></div></div>`;
+  document.querySelectorAll('[data-edtab]').forEach(b=>b.onclick=()=>{
+    editor.tab=b.dataset.edtab;renderConfig();document.querySelector(`[data-edtab="${editor.tab}"]`).focus();
+  });
+  $('cancelConfig').onclick=restoreConfig;$('downloadToml').onclick=downloadToml;
+  renderEditorBody();updateConfigStatus();
+}
+function renderEditorBody(focusId) {
+  const root = $('editorbody'), a = apps[editor.app], p = configProfile();
+  if (editor.tab !== 'visual') {
+    const raw = editor.tab === 'raw';
+    root.innerHTML = `<div class="fullpage" style="width:100%"><div class="pageh"><div><h2>${raw ? '示例 TOML' : '当前修改差异'}</h2><p>${raw ? '由演示数据生成。正式文件的解析与无损保存将在后端接入时处理。' : '比较本页配置修改的属性修改；不涉及系统环境写入。'}</p></div><button class="btn" id="copyText">复制内容</button></div><pre class="codetext" id="sourceText">${esc(raw ? generateToml() : generateDiff())}</pre></div>`;
+    $('copyText').onclick = async () => {
+      try {
+        if (!navigator.clipboard) throw new Error('Clipboard unavailable');
+        await navigator.clipboard.writeText($('sourceText').innerText);
+        notify('已复制');
+      } catch { notify('浏览器不允许直接复制，请手动选中复制'); }
+    };
+    return;
+  }
+  const visibleProfiles = editor.showAll ? a.profiles : [p];
+  const groups = visibleProfiles.map(profile => `
+    <tr class="scheme-group"><th colspan="4"><div class="scheme-heading"><span class="scheme-name">${esc(profile.name)}</span><span class="group-meta">${profile.vars.length} 项变量</span><span class="scheme-flags">${[profile.name === a.default ? '默认方案' : '', profile.name === p.name ? '当前编辑' : ''].filter(Boolean).join(' · ')}</span></div></th></tr>
+    ${profile.vars.map((v, i) => `<tr tabindex="0" class="${profile.name === p.name && i === editor.varIdx ? 'active' : ''}" data-tableplan="${esc(profile.name)}" data-tablevar="${i}" aria-current="${profile.name===p.name&&i===editor.varIdx?'true':'false'}" aria-label="编辑 ${esc(profile.name)} 的 ${esc(v.name)}"><td><strong>${esc(v.name)}</strong></td><td>${v.scope === 'User' ? '用户' : '系统'}</td><td>${esc(MODE[v.mode])}</td><td title="${esc(v.defaultValue)}">${esc(v.defaultValue)}</td></tr>`).join('')}
+  `).join('');
+  root.innerHTML = `<div class="editor-shell" style="width:100%">
+    <aside class="editor-left"><section class="editor-nav-group"><div class="editor-section"><strong id="editorAppsHeading">应用</strong><span class="mini sub">${apps.length} 项</span></div><div class="editor-nav-list" data-editor-list="apps" aria-labelledby="editorAppsHeading">
+      ${apps.map((x,i) => `<button class="editor-item ${editor.app === i ? 'active' : ''}" data-editapp="${i}" aria-current="${editor.app===i?'true':'false'}" title="${esc(x.name)}">${esc(x.name)}<span class="sub mini">›</span></button>`).join('')}
+      </div></section><section class="editor-nav-group"><div class="editor-section"><strong id="editorProfilesHeading">方案</strong><span class="mini sub">${a.profiles.length} 项</span></div><div class="editor-nav-list" data-editor-list="profiles" aria-labelledby="editorProfilesHeading">
+      ${a.profiles.map(x => `<button class="editor-item ${p.name === x.name ? 'active' : ''}" data-editplan="${esc(x.name)}" aria-current="${p.name===x.name?'true':'false'}" title="${esc(x.name)}">${esc(x.name)}${x.name === a.default ? ' · 默认' : ''}</button>`).join('')}
+      </div></section></aside>
+    <main class="editor-mid"><div class="eyebrow">配置 / ${esc(a.name)}</div><h2>${esc(a.name)}</h2><div class="littlemeta">正在编辑 ${esc(p.name)} · ${p.vars.length} 项变量 · 默认方案 ${esc(a.default)}</div>
+      <div class="sectionbar"><h2>方案变量</h2><select id="editorView" class="view-select" aria-label="配置方案显示范围"><option value="current" ${!editor.showAll ? 'selected' : ''}>当前方案</option><option value="all" ${editor.showAll ? 'selected' : ''}>全部方案</option></select></div>
+      <table class="editor-table"><thead><tr><th>变量名称</th><th>作用域</th><th>模式</th><th>默认值</th></tr></thead><tbody>${groups}</tbody></table>
+      <p class="helpnote">选择变量编辑属性。这里的修改属于配置修改，不会应用到系统环境。</p>
+    </main><aside class="editor-right" id="editorInspector"></aside>
+  </div>`;
+  $('editorView').onchange = e => { editor.showAll = e.target.value === 'all'; renderEditorBody('editorView'); };
+  root.querySelectorAll('[data-editapp]').forEach(b => b.onclick = () => { editor.app = +b.dataset.editapp; editor.profile = apps[editor.app].default; editor.varIdx = 0; renderEditorBody();root.querySelectorAll('[data-editapp]')[editor.app]?.focus(); });
+  root.querySelectorAll('[data-editplan]').forEach(b => b.onclick = () => { editor.profile = b.dataset.editplan; editor.varIdx = 0; renderEditorBody();[...root.querySelectorAll('[data-editplan]')].find(el=>el.dataset.editplan===editor.profile)?.focus(); });
+  root.querySelectorAll('[data-tableplan]').forEach(row => {
+    const choose = () => { editor.profile = row.dataset.tableplan; editor.varIdx = +row.dataset.tablevar; renderEditorBody();[...root.querySelectorAll('[data-tableplan]')].find(el=>el.dataset.tableplan===editor.profile&&+el.dataset.tablevar===editor.varIdx)?.focus(); };
+    row.onclick = choose;
+    row.onkeydown = e => {
+      if(e.key==='Enter'||e.key===' '){e.preventDefault();choose();return;}
+      if(!['ArrowUp','ArrowDown','Home','End'].includes(e.key))return;
+      e.preventDefault();const rows=[...root.querySelectorAll('[data-tableplan]')],position=rows.indexOf(row);
+      const next=e.key==='Home'?0:e.key==='End'?rows.length-1:Math.max(0,Math.min(rows.length-1,position+(e.key==='ArrowDown'?1:-1)));
+      rows[next]?.click();
+    };
+  });
+  renderEditorInspector();updateConfigStatus();
+  if (focusId) $(focusId)?.focus();
+}
+function renderEditorInspector(){const v=configVar();$('editorInspector').innerHTML=`<h3>${esc(v.name)}</h3><div class="inspector-context">${esc(apps[editor.app].name)} / ${esc(configProfile().name)} · 变量属性</div><div class="field"><label for="cfgName">变量名</label><input id="cfgName" value="${esc(v.name)}" disabled title="演示中变量名固定，不支持重命名"></div><div class="field"><label for="cfgScope">作用域</label><select id="cfgScope"><option value="User" ${v.scope==='User'?'selected':''}>用户 (User)</option><option value="System" ${v.scope==='System'?'selected':''}>系统 (System)</option></select></div><div class="field"><label for="cfgMode">模式</label><select id="cfgMode">${Object.entries(MODE).map(([k,x])=>`<option value="${k}" ${v.mode===k?'selected':''} ${v.special&&k!=='replace'?'disabled':''}>${esc(k)} · ${x}</option>`).join('')}</select></div><div class="field"><label for="cfgDefault">默认值（保留原始字符串）</label><textarea id="cfgDefault" spellcheck="false">${esc(v.defaultValue)}</textarea></div><div class="field"><label for="cfgSaved">已保存值（只读演示数据）</label><input id="cfgSaved" value="${esc(v.savedValue??'（无）')}" disabled></div><div class="field"><label for="cfgSource">当前选定值来源</label><input id="cfgSource" value="${esc(v.source)}" disabled></div><label class="checklabel" style="margin-top:5px"><input type="checkbox" id="cfgSpecial" ${v.special?'checked':''}>特殊变量 (Special)</label><p class="helpnote">特殊变量的值作为一个整体处理。配置修改保留在此演示状态中，可以导出为新 TOML 文件。工作台使用“默认值”来源时会跟随此处默认值修改；其他来源保持原选定值，仍需预览确认才更新演示环境。</p>`;
+ $('cfgScope').onchange=e=>{v.matchBaseline=null;v.scope=e.target.value;renderEditorBody('cfgScope')};$('cfgMode').onchange=e=>{v.matchBaseline=null;v.mode=e.target.value;renderEditorBody('cfgMode')};$('cfgDefault').oninput=e=>{if(v.source==='默认值')beginSelectedEdit(v,e.target.value);v.defaultValue=e.target.value;v.dirty=hasPendingValue(v);const trs=document.querySelectorAll('[data-tableplan]');trs.forEach(tr=>{if(tr.dataset.tableplan===configProfile().name&&+tr.dataset.tablevar===editor.varIdx){const td=tr.lastElementChild;td.textContent=v.defaultValue;td.title=v.defaultValue}});updateConfigStatus()};$('cfgSpecial').onchange=e=>{v.matchBaseline=null;v.special=e.target.checked;if(v.special)v.mode='replace';renderEditorBody('cfgSpecial')}}
+function tomlQuote(s){return '"'+String(s).replace(/\\/g,'\\\\').replace(/"/g,'\\"').replace(/\r/g,'\\r').replace(/\n/g,'\\n')+'"'}
+function generateToml(){let out=['# 由 Compact UI 演示生成（示例结构，非仓库配置格式的正式序列化）',''];apps.forEach(a=>{out.push('# '+a.name);a.profiles.forEach(p=>{out.push('[[application]]');out.push('name = '+tomlQuote(a.name));out.push('profile = '+tomlQuote(p.name));out.push('default_profile = '+(a.default===p.name?'true':'false'));p.vars.forEach(v=>{out.push('[[application.variable]]');out.push('name = '+tomlQuote(v.name));out.push('scope = '+tomlQuote(v.scope));out.push('mode = '+tomlQuote(v.mode));out.push('default_value = '+tomlQuote(v.defaultValue));if(v.special)out.push('special = true')});out.push('')})});return out.join('\n')}
+function generateDiff() {
+  const display=(field,val)=>field==='special'?(val?'是':'否'):String(val);
+  return configChanges().map(c=>`${c.app} / ${c.profile} / ${c.name} · ${c.label}\n  原始：${display(c.field,c.before)}\n  修改：${display(c.field,c.after)}`).join('\n\n')||'目前没有配置属性修改。';
+}
+function downloadToml(){const b=new Blob([generateToml()],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(b),a=document.createElement('a');a.href=url;a.download='env.compact-demo.toml';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);notify('已生成演示 TOML（非仓库正式格式）')}
+
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Tab' || !$('modal').classList.contains('open')) return;
+  const controls = [...$('modal').querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex="0"]')].filter(el=>!el.closest('[hidden]'));
+  const first = controls[0], last = controls[controls.length - 1];
+  if (!first) return;
+  if (!$('modal').contains(document.activeElement)) { e.preventDefault();first.focus();return; }
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+});
+$('refreshBtn').onclick=()=>{revision++;render();notify('重新检测完成（基于当前模拟数据）')};$('configBtn').onclick=()=>go('config');$('resetBtn').onclick=()=>{if(confirm('将所有演示数据重置为初始状态？'))reset()};document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>go(b.dataset.view));document.addEventListener('click',e=>{if(!e.target.closest('#planField')&&!e.target.closest('.btndrop'))closeDropdowns()});document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeDropdowns()}if((e.ctrlKey||e.metaKey)&&['s','f'].includes(e.key.toLowerCase())&&$('modal').classList.contains('open')){e.preventDefault();return}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'&&!$('modal').classList.contains('open')){e.preventDefault();downloadToml()}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='f'&&screen==='workbench'&&!$('modal').classList.contains('open')){e.preventDefault();$('appSearch').focus()}});$('modal').onclick=e=>{if(e.target===$('modal'))closeModal()};reset(true);
+</script>
+</body></html>
+
+
+FULL SOURCE windows-elements.js
+/* Element editing and annotations are UI-only. Only serialized live rows are applied. */
+var WindowsElements = (() => {
+  const escape = text => String(text ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  let session = null, sequence = 0;
+  const normalized = value => value.trim();
+  const matches = (raw,values,whole) => DemoPlan.matches(raw,values,whole);
+  // State icons are decorative; badge text supplies the accessible state name.
+  const PLATE_ICON={added:'add','manual-added':'add',replaced:'swap',moved:'move',removed:'cut',empty:'void',duplicate:'stack',pendingAdd:'add',pendingRemove:'minus',adopted:'check',match:'check'};
+  const plateCells=kinds=>kinds.map(kind=>`<i class="st-cell st-${kind}" aria-hidden="true"><b class="ic ic-${PLATE_ICON[kind]}"></b></i>`).join('');
+  const plateMarkup=kinds=>kinds.length?`<span class="st-plate" aria-hidden="true">${plateCells(kinds)}</span>`:'';
+  const statusBadge=(kind,text,iconKind=kind,title='')=>`<span class="diff-label is-${kind} status-badge"${title?` title="${escape(title)}"`:''}>${plateCells([iconKind])}${escape(text)}</span>`;
+  const tailMarkup=html=>html?`<span class="st-tail">${html}</span>`:'';
+  const valueHint=(value,whole=false)=>value===''?statusBadge('empty',whole?'空字符串':'空元素'):'';
+  const reducedMotion=()=>typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const canAnimate=()=>!reducedMotion()&&typeof Element.prototype.animate==='function';
+  const fieldSizing=typeof CSS!=='undefined'&&typeof CSS.supports==='function'&&CSS.supports('field-sizing','content');
+  function selectionInfo(raw,values=[],whole=false){
+    const parts=values.flatMap(selectedRaw=>DemoPlan.build({mode:'-append',whole,actualRaw:raw,selectedRaw}).parts).map((part,index)=>({...part,index}));
+    const effective=parts.filter(part=>whole||normalized(part.value)!=='');
+    return {parts,total:effective.length,matched:effective.filter(part=>part.matched).length,missing:effective.filter(part=>!part.matched).map(({value,index})=>({value,index}))};
+  }
+  const isAppendMode = mode => ['+append','-append','append'].includes(mode);
+  const pendingToken = (part,mode=null) => {
+    const position=mode==='+append'?'开头':'末尾';
+    const button=isAppendMode(mode)?`<button type="button" class="pending-add-button" data-add-pending="${part.index}" title="加入当前编辑列表${position}" aria-label="将 ${escape(part.value)} 加入当前编辑列表${position}">${iconFallback('＋')}</button>`:'';
+    return `<span class="pending-add-token${button?' is-actionable':''}" data-selected-index="${part.index}"><span class="diff-value" data-raw-value="${escape(part.value)}">${escape(part.value)}</span>${tailMarkup(statusBadge('pending-add','待追加','pendingAdd'))}${button}</span>`;
+  };
+  function selectionMarkup(raw, values = [], whole = false, append = false, plan = null) {
+    if (whole || !append) return escape(values.join(';')) || '<span class="empty-element">（空字符串）</span>';
+    if (values.length===1 && values[0]==='') return '<span class="empty-element">（空字符串）</span>';
+    const selectedPlan=plan||DemoPlan.build({mode:'-append',actualRaw:raw,selectedRaw:values.join(';')});
+    const insertionIndexes=new Set(selectedPlan.operations.filter(op=>op.type==='insert').map(op=>op.selectedIndex));
+    return selectedPlan.parts.map(part => {
+      if (insertionIndexes.has(part.index)) return pendingToken(part);
+      if (part.matched) return `<mark class="matched-element"><span data-raw-value="${escape(part.value)}">${escape(part.value)}</span></mark>`;
+      return part.value === '' ? '<span class="empty-element" data-raw-value="">（空元素）</span>' : escape(part.value);
+    }).join('<span class="element-separator">;</span>');
+  }
+  const iconFallback=symbol=>'<span class="icon-fallback" aria-hidden="true">'+symbol+'</span>';
+  const removalToken=(op,editing=false)=>`<span class="pending-remove-token" data-pending-before-index="${op.beforeIndex}"${op.elementId===undefined?'':` data-element-id="${op.elementId}"`}><span class="diff-value" data-raw-value="${escape(op.value)}">${escape(op.value)}</span>${tailMarkup(statusBadge('removed','待删除','pendingRemove'))}${editing?`<button type="button" class="pending-remove-button" data-remove-pending="${op.beforeIndex}" aria-label="从本次编辑列表移除 ${escape(op.value)}" title="从本次编辑列表移除">${iconFallback('−')}</button>`:''}</span>`;
+  function removalMarkup(plan,editing=false){
+    const removals=(plan?.operations||[]).filter(op=>op.type==='remove');
+    return removals.length?`<div class="pending-removals"><span class="pending-additions-title">方案待删除 · ${editing?'尚未从本次编辑列表移除':'确认应用后移除'}</span><div class="pending-additions-values">${removals.map(op=>removalToken(op,editing)).join('<span class="element-separator">;</span>')}</div></div>`:'';
+  }
+  function issuesMarkup(plan,editing=false){
+    return (plan?.issues||[]).length?`<div class="plan-issues">${plan.issues.map(issue=>`<span class="plan-issue"><code>${escape(issue.value)}</code><span class="diff-label is-retained">${issue.reason==='duplicate'?(editing?'存在重复，需明确选择元素':'存在重复，删除需确认'):issue.reason==='shared'?'共享保留':issue.reason==='stale'?'编辑基线已失效':'目标计划冲突'}</span></span>`).join('')}</div>`:'';
+  }
+  function editorSuggestionToken(op,kind,modes) {
+    const removing=kind==='remove',adopted=!!op.adopted,index=removing?op.beforeIndex:op.selectedIndex;
+    const position=modes[index]==='+append'?'开头':'末尾';
+    const actionable=removing||isAppendMode(modes[index]);
+    const action=removing?(adopted?'撤销本次建议删除，恢复原始元素':'采纳建议删除：从本次编辑列表移除'):adopted?'撤销本次采纳':'采纳建议追加：加入本次编辑列表'+position;
+    const removalIdentity=removing?` data-removal-id="${op.elementId}" data-removal-adopted="${adopted}"`:'';
+    const button=actionable?`<button type="button" class="pending-${removing?'remove':'add'}-button" data-${removing?'remove':'add'}-pending="${index}"${removalIdentity} aria-pressed="${adopted}" title="${action}" aria-label="${action} ${escape(op.value)}">${iconFallback(adopted?'✓':removing?'−':'＋')}</button>`:'';
+    const adoptedLabel=removing?'已采纳删除':'已加入本次编辑';
+    const badge=adopted?statusBadge('adopted',adoptedLabel):removing?statusBadge('removed','建议删除','pendingRemove'):statusBadge('pending-add','建议追加','pendingAdd');
+    return `<span class="pending-${removing?'remove':'add'}-token editor-suggestion-token${button?' is-actionable':''}${adopted?' is-adopted':''}" ${removing?'data-pending-before-index':'data-selected-index'}="${index}"${removing&&op.elementId!==undefined?` data-element-id="${op.elementId}"`:''}><span class="diff-value" data-raw-value="${escape(op.value)}">${escape(op.value)}</span>${tailMarkup(badge)}${button}</span>`;
+  }
+  function editorSuggestionsMarkup(plan,whole,modes) {
+    if(whole&&plan?.valid!==false)return '';
+    const title='<div class="element-suggestions-title">方案建议</div>';
+    const hint='<p class="element-suggestions-hint">点击 − 或 ＋ 采纳方案建议；已采纳的卡片可点 ↶ 撤销。所有变化仅作用于本次编辑，确认应用前不会写入 Windows。</p>';
+    if(plan?.valid===false)return `<section class="element-suggestions" aria-label="方案建议">${title}<p class="element-suggestions-empty invalid-result">方案建议已失效，需要重新检测。</p></section>`;
+    const groups=[['remove','建议删除'],['insert','建议追加']].map(([kind,label])=>{
+      const operations=(plan?.operations||[]).filter(op=>op.type===kind);
+      return operations.length?`<div class="element-suggestions-group ${kind==='remove'?'pending-removals':'pending-additions'}"><span class="element-suggestions-label">${label}</span><div class="pending-additions-values">${operations.map(op=>editorSuggestionToken(op,kind,modes)).join('<span class="element-separator">;</span>')}</div></div>`:'';
+    }).join('');
+    const issues=issuesMarkup(plan,true);
+    return `<section class="element-suggestions" aria-label="方案建议">${title}${hint}${groups}${issues}${groups?'':'<p class="element-suggestions-empty">没有尚待采纳的方案建议。</p>'}</section>`;
+  }
+  function pendingMarkup(raw, values = [], whole = false, editing = false, modes = [], plan = null) {
+    if (whole && !editing) return '';
+    const pendingPlan=plan||DemoPlan.build({mode:'-append',whole,actualRaw:raw,selectedRaw:values.join(';')});
+    if(editing)return editorSuggestionsMarkup(pendingPlan,whole,modes);
+    const missing=pendingPlan.operations.filter(op=>op.type==='insert').map(op=>({value:op.value,index:op.selectedIndex,mode:op.position==='head'?'+append':'-append'}));
+    const additions=missing.length?`<div class="pending-additions"><span class="pending-additions-title">方案待追加 · ${editing?'尚未加入本次编辑结果':'尚未加入当前值'}</span><div class="pending-additions-values">${missing.map(part=>pendingToken(part,editing?modes[part.index]:null)).join('<span class="element-separator">;</span>')}</div></div>`:'';
+    return removalMarkup(pendingPlan,editing)+additions+issuesMarkup(pendingPlan);
+  }
+  function highlight(raw, values = [], whole = false, willReplace = false, plan = null) {
+    if (raw === undefined) return '<span class="empty-element">（不存在）</span>';
+    if (raw === '') return '<span class="empty-element">（空字符串）</span>' + (willReplace ? '<span class="diff-label replacement-label">整体待替换</span>' : '');
+    const parts = whole ? [raw] : raw.split(';');
+    const removals=new Map((plan?.operations||[]).filter(op=>op.type==='remove').map(op=>[op.beforeIndex,op]));
+    const content = parts.map((part,index) => {
+      if(removals.has(index))return removalToken(removals.get(index));
+      const issue=plan?.issues?.find(item=>item.actualIndexes?.includes(index));
+      const rawValue=matches(part,values,whole)?`<mark class="matched-element" title="与准备方案中的元素匹配">${escape(part)}</mark>`:escape(part);
+      return issue?`<span class="retained-element">${rawValue}<span class="diff-label is-retained">${issue.reason==='shared'?'共享保留':'删除需确认'}</span></span>`:rawValue;
+    }).join('<span class="element-separator">;</span>');
+    return willReplace ? `<span class="pending-replacement"><span class="diff-value" data-raw-value="${escape(raw)}">${content}</span><span class="diff-label replacement-label">整体待替换</span></span>` : content;
+  }
+  // Display metadata comes from the frozen plan; it never supplies an apply result.
+  function comparisonMarkup(plan){
+    const whole=plan.kind!=='append',active=plan.valid!==false;
+    const actual=plan.before.exists?(whole?[{value:plan.before.raw,key:'actual:whole'}]:plan.before.raw.split(';').map((value,index)=>({value,key:'actual:'+index,beforeIndex:index}))):[];
+    const removals=new Set(active?plan.operations.filter(op=>op.type==='remove').map(op=>op.beforeIndex):[]);
+    const additions=active?plan.operations.filter(op=>op.type==='insert'):[];
+    const selectedParts=whole?[{value:plan.desiredRaw,index:0,matched:plan.matchResult.exact}]:plan.parts;
+    const selected=selectedParts.map(part=>{
+      const normalized=part.value.trim(),actualMatches=actual.filter(item=>item.value.trim()===normalized);
+      const selectedMatches=selectedParts.filter(item=>item.value.trim()===normalized);
+      const uniqueMatch=part.matched&&actualMatches.length===1&&selectedMatches.length===1;
+      return {...part,key:uniqueMatch?actualMatches[0].key:'selected:'+part.index,added:additions.some(op=>op.selectedIndex===part.index)};
+    });
+    let after=whole?[{value:plan.after.raw,key:plan.operations.length?'selected:0':'actual:whole',wholeChange:active&&plan.operations.length>0}]:actual.map(item=>({...item,ghost:removals.has(item.beforeIndex)}));
+    if(!whole){
+      const groups=[];
+      for(const op of additions){const last=groups.at(-1);if(last&&last.requestId===op.requestId&&last.position===op.position)last.items.push(op);else groups.push({requestId:op.requestId,position:op.position,items:[op]});}
+      for(const group of groups){const items=group.items.map(op=>({value:op.value,key:'selected:'+op.selectedIndex,index:op.selectedIndex,added:true}));after=group.position==='head'?[...items,...after]:[...after,...items];}
+      // If annotation metadata cannot represent the authoritative after, show that raw value without invented links.
+      if(plan.after.exists&&after.filter(item=>!item.ghost).map(item=>item.value).join(';')!==plan.after.raw)after=plan.after.raw.split(';').map((value,index)=>({value,key:'after:'+index}));
+    }
+    // Ghosts explain removals but never participate in the serialized result.
+    const render=(items,side)=>{
+      const counts=new Map();items.filter(item=>!item.ghost).forEach(item=>counts.set(item.value,(counts.get(item.value)||0)+1));
+      return items.map(item=>{
+        const removed=item.ghost||(side==='actual'&&removals.has(item.beforeIndex));
+        const issue=side==='actual'||side==='after'?plan.issues?.find(issue=>issue.actualIndexes?.includes(item.beforeIndex)):null;
+        const matched=side==='selected'?item.matched:whole?item.value===plan.desiredRaw:matches(item.value,[plan.desiredRaw]);
+        const added=(side==='after'||side==='selected')&&item.added;
+        const classes=['diff-token','comparison-token',item.ghost?'is-ghost':'',removed?'is-removed':added?'is-added pending-add-token':item.wholeChange?'is-replaced':matched?'is-matched':''].filter(Boolean).join(' ');
+        const label=removed?statusBadge('removed',item.ghost?'结果排除':'待删除',item.ghost?'removed':'pendingRemove'):added?statusBadge('pending-add','待追加','pendingAdd'):item.wholeChange?statusBadge('replaced','整体待替换'):issue?'<span class="diff-label is-retained">'+(issue.reason==='shared'?'共享保留':'删除需确认')+'</span>':'';
+        const dup=!whole?duplicateLabel(counts.get(item.value)):'';
+        return '<span class="'+classes+'" tabindex="0" data-related-key="'+item.key+'"'+(item.value===''?' data-empty="true"':'')+(item.beforeIndex===undefined?'':' data-before-index="'+item.beforeIndex+'"')+'>'+'<span class="diff-value" data-raw-value="'+escape(item.value)+'">'+(item.value===''?'<span class="empty-element">'+(whole?'（空字符串）':'（空元素）')+'</span>':escape(item.value))+'</span>'+tailMarkup(valueHint(item.value,whole)+label+dup)+'</span>';
+      }).join('<span class="element-separator">;</span>');
+    };
+    const tally=!active?'':whole?'<span class="tally tally-'+(after.some(item=>item.wholeChange)?'replace">整体替换':'keep">无变化')+'</span>'
+      :[['keep','保留',after.filter(item=>!item.ghost&&!item.added).length],['add','新增',after.filter(item=>item.added).length],['remove','删除',after.filter(item=>item.ghost).length]]
+        .map(([kind,text,count])=>'<span class="tally tally-'+kind+(count?'':' is-zero')+'"><i class="tally-dot"></i>'+text+' <b>'+count+'</b></span>').join('');
+    return {tally,selected:'<span class="selection-current">'+render(selected,'selected')+'</span>',
+      actual:plan.before.exists?(render(actual,'actual')||'<span class="empty-element">（空字符串）</span>'):'<span class="empty-element">（不存在）</span>',
+      after:!active?'<span class="invalid-result">计划已失效，需要重新检测并预览</span>':(render(after,'after')||'<span class="empty-element">'+(plan.after.exists?'（空字符串）':'（不存在）')+'</span>')+(after.some(item=>item.ghost)?'<span class="comparison-ghost-hint">应用后预览。划线元素不计入最终写入值，当前尚未应用。</span>':'')};
+  }
+  const comparisonBindings=new WeakMap();
+  function bindComparison(root){
+    comparisonBindings.get(root)?.();
+    let hovered=null,focused=null;
+    const keyFor=target=>target?.closest?.('[data-related-key]')?.dataset.relatedKey??null;
+    const paint=()=>{const key=hovered??focused;root.classList.toggle('is-linking',key!==null);root.querySelectorAll('[data-related-key]').forEach(node=>node.classList.toggle('is-related-highlight',node.dataset.relatedKey===key))};
+    const handlers={
+      pointerover:e=>{hovered=keyFor(e.target);paint()},
+      pointerout:e=>{hovered=root.contains(e.relatedTarget)?keyFor(e.relatedTarget):null;paint()},
+      pointerleave:()=>{hovered=null;paint()},
+      focusin:e=>{focused=keyFor(e.target);paint()},
+      focusout:e=>{focused=root.contains(e.relatedTarget)?keyFor(e.relatedTarget):null;paint()}
+    };
+    for(const [type,handler] of Object.entries(handlers))root.addEventListener(type,handler);
+    comparisonBindings.set(root,()=>{for(const [type,handler] of Object.entries(handlers))root.removeEventListener(type,handler)});
+  }
+  const serialized = () => session.rows.map(row => row.value).join(session.whole ? '' : ';');
+  const valid = () => !session.rows.some(row => row.value.includes('\0') || (!session.whole && row.value.includes(';')));
+  function preserveRawLineEndings(raw,textareaValue,edit) {
+    const boundaries=[0];
+    let normalizedRaw='';
+    for(let offset=0;offset<raw.length;){
+      if(raw[offset]==='\r'){
+        offset+=raw[offset+1]==='\n'?2:1;
+        normalizedRaw+='\n';
+      }else{
+        normalizedRaw+=raw[offset++];
+      }
+      boundaries.push(offset);
+    }
+    const next=textareaValue.replace(/\r\n?/g,'\n');
+    const spliceRaw=(start,end,inserted)=>{
+      let before=raw.slice(0,boundaries[start]);
+      const after=raw.slice(boundaries[end]);
+      // A formerly standalone CR must not absorb the LF made adjacent by this edit.
+      if(before.endsWith('\r')&&(inserted+after).startsWith('\n'))before=before.slice(0,-1)+'\n';
+      const result=before+inserted+after;
+      return result.replace(/\r\n?/g,'\n')===next?result:next;
+    };
+    // beforeinput identifies which occurrence changed when normalized characters repeat.
+    if(edit&&edit.raw===raw&&edit.value===normalizedRaw){
+      const {start,end}=edit,insertedLength=next.length-normalizedRaw.length+(end-start);
+      if(insertedLength>=0&&next.slice(0,start)===normalizedRaw.slice(0,start)&&
+          next.slice(start+insertedLength)===normalizedRaw.slice(end)){
+        return spliceRaw(start,end,next.slice(start,start+insertedLength));
+      }
+    }
+    if(normalizedRaw===next)return raw;
+    let prefix=0;
+    while(prefix<normalizedRaw.length&&prefix<next.length&&normalizedRaw[prefix]===next[prefix])prefix++;
+    let suffix=0;
+    while(suffix<normalizedRaw.length-prefix&&suffix<next.length-prefix&&normalizedRaw[normalizedRaw.length-1-suffix]===next[next.length-1-suffix])suffix++;
+    return spliceRaw(prefix,normalizedRaw.length-suffix,next.slice(prefix,next.length-suffix));
+  }
+  function textareaEditRange(input,event,raw) {
+    if(event.isComposing)return null;
+    const value=input.value,type=event.inputType;
+    let start=input.selectionStart,end=input.selectionEnd;
+    if(!Number.isInteger(start)||!Number.isInteger(end))return null;
+    if(type==='deleteContentBackward'&&start===end){
+      if(start===0)return null;
+      start-=1;
+      if(start>0&&/[\uDC00-\uDFFF]/.test(value[start])&&/[\uD800-\uDBFF]/.test(value[start-1]))start-=1;
+    }else if(type==='deleteContentForward'&&start===end){
+      if(end===value.length)return null;
+      end+=1;
+      if(end<value.length&&/[\uD800-\uDBFF]/.test(value[end-1])&&/[\uDC00-\uDFFF]/.test(value[end]))end+=1;
+    }else if(!['insertText','insertLineBreak','insertParagraph','insertFromPaste','insertFromDrop','insertReplacementText','deleteContentBackward','deleteContentForward','deleteByCut','deleteByDrag'].includes(type))return null;
+    return {raw,value,start,end};
+  }
+  function syncRowsToDisplayOrder() {
+    const liveById=new Map(session.rows.map(row=>[row.id,row]));
+    session.rows=session.displayOrder.filter(id=>liveById.has(id)).map(id=>liveById.get(id));
+  }
+  function clearAdoptionForId(id) {
+    for(const [index,adoption] of session.adoptionMap)if(adoption.elementId===id)session.adoptionMap.delete(index);
+  }
+  function removeLiveRow(id) {
+    const row=session.rows.find(item=>item.id===id);
+    if(row&&session.originalById.has(id))session.deletedDrafts.set(id,{id:row.id,value:row.value});
+    session.rows=session.rows.filter(row=>row.id!==id);
+    if(!session.originalById.has(id))session.displayOrder=session.displayOrder.filter(item=>item!==id);
+    clearAdoptionForId(id);
+    session.manualAddedIds.delete(id);
+    syncRowsToDisplayOrder();
+  }
+  function countsFor(rows) {
+    const counts = new Map();
+    for (const row of rows) counts.set(row.value, (counts.get(row.value) || 0) + 1);
+    return counts;
+  }
+  const duplicateLabel = count => count > 1
+    ? statusBadge('duplicate',`重复 ×${count}`,'duplicate',`此栏有 ${count} 个原始文本完全相同的元素；仅提示，不自动去重`) : '';
+  function editStateFor(row) {
+    const original = session.originalById.get(row.id);
+    if (!original) return {added:true,replaced:false,moved:false};
+    const existing = session.rows.filter(item => session.originalById.has(item.id));
+    const remaining = session.originalRows.filter(item => session.rows.some(current => current.id === item.id));
+    return {added:false,replaced:row.value !== original.value,
+      moved:existing.findIndex(item => item.id === row.id) !== remaining.findIndex(item => item.id === row.id)};
+  }
+  // Presentation compares every original stable ID, including ghosts; Audit still compares live originals.
+  function displayMoved(id){
+    if(!session.originalById.has(id))return false;
+    const originalIndex=session.originalRows.findIndex(row=>row.id===id);
+    const displayIndex=session.displayOrder.filter(item=>session.originalById.has(item)).indexOf(id);
+    return displayIndex>=0&&displayIndex!==originalIndex;
+  }
+  function displayMovementCounts(){
+    const liveIds=new Set(session.rows.map(row=>row.id));
+    return session.originalRows.reduce((counts,row)=>{
+      if(displayMoved(row.id))counts[liveIds.has(row.id)?'moved':'ghost-moved']++;
+      return counts;
+    },{moved:0,'ghost-moved':0});
+  }
+  function stateFor(row){
+    const business=session.plan?.audit.elements.find(element=>element.elementId===row.id)||editStateFor(row);
+    return {...business,moved:displayMoved(row.id)};
+  }
+  const manualAddition=(row,state)=>!!state.added&&session.manualAddedIds.has(row.id);
+  function labels(state, removed = false,row) {
+    return (row?valueHint(row.value,session.whole):'')+(removed ? [['removed','删除'],...(state.moved?[['moved','幽灵移动']]:[])] : [
+      ...(state.added ? [[row&&manualAddition(row,state)?'manual-added':'added',row&&manualAddition(row,state)?'手动新增':'新增']] : []), ...(state.replaced ? [['replaced','替换']] : []),
+      ...(state.moved ? [['moved','移动']] : [])
+    ]).map(([kind,text]) => statusBadge(kind,text)).join('');
+  }
+  function auditSnapshot() {
+    const elements=session.rows.map((row,afterIndex)=>{
+      const beforeIndex=session.originalRows.findIndex(original=>original.id===row.id);
+      const state=editStateFor(row);
+      return {elementId:row.id,beforeIndex:beforeIndex<0?null:beforeIndex,afterIndex,
+        before:beforeIndex<0?undefined:session.originalRows[beforeIndex].value,after:row.value,
+        ...state,removed:false};
+    });
+    session.originalRows.forEach((row,beforeIndex)=>{
+      if(!session.rows.some(current=>current.id===row.id))elements.push({elementId:row.id,beforeIndex,afterIndex:null,
+        before:row.value,after:undefined,added:false,removed:true,replaced:false,moved:false});
+    });
+    return {before:session.original,after:serialized(),whole:session.whole,elements,
+      counts:Object.fromEntries(['added','removed','replaced','moved'].map(kind=>[kind,elements.filter(element=>element[kind]).length]))};
+  }
+  function token(row, state, removed = false, duplicateCount = 1, ghost = false) {
+    const matched = matches(row.value,session.selectedValues || [],session.whole);
+    const classes = [removed?'is-removed':'',ghost?'is-ghost':'',state.added?'is-added':'',manualAddition(row,state)?'is-manual-added':'',state.replaced?'is-replaced':'',state.moved?'is-moved':'',matched?'is-matched':'',duplicateCount>1?'is-duplicate':''].filter(Boolean).join(' ');
+    return `<span class="diff-token ${classes}" data-element-id="${row.id}" data-duplicate-count="${duplicateCount}"${row.value===''?' data-empty="true"':''} tabindex="-1"><span class="diff-value" data-raw-value="${escape(row.value)}">${row.value === '' ? `<span class="empty-element">${session.whole?'（空字符串）':'（空元素）'}</span>` : escape(row.value)}</span>${tailMarkup(labels(state,removed,row)+duplicateLabel(duplicateCount)+(matched&&!removed?statusBadge('match','匹配'):''))}</span>`;
+  }
+  function renderComparison() {
+    const root=session.container;
+    root.querySelector('#elementOriginal').innerHTML=session.original === undefined ? '<span class="empty-element">（不存在）</span>'
+      : session.originalRows.map(original=>{const current=session.rows.find(row=>row.id===original.id);return token(original,stateFor(current??original),!current,session.originalCounts.get(original.value));}).join('<span class="element-separator">;</span>');
+    const liveById=new Map(session.rows.map(row=>[row.id,row]));
+    const current=session.displayOrder.map(id=>{
+      const row=liveById.get(id);
+      return row?token(row,stateFor(row),false,session.currentCounts.get(row.value)):token(session.deletedDrafts.get(id)??session.originalById.get(id),stateFor(session.originalById.get(id)),true,1,true);
+    }).join('<span class="element-separator">;</span>');
+    root.querySelector('#elementPreview').innerHTML=current || `<span class="empty-element">${session.plan.after.exists?'（空字符串）':'（不存在）'}</span>`;
+    root.querySelector('#elementSerialized').textContent=session.plan.after.exists?serialized():'（不存在）';
+    paintRelated();
+  }
+  function paintRelated() {
+    if (!session) return;
+    const id = session.hoveredId ?? session.focusedId;
+    session.container.querySelector('.element-dialog')?.classList.toggle('is-linking', id !== null);
+    session.container.querySelectorAll('[data-element-id]').forEach(element => {
+      element.classList.toggle('is-related-highlight', id !== null && Number(element.dataset.elementId) === id);
+    });
+  }
+  function elementAt(target) {
+    if (!target || target.nodeType !== 1) return null;
+    const element = target.closest('[data-element-id]');
+    return element && session.container.contains(element) ? element : null;
+  }
+  function bindRelated() {
+    const root = session.container;
+    const handlers = {};
+    handlers.pointerover = event => {
+      if (!session) return;
+      const element = elementAt(event.target);
+      const id = element ? Number(element.dataset.elementId) : null;
+      if (session.hoveredId !== id) { session.hoveredId = id; paintRelated(); }
+    };
+    handlers.pointerout = event => {
+      if (!session) return;
+      const next = elementAt(event.relatedTarget);
+      const id = next ? Number(next.dataset.elementId) : null;
+      if (session.hoveredId !== id) { session.hoveredId = id; paintRelated(); }
+    };
+    handlers.pointerleave = () => {
+      if (session) { session.hoveredId = null; paintRelated(); }
+    };
+    handlers.focusin = event => {
+      if (!session) return;
+      const element = elementAt(event.target);
+      session.focusedId = element ? Number(element.dataset.elementId) : null;
+      paintRelated();
+    };
+    handlers.focusout = event => {
+      if (!session) return;
+      const next = elementAt(event.relatedTarget);
+      session.focusedId = next ? Number(next.dataset.elementId) : null;
+      paintRelated();
+    };
+    for (const [type, handler] of Object.entries(handlers)) root.addEventListener(type, handler);
+    session.relatedHandlers = handlers;
+  }
+  function paintRow(element,row) {
+    const matched=matches(row.value,session.selectedValues || [],session.whole),state=stateFor(row);
+    element.classList.toggle('is-matched',matched);
+    element.classList.toggle('is-manual-added',manualAddition(row,state));
+    for(const flag of ['added','replaced','moved'])element.classList.toggle('is-'+flag,!!state[flag]);
+    const duplicateCount = session.currentCounts.get(row.value);
+    element.classList.toggle('is-duplicate', duplicateCount > 1);
+    element.dataset.duplicateCount = duplicateCount;
+    element.classList.toggle('is-empty',row.value==='');
+    element.querySelector('.element-match-state').innerHTML=matched?statusBadge('match','匹配'):'';
+    element.querySelector('.element-change-state').innerHTML=labels(state,false,row)+duplicateLabel(duplicateCount);
+    element.querySelector('.element-plate').innerHTML='';
+    element.querySelector('.element-input').setAttribute('aria-invalid',String(row.value.includes('\0') || (!session.whole && row.value.includes(';'))));
+  }
+  function candidatePlan(){
+    const values=session.appendValues,additions=DemoPlan.build({mode:'-append',actualRaw:serialized(),selectedRaw:values.join(';')});
+    const originalPlan=session.selectionPlan;
+    if(originalPlan?.valid===false)return {...originalPlan,operations:[]};
+    const seenRemovalIds=new Set();
+    const removals=(originalPlan?.operations||[]).filter(op=>op.type==='remove').flatMap(op=>{
+      const original=session.originalRows[op.beforeIndex];
+      if(!original||original.value!==op.value||seenRemovalIds.has(original.id))return [];
+      seenRemovalIds.add(original.id);
+      const row=session.rows.find(row=>row.id===original.id);
+      const adopted=session.removalAdoptions.has(original.id);
+      if(adopted)return !row&&session.displayOrder.includes(original.id)?[{...op,elementId:original.id,adopted:true}]:[];
+      return row&&row.value===op.value?[{...op,elementId:original.id}]:[];
+    }).sort((a,b)=>a.beforeIndex-b.beforeIndex);
+    const adopted=[...session.adoptionMap].flatMap(([selectedIndex,entry])=>{
+      const row=session.rows.find(row=>row.id===entry.elementId);
+      return row&&row.value===entry.adoptedRaw?[{type:'insert',selectedIndex,value:entry.adoptedRaw,adopted:true}]:[];
+    });
+    const adoptedIndexes=new Set(adopted.map(op=>op.selectedIndex));
+    const inserts=[...additions.operations.filter(op=>op.type==='insert'&&!adoptedIndexes.has(op.selectedIndex)),...adopted]
+      .sort((a,b)=>a.selectedIndex-b.selectedIndex);
+    return {...additions,operations:[...removals,...inserts],issues:originalPlan?.issues||[]};
+  }
+  // Legend chips double as live counters. Counts come from the audit/live rows; they never feed back into the plan.
+  function additionCounts() {
+    const manualAdded=session.plan.audit.elements.filter(element=>element.added&&session.manualAddedIds.has(element.elementId)).length;
+    return {added:session.plan.audit.counts.added-manualAdded,manualAdded};
+  }
+  function paintLegend() {
+    const counts=session.plan.audit.counts,rows=session.rows,additions=additionCounts();
+    const live={
+      ...displayMovementCounts(),
+      added:additions.added,
+      'manual-added':additions.manualAdded,
+      duplicate:session.whole?0:rows.filter(row=>session.currentCounts.get(row.value)>1).length,
+      empty:session.whole?0:rows.filter(row=>row.value==='').length,
+      match:rows.filter(row=>matches(row.value,session.selectedValues||[],session.whole)).length
+    };
+    session.container.querySelectorAll('[data-legend-count]').forEach(node=>{
+      const kind=node.dataset.legendCount,count=kind in live?live[kind]:counts[kind]||0;
+      node.textContent=count;
+      node.closest('.lg')?.classList.toggle('is-zero',!count);
+    });
+  }
+  // One-shot feedback for the suggestion card that was just toggled. Re-rendering recreates the node, so the
+  // entry/exit state is replayed with a class that CSS keyframes pick up and that removes itself afterwards.
+  function applySuggestionFx(pending) {
+    const fx=session.suggestFx;session.suggestFx=null;
+    if(!fx)return;
+    const selector=fx.type==='add'?`[data-selected-index="${fx.index}"]`:`[data-pending-before-index="${fx.index}"]`;
+    const token=pending.querySelector('.editor-suggestion-token'+selector);
+    if(!token)return;
+    const name=fx.adopt?'fx-adopt':'fx-unadopt';
+    token.classList.add(name);
+    setTimeout(()=>token.classList.remove(name),700);
+  }
+  const fxKey=element=>(element.closest('#elementPreview')?'p':'l')+element.dataset.elementId;
+  function layoutSnapshot(root,fx) {
+    const positions=new Map(),shards=[];
+    if(fx?.kind==='remove'&&fx.id!=null){
+      const live=root.querySelector(`#elementList > .element-row[data-element-id="${fx.id}"]`);
+      if(live){
+        const rect=live.getBoundingClientRect(),node=live.cloneNode(true),fields=[...live.querySelectorAll('input,textarea')];
+        node.querySelectorAll('input,textarea').forEach((field,index)=>{const value=fields[index]?.value??'';field.value=value;if(field.tagName==='TEXTAREA')field.textContent=value;else field.setAttribute('value',value);});
+        shards.push({key:fxKey(live),node,height:rect.height});
+      }
+    }
+    root.querySelectorAll('#elementList > [data-element-id], #elementPreview [data-element-id]').forEach(element=>{
+      const rect=element.getBoundingClientRect();positions.set(fxKey(element),{x:rect.left,y:rect.top});
+    });
+    return {positions,shards,scroll:root.querySelector('.elements-body')?.scrollTop??0};
+  }
+  // FLIP: rows and preview tokens glide from their old position, and the touched element gets a landing mark.
+  // Deletion: the old live row is redrawn as two halves that part along a jagged crack while the trace row fades in underneath.
+  const CRACK=[[41,0],[47,24],[42,42],[51,60],[46,80],[55,100]];
+  function playBreak(shard,target) {
+    const rect=target.getBoundingClientRect();
+    if(!rect.width||!rect.height)return;
+    const poly=side=>`polygon(${(side==='left'?[[0,0],...CRACK,[0,100]]:[...CRACK,[100,100],[100,0]]).map(([x,y])=>x+'% '+y+'%').join(',')})`;
+    const wrap=document.createElement('div');wrap.className='break-fx';wrap.setAttribute('aria-hidden','true');
+    wrap.style.cssText=`left:${rect.left}px;top:${rect.top}px;width:${rect.width}px;height:${Math.max(rect.height,shard.height)}px`;
+    ['left','right'].forEach(side=>{
+      const half=document.createElement('div'),clone=shard.node.cloneNode(true);
+      half.className='break-half is-'+side;half.style.clipPath=poly(side);
+      [clone,...clone.querySelectorAll('*')].forEach(n=>[...n.attributes].forEach(a=>{if(a.name.startsWith('data-')||a.name==='id'||a.name==='for'||a.name==='draggable')n.removeAttribute(a.name);}));
+      clone.querySelectorAll('input,textarea,button').forEach(n=>{n.tabIndex=-1;n.disabled=true;});
+      clone.classList.remove('is-dragging','is-related-highlight','is-focus');half.appendChild(clone);wrap.appendChild(half);
+    });
+    wrap.insertAdjacentHTML('beforeend',`<svg class="break-crack" viewBox="0 0 100 100" preserveAspectRatio="none"><polyline pathLength="1" points="${CRACK.map(point=>point.join(',')).join(' ')}"/></svg>`);
+    for(let index=0;index<7;index++){
+      const [x,y]=CRACK[Math.min(index%CRACK.length,CRACK.length-1)],angle=(index*57+20)*Math.PI/180,dist=18+index*5;
+      wrap.insertAdjacentHTML('beforeend',`<i class="break-chip" style="left:${x+(index%2?1:-1)*2}%;top:${y}%;--dx:${Math.round(Math.cos(angle)*dist*(index%2?1:-1))}px;--dy:${Math.round(Math.abs(Math.sin(angle))*dist*.8+4)}px;--r:${(index%2?1:-1)*(40+index*23)}deg;--s:${(.55+(index%3)*.28).toFixed(2)}"></i>`);
+    }
+    document.body.appendChild(wrap);
+    setTimeout(()=>wrap.remove(),1000);
+  }
+  function playLayoutFx(root,before,fx) {
+    if(!fx||!before)return;
+    if(fx.kind==='remove'&&canAnimate()&&(root.querySelector('.elements-body')?.scrollTop??0)===before.scroll){
+      before.shards.forEach(shard=>{const target=[...root.querySelectorAll('#elementList > [data-element-id]')].find(element=>fxKey(element)===shard.key);if(target)playBreak(shard,target);});
+    }
+    const names={move:'fx-move',enter:'fx-enter',remove:'fx-remove',restore:'fx-restore'};
+    const marked=fx.id==null?[]:[...root.querySelectorAll(`#elementList > [data-element-id="${fx.id}"], #elementPreview [data-element-id="${fx.id}"]`)];
+    if(names[fx.kind]){
+      marked.forEach(element=>{element.classList.add(names[fx.kind]);setTimeout(()=>element.classList.remove(names[fx.kind]),900);});
+    }
+    if(!canAnimate()||(root.querySelector('.elements-body')?.scrollTop??0)!==before.scroll)return;
+    root.querySelectorAll('#elementList > [data-element-id], #elementPreview [data-element-id]').forEach(element=>{
+      const old=before.positions.get(fxKey(element));if(!old)return;
+      const rect=element.getBoundingClientRect(),dx=old.x-rect.left,dy=old.y-rect.top;
+      if(Math.abs(dx)<1&&Math.abs(dy)<1)return;
+      element.animate([{transform:`translate(${dx}px,${dy}px)`},{transform:'translate(0,0)'}],{duration:Math.round(Math.min(320,150+Math.hypot(dx,dy)*.35)),easing:'cubic-bezier(.2,.75,.25,1)'});
+    });
+  }
+  function update() {
+    const root=session.container,raw=serialized();
+    session.currentCounts = countsFor(session.rows);
+    session.plan=DemoPlan.buildElementEdit({target:{scope:session.scope,name:session.name},snapshot:session.snapshot||{exists:session.original!==undefined,raw:session.original===undefined?null:session.original,type:session.registryType,revision:0},afterRaw:raw,audit:auditSnapshot()});
+    const changed=session.plan.operations.length>0,candidates=candidatePlan(),additions=additionCounts(),movement=displayMovementCounts();
+    const operationCounts={add:0,remove:0,replace:0,move:0};
+    for(const operation of session.plan.operations){
+      const kind=String(operation.type||operation.action).toLowerCase(),key=kind==='insert'?'add':kind;
+      if(key in operationCounts)operationCounts[key]++;
+    }
+    const hasSuggestions=session.showSuggestions!==false&&!session.whole&&candidates.valid!==false&&((candidates.operations||[]).some(op=>!op.adopted)||(candidates.issues||[]).length>0);
+    const structureChanged=JSON.stringify(session.rows.map(row=>({id:row.id,value:row.value})))!==JSON.stringify(session.originalRows)
+      ||session.displayOrder.some((id,index)=>id!==session.originalRows[index]?.id)||session.displayOrder.length!==session.originalRows.length;
+    root.querySelector('#elementTotal').textContent=`有效${session.whole?'字符串':'元素'} ${session.rows.length} · 已移除 ${session.originalRows.filter(row=>!session.rows.some(live=>live.id===row.id)).length}`;
+    root.querySelector('#elementValidation').textContent=valid()?'':session.whole?'字符串不能包含 NUL。':'一个元素内不能包含分号或 NUL；请将多项内容拆成多个元素。';
+    root.querySelector('#applyElements').disabled=!valid()||!session.plan.operations.length;
+    root.querySelector('#restoreElements').disabled=!structureChanged;
+    root.querySelector('#elementStatus').textContent=changed?`本次编辑：新增 ${additions.added} · 手动新增 ${additions.manualAdded} · 删除 ${operationCounts.remove} · 替换 ${operationCounts.replace} · 展示移动：移动 ${movement.moved} · 幽灵移动 ${movement['ghost-moved']} · 确认后生效`:`本次编辑：0 项变化${hasSuggestions?' · 有尚未采纳的方案建议':''}${structureChanged?' · 结果值未改变':''} · 展示移动：移动 ${movement.moved} · 幽灵移动 ${movement['ghost-moved']}`;
+    root.querySelectorAll('[data-element-id]').forEach(el=>{if(!el.classList.contains('element-row'))return;const row=session.rows.find(row=>row.id===Number(el.dataset.elementId));if(row)paintRow(el,row);});
+    const pending = root.querySelector('#pendingElements');
+    pending.innerHTML = session.showSuggestions===false?'':pendingMarkup(raw,session.appendValues,session.whole,true,session.appendModes,candidates);
+    pending.hidden = !pending.innerHTML;
+    paintLegend();
+    root.querySelector('.legend-match').hidden=session.showSuggestions===false;
+    applySuggestionFx(pending);
+    session.suggestionButtons=new Set(pending.querySelectorAll('[data-add-pending],[data-remove-pending]'));
+    const editingSession=session;
+    pending.querySelectorAll('[data-add-pending]').forEach(button=>{
+      button.onclick=()=>adoptPending(Number(button.dataset.addPending),button,editingSession);
+    });
+    pending.querySelectorAll('[data-remove-pending]').forEach(button=>button.onclick=()=>toggleRemoval(button,editingSession));
+    // Arrow keys / Home / End walk between suggestion buttons so a run of adopt/undo needs no mouse.
+    pending.onkeydown=event=>{
+      const step={ArrowDown:1,ArrowRight:1,ArrowUp:-1,ArrowLeft:-1}[event.key];
+      if(step===undefined&&event.key!=='Home'&&event.key!=='End')return;
+      const buttons=[...pending.querySelectorAll('[data-add-pending],[data-remove-pending]')],at=buttons.indexOf(document.activeElement);
+      if(at<0||event.altKey||event.ctrlKey||event.metaKey)return;
+      event.preventDefault();
+      buttons[event.key==='Home'?0:event.key==='End'?buttons.length-1:Math.min(buttons.length-1,Math.max(0,at+step))]?.focus();
+    };
+    renderComparison();
+  }
+  function open(options) {
+    dismiss();
+    const original=options.raw,rawValues=original===undefined?[]:options.whole?[original]:original.split(';');
+    const originalRows=rawValues.map(value=>({id:++sequence,value}));
+    const entries=Array.isArray(options.appendEntries)?options.appendEntries:null;
+    const appendValues=entries?entries.map(entry=>entry.value):[...(options.appendValues || [])];
+    const appendModes=entries?entries.flatMap(entry=>entry.value.split(';').map(()=>entry.mode)):[];
+    session={...options,appendValues,appendModes,original,originalRows,originalById:new Map(originalRows.map(row=>[row.id,row])),originalCounts:countsFor(originalRows),currentCounts:new Map(),rows:originalRows.map(row=>({...row})),displayOrder:originalRows.map(row=>row.id),adoptionMap:new Map(),manualAddedIds:new Set(),removalAdoptions:new Set(),deletedDrafts:new Map(),dragging:null,hoveredId:null,focusedId:null};
+    const container=options.container;
+    container.innerHTML=`<div class="dialog element-dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
+      <div class="dialoghead"><div><div class="eyebrow">Windows 环境 / ${options.scope==='User'?'用户':'系统'}</div><h3 id="dialogTitle" title="注册表类型：${escape(options.registryType)}（演示）">${escape(options.name)} <span class="element-demo">演示数据</span></h3><p>调整元素顺序或内容，应用后更新本页展示。</p></div><button class="close" id="closeDialog" aria-label="关闭元素编辑器">×</button></div>
+      <div class="dialogbody elements-body"><div class="elements-main"><div class="elements-toolbar"><div class="elements-toolbar-info"><span id="elementTotal" class="elements-count" aria-live="polite"></span><span>${options.whole?'整体字符串 · 不拆分元素':'按分号排列 · Alt + ↑ / ↓ 调整顺序'}</span></div><div class="elements-toolbar-actions"><button class="textbtn" id="restoreElements" disabled title="恢复打开弹窗时的值，不改变页面快照">还原本次编辑</button><button class="btn" id="addElement" ${options.whole?'hidden':''}>＋ 新增元素</button></div></div>
+        <div class="change-legend" role="group" aria-label="状态图例与计数"><span class="legend-group"><span class="legend-heading">本次变更</span><span class="lg legend-added"><i class="st-cell st-added"><b class="ic ic-add"></b></i>新增<em data-legend-count="added">0</em></span><span class="lg legend-manual-added"><i class="st-cell st-manual-added"><b class="ic ic-add"></b></i>手动新增<em data-legend-count="manual-added">0</em></span><span class="lg legend-replaced"><i class="st-cell st-replaced"><b class="ic ic-swap"></b></i>替换<em data-legend-count="replaced">0</em></span><span class="lg legend-moved" title="普通原始元素的展示位置变化；实际应用仍依据有效元素顺序"><i class="st-cell st-moved"><b class="ic ic-move"></b></i>移动<em data-legend-count="moved">0</em></span><span class="lg legend-moved" title="已移除原始元素的展示位置变化，不写入结果"><i class="st-cell st-moved"><b class="ic ic-move"></b></i>幽灵移动<em data-legend-count="ghost-moved">0</em></span><span class="lg legend-removed"><i class="st-cell st-removed"><b class="ic ic-cut"></b></i>删除<em data-legend-count="removed">0</em></span></span><span class="legend-group"><span class="legend-heading">提示</span><span class="lg legend-duplicate"><i class="st-cell st-duplicate"><b class="ic ic-stack"></b></i>重复<em data-legend-count="duplicate">0</em></span><span class="lg legend-empty"><i class="st-cell st-empty"><b class="ic ic-void"></b></i>空元素<em data-legend-count="empty">0</em></span><span class="lg legend-match"><i class="st-cell st-match"><b class="ic ic-check"></b></i>匹配<em data-legend-count="match">0</em></span></span></div>
+        <div class="element-list" id="elementList"></div><div class="element-validation" id="elementValidation" role="status"></div><div id="pendingElements" hidden></div>
+      </div><aside class="elements-compare" aria-label="元素变更对照">
+        <details class="element-raw" open><summary>元素变更对照</summary><p class="comparison-hint">悬停或聚焦任一元素，三处对应项一起亮起。重复按每栏的原始文本统计，空元素保留；删除项不计入新值。</p><div class="raw-comparison"><div class="raw-pane"><label>打开时的值</label><pre id="elementOriginal"></pre></div><div class="raw-pane"><label>编辑后的值 · 含删除标记</label><pre id="elementPreview"></pre></div></div><details class="serialized-result" open><summary>实际结果字符串（不含标记或删除项）</summary><pre id="elementSerialized"></pre></details></details>
+      </aside></div><div class="dialogfoot element-footer"><span id="elementStatus" role="status">仅更新演示数据</span><button class="btn" id="cancelDialog" title="丢弃弹窗内修改，保留页面快照">取消修改</button><button class="btn primary" id="applyElements" disabled>应用（演示）</button></div></div>`;
+    container.classList.add('open');
+    bindRelated();
+    container.querySelector('#closeDialog').onclick=options.close;container.querySelector('#cancelDialog').onclick=options.close;
+    container.querySelector('#addElement').onclick=()=>{const row={id:++sequence,value:''};session.rows.push(row);session.manualAddedIds.add(row.id);session.displayOrder.push(row.id);session.fx={kind:'enter',id:row.id};renderRows(row.id);};
+    container.querySelector('#restoreElements').onclick=()=>{session.rows=session.originalRows.map(row=>({...row}));session.displayOrder=session.originalRows.map(row=>row.id);session.adoptionMap.clear();session.manualAddedIds.clear();session.removalAdoptions.clear();session.deletedDrafts.clear();session.dragging=null;session.hoveredId=null;session.focusedId=null;renderRows(session.rows[0]?.id);if(!session.rows.length)container.querySelector('#addElement').focus();};
+    container.querySelector('#applyElements').onclick=()=>{if(!session||!valid()||container.querySelector('#applyElements').disabled)return;const current=session,plan=session.plan;current.close();current.onApply(plan.afterRaw,plan.audit,plan);};
+    renderRows();container.querySelector('#closeDialog').focus();
+  }
+  function toggleRemoval(button,editingSession) {
+    if(!session||session!==editingSession||session.whole||session.selectionPlan?.valid===false||!button.isConnected||!session.suggestionButtons.has(button)||!session.container.querySelector('#pendingElements').contains(button))return;
+    const beforeIndex=Number(button.dataset.removePending);
+    if(!Number.isInteger(beforeIndex)||beforeIndex<0)return;
+    const original=session.originalRows[beforeIndex];
+    if(!original||button.dataset.removalId!==String(original.id))return;
+    const adopted=session.removalAdoptions.has(original.id);
+    if(button.dataset.removalAdopted!==String(adopted)||button.getAttribute('aria-pressed')!==String(adopted))return;
+    const candidate=candidatePlan();
+    if(candidate.valid===false||!candidate.operations.some(op=>op.type==='remove'&&op.beforeIndex===beforeIndex&&op.elementId===original.id&&!!op.adopted===adopted&&op.value===original.value))return;
+    const row=session.rows.find(row=>row.id===original.id);
+    if(adopted){
+      if(row||session.displayOrder.filter(id=>id===original.id).length!==1)return;
+      session.rows.push({...original});
+      syncRowsToDisplayOrder();
+      session.removalAdoptions.delete(original.id);
+      session.deletedDrafts.delete(original.id);
+      session.fx={kind:'restore',id:original.id};session.suggestFx={type:'remove',index:beforeIndex,adopt:false};
+      renderRows(original.id);
+      return;
+    }
+    if(!row||row.value!==original.value||session.displayOrder.filter(id=>id===original.id).length!==1)return;
+    session.removalAdoptions.add(original.id);
+    removeLiveRow(original.id);
+    session.fx={kind:'remove',id:original.id};session.suggestFx={type:'remove',index:beforeIndex,adopt:true};
+    renderRows(session.rows[0]?.id);
+  }
+  // Cancel a deletion from the trace row itself: restore its last live draft at the current display position.
+  function restoreGhost(id) {
+    const original=session.originalById.get(id);
+    if(!original||session.rows.some(row=>row.id===id)||session.displayOrder.filter(item=>item===id).length!==1)return;
+    session.rows.push({...(session.deletedDrafts.get(id)??original)});
+    syncRowsToDisplayOrder();
+    session.deletedDrafts.delete(id);
+    session.removalAdoptions.delete(id);
+    session.fx={kind:'restore',id};
+    renderRows(id);
+  }
+  function adoptPending(index,button,editingSession) {
+    if(!session||session!==editingSession||session.whole||session.selectionPlan?.valid===false||!button.isConnected||!session.suggestionButtons.has(button)||!session.container.querySelector('#pendingElements').contains(button))return;
+    const mode=session.appendModes[index];
+    if(!isAppendMode(mode))return;
+    const adopted=session.adoptionMap.get(index);
+    if(adopted){
+      const row=session.rows.find(row=>row.id===adopted.elementId);
+      if(row&&row.value===adopted.adoptedRaw){session.fx={kind:'none'};session.suggestFx={type:'add',index,adopt:false};removeLiveRow(row.id);renderRows(session.rows[0]?.id);}
+      return;
+    }
+    const candidate=selectionInfo(serialized(),session.appendValues).missing.find(part=>part.index===index);
+    if(!candidate)return;
+    const row={id:++sequence,value:candidate.value};
+    session.rows.push(row);
+    if(mode==='+append')session.displayOrder.unshift(row.id);else session.displayOrder.push(row.id);
+    session.adoptionMap.set(index,{elementId:row.id,adoptedRaw:row.value,mode});
+    syncRowsToDisplayOrder();
+    session.fx={kind:'enter',id:row.id};session.suggestFx={type:'add',index,adopt:true};
+    renderRows(row.id);
+  }
+  function move(id,offset) {
+    const index=session.displayOrder.indexOf(id),target=index+offset;
+    if(index<0||target<0||target>=session.displayOrder.length)return;
+    [session.displayOrder[index],session.displayOrder[target]]=[session.displayOrder[target],session.displayOrder[index]];
+    syncRowsToDisplayOrder();session.fx={kind:'move',id};session.focusPrefer=offset>0?'down':'up';renderRows(id);
+  }
+  function rowDisplayOrder() {
+    const liveById=new Map(session.rows.map(row=>[row.id,row]));
+    return session.displayOrder.map((id,displayIndex)=>{
+      const row=liveById.get(id);
+      return row?{row,displayIndex,ghost:false}:{row:session.deletedDrafts.get(id)??session.originalById.get(id),displayIndex,ghost:true};
+    });
+  }
+  function elementActionsMarkup(id,displayIndex,total,ghost=false) {
+    const position=displayIndex+1,qualifier=ghost?' 个已移除元素，仅调整展示位置':' 个元素';
+    const action=ghost?'<button class="ibtn ibtn-restore" data-restore-ghost="'+id+'" aria-label="取消删除第 '+position+' 个元素，恢复删除前编辑的内容到当前位置" title="取消删除 · 恢复删除前编辑的内容（保持当前位置）"><b class="ic ic-undo" aria-hidden="true"></b></button>':'<button class="ibtn element-delete" data-delete="'+id+'" aria-label="删除第 '+position+' 个元素" title="删除此元素"><b class="ic ic-trash" aria-hidden="true"></b></button>';
+    return '<div class="element-actions"'+(session.whole?' hidden':'')+'><button class="ibtn" data-move-up="'+id+'" aria-label="上移第 '+position+qualifier+'" title="'+(ghost?'上移 · 仅调整已移除元素的展示位置':'上移 (Alt+↑)')+'"'+(displayIndex===0?' disabled':'')+'><b class="ic ic-up" aria-hidden="true"></b></button><button class="ibtn" data-move-down="'+id+'" aria-label="下移第 '+position+qualifier+'" title="'+(ghost?'下移 · 仅调整已移除元素的展示位置':'下移 (Alt+↓)')+'"'+(displayIndex===total-1?' disabled':'')+'><b class="ic ic-down" aria-hidden="true"></b></button>'+action+'</div>';
+  }
+  function ghostRowMarkup(row,displayIndex,total) {
+    const beforeIndex=session.originalRows.findIndex(original=>original.id===row.id);
+    return `<div class="element-ghost-row${displayMoved(row.id)?' is-moved':''}" data-element-id="${row.id}"><span class="element-order" title="原始位置：第 ${beforeIndex+1} 项">${displayIndex+1}</span><span class="element-ghost-body"><span class="element-ghost-value" data-raw-value="${escape(row.value)}">${row.value===''?'<span class="empty-element">（空元素）</span>':escape(row.value)}</span><span class="element-ghost-state">${valueHint(row.value,session.whole)}${statusBadge('removed','本次编辑已移除')}${displayMoved(row.id)?statusBadge('moved','幽灵移动'):''}<span class="element-ghost-note">仅展示痕迹 · 不写入结果</span></span></span>${elementActionsMarkup(row.id,displayIndex,total,true)}</div>`;
+  }
+  function renderRows(focusId) {
+    const root=session.container;
+    const fx=session.fx,prefer=session.focusPrefer||'up',before=fx?layoutSnapshot(root,fx):null;
+    // Adopting/undoing a suggestion keeps keyboard focus on that suggestion's button (re-created by update()).
+    const keepSuggestion=session.suggestFx?{...session.suggestFx}:null;
+    session.fx=null;session.focusPrefer=null;
+    session.hoveredId = null;
+    session.focusedId = null;
+    const ordered=rowDisplayOrder(),total=ordered.length;
+    root.querySelector('#elementList').innerHTML=ordered.map(({row,displayIndex,ghost})=>ghost?ghostRowMarkup(row,displayIndex,total):`<div class="element-row" data-element-id="${row.id}" draggable="${!session.whole}">
+      <span class="element-order" title="当前顺序">${displayIndex+1}</span><label class="element-input-wrap"><span class="sr-only">第 ${displayIndex+1} ${session.whole?'条字符串':'个元素'}</span>${session.whole?`<textarea class="element-input" rows="3" spellcheck="false" data-element-input="${row.id}">${escape(row.value)}</textarea>`:`<textarea class="element-input is-line" rows="1" wrap="soft" spellcheck="false" placeholder="（空元素）" data-element-input="${row.id}">${escape(row.value)}</textarea>`}</label>
+      <span class="element-states"><span class="st-plate element-plate" aria-hidden="true"></span><span class="element-match-state"></span><span class="element-change-state"></span></span>${elementActionsMarkup(row.id,displayIndex,total)}</div>`).join('')+(session.whole||!session.rows.length&&!ordered.length?'':'<div class="element-drop-end" aria-hidden="true">放到末尾</div>')+(session.rows.length?'':'<div class="empty">结果列表为空。确认应用将移除变量；保留一个空元素则保存为空值。</div>');
+    const fit=input=>{if(!input.classList.contains('is-line')||fieldSizing)return;input.style.height='auto';if(input.scrollHeight>0)input.style.height=input.scrollHeight+2+'px';};
+    root.querySelectorAll('[data-element-input]').forEach(input=>{
+      const id=Number(input.dataset.elementInput),row=session.rows.find(row=>row.id===id);input.value=row.value;
+      let pendingEdit=null;
+      input.onbeforeinput=event=>{pendingEdit=textareaEditRange(input,event,row.value);};
+      input.addEventListener('blur',()=>{pendingEdit=null;});
+      input.oninput=()=>{
+        const edit=pendingEdit;pendingEdit=null;
+        const value=preserveRawLineEndings(row.value,input.value,edit);
+        if(value!==row.value)clearAdoptionForId(id);row.value=value;fit(input);update();};
+      input.onkeydown=e=>{
+        if(e.altKey&&['ArrowUp','ArrowDown'].includes(e.key)&&!session.whole){e.preventDefault();move(id,e.key==='ArrowUp'?-1:1);}
+      };
+      fit(input);
+    });
+    root.querySelectorAll('[data-move-up]').forEach(button=>button.onclick=()=>move(Number(button.dataset.moveUp),-1));
+    root.querySelectorAll('[data-move-down]').forEach(button=>button.onclick=()=>move(Number(button.dataset.moveDown),1));
+    root.querySelectorAll('[data-delete]').forEach(button=>button.onclick=()=>{const deletedId=Number(button.dataset.delete),index=session.rows.findIndex(row=>row.id===deletedId),keepsGhost=session.originalById.has(deletedId);session.fx=keepsGhost?{kind:'remove',id:deletedId}:{kind:'none'};removeLiveRow(deletedId);renderRows(session.rows[Math.min(index,session.rows.length-1)]?.id);if(!session.rows.length)root.querySelector('#addElement').focus();});
+    root.querySelectorAll('[data-restore-ghost]').forEach(button=>button.onclick=()=>restoreGhost(Number(button.dataset.restoreGhost)));
+    const list=root.querySelector('#elementList');
+    const clearDrop=()=>{
+      list.querySelectorAll('.drop-target').forEach(row=>row.classList.remove('drop-target','is-noop'));
+      list.querySelectorAll('.will-shift-up,.will-shift-down').forEach(row=>row.classList.remove('will-shift-up','will-shift-down'));
+      const pill=list.querySelector('.drop-pill');if(pill)pill.hidden=true;
+    };
+    // Drop preview (display only): a pill names the landing position, rows that would slide get a nudge hint. No layout shift, so hit-testing stays stable.
+    const markDrop=(zone,targetId)=>{
+      const order=session.displayOrder,from=order.indexOf(session.dragging);if(from<0)return;
+      const rest=order.filter(id=>id!==session.dragging),to=targetId===null?rest.length:rest.indexOf(targetId);if(to<0)return;
+      const noop=to===from;clearDrop();zone.classList.add('drop-target');zone.classList.toggle('is-noop',noop);
+      if(!noop){
+        const [lo,hi,cls]=to<from?[to,from-1,'will-shift-down']:[from+1,to,'will-shift-up'];
+        order.slice(lo,hi+1).forEach(id=>list.querySelector(`[data-element-id="${id}"]`)?.classList.add(cls));
+      }
+      let pill=list.querySelector('.drop-pill');
+      if(!pill){pill=document.createElement('div');pill.className='drop-pill';pill.setAttribute('aria-hidden','true');list.appendChild(pill);}
+      pill.hidden=false;pill.classList.toggle('is-noop',noop);
+      pill.textContent=noop?'位置不变':`${to<from?'↑':'↓'} ${targetId===null?'放到末尾 · 第 ':'放到第 '}${to+1} 位`;
+      pill.style.top=Math.max(zone.offsetTop-11,2)+'px';
+    };
+    root.querySelectorAll('.element-row').forEach(element=>{
+      const id=Number(element.dataset.elementId);
+      element.ondragstart=e=>{if(session.whole||e.target.matches('input,textarea,button')){e.preventDefault();return;}session.dragging=id;e.dataTransfer.setData('text/plain',String(id));e.dataTransfer.effectAllowed='move';element.classList.add('is-dragging');list.classList.add('is-dragging-list');
+        // Lifted-card drag image instead of the browser's flat screenshot of the row.
+        const card=document.createElement('div'),source=session.rows.find(row=>row.id===id);card.className='drag-card';card.setAttribute('aria-hidden','true');
+        const number=document.createElement('b'),text=document.createElement('span');number.textContent=String(session.displayOrder.indexOf(id)+1);text.textContent=source?.value||'（空元素）';card.append(number,text);document.body.appendChild(card);
+        try{e.dataTransfer.setDragImage(card,22,18);}catch{}
+        setTimeout(()=>card.remove(),0);};
+      element.ondragend=()=>{if(session)session.dragging=null;element.classList.remove('is-dragging');list.classList.remove('is-dragging-list');clearDrop();};
+    });
+    // Dropping always inserts the dragged element before the target (V3.6); the end strip appends after the last visible row.
+    const dropBefore=(dragged,targetId)=>{
+      const from=session.displayOrder.indexOf(dragged);if(from<0)return false;
+      session.displayOrder.splice(from,1);
+      const to=targetId===null?session.displayOrder.length:session.displayOrder.indexOf(targetId);if(to<0)return false;
+      session.displayOrder.splice(to,0,dragged);syncRowsToDisplayOrder();session.fx={kind:'move',id:dragged};renderRows(dragged);return true;
+    };
+    root.querySelectorAll('.element-row,.element-ghost-row').forEach(element=>{
+      const id=Number(element.dataset.elementId);
+      element.ondragover=e=>{if(session.dragging!==null){e.preventDefault();if(session.dragging===id)clearDrop();else if(!element.classList.contains('drop-target'))markDrop(element,id);}};
+      element.ondragleave=e=>{if(!element.contains(e.relatedTarget))element.classList.remove('drop-target');};
+      element.ondrop=e=>{if(session.dragging===null)return;e.preventDefault();const dragged=session.dragging;session.dragging=null;list.classList.remove('is-dragging-list');if(dragged===id)return;dropBefore(dragged,id);};
+    });
+    const endZone=root.querySelector('.element-drop-end');
+    if(endZone){
+      endZone.ondragover=e=>{if(session.dragging!==null){e.preventDefault();if(!endZone.classList.contains('drop-target'))markDrop(endZone,null);}};
+      endZone.ondragleave=()=>endZone.classList.remove('drop-target');
+      endZone.ondrop=e=>{if(session.dragging===null)return;e.preventDefault();const dragged=session.dragging;session.dragging=null;list.classList.remove('is-dragging-list');if(session.displayOrder[session.displayOrder.length-1]===dragged)return;dropBefore(dragged,null);};
+    }
+    update();
+    playLayoutFx(root,before,fx);
+    if(keepSuggestion){
+      const selector=keepSuggestion.type==='add'?`[data-selected-index="${keepSuggestion.index}"]`:`[data-pending-before-index="${keepSuggestion.index}"]`;
+      const kept=root.querySelector(`#pendingElements ${selector} button`);
+      if(kept){kept.focus();return;}
+    }
+    if(focusId)(root.querySelector(`[data-element-input="${focusId}"]`)||root.querySelector(`.element-ghost-row[data-element-id="${focusId}"] [data-move-${prefer}]:not(:disabled)`)||root.querySelector(`.element-ghost-row[data-element-id="${focusId}"] [data-move-up]:not(:disabled)`)||root.querySelector(`.element-ghost-row[data-element-id="${focusId}"] [data-move-down]:not(:disabled)`))?.focus();
+  }
+  function dismiss() {
+    if (session) {
+      session.container.querySelectorAll('.is-related-highlight').forEach(element=>element.classList.remove('is-related-highlight'));
+      for (const [type, handler] of Object.entries(session.relatedHandlers || {})) session.container.removeEventListener(type, handler);
+    }
+    session=null;
+  }
+  return {highlight,selectionInfo,selectionMarkup,pendingMarkup,comparisonMarkup,bindComparison,open,dismiss};
+})();
+
+
+FULL SOURCE design-evidence/verify_windows_snapshot.cjs
+'use strict';
+// Windows-page entry points are exercised through the DOM; no registry or browser access.
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const {JSDOM,VirtualConsole}=require('jsdom');
+const root=path.resolve(__dirname,'..'),checks=[],errors=[],opened=[];
+const vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));
+const dom=new JSDOM(fs.readFileSync(path.join(root,'temp.html'),'utf8'),{runScripts:'dangerously',pretendToBeVisual:true,virtualConsole:vc,beforeParse(w){w.confirm=()=>true;for(const f of ['demo-plan.js','demo-configs.js','windows-elements.js'])w.eval(fs.readFileSync(path.join(root,f),'utf8'));}});
+const w=dom.window,q=s=>w.document.querySelector(s),all=s=>[...w.document.querySelectorAll(s)],ev=s=>w.eval(s);
+const originalOpen=w.WindowsElements.open;
+w.WindowsElements.open=options=>{opened.push(options);return originalOpen(options);};
+const check=(name,run)=>{try{run();checks.push({name,passed:true});}catch(e){checks.push({name,passed:false,error:e.stack});}};
+const setInput=(field,raw)=>{assert.ok(field,'input must exist');field.value=raw;field.dispatchEvent(new w.Event('input',{bubbles:true}));};
+const rows=()=>all('#elementList .element-row'),values=()=>rows().map(n=>n.querySelector('.element-input').value);
+const serialized=()=>q('#elementSerialized').textContent,historyLength=()=>ev('history.length');
+const state=()=>ev('JSON.stringify({apps,selected,profileChoice,checked:[...checked]})');
+const windowsState=()=>ev('JSON.stringify(windows)');
+const visible=node=>!!node&&!node.closest('[hidden]')&&w.getComputedStyle(node).display!=='none';
+const targetNode=(selector,target)=>all(selector).find(n=>(n.dataset.windowsValue??n.dataset.windowsEdit)===target);
+const pageValue=target=>targetNode('[data-windows-value]',target);
+function setup(raw='X;A;C;Y',old='A;C',desired='A;E'){
+ ev('closeModal();reset(true)');opened.length=0;
+ ev('selected=1;focusedVariable=1;const v=scheme(1).vars[1];v.defaultValue='+JSON.stringify(old)+';v.baselineValue=v.defaultValue;v.mode="-append";windows["User|PATH"]='+JSON.stringify(raw)+';render()');
+ if(desired!==undefined)setInput(q('#varRows [data-row="1"] .vinput'),desired);
+ q('[data-view="windows"]').click();
+}
+function enter(target='User|PATH',source='button'){
+ const node=targetNode(source==='button'?'[data-windows-edit]':'[data-windows-value]',target);assert.ok(node,'Windows entry must exist: '+target);node.focus();
+ if(source==='button')node.click();
+ else if(source==='double-click')node.dispatchEvent(new w.MouseEvent('dblclick',{bubbles:true}));
+ else node.dispatchEvent(new w.KeyboardEvent('keydown',{key:source,bubbles:true,cancelable:true}));
+ assert.ok(q('#modal').classList.contains('open'),'entry opens editor');return opened.at(-1);
+}
+function noSchemeContext(){
+ const pending=q('#pendingElements');assert.ok(!visible(pending),'scheme suggestion region is absent or hidden');
+ assert.equal(all('#modal [data-add-pending],#modal [data-remove-pending]').length,0);
+ assert.ok(!visible(q('#modal .legend-match')),'match legend is absent or hidden');
+ assert.ok(!visible(q('#modal [data-legend-count="match"]')),'match counter is absent or hidden');
+ assert.equal(all('#modal .is-matched,#modal .diff-label.is-match').length,0);
+ assert.doesNotMatch(q('#elementStatus').textContent,/方案建议|待追加|待删除|冲突/);
+}
+function assertIndependentOptions(options,target='User|PATH'){
+ const [scope,name]=target.split('|');assert.equal(options.scope,scope);assert.equal(options.name.toUpperCase(),name);
+ assert.equal(options.raw,ev('windows['+JSON.stringify(target)+']'));
+ assert.deepEqual(Array.from(options.selectedValues??[]),[],'Windows page supplies no selected scheme values');
+ assert.ok(options.selectionPlan==null,'Windows page supplies no selection plan');
+ assert.ok(options.appendEntries==null||options.appendEntries.length===0,'Windows page supplies no append entries');
+ assert.deepEqual(Array.from(options.appendValues??[]),[],'Windows page supplies no append suggestions');
+ assert.equal(options.snapshot.raw,options.raw);assert.equal(options.snapshot.exists,true);
+}
+function declare(scope,name,special,profile=1){
+ ev('apps[1].profiles['+profile+'].vars.push(mkVar('+JSON.stringify([name,scope,'replace','UNRELATED;SCHEME',{special}])+',99))');
+}
+check('Windows page shows escaped snapshot text with original spaces and CRLF, without scheme overlays',()=>{
+ const raw='  <img src=x onerror="evil()"> & \'quoted\'\r\nnext\rline\nlast ;;A;A; ';setup(raw);
+ assert.equal(pageValue('User|PATH').textContent,raw);assert.equal(pageValue('User|PATH').querySelector('img,script,mark'),null);
+ assert.equal(all('#screen mark,#screen .pending-add,#screen .pending-remove,#screen .pending-elements,#screen .match-legend,#screen .is-matched,#screen .is-conflict').length,0);
+ assert.doesNotMatch(q('#screen').textContent,/高亮为当前准备方案|建议追加|建议删除|待追加|待删除|方案冲突/);
+});
+check('Empty Windows string remains an existing editable value rather than a missing variable',()=>{
+ setup('');assert.ok(pageValue('User|PATH'));const o=enter();assertIndependentOptions(o);assert.deepEqual(values(),['']);assert.equal(serialized(),'');assert.ok(q('#applyElements').disabled);noSchemeContext();
+});
+check('Selected app, profile, checked batch and selected-value changes leave Windows snapshot markup unchanged',()=>{
+ setup();const before=all('[data-windows-value]').map(n=>[n.dataset.windowsValue,n.innerHTML]);
+ ev('selected=0;profileChoice[0]="JDK17";profileChoice[1]="Python311";checked=new Set([0,1,2]);apps[0].profiles[1].vars[1].custom="DIFFERENT;DRAFT";apps[0].profiles[1].vars[1].source="自定义值";render()');
+ assert.deepEqual(all('[data-windows-value]').map(n=>[n.dataset.windowsValue,n.innerHTML]),before);assertIndependentOptions(enter());noSchemeContext();
+});
+for(const source of ['button','double-click','Enter',' '])check('Real Windows '+JSON.stringify(source)+' entry opens snapshot-only editor',()=>{
+ setup();const before=state();const o=enter('User|PATH',source);assertIndependentOptions(o);assert.equal(o.whole,false);assert.deepEqual(values(),['X','A','C','Y']);assert.equal(serialized(),'X;A;C;Y');noSchemeContext();assert.equal(state(),before);
+});
+check('Windows renderer and entry do not consult current scheme or selected-value planning helpers',()=>{
+ setup();const saved={scheme:w.scheme,value:w.value,recordsFor:w.recordsFor};
+ try{for(const name of Object.keys(saved))w[name]=()=>{throw new Error('Windows snapshot consulted '+name);};ev('renderWindows()');assertIndependentOptions(enter());noSchemeContext();}
+ finally{Object.assign(w,saved);}
+});
+check('Inactive-profile Special declaration with case-insensitive same scope/name keeps command semicolons whole',()=>{
+ setup();declare('User','snapshot_command',true);const raw='  tool.exe --require "C:\\工具\\init;local.js"; echo done\r\n  tail  ';
+ ev('windows["User|SNAPSHOT_COMMAND"]='+JSON.stringify(raw)+';render()');
+ assert.equal(pageValue('User|SNAPSHOT_COMMAND').textContent,raw);const o=enter('User|SNAPSHOT_COMMAND');assertIndependentOptions(o,'User|SNAPSHOT_COMMAND');assert.equal(o.whole,true);assert.equal(rows().length,1);assert.equal(serialized(),raw);noSchemeContext();
+});
+check('Consistent Special declarations across apps keep whole-string editing independent of selection',()=>{
+ setup();declare('User','SNAPSHOT_COMMAND',true,0);declare('User','SNAPSHOT_COMMAND',true,1);
+ ev('windows["User|SNAPSHOT_COMMAND"]="ONE;TWO";profileChoice[1]="Python313";render()');
+ assert.equal(enter('User|SNAPSHOT_COMMAND').whole,true);assert.deepEqual(values(),['ONE;TWO']);
+});
+check('Same-name Special in other scope does not make ordinary current-scope variable whole',()=>{
+ setup();declare('System','SCOPE_COMMAND',true);declare('User','SCOPE_COMMAND',false);
+ ev('windows["User|SCOPE_COMMAND"]="ONE;TWO";windows["System|SCOPE_COMMAND"]="CMD;ARGS";render()');
+ assert.equal(enter('User|SCOPE_COMMAND').whole,false);assert.deepEqual(values(),['ONE','TWO']);q('#cancelDialog').click();
+ assert.equal(enter('System|SCOPE_COMMAND').whole,true);assert.deepEqual(values(),['CMD;ARGS']);
+});
+check('Different-name Special and ordinary replace-mode declaration do not disable element editing',()=>{
+ setup();declare('User','OTHER_COMMAND',true);declare('User','PLAIN_COMMAND',false);
+ ev('windows["User|PLAIN_COMMAND"]="ONE;;TWO";render()');assert.equal(enter('User|PLAIN_COMMAND').whole,false);assert.deepEqual(values(),['ONE','','TWO']);assert.ok(!q('#addElement').hidden);
+});
+check('Undeclared snapshot variable remains editable as individual elements',()=>{
+ setup();ev('windows["User|UNDECLARED"]="A;;A;";render()');const o=enter('User|UNDECLARED');assertIndependentOptions(o,'User|UNDECLARED');assert.equal(o.whole,false);assert.deepEqual(values(),['A','','A','']);noSchemeContext();
+});
+check('Untouched raw CRLF, tabs, repeated elements and empty slices survive add and Apply exactly',()=>{
+ const raw=' \tA\r\nB ;;A;A;\t;';setup(raw);const before=state(),n=historyLength();enter();assert.equal(serialized(),raw);q('#addElement').click();setInput(rows().at(-1).querySelector('.element-input'),'TAIL');assert.equal(serialized(),raw+';TAIL');noSchemeContext();
+ q('#applyElements').click();assert.equal(ev('windows["User|PATH"]'),raw+';TAIL');assert.equal(state(),before);assert.equal(historyLength(),n+1);
+ const c=ev('history[0].changes[0]');assert.equal(c.before,raw);assert.equal(c.after,raw+';TAIL');assert.equal(c.plan.before.raw,raw);assert.equal(c.plan.after.raw,raw+';TAIL');
+});
+check('Manual replacement, move, delete, per-row recovery and reset remain local until Apply',()=>{
+ setup('A;;A;B');const before=windowsState(),draft=state(),n=historyLength();enter();const ids=rows().map(n=>n.dataset.elementId),get=id=>q('#elementList .element-row[data-element-id="'+id+'"]');
+ setInput(get(ids[3]).querySelector('.element-input'),'EDIT');get(ids[3]).querySelector('[data-move-up]').click();assert.equal(serialized(),'A;;EDIT;A');
+ get(ids[1]).querySelector('[data-delete]').click();assert.equal(serialized(),'A;EDIT;A');q('[data-restore-ghost="'+ids[1]+'"]').click();assert.equal(serialized(),'A;;EDIT;A');
+ q('#addElement').click();setInput(rows().at(-1).querySelector('.element-input'),'NEW');assert.equal(serialized(),'A;;EDIT;A;NEW');noSchemeContext();
+ assert.equal(windowsState(),before);assert.equal(historyLength(),n);assert.equal(state(),draft);q('#restoreElements').click();assert.equal(serialized(),'A;;A;B');assert.deepEqual(rows().map(n=>n.dataset.elementId),ids);assert.ok(q('#applyElements').disabled);noSchemeContext();
+});
+check('Cancel discards direct edits and leaves workbench drafts and history unchanged',()=>{
+ setup();const before=windowsState(),draft=state(),n=historyLength();enter();setInput(rows()[0].querySelector('.element-input'),'MANUAL');q('#cancelDialog').click();assert.equal(windowsState(),before);assert.equal(historyLength(),n);assert.equal(state(),draft);
+ enter();assert.equal(serialized(),'X;A;C;Y');assert.ok(q('#applyElements').disabled);
+});
+check('Direct Apply records only manual operations and factual History while preserving workbench drafts',()=>{
+ setup();const draft=state(),n=historyLength();enter();setInput(rows()[2].querySelector('.element-input'),'MANUAL');q('#applyElements').click();assert.equal(ev('windows["User|PATH"]'),'X;A;MANUAL;Y');assert.equal(state(),draft);assert.equal(historyLength(),n+1);
+ const c=ev('history[0].changes[0]');assert.equal(c.before,'X;A;C;Y');assert.equal(c.after,'X;A;MANUAL;Y');assert.deepEqual(Array.from(c.plan.operations,o=>o.action),['REPLACE']);assert.ok(Object.isFrozen(c));
+ q('[data-view="history"]').click();assert.ok(q('.history-details'));assert.equal(q('.history-before').textContent,'X;A;C;Y');assert.equal(q('.history-after').textContent,'X;A;MANUAL;Y');assert.equal(state(),draft);
+});
+check('Direct empty-element editing preserves empty-variable state and explicit last-row deletion removes it',()=>{
+ setup('A;');enter();rows()[0].querySelector('[data-delete]').click();assert.equal(serialized(),'');q('#applyElements').click();assert.equal(ev('Object.hasOwn(windows,"User|PATH")'),true);assert.equal(ev('windows["User|PATH"]'),'');
+ enter();rows()[0].querySelector('[data-delete]').click();assert.equal(serialized(),'（不存在）');q('#applyElements').click();assert.equal(ev('Object.hasOwn(windows,"User|PATH")'),false);assert.equal(ev('history[0].changes[0].plan.after.exists'),false);
+});
+check('Whole Special direct manual edit applies complete string and records whole audit without draft changes',()=>{
+ setup();declare('User','SNAPSHOT_COMMAND',true);ev('windows["User|SNAPSHOT_COMMAND"]="OLD;ARGS";render()');const draft=state();enter('User|SNAPSHOT_COMMAND');setInput(rows()[0].querySelector('.element-input'),'NEW;ARGS\nNEXT');noSchemeContext();q('#applyElements').click();assert.equal(ev('windows["User|SNAPSHOT_COMMAND"]'),'NEW;ARGS\nNEXT');assert.equal(ev('history[0].changes[0].plan.special'),true);assert.equal(state(),draft);
+});
+check('Snapshot raw change rejects direct Apply and creates no successful history',()=>{
+ setup();enter();const n=historyLength(),draft=state();setInput(rows()[0].querySelector('.element-input'),'MANUAL');ev('windows["User|PATH"]="EXTERNAL";targetRevisions["User|PATH"]=1');q('#applyElements').click();assert.equal(ev('windows["User|PATH"]'),'EXTERNAL');assert.equal(historyLength(),n);assert.equal(state(),draft);assert.match(q('#toast').textContent,/失效/);
+});
+check('Snapshot revision change rejects direct Apply even when original raw is equal',()=>{
+ setup();enter();const n=historyLength();setInput(rows()[0].querySelector('.element-input'),'MANUAL');ev('targetRevisions["User|PATH"]=1');q('#applyElements').click();assert.equal(ev('windows["User|PATH"]'),'X;A;C;Y');assert.equal(historyLength(),n);assert.match(q('#toast').textContent,/失效/);
+});
+check('Workbench still exposes scheme suggestions and previews the selected-value plan',()=>{
+ setup();q('[data-view="workbench"]').click();q('#editWindowsElements').click();assert.ok(visible(q('#pendingElements')));assert.ok(q('[data-add-pending]'));assert.ok(q('[data-remove-pending]'));assert.ok(visible(q('.legend-match')));q('#cancelDialog').click();
+ ev('showPreview("应用","Snapshot regression",[{app:1,profile:"Python313",varIdx:1}])');const p=ev('modalAction.rows[0].plan');assert.equal(p.valid,true);assert.equal(p.after.raw,'X;A;Y;E');assert.ok(!q('#confirmDialog').disabled);q('#cancelDialog').click();
+});
+check('Workbench batch preview still blocks incompatible Special and ordinary target requests',()=>{
+ setup();q('[data-view="workbench"]').click();ev('scheme(0).vars[1].special=true;scheme(0).vars[1].mode="replace";checked=new Set([0,1]);render()');q('#previewButton').click();
+ const p=ev('modalAction.rows.find(r=>r.v.scope==="User"&&r.v.name.toUpperCase()==="PATH").plan');assert.equal(p.valid,false);assert.ok(Array.from(p.issues).some(issue=>issue.reason==='conflict'));assert.ok(q('#confirmDialog').disabled);q('#cancelDialog').click();
+});
+check('Windows page remains independent even when selected workbench draft has stale baseline',()=>{
+ setup();ev('windows["User|PATH"]="EXTERNAL;RAW";targetRevisions["User|PATH"]=1;render()');assert.equal(pageValue('User|PATH').textContent,'EXTERNAL;RAW');assert.doesNotMatch(q('#screen').textContent,/计划已失效|方案建议已失效|冲突/);assertIndependentOptions(enter());noSchemeContext();setInput(rows()[0].querySelector('.element-input'),'DIRECT');q('#applyElements').click();assert.equal(ev('windows["User|PATH"]'),'DIRECT;RAW');
+});
+check('No JSDOM runtime errors in Windows snapshot and workbench regression workflows',()=>assert.deepEqual(errors,[]));
+console.log(JSON.stringify({passed:checks.filter(c=>c.passed).length,total:checks.length,checks},null,2));if(checks.some(c=>!c.passed))process.exitCode=1;dom.window.close();
+
+
+TEST RESULTS
+[
+  {
+    "dir": "H:/Yuri368/环境变量配置V3",
+    "scripts": 25,
+    "checks": 487,
+    "failed": []
+  },
+  {
+    "dir": "H:/Yuri368/环境变量配置V3-git/ui-v3",
+    "scripts": 25,
+    "checks": 487,
+    "failed": []
+  }
+]
+
+BROWSER PROOF
+{
+  "inventory": {
+    "body": "Windows 环境\n\n当前演示快照 · 双击变量值直接编辑\n\n18 项变量\n作用域\t变量\t模拟当前值\t操作\n系统\tCUDA_PATH\t\nC:\\Program Files\\GPU Toolkit\\CUDA\\v11.8\n\t编辑\n系统\tDOTNET_CLI_TELEMETRY_OPTOUT\t\n1\n\t编辑\n系统\tDOTNET_ROOT\t\nC:\\Build Tools\\dotnet\n\t编辑\n系统\tPATH\t\nC:\\Windows\\System32;;%CUDA_PATH%\\bin;%CUDA_PATH%\\libnvvp;C:\\Windows\\System32;%DOTNET_ROOT%;\n\t编辑\n用户\tCUDA_CACHE_PATH\t\nC:\\Demo Cache\\CUDA\n\t编辑\n用户\tDEMO_COMMAND\t\ncmd /c \"echo alpha;beta\"\n\t编辑\n用户\tDEMO_EMPTY_VALUE\t\n（空字符串）\n\t编辑\n用户\tDEMO_SEARCH_PATH\t\nC:\\Demo\\Alpha;;C:\\Demo\\Alpha;C:\\Demo\\Gamma;\n\t编辑\n用户\tDOTNET_CLI_TELEMETRY_OPTOUT\t\n1\n\t编辑\n用户\tDOTNET_ROOT\t\nD:\\Portable Apps\\dotnet\n\t编辑\n用户\tJAVA_HOME\t\nH:\\ProgramFiles\\DevTools\\Java\\jdk1.8.0_202\n\t编辑\n用户\tMAVEN_HOME\t\nH:\\ProgramFiles\\DevTools\\Maven\\apache-maven-3.9.11\n\t编辑\n用户\tNODE_HOME\t\nC:\\Dev Tools\\Node22\n\t编辑\n用户\tNODE_OPTIONS\t\n--max-old-space-size=4096 --require \"C:\\团队工具\\初始化;本地.js\"\n\t编辑\n用户\tPATH\t\n%JAVA_HOME%\\bin;%PYTHON_HOME%;%PYTHON_HOME%\\Scripts;%MAVEN_HOME%\\bin;H:\\ProgramFiles\\PortableGit\\cmd;H:\\ProgramFiles\\VSCode\\bin;%NODE_HOME%\\bin;%DOTNET_ROOT%;%TEAM_TOOLS_HOME%\\bin\n\t编辑\n用户\tPYTHON_HOME\t\nH:\\ProgramFiles\\Python313\n\t编辑\n用户\tTEAM_LOG_LEVEL\t\nINFO\n\t编辑\n用户\tTEAM_TOOLS_HOME\t\nD:\\团队工具\\稳定版\n\t编辑",
+    "overlays": 0,
+    "raw": "%JAVA_HOME%\\bin;%PYTHON_HOME%;%PYTHON_HOME%\\Scripts;%MAVEN_HOME%\\bin;H:\\ProgramFiles\\PortableGit\\cmd;H:\\ProgramFiles\\VSCode\\bin;%NODE_HOME%\\bin;%DOTNET_ROOT%;%TEAM_TOOLS_HOME%\\bin"
+  },
+  "direct": {
+    "matchHidden": true,
+    "matchedRows": 0,
+    "pendingHidden": true,
+    "values": [
+      "%JAVA_HOME%\\bin",
+      "%PYTHON_HOME%",
+      "%PYTHON_HOME%\\Scripts",
+      "%MAVEN_HOME%\\bin",
+      "H:\\ProgramFiles\\PortableGit\\cmd",
+      "H:\\ProgramFiles\\VSCode\\bin",
+      "%NODE_HOME%\\bin",
+      "%DOTNET_ROOT%",
+      "%TEAM_TOOLS_HOME%\\bin"
+    ]
+  },
+  "applied": "%JAVA_HOME%\\bin;%PYTHON_HOME%;%PYTHON_HOME%\\Scripts;%MAVEN_HOME%\\bin2;H:\\ProgramFiles\\PortableGit\\cmd;H:\\ProgramFiles\\VSCode\\bin;%NODE_HOME%\\bin;%DOTNET_ROOT%;%TEAM_TOOLS_HOME%\\bin",
+  "draft": "%MAVEN_HOME%\\bin1",
+  "workbench": {
+    "draft": "%MAVEN_HOME%\\bin1",
+    "pendingHidden": false,
+    "proposal": "方案建议\n\n点击 − 或 ＋ 采纳方案建议；已采纳的卡片可点 ↶ 撤销。所有变化仅作用于本次编辑，确认应用前不会写入 Windows。\n\n建议追加\n%MAVEN_HOME%\\bin1\n建议追加"
+  },
+  "special": {
+    "addHidden": true,
+    "pendingHidden": true,
+    "values": [
+      "cmd /c \"echo alpha;beta\""
+    ]
+  },
+  "empty": {
+    "applyDisabled": true,
+    "emptyBadges": 3,
+    "values": [
+      ""
+    ]
+  },
+  "narrow": {
+    "dialog": {
+      "bottom": 856.9687805175781,
+      "height": 700.6041870117188,
+      "left": 33.333335876464844,
+      "right": 1273.3333358764648,
+      "top": 156.36459350585938,
+      "width": 1240,
+      "x": 33.333335876464844,
+      "y": 156.36459350585938
+    },
+    "documentWidth": 1307,
+    "dpr": 0.75,
+    "innerHeight": 1013,
+    "innerWidth": 1307
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "browser": "isolated headless Google Chrome",
+  "appUrl": "http://127.0.0.1:8000/temp.html",
+  "desktopViewport": {
+    "width": 1383,
+    "height": 851
+  },
+  "narrowWidths": [
+    800,
+    600
+  ],
+  "passed": 13,
+  "total": 14,
+  "checks": [
+    {
+      "name": "Normal preview is compact, shows one legend, and still uses the frozen plans",
+      "passed": true
+    },
+    {
+      "name": "Target navigation, raw expansion and cancel preserve request and draft",
+      "passed": true
+    },
+    {
+      "name": "No-operation confirmation does not fabricate history",
+      "passed": true
+    },
+    {
+      "name": "Retained deletion and partial completion keep explanations and original intent",
+      "passed": true
+    },
+    {
+      "name": "Unsupported ordering and request conflicts still block the full batch",
+      "passed": true
+    },
+    {
+      "name": "Relevant refresh retains raw/focus and requires review then separate confirmation",
+      "passed": true
+    },
+    {
+      "name": "Preview 800px preserves controls, body scrolling and stacked values",
+      "passed": true
+    },
+    {
+      "name": "Preview 600px preserves controls, body scrolling and stacked values",
+      "passed": true
+    },
+    {
+      "name": "History detail spans the record, with immutable recorded raw data and correct deletion/addition sides",
+      "passed": false,
+      "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n2 !== 1\n\n    at H:\\Yuri368\\环境变量配置V3-git\\ui-v3\\design-evidence\\phase2-preview-history-2026-10-17\\verify-browser.cjs:103:11\n    at async check (H:\\Yuri368\\环境变量配置V3-git\\ui-v3\\design-evidence\\phase2-preview-history-2026-10-17\\verify-browser.cjs:11:36)\n    at async H:\\Yuri368\\环境变量配置V3-git\\ui-v3\\design-evidence\\phase2-preview-history-2026-10-17\\verify-browser.cjs:96:3"
+    },
+    {
+      "name": "History keyboard/hover links remain confined to the audited occurrence and closing restores summary focus",
+      "passed": true
+    },
+    {
+      "name": "History 800px remains full width, wraps and exposes all audit rows",
+      "passed": true
+    },
+    {
+      "name": "History 600px remains full width, wraps and exposes all audit rows",
+      "passed": true
+    },
+    {
+      "name": "History state is scoped per record and stable under presentation redraw",
+      "passed": true
+    },
+    {
+      "name": "Reduced motion and runtime health",
+      "passed": true
+    }
+  ],
+  "errors": []
+}

@@ -1,0 +1,22 @@
+{
+  "passed": 4,
+  "total": 4,
+  "checks": [
+    {
+      "name": "Frozen TOML visual DOM equals 6a9379b",
+      "passed": true
+    },
+    {
+      "name": "Frozen TOML raw DOM equals 6a9379b",
+      "passed": true
+    },
+    {
+      "name": "Frozen TOML diff DOM equals 6a9379b",
+      "passed": true
+    },
+    {
+      "name": "Default markup unchanged for frozen fixtures",
+      "passed": true
+    }
+  ]
+}

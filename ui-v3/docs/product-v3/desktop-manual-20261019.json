@@ -1,0 +1,71 @@
+{
+  "date": "2026-10-19",
+  "backend": "file",
+  "page": "http://127.0.0.1:8796/",
+  "installedExecutableSha256": "4b11c2b840a6d7cac8cc3649ee178f4b30dec3ca3031393726a985a3950f4f79",
+  "manualReports": {
+    "imeAndMouseDrag": {
+      "answer": "输入和拖动都正常",
+      "instructions": "Use Chinese IME, without paste, to replace row 4 with 中文输入验收; drag row 5 before row 1; leave in editor without execution."
+    },
+    "nativeScaling": {
+      "answer": "正常",
+      "requestedWindowsScalesPercent": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "requestedBrowserZoomPercent": 100,
+      "requestedChecks": "Input and bottom buttons usable, no overlap; restore original scale.",
+      "evidenceType": "Owner-reported manual acceptance; no automated native DPI telemetry was collected."
+    }
+  },
+  "beforeRows": [
+    {
+      "id": "1",
+      "value": "A"
+    },
+    {
+      "id": "2",
+      "value": "A"
+    },
+    {
+      "id": "3",
+      "value": ""
+    },
+    {
+      "id": "4",
+      "value": "中文"
+    },
+    {
+      "id": "5",
+      "value": " D "
+    }
+  ],
+  "afterRows": [
+    {
+      "id": "5",
+      "value": " D "
+    },
+    {
+      "id": "1",
+      "value": "A"
+    },
+    {
+      "id": "2",
+      "value": "A"
+    },
+    {
+      "id": "3",
+      "value": ""
+    },
+    {
+      "id": "4",
+      "value": "中文输入验收"
+    }
+  ],
+  "supplement": "Read-only DOM observation confirms exact values, order and stable occurrence IDs. No execution was requested; environment file unchanged.",
+  "screenshot": "desktop-manual-20261019.png",
+  "scope": "Manual checks performed on previously installed native-fix candidate. Later lifecycle-only changes require their own frozen launch/exit checks; no claim of a clean Windows VM or automated native input."
+}

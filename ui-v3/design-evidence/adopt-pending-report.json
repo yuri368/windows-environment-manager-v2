@@ -1,0 +1,112 @@
+{
+  "verification": "DOM-only: JSDOM native button focus/click, adoption direction, raw slices, stable live-row IDs, revalidation, restore/cancel/apply and page state; native browser keyboard activation, visual layout and Windows integration not verified",
+  "total": 26,
+  "passed": 26,
+  "failed": 0,
+  "checks": [
+    {
+      "name": "Every actionable pending occurrence has an explicit native plus button and flattened selected index",
+      "passed": true
+    },
+    {
+      "name": "+append adopts exactly one raw slice in the expected position with stable existing rows and focused suggestion",
+      "passed": true
+    },
+    {
+      "name": "Workbench +append passes current mode into editor without writing page state before apply",
+      "passed": true
+    },
+    {
+      "name": "-append adopts exactly one raw slice in the expected position with stable existing rows and focused suggestion",
+      "passed": true
+    },
+    {
+      "name": "Workbench -append passes current mode into editor without writing page state before apply",
+      "passed": true
+    },
+    {
+      "name": "append adopts exactly one raw slice in the expected position with stable existing rows and focused suggestion",
+      "passed": true
+    },
+    {
+      "name": "Workbench append passes current mode into editor without writing page state before apply",
+      "passed": true
+    },
+    {
+      "name": "Duplicate missing targets project one definite insertion; stale button clicks cannot duplicate it",
+      "passed": true
+    },
+    {
+      "name": "Clicking a retained button after a manual live edit rechecks whether its slice is still missing",
+      "passed": true
+    },
+    {
+      "name": "Deleting an adopted slice makes its original flattened candidate actionable again with a fresh live ID",
+      "passed": true
+    },
+    {
+      "name": "Repeated front adoptions insert at the current head in click order while original duplicate and empty rows retain order",
+      "passed": true
+    },
+    {
+      "name": "Mixed source modes preserve each candidate direction instead of appending all selected specs to the tail",
+      "passed": true
+    },
+    {
+      "name": "Adopted rows enter existing exact-raw duplicate feedback only after a later live edit creates a duplicate",
+      "passed": true
+    },
+    {
+      "name": "Restore exactly recovers original raw whitespace, duplicates, empty slices and IDs after adoption plus live edits",
+      "passed": true
+    },
+    {
+      "name": "Cancel after adoption leaves snapshot, configuration, history and revision exact and reopening has original raw rows",
+      "passed": true
+    },
+    {
+      "name": "Apply stores only current live rows including adopted and manually edited values while unclicked candidates stay excluded",
+      "passed": true
+    },
+    {
+      "name": "Adoption with undefined original distinguishes no rows from one preserved empty row",
+      "passed": true
+    },
+    {
+      "name": "Adoption with empty-string original distinguishes no rows from one preserved empty row",
+      "passed": true
+    },
+    {
+      "name": "Appending a NUL-containing candidate participates in existing validation and cannot apply",
+      "passed": true
+    },
+    {
+      "name": "Unknown and replace entry modes cannot offer an adoption action",
+      "passed": true
+    },
+    {
+      "name": "Legacy appendValues without mode stays readonly even with missing values",
+      "passed": true
+    },
+    {
+      "name": "Whole-string and replace workbench contexts do not create candidates or plus actions",
+      "passed": true
+    },
+    {
+      "name": "Empty raw selected slices remain excluded from adoption while flattened nonempty indexes retain their gaps",
+      "passed": true
+    },
+    {
+      "name": "Standalone pendingMarkup remains readonly outside editor, and omitted mode metadata remains readonly within editing markup",
+      "passed": true
+    },
+    {
+      "name": "Windows direct editing ignores mixed scheme directions and preserves scope isolation",
+      "passed": true
+    },
+    {
+      "name": "Adoption workflows emit no JSDOM runtime errors",
+      "passed": true
+    }
+  ]
+}

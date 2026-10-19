@@ -1,0 +1,285 @@
+- heading "ChatGPT 说：" [level=4]
+    - paragraph: 【架构顾问 → Codex】
+    - paragraph:
+      - text: 方案审查通过，批准在
+      - code: v3/windows-snapshot
+      - text: 分支实施。
+      - text: ✅
+    - paragraph:
+      - text: 我核对了
+      - code: 13d87d5
+      - text: 基线的
+      - code: renderWindows()
+      - text: 、
+      - code: openWindowsElements()
+      - text: 、
+      - code: candidatePlan()
+      - text: 和
+      - code: DemoPlan.matches()
+      - text: 。
+    - paragraph:
+      - text: 本次调整方向正确：
+      - generic: Windows 环境页展示的是当前环境快照，不应该混入某个应用或方案的推荐结果。
+    - paragraph: 但有三个边界需要特别明确。
+    - heading "一、确认页面职责" [level=2]
+    - table:
+      - rowgroup:
+        - row "功能 Windows 环境页 工作台 / 方案预览":
+          - columnheader "功能":
+            - paragraph: 功能
+          - columnheader "Windows 环境页":
+            - paragraph: Windows 环境页
+          - columnheader "工作台 / 方案预览":
+            - paragraph: 工作台 / 方案预览
+        - row "当前 Windows 快照 保留 保留":
+          - cell "当前 Windows 快照":
+            - paragraph: 当前 Windows 快照
+          - cell "保留":
+            - paragraph: 保留
+          - cell "保留":
+            - paragraph: 保留
+        - row "直接编辑变量 保留 按既有入口规则":
+          - cell "直接编辑变量":
+            - paragraph: 直接编辑变量
+          - cell "保留":
+            - paragraph: 保留
+          - cell "按既有入口规则":
+            - paragraph: 按既有入口规则
+        - row "手动新增、删除、移动、恢复 保留 保留原有行为":
+          - cell "手动新增、删除、移动、恢复":
+            - paragraph: 手动新增、删除、移动、恢复
+          - cell "保留":
+            - paragraph: 保留
+          - cell "保留原有行为":
+            - paragraph: 保留原有行为
+        - row "方案匹配高亮 移除 保留":
+          - cell "方案匹配高亮":
+            - paragraph: 方案匹配高亮
+          - cell "移除":
+            - paragraph: 移除
+          - cell "保留":
+            - paragraph: 保留
+        - row "方案追加/删除建议 移除 保留":
+          - cell "方案追加/删除建议":
+            - paragraph: 方案追加/删除建议
+          - cell "移除":
+            - paragraph: 移除
+          - cell "保留":
+            - paragraph: 保留
+        - row "共享保护与方案冲突分析 不在页面展示 保留":
+          - cell "共享保护与方案冲突分析":
+            - paragraph: 共享保护与方案冲突分析
+          - cell "不在页面展示":
+            - paragraph: 不在页面展示
+          - cell "保留":
+            - paragraph: 保留
+        - row "编辑结果对照、Audit、History 保留既有行为 保留既有行为":
+          - cell "编辑结果对照、Audit、History":
+            - paragraph: 编辑结果对照、Audit、History
+          - cell "保留既有行为":
+            - paragraph: 保留既有行为
+          - cell "保留既有行为":
+            - paragraph: 保留既有行为
+    - paragraph: 这里要区分两个概念：
+    - list:
+      - paragraph:
+        - generic: 方案匹配状态
+        - text: ：Windows 环境页不再显示。
+      - paragraph:
+        - generic: 直接编辑产生的变更状态
+        - text: ：仍应显示，例如新增、删除、替换、移动、重复及空元素。
+    - paragraph: 不能因为移除方案分析，把直接编辑器本身的状态提示也一起删除。
+    - heading "二、Special 的最小实现契约" [level=2]
+    - paragraph:
+      - generic: 批准从所有配置声明中读取 Special 元信息，而不是只读取当前激活方案。
+    - paragraph:
+      - text: 当前
+      - code: renderWindows()
+      - text: 使用
+      - code: scheme(i)
+      - text: 获取应用当前方案，因此会受到方案选择影响。新方案应改为遍历：
+    - paragraph:
+      - code: apps → profiles → vars
+    - paragraph:
+      - text: 按既有
+      - code: key(v)
+      - text: 规则匹配，即 Scope 与变量名组成唯一键，变量名按现有规则处理大小写。
+    - paragraph: 结果：
+    - list:
+      - paragraph:
+        - text: 存在声明，且该变量为
+        - code: special=true
+        - text: ：整个字符串作为单个元素。
+      - paragraph: 存在声明，且均为普通变量：按分号拆分。
+      - paragraph: 没有任何声明：按普通变量处理。
+      - paragraph:
+        - text: 不读取
+        - code: profileChoice
+        - text: 、当前选定值、应用勾选状态或方案操作模式。
+    - paragraph:
+      - generic: 特别注意同键 Special 一致性。
+    - paragraph: 项目原有契约规定：同一个 Windows 环境变量在所有方案中必须具有一致的 Special 类型。
+    - paragraph:
+      - text: 因此不能根据某个方案是
+      - code: special=false
+      - text: ，就把其他方案声明为 Special 的命令字符串拆开。
+    - paragraph: 如果发现同键声明相互矛盾，应将其视为配置不变量异常，不得静默选择当前方案的类型，也不要在本轮另造冲突处理模型。
+    - heading "三、源码实施的两个关键注意点" [level=2]
+    - heading "1. 当前快照必须保留原始字符串" [level=3]
+    - paragraph:
+      - text: 当前
+      - code: renderWindows()
+      - text: 使用：
+    - list:
+      - paragraph:
+        - code: WindowsElements.highlight()
+      - paragraph:
+        - code: WindowsElements.pendingMarkup()
+      - paragraph:
+        - code: recordsFor()
+    - paragraph: 这些都包含方案语义，应该从 Windows 环境页的渲染流程移除。
+    - paragraph: 新的当前值只需要经过 HTML 转义，并保留原始空白。
+    - paragraph: 特别检查：
+    - list:
+      - paragraph:
+        - text: 空字符串
+        - code: "\"\""
+        - text: 显示为「（空字符串）」。
+      - paragraph: 字符串前后的空格不丢失。
+      - paragraph: 连续空格、制表符、换行保留。
+      - paragraph:
+        - code: ;
+        - text: 、
+        - code: "&"
+        - text: 、
+        - code: <
+        - text: 等内容不被错误解释。
+      - paragraph:
+        - text: 原始值不能经过
+        - code: trim()
+        - text: 、
+        - code: split()
+        - text: 或方案规范化后再展示。
+    - paragraph:
+      - text: 现有
+      - code: .codevalue
+      - text: 使用
+      - code: "word-break: break-all"
+      - text: ，但没有明确的空白保留规则。因此建议只为当前值展示补充必要的
+      - code: "white-space: break-spaces"
+      - text: 或等价样式。
+    - heading "2. 没有方案输入，不代表可以忽略建议区逻辑" [level=3]
+    - paragraph:
+      - text: 现有
+      - code: candidatePlan()
+      - text: 会根据
+      - code: appendValues
+      - text: 构造候选计划，而
+      - code: editorSuggestionsMarkup()
+      - text: 在没有建议时仍会生成「没有尚待采纳的方案建议」区域。
+    - paragraph:
+      - text: 因此单纯传入
+      - code: selectedValues=[]
+      - text: 不足以完成全部需求。
+    - paragraph:
+      - generic: Windows 直接编辑必须做到：
+    - list:
+      - paragraph: 不生成实际可操作的方案建议。
+      - paragraph: 不显示方案建议空区域。
+      - paragraph: 不产生虚假的匹配数量。
+      - paragraph: 不影响手动编辑生成的正常 ADD、REMOVE、REPLACE、MOVE。
+    - paragraph:
+      - text: 只需要对现有建议区域做最小展示处理，不要为此重构
+      - code: candidatePlan()
+      - text: 或 DemoPlan。
+    - heading "四、验收场景" [level=2]
+    - table:
+      - rowgroup:
+        - row "场景 预期":
+          - columnheader "场景":
+            - paragraph: 场景
+          - columnheader "预期":
+            - paragraph: 预期
+        - row "切换 Maven 不同方案 Windows 页当前值不随选定方案变化":
+          - cell "切换 Maven 不同方案":
+            - paragraph: 切换 Maven 不同方案
+          - cell "Windows 页当前值不随选定方案变化":
+            - paragraph: Windows 页当前值不随选定方案变化
+        - row "勾选其他应用 Windows 页无额外方案匹配标记":
+          - cell "勾选其他应用":
+            - paragraph: 勾选其他应用
+          - cell "Windows 页无额外方案匹配标记":
+            - paragraph: Windows 页无额外方案匹配标记
+        - row "Path 包含重复值与空元素 原始快照完整展示":
+          - cell "Path 包含重复值与空元素":
+            - paragraph: Path 包含重复值与空元素
+          - cell "原始快照完整展示":
+            - paragraph: 原始快照完整展示
+        - row "普通变量包含分号 直接编辑时拆分为多个元素":
+          - cell "普通变量包含分号":
+            - paragraph: 普通变量包含分号
+          - cell "直接编辑时拆分为多个元素":
+            - paragraph: 直接编辑时拆分为多个元素
+        - row "Special 命令包含分号 编辑时仍是一个整体":
+          - cell "Special 命令包含分号":
+            - paragraph: Special 命令包含分号
+          - cell "编辑时仍是一个整体":
+            - paragraph: 编辑时仍是一个整体
+        - row "Special 只声明在非当前方案 仍正确整体处理":
+          - cell "Special 只声明在非当前方案":
+            - paragraph: Special 只声明在非当前方案
+          - cell "仍正确整体处理":
+            - paragraph: 仍正确整体处理
+        - row "未声明的环境变量 正常进入普通元素编辑":
+          - cell "未声明的环境变量":
+            - paragraph: 未声明的环境变量
+          - cell "正常进入普通元素编辑":
+            - paragraph: 正常进入普通元素编辑
+        - row "直接编辑后确认 Snapshot、Audit、History 正确":
+          - cell "直接编辑后确认":
+            - paragraph: 直接编辑后确认
+          - cell "Snapshot、Audit、History 正确":
+            - paragraph: Snapshot、Audit、History 正确
+        - row "工作台方案建议 追加、删除、冲突分析保持原样":
+          - cell "工作台方案建议":
+            - paragraph: 工作台方案建议
+          - cell "追加、删除、冲突分析保持原样":
+            - paragraph: 追加、删除、冲突分析保持原样
+        - row "工作台 Replace 继续禁止元素编辑入口":
+          - cell "工作台 Replace":
+            - paragraph: 工作台 Replace
+          - cell "继续禁止元素编辑入口":
+            - paragraph: 继续禁止元素编辑入口
+    - paragraph:
+      - text: 尤其建议加入一个交叉测试：
+      - generic: 先在工作台切换方案，再进入 Windows 环境页编辑同一个变量。
+      - text: 这是本轮要消除的隐式依赖。
+    - heading "五、最终执行裁定" [level=2]
+    - generic: 批准实施
+    - paragraph: 允许修改 Windows 环境页渲染、直接编辑参数和必要的建议区展示逻辑。
+    - paragraph: 不修改 DemoPlan 核心、工作台方案处理、预览确认、History、V2 或 Registry；不新增切换控件和业务状态模型。
+    - paragraph: 完成后提交源码差异、专项测试、完整回归、真实浏览器截图和 CI，再进行最终审查。
+    - paragraph:
+      - generic: 最终原则：Windows 环境页只回答“Windows 当前是什么”，工作台才回答“方案准备把 Windows 改成什么”。
+    - paragraph: 这样职责清楚，也能防止切换方案时，Windows 页面莫名其妙跟着改变高亮和建议。
+    - button "复制":
+    - button "评价回复":
+    - button "分享":
+    - button "朗读":
+    - button "重新生成回复":
+    - button "更多操作":
+    - generic: ChatGPT 可能会出错。请核查重要信息。
+    - button:
+    - heading "最新一条回复" [level=4]
+    - status
+    - button "添加文件等内容":
+    - textbox "询问 ChatGPT":
+      - paragraph: 询问 ChatGPT
+    - button "选择 ChatGPT 模型":
+      - generic: 高
+    - button "听写":
+    - button "开始语音":
+- status
+- status: 回答已完成
+- status
+- status

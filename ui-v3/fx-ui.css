@@ -1,0 +1,160 @@
+/* =====================================================================
+   元素编辑器动效 · 第二轮
+   ① 删除 → 断裂：原行沿锯齿裂缝分成两半向两侧错开消散，碎屑迸出，同时删除痕迹从底下浮现
+   ② 拖放 → 空间反馈：浮起的拖拽卡片、原位“空穴”、落点胶囊（第几位 / 位置不变）、
+      会被挤动的行提前轻推 + 箭头
+   全部是一次性或拖动期间的短暂状态；prefers-reduced-motion 下关闭。
+   ===================================================================== */
+
+/* ---------- ① 断裂 ---------- */
+.break-fx { position: fixed; z-index: 400; pointer-events: none; }
+.break-half { position: absolute; inset: 0; will-change: transform, opacity; }
+.break-half > * { width: 100%; margin: 0; }
+.break-half.is-left { transform-origin: 100% 100%; animation: breakLeft .72s cubic-bezier(.3, .05, .3, 1) both; }
+.break-half.is-right { transform-origin: 0 0; animation: breakRight .72s cubic-bezier(.3, .05, .3, 1) both; }
+@keyframes breakLeft { 0%, 14% { transform: none; opacity: 1; filter: none; } 100% { transform: translate(-18px, 7px) rotate(-2deg); opacity: 0; filter: blur(1.4px); } }
+@keyframes breakRight { 0%, 14% { transform: none; opacity: 1; filter: none; } 100% { transform: translate(18px, -6px) rotate(1.6deg); opacity: 0; filter: blur(1.4px); } }
+.break-crack { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.break-crack polyline { fill: none; stroke: #c24a47; stroke-width: 2.4; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; stroke-dasharray: 1; stroke-dashoffset: 1; filter: drop-shadow(0 0 3px #c24a4799); animation: crackDraw .72s ease-out both; }
+@keyframes crackDraw { 0% { stroke-dashoffset: 1; opacity: 1; } 20% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+.break-chip { position: absolute; width: 6px; height: 6px; margin: -3px 0 0 -3px; border-radius: 1px; background: #b9514e; animation: chipFly .66s .1s cubic-bezier(.2, .7, .3, 1) both; }
+@keyframes chipFly { 0% { opacity: 0; transform: translate(0, 0) rotate(0) scale(var(--s)); } 12% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(var(--r)) scale(0); } }
+/* 删除痕迹在两半散开时才浮现 */
+.element-ghost-row.fx-remove { animation: ghostFlash .7s .14s ease-out backwards, ghostReveal .3s .1s ease-out backwards; }
+@keyframes ghostReveal { from { opacity: 0; } }
+.element-ghost-row.fx-remove::before { animation: ghostSkin .38s .16s var(--ease-out) backwards; }
+.element-ghost-row.fx-remove > .element-ghost-body .element-ghost-value { animation: strikeIn .5s .34s ease-out backwards; }
+
+/* ---------- ② 拖放 ---------- */
+/* The original-size row stays on the list's rail and softly follows vertically.
+   The 1px transparent canvas suppresses the browser's translucent drag bitmap. */
+.element-row.element-drag-preview, .element-ghost-row.element-drag-preview { position: fixed; z-index: 450; margin: 0; box-sizing: border-box; pointer-events: none; opacity: 1; transform: translateY(var(--drag-y, 0px)); transition: transform .12s cubic-bezier(.2,.65,.3,1) !important; outline: 1px solid var(--line2); box-shadow: inset 4px 0 0 var(--rail), 0 5px 14px #203c2926; }
+.element-drag-preview[hidden] { display: none; }
+.element-drag-native { position: fixed; left: 0; top: 0; width: 1px; height: 1px; pointer-events: none; }
+.element-drag-preview, .element-drag-preview * { animation: none !important; }
+.element-drag-preview * { transition: none !important; }
+.element-list.is-dragging-list > [data-element-id] { transform: translateY(var(--reorder-y,0px)); transition: transform .2s cubic-bezier(.2,.75,.25,1); }
+.element-drop-gap { position: absolute; left: 0; right: 0; z-index: 0; pointer-events: none; border: 1px dashed var(--green); background: var(--green-soft); transition: top .18s cubic-bezier(.2,.75,.25,1); }
+.element-drop-gap[hidden] { display: none; }
+.element-list.is-dragging-list > [data-element-id]:not(.is-dragging) { z-index: 1; }
+.element-list.is-dragging-list > .is-dragging { opacity: .12; }
+.element-list.is-dragging-list .drop-target::after { display: none; }
+
+/* 原位：变成一个虚线“空穴”，内容淡出，表示“这里空出来了” */
+.element-row.is-dragging { opacity: 1; background: repeating-linear-gradient(135deg, #f1f6f3 0 6px, #fafcfb 6px 12px); outline: 1.5px dashed #86b69d; outline-offset: -5px; }
+.element-row.is-dragging > * { opacity: .32; }
+.element-row.is-dragging .element-input { background: transparent; }
+
+/* 落点胶囊：不改变布局，只悬在目标行上沿，命中区域保持稳定 */
+.drop-pill { position: absolute; left: 46px; z-index: 6; display: flex; align-items: center; height: 22px; padding: 0 11px; border-radius: 999px; background: var(--green); color: #fff; font: 700 11.5px/1 'Microsoft YaHei UI', sans-serif; white-space: nowrap; box-shadow: 0 0 0 2px #fff, 0 5px 12px #1d583f59; pointer-events: none; transition: top .13s var(--ease-out); animation: pillIn .16s var(--ease-out); }
+.drop-pill[hidden] { display: none; }
+.drop-pill.is-noop { background: #fff; color: var(--sub); box-shadow: 0 0 0 1px var(--line2), 0 3px 8px #203c2914; }
+@keyframes pillIn { from { opacity: 0; transform: translateY(6px) scale(.9); } }
+.element-row.drop-target.is-noop::after, .element-ghost-row.drop-target.is-noop::after { background: #b4c4b9; box-shadow: 0 0 0 2px #fff; }
+
+/* 会被挤动的行：序号提前轻推 + 箭头，预告“它们会往哪边让位” */
+.element-order { position: relative; transition: transform .16s var(--ease-out), background-color .12s, box-shadow .16s; }
+.will-shift-up, .will-shift-down { background-image: linear-gradient(90deg, #e3f0e8, transparent 42%); }
+.will-shift-up > .element-order { transform: translateY(-5px); box-shadow: 0 5px 0 -3px #86b69d; }
+.will-shift-down > .element-order { transform: translateY(5px); box-shadow: 0 -5px 0 -3px #86b69d; }
+.will-shift-up > .element-order::after, .will-shift-down > .element-order::after { position: absolute; left: -11px; top: 50%; margin-top: -8px; font: 700 11px/16px 'Microsoft YaHei UI', sans-serif; color: #4f9373; }
+.will-shift-up > .element-order::after { content: '↑'; }
+.will-shift-down > .element-order::after { content: '↓'; }
+
+/* 抓手提示：悬停时序号左侧浮出六点握把 */
+:is(.element-row,.element-ghost-row)[draggable="true"] > .element-order::before { content: ''; position: absolute; left: -9px; top: 50%; width: 4px; height: 14px; margin-top: -7px; background: radial-gradient(circle, #8da699 1.1px, transparent 1.5px) 0 0 / 4px 4.67px; opacity: 0; transition: opacity .12s; }
+:is(.element-row,.element-ghost-row)[draggable="true"]:hover > .element-order::before { opacity: 1; }
+:is(.element-row,.element-ghost-row).is-dragging > .element-order::before { opacity: 0; }
+:is(.element-row,.element-ghost-row)[draggable="true"] > .element-order { touch-action: none; user-select: none; cursor: grab; }
+:is(.element-row,.element-ghost-row).is-dragging > .element-order { cursor: grabbing; }
+
+/* 落下：轻微“落座”后停稳（与既有落点环叠加） */
+.element-row.fx-move { animation: landRing .8s ease-out, dropSettle .36s var(--ease-out); }
+/* A released lift already moved on screen. Its FLIP starts at that visible
+   position; only a ring remains, with no second translate/scale animation. */
+.element-row.fx-drop { z-index: 3; animation: landRing .8s ease-out; }
+.element-ghost-row.fx-drop { z-index: 3; animation: ghostLand .8s ease-out; }
+#elementPreview .diff-token.fx-drop { z-index: 3; animation: tokenLand .8s ease-out; }
+@keyframes dropSettle { 0% { transform: translateY(-5px) scale(1.012); } 55% { transform: translateY(1px) scale(.998); } 100% { transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .break-fx { display: none; }
+  .drop-pill, .element-order { animation: none !important; transition: none !important; }
+  .element-row.element-drag-preview, .element-ghost-row.element-drag-preview, .element-list.is-dragging-list > [data-element-id], .element-drop-gap { transition: none !important; }
+}
+
+/* ---------- 键盘流：焦点停在建议按钮上时，整张建议卡亮环 + 一行操作提示 ---------- */
+.pending-add-token:has(button:focus-visible), .pending-remove-token:has(button:focus-visible) { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--ring); }
+.pending-add-button, .pending-remove-button { position: relative; }
+.pending-add-button:focus-visible, .pending-remove-button:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.pending-add-button:focus-visible::after, .pending-remove-button:focus-visible::after { content: 'Enter 采纳 / 撤销 · ↑↓ 切换建议'; position: absolute; right: 0; bottom: calc(100% + 8px); z-index: 8; padding: 4px 9px; border-radius: 6px; background: var(--ring); color: #fff; font: 600 11px/1.3 'Microsoft YaHei UI', sans-serif; white-space: nowrap; pointer-events: none; animation: pillIn .16s var(--ease-out); }
+
+/* =====================================================================
+   建议卡图标协调：左 = 状态（方形插槽），右 = 动作（圆形按钮）
+   · 待采纳插槽改为淡底 + 同色图标，去掉嵌套的空心描边框
+   · 动作按钮缩小为卡内圆形，与插槽同尺寸图标；已采纳时显示 ↶（撤销），
+     不再和左侧的 ✓（状态）重复
+   ===================================================================== */
+.ic-undo { --mask: var(--i-undo); }
+.st-pendingAdd { --c: #e1ecf8; color: var(--st-added); box-shadow: none; }
+.st-pendingRemove { --c: #f8e1de; color: var(--st-removed); box-shadow: none; }
+.pending-add-button, .pending-remove-button { align-self: center; width: 22px; height: 22px; min-height: 0; margin: 0 6px 0 2px; border: 1px solid var(--st-line); border-radius: 50%; background: #fff; }
+.pending-add-button::before, .pending-remove-button::before { width: 12px; height: 12px; }
+.pending-add-button:hover { background: #dcebfa; border-color: var(--st-added); }
+.pending-remove-button:hover { background: #fadfdc; border-color: var(--st-removed); }
+.editor-suggestion-token.is-adopted .pending-add-button, .editor-suggestion-token.is-adopted .pending-remove-button { border-color: var(--st-adopted-line); }
+.editor-suggestion-token.is-adopted .pending-add-button::before, .editor-suggestion-token.is-adopted .pending-remove-button::before { -webkit-mask-image: var(--i-undo); mask-image: var(--i-undo); }
+.editor-suggestion-token.is-adopted .pending-add-button:hover, .editor-suggestion-token.is-adopted .pending-remove-button:hover { background: #cfe6d9; border-color: var(--st-adopted); }
+.pending-add-button:focus-visible, .pending-remove-button:focus-visible { outline-offset: 2px; }
+
+/* ---------- 删除痕迹行：取消删除 ---------- */
+.ibtn.ibtn-restore { width: 30px; height: 30px; margin: 0; padding: 0; border-color: transparent; background: transparent; color: #4f8066; }
+.ibtn.ibtn-restore:hover:not(:disabled) { background: #e8f4ed; border-color: var(--green); color: var(--green-dark); }
+
+/* =====================================================================
+   对照区「待删除 / 结果排除」元素
+   · 新出现时播放一次（temp.html 的 playRemovalFx 加 .fx-lock-in / .fx-cut-in）：
+       待删除   → 准星四角收拢“锁定”目标 + 淡红闪一下 + ✕ 盖章
+       结果排除 → 斜纹自左向右铺开、一道红线划过文字、✕ 盖章、轻震一下，最后留下常驻的删除线
+   · 悬停/联动高亮时：斜纹缓慢漂移，✕ 转 90°（离开即停，静态时不动）
+   ===================================================================== */
+@keyframes cutStamp { 0% { transform: scale(2.1) rotate(-18deg); opacity: 0; } 50% { opacity: 1; } 100% { transform: none; } }
+@keyframes cutShake { 0%, 100% { transform: none; } 25% { transform: translateX(-2.5px); } 55% { transform: translateX(2px); } 80% { transform: translateX(-1px); } }
+@keyframes cutRing { 0% { box-shadow: 0 0 0 0 #a8403f88; } 100% { box-shadow: 0 0 0 10px #a8403f00; } }
+@keyframes skinWipe { from { transform: scaleX(0); opacity: 0; } }
+@keyframes slashDraw { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes slashOut { to { opacity: 0; } }
+@keyframes lockOn { 0% { inset: -18px; opacity: 0; } 35% { opacity: 1; } 72% { inset: -4px; opacity: 1; } 100% { inset: -4px; opacity: 0; } }
+@keyframes pendFlash { from { background-color: #f4c9c5; } }
+
+/* 结果排除 */
+.diff-token.is-ghost.fx-cut-in { animation: cutShake .28s .46s ease-out, cutRing .62s .32s ease-out; }
+.diff-token.is-ghost.fx-cut-in::before { transform-origin: left center; animation: skinWipe .46s .1s var(--ease-out) backwards; }
+.diff-token.is-ghost.fx-cut-in > .diff-value { position: relative; animation: strikeIn .4s .44s ease-out backwards; }
+.diff-token.is-ghost.fx-cut-in > .diff-value::after { content: ''; position: absolute; left: 3px; right: 3px; top: 50%; height: 2px; margin-top: -1px; border-radius: 1px; background: #b13f3c; transform-origin: left center; animation: slashDraw .26s .14s var(--ease-out) both, slashOut .18s .46s ease-out forwards; }
+.diff-token.fx-cut-in > .st-tail .status-badge .st-cell { animation: cutStamp .38s .3s var(--ease-out) backwards; }
+
+/* 待删除 */
+.diff-token.is-removed:not(.is-ghost).fx-lock-in { animation: pendFlash .7s ease-out; }
+.diff-token.is-removed:not(.is-ghost).fx-lock-in::after {
+  content: ''; position: absolute; inset: -4px; z-index: 3; pointer-events: none;
+  background:
+    linear-gradient(var(--st-removed), var(--st-removed)) left top / 9px 2px no-repeat,
+    linear-gradient(var(--st-removed), var(--st-removed)) left top / 2px 9px no-repeat,
+    linear-gradient(var(--st-removed), var(--st-removed)) right top / 9px 2px no-repeat,
+    linear-gradient(var(--st-removed), var(--st-removed)) right top / 2px 9px no-repeat,
+    linear-gradient(var(--st-removed), var(--st-removed)) left bottom / 9px 2px no-repeat,
+    linear-gradient(var(--st-removed), var(--st-removed)) left bottom / 2px 9px no-repeat,
+    linear-gradient(var(--st-removed), var(--st-removed)) right bottom / 9px 2px no-repeat,
+    linear-gradient(var(--st-removed), var(--st-removed)) right bottom / 2px 9px no-repeat;
+  animation: lockOn .66s var(--ease-out) both;
+}
+.diff-token.fx-lock-in > .st-tail .status-badge .st-cell { animation: cutStamp .34s .12s var(--ease-out) backwards; }
+
+/* 悬停 / 联动：斜纹漂移 + ✕ 转动（9.9px = 7px 斜纹周期 / cos45°，首尾无缝） */
+@keyframes stripeDrift { to { background-position: 9.9px 0, 0 0; } }
+.diff-token.is-ghost:hover::before, .diff-token.is-ghost.is-related-highlight::before, .diff-token.is-ghost:focus-visible::before,
+.element-ghost-row:hover::before { animation: stripeDrift .9s linear infinite; }
+.diff-token.is-removed .ic-cut { transition: transform .28s var(--ease-out); }
+.diff-token.is-removed:hover .ic-cut, .diff-token.is-removed.is-related-highlight .ic-cut { transform: rotate(90deg); }
+.diff-token.is-ghost:hover > .diff-value, .diff-token.is-ghost.is-related-highlight > .diff-value { text-decoration-thickness: 3px; }

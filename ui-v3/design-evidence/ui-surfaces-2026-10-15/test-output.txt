@@ -1,0 +1,1870 @@
+
+> environment-manager-v3-ui-prototype@0.1.0 test
+> node design-evidence/verify_demo_plan.cjs && node design-evidence/verify_dom.cjs && node design-evidence/verify_elements.cjs && node design-evidence/verify_interactions.cjs && node design-evidence/verify_examples.cjs && node design-evidence/verify_change_states.cjs && node design-evidence/verify_element_feedback.cjs && node design-evidence/verify_append_feedback.cjs && node design-evidence/verify_adopt_pending.cjs && node design-evidence/verify_history_sidebar.cjs && node design-evidence/verify_overall_audit.cjs && node design-evidence/verify_unified_plan.cjs && node design-evidence/verify_matched_baseline.cjs && node design-evidence/verify_matched_workflow.cjs && node design-evidence/verify_three_value_compare.cjs && node design-evidence/verify_editor_suggestion_states.cjs && node design-evidence/verify_deletion_trace_ui.cjs && node design-evidence/verify_editor_order_toggle.cjs && node design-evidence/verify_removal_suggestion_toggle.cjs && node design-evidence/verify_claude_ui_repairs.cjs && node design-evidence/verify_gui_feedback.cjs && node design-evidence/verify_suggestion_manual_edit.cjs && node design-evidence/verify_display_movement.cjs && node design-evidence/verify_gui_followups.cjs && node design-evidence/verify_windows_snapshot.cjs
+
+PASS Tail append preserves actual whitespace, empty slices, duplicates and order
+PASS Head append preserves missing selection order and existing matched positions
+PASS Custom-order mode retains existing demo tail plan
+PASS Comparisons trim whitespace and remain case sensitive
+PASS Selected duplicate occurrences remain visible but produce one real insertion
+PASS Existing one copy satisfies all selected duplicate occurrences without count top-up
+PASS Empty and whitespace-only selected slices are preserved in parts but never inserted
+PASS Absent actual and present empty actual stay distinct while appending
+PASS Absent actual with no effective selected value stays absent with no insertion
+PASS Replace preserves selected original string and emits one whole replacement
+PASS Whole values never split internal semicolons and match exact raw text
+PASS Exact no-op replace and whole plans emit no operations
+PASS Absent versus empty replace retains exact before value
+PASS Target passes through and build leaves inputs untouched
+PASS Unknown mode preserves legacy tail behavior without inventing a new restriction
+PASS Snapshot metadata is preserved and target name canonicalizes within its scope
+PASS Every nested output is frozen and mutable metadata is copied
+PASS Snapshot takes precedence over legacy raw and absent plus empty stays absent
+PASS Matching excludes blanks, counts duplicate desired rows and preserves existence coverage
+PASS Replace matching follows existing set equality while operation uses exact raw
+PASS Special matching is whole and exact including empty and internal semicolons
+PASS Row matching and selection change are pure and never infer Windows operations
+PASS Explicit stable identity editor plan projects add remove replace and move
+PASS Repeated actual elements are replaced by stable identity without guessed correspondence
+PASS Special element edit keeps semicolons whole and emits explicit replacement
+PASS Equal serialization emits no actual operations despite duplicate identity move
+PASS Absent editor remains absent until an explicit live element is added
+PASS Editor refuses mismatched snapshots, missing identity and unexplained final changes
+28 pure demo-plan checks passed.
+{
+  "verification": "JSDOM interactions; visual rendering and real backend not verified",
+  "checks": [
+    {
+      "name": "Startup: thirteen applications and Maven current scheme",
+      "passed": true
+    },
+    {
+      "name": "Scheme menu: arrows, Escape, focus and exact new scheme",
+      "passed": true
+    },
+    {
+      "name": "Search and keyboard application selection",
+      "passed": true
+    },
+    {
+      "name": "Exact raw custom string retained in running draft",
+      "passed": true
+    },
+    {
+      "name": "Preview cancel and keyboard trap preserve mock Windows value",
+      "passed": true
+    },
+    {
+      "name": "Batch preview contains selected app names",
+      "passed": true
+    },
+    {
+      "name": "Editor defaults to one scheme and All view has explicit groups",
+      "passed": true
+    },
+    {
+      "name": "Configuration exact string only changes selected scheme",
+      "passed": true
+    },
+    {
+      "name": "Raw TOML and differences remain available and labelled as demo",
+      "passed": true
+    },
+    {
+      "name": "Windows and History views preserved",
+      "passed": true
+    },
+    {
+      "name": "No runtime errors; local polish stylesheet exists",
+      "passed": true
+    }
+  ]
+}
+{
+  "verification": "JSDOM UI event checks only; native dragging, visual rendering and Windows integration not verified",
+  "checks": [
+    {
+      "name": "Highlight preserves exact raw text, empty and duplicate elements, and escapes markup",
+      "passed": true
+    },
+    {
+      "name": "Whole-string highlights only exact matches; blanks are not matched as list elements",
+      "passed": true
+    },
+    {
+      "name": "Workbench highlights just the selected Path element, leaving other elements unmarked",
+      "passed": true
+    },
+    {
+      "name": "Workbench double click opens shared editor with raw values and demo metadata",
+      "passed": true
+    },
+    {
+      "name": "Edit, move, add and delete stay in draft; cancel restores focus and snapshot",
+      "passed": true
+    },
+    {
+      "name": "Explicit workbench edit button provides a discoverable alternative",
+      "passed": true
+    },
+    {
+      "name": "Windows table shows snapshot without scheme highlights and shares the direct editor",
+      "passed": true
+    },
+    {
+      "name": "Keyboard entry and Escape close editor without changing demo data",
+      "passed": true
+    },
+    {
+      "name": "Empty segments, repeated values and whitespace survive the editor unchanged",
+      "passed": true
+    },
+    {
+      "name": "Keyboard ordering retains stable row identity and input focus",
+      "passed": true
+    },
+    {
+      "name": "Drag/drop event handlers reorder elements without deduplication",
+      "passed": true
+    },
+    {
+      "name": "Separator validation prevents ambiguous element input while retaining typed text",
+      "passed": true
+    },
+    {
+      "name": "Apply updates only demo snapshot, keeps raw order, and records a demo history item",
+      "passed": true
+    },
+    {
+      "name": "Deleting all elements removes the Windows value rather than persisting an empty string",
+      "passed": true
+    },
+    {
+      "name": "Special value stays whole with semicolons and hides element sorting controls",
+      "passed": true
+    },
+    {
+      "name": "All schemes copy is simple and group headings separate name, count and flags",
+      "passed": true
+    },
+    {
+      "name": "Shared component and additional stylesheet are local; no UI runtime errors",
+      "passed": true
+    }
+  ]
+}
+{
+  "verification": "JSDOM event contracts only; browser visual rendering, native dragging and real Windows operations not tested",
+  "checks": [
+    {
+      "name": "Keyboard application selection preserves focus and current semantics",
+      "passed": true
+    },
+    {
+      "name": "Batch checkbox refresh returns focus to that checkbox",
+      "passed": true
+    },
+    {
+      "name": "Running source selector refresh retains focus and original input draft",
+      "passed": true
+    },
+    {
+      "name": "Element restore preserves original whitespace, empty and duplicate rows without applying",
+      "passed": true
+    },
+    {
+      "name": "Delete last row focuses Add and Tab remains trapped",
+      "passed": true
+    },
+    {
+      "name": "Page search/export shortcuts do not divert focus while an editor is open",
+      "passed": true
+    },
+    {
+      "name": "Unchanged missing value starts with disabled apply; restore returns to missing baseline",
+      "passed": true
+    },
+    {
+      "name": "Configuration navigation and All selector preserve their focus and current semantics",
+      "passed": true
+    },
+    {
+      "name": "All four config properties update draft count and retain field focus",
+      "passed": true
+    },
+    {
+      "name": "Diff shows all edited properties in the correct scheme; export reflects them",
+      "passed": true
+    },
+    {
+      "name": "Restore config clears all four properties while preserving runtime draft and Windows snapshot",
+      "passed": true
+    },
+    {
+      "name": "Restoring one changed value manually clears its draft count",
+      "passed": true
+    },
+    {
+      "name": "No runtime errors in the revised UI event workflows",
+      "passed": true
+    }
+  ]
+}
+{
+  "verification": "JSDOM demo data and UI events only; actual browser visual rendering and system operations not verified",
+  "checks": [
+    {
+      "name": "Expanded fixtures have 13 apps, 23 schemes and 60 variable definitions; no initial config drafts",
+      "passed": true
+    },
+    {
+      "name": "Second candidate and saved value select distinct strings without writing the mock snapshot",
+      "passed": true
+    },
+    {
+      "name": "Scheme switching keeps each runtime draft in its own scheme",
+      "passed": true
+    },
+    {
+      "name": "Seeded whole-string flags stay clean initially and restore to their seeded baseline",
+      "passed": true
+    },
+    {
+      "name": "System scope examples expose partial matching and a separate system Path",
+      "passed": true
+    },
+    {
+      "name": "List example retains duplicates and blanks; empty and missing values display differently",
+      "passed": true
+    },
+    {
+      "name": "Shared variable conflict is visible and confirmation is disabled",
+      "passed": true
+    },
+    {
+      "name": "Long Chinese example exposes six variables with full values and reset restores sample choices",
+      "passed": true
+    },
+    {
+      "name": "No runtime errors with the expanded configurations",
+      "passed": true
+    }
+  ]
+}
+{
+  "verification": "JSDOM event and semantic DOM checks only; browser rendering, native drag and Windows integration not verified",
+  "checks": [
+    {
+      "name": "Runtime edit and default restore count exact string differences, including whitespace",
+      "passed": true
+    },
+    {
+      "name": "Choosing a custom, saved or candidate source with the same value creates no pending change",
+      "passed": true
+    },
+    {
+      "name": "Typing the original runtime value back removes pending styling and count",
+      "passed": true
+    },
+    {
+      "name": "Matching result stays independent from pending edits in both matching and mismatching states",
+      "passed": true
+    },
+    {
+      "name": "Simulated application resets the runtime baseline to the applied string",
+      "passed": true
+    },
+    {
+      "name": "Runtime pending copy uses pending-application language without draft wording",
+      "passed": true
+    },
+    {
+      "name": "Matched elements carry the semantic match class; edits refresh that class independently",
+      "passed": true
+    },
+    {
+      "name": "Editing the second duplicate marks only its stable identity in both original and edited diff",
+      "passed": true
+    },
+    {
+      "name": "Changing an element back clears replacement annotations without changing its identity",
+      "passed": true
+    },
+    {
+      "name": "Mixed deletion, addition and movement preserve old identities and serialize only the edited values",
+      "passed": true
+    },
+    {
+      "name": "Restore reinstates exact initial strings, identities, matching and clean change labels",
+      "passed": true
+    },
+    {
+      "name": "Empty duplicate positions stay distinct when only the second empty segment is removed",
+      "passed": true
+    },
+    {
+      "name": "Diff values escape markup and annotations never contaminate serialized or applied data",
+      "passed": true
+    },
+    {
+      "name": "Whole strings retain semicolons as one replacement and keep actual-value marks separate",
+      "passed": true
+    },
+    {
+      "name": "Semantic change-state workflows emit no JSDOM runtime errors",
+      "passed": true
+    }
+  ]
+}
+{
+  "verification": "DOM-only: JSDOM event, semantic class, raw serialization and node identity checks; real browser visual rendering, native pointer behavior and Windows integration not verified",
+  "total": 21,
+  "passed": 21,
+  "failed": 0,
+  "checks": [
+    {
+      "name": "Initial duplicates annotate every member independently in original, preview and editing rows",
+      "passed": true
+    },
+    {
+      "name": "Editing second A to B keeps original A x2 and marks both live B members x2",
+      "passed": true
+    },
+    {
+      "name": "Deleting one A preserves original duplicates but excludes preview deletion ghost from live counts",
+      "passed": true
+    },
+    {
+      "name": "Deleting changed duplicate displays its draft but does not count it among live duplicate values",
+      "passed": true
+    },
+    {
+      "name": "Adding a duplicate marks existing and new members, then changing it back removes stale marks",
+      "passed": true
+    },
+    {
+      "name": "Raw equality keeps A, a, leading/trailing whitespace, slash and case variants distinct",
+      "passed": true
+    },
+    {
+      "name": "Repeated empty segments are real duplicate members and trailing empty values survive application",
+      "passed": true
+    },
+    {
+      "name": "Whole special strings retain semicolons without internal duplicate warnings",
+      "passed": true
+    },
+    {
+      "name": "Moving, replacing, adding and removing retain all four semantic inline token states",
+      "passed": true
+    },
+    {
+      "name": "Original pointer hover distinguishes equal-valued elements by stable ID",
+      "passed": true
+    },
+    {
+      "name": "Preview pointer hover is symmetric with original hover and row hover",
+      "passed": true
+    },
+    {
+      "name": "Token child-to-child pointer transitions preserve hover without highlight flicker",
+      "passed": true
+    },
+    {
+      "name": "Input focus links all representations; hover overrides focus and leaving restores focused ID",
+      "passed": true
+    },
+    {
+      "name": "Programmatic token focus links both sides without adding tokens to normal Tab order",
+      "passed": true
+    },
+    {
+      "name": "Typing and row redraw preserve focused identity highlighting",
+      "passed": true
+    },
+    {
+      "name": "Hover changes classes only: node identity, comparison content and serialization remain untouched",
+      "passed": true
+    },
+    {
+      "name": "Deletion clears deleted hover identity, focuses remaining row and does not leave ghost highlight",
+      "passed": true
+    },
+    {
+      "name": "Restoring resets duplicate annotations and clears hover of removed added identities",
+      "passed": true
+    },
+    {
+      "name": "Close and cancel dismiss highlights; reopening starts without previous hover or focused IDs",
+      "passed": true
+    },
+    {
+      "name": "Applying duplicate edits dismisses all highlight state while preserving raw output",
+      "passed": true
+    },
+    {
+      "name": "Element feedback workflows emit no JSDOM runtime errors",
+      "passed": true
+    }
+  ]
+}
+{
+  "verification": "DOM-only: JSDOM events, selected-occurrence ratios, readonly candidate semantics, raw text and serialization; browser appearance and Windows integration not verified",
+  "total": 33,
+  "passed": 33,
+  "failed": 0,
+  "checks": [
+    {
+      "name": "selectionInfo reports matched and missing selected occurrences with preserved raw slices",
+      "passed": true
+    },
+    {
+      "name": "Duplicate selected occurrences contribute individually without consuming actual occurrences",
+      "passed": true
+    },
+    {
+      "name": "Multiple selected values flatten to occurrence indexes and preserve duplicate missing candidates",
+      "passed": true
+    },
+    {
+      "name": "Blank selected slices retain their raw text and indexes but are excluded from denominator",
+      "passed": true
+    },
+    {
+      "name": "Matching trims only whitespace and preserves case, slash and unexpanded reference distinctions",
+      "passed": true
+    },
+    {
+      "name": "Undefined actual values expose all valid selected elements as missing",
+      "passed": true
+    },
+    {
+      "name": "Whole values use independent exact matching and never split semicolons",
+      "passed": true
+    },
+    {
+      "name": "Maven Path custom source marks missing desired value and leaves existing actual text intact",
+      "passed": true
+    },
+    {
+      "name": "Python Path two selected values report partial 1/2 and expose only the missing value",
+      "passed": true
+    },
+    {
+      "name": "+append marks pending desired slices and displays separate readonly actual candidates",
+      "passed": true
+    },
+    {
+      "name": "-append marks pending desired slices and displays separate readonly actual candidates",
+      "passed": true
+    },
+    {
+      "name": "append marks pending desired slices and displays separate readonly actual candidates",
+      "passed": true
+    },
+    {
+      "name": "Partial, full and zero append matches distinguish 1/2, 2/2 and 0/2",
+      "passed": true
+    },
+    {
+      "name": "Replace retains whole item mismatch with extra actual elements despite desired ratio 2/2",
+      "passed": true
+    },
+    {
+      "name": "Whole editor preserves semicolon string with no pending candidate or misleading 0/0",
+      "passed": true
+    },
+    {
+      "name": "Empty selected values preserve raw blank slices without 0/0 detection or append candidates",
+      "passed": true
+    },
+    {
+      "name": "Pending candidates retain raw whitespace and escape markup without creating active DOM",
+      "passed": true
+    },
+    {
+      "name": "Dialog candidates are separate from live rows, stable IDs, duplicates and serialized result",
+      "passed": true
+    },
+    {
+      "name": "Readonly guidance cannot change dirty state, apply state or persisted demo values",
+      "passed": true
+    },
+    {
+      "name": "Manually adding a missing element removes guidance and apply serializes only actual live rows",
+      "passed": true
+    },
+    {
+      "name": "Editing a live row to missing value updates guidance and restoring recomputes from original rows",
+      "passed": true
+    },
+    {
+      "name": "Deleting a matched element makes it a candidate while deletion ghosts remain excluded",
+      "passed": true
+    },
+    {
+      "name": "Cancel discards live edits and reopening has no latent insertion of pending candidates",
+      "passed": true
+    },
+    {
+      "name": "Applying an unrelated live edit never implicitly appends pending candidates",
+      "passed": true
+    },
+    {
+      "name": "Undefined actual editor starts with no live rows and cannot apply readonly candidates",
+      "passed": true
+    },
+    {
+      "name": "Matching preserves raw live rows; definite append candidates contain only the first normalized occurrence",
+      "passed": true
+    },
+    {
+      "name": "Same target name keeps User and System candidates isolated",
+      "passed": true
+    },
+    {
+      "name": "Windows snapshot and direct editors ignore conflicting and append scheme requests in both scopes",
+      "passed": true
+    },
+    {
+      "name": "Source switching refreshes desired guidance and newly opened dialog selection",
+      "passed": true
+    },
+    {
+      "name": "options.appendValues supports readonly guidance independent of highlight selectedValues",
+      "passed": true
+    },
+    {
+      "name": "Explicit appendValues in a whole-string session still cannot create split candidates",
+      "passed": true
+    },
+    {
+      "name": "Missing append context and replace/whole contexts do not generate editor candidates",
+      "passed": true
+    },
+    {
+      "name": "Append feedback workflows emit no JSDOM runtime errors",
+      "passed": true
+    }
+  ]
+}
+{
+  "verification": "DOM-only: JSDOM native button focus/click, adoption direction, raw slices, stable live-row IDs, revalidation, restore/cancel/apply and page state; native browser keyboard activation, visual layout and Windows integration not verified",
+  "total": 26,
+  "passed": 26,
+  "failed": 0,
+  "checks": [
+    {
+      "name": "Every actionable pending occurrence has an explicit native plus button and flattened selected index",
+      "passed": true
+    },
+    {
+      "name": "+append adopts exactly one raw slice in the expected position with stable existing rows and focused suggestion",
+      "passed": true
+    },
+    {
+      "name": "Workbench +append passes current mode into editor without writing page state before apply",
+      "passed": true
+    },
+    {
+      "name": "-append adopts exactly one raw slice in the expected position with stable existing rows and focused suggestion",
+      "passed": true
+    },
+    {
+      "name": "Workbench -append passes current mode into editor without writing page state before apply",
+      "passed": true
+    },
+    {
+      "name": "append adopts exactly one raw slice in the expected position with stable existing rows and focused suggestion",
+      "passed": true
+    },
+    {
+      "name": "Workbench append passes current mode into editor without writing page state before apply",
+      "passed": true
+    },
+    {
+      "name": "Duplicate missing targets project one definite insertion; stale button clicks cannot duplicate it",
+      "passed": true
+    },
+    {
+      "name": "Clicking a retained button after a manual live edit rechecks whether its slice is still missing",
+      "passed": true
+    },
+    {
+      "name": "Deleting an adopted slice makes its original flattened candidate actionable again with a fresh live ID",
+      "passed": true
+    },
+    {
+      "name": "Repeated front adoptions insert at the current head in click order while original duplicate and empty rows retain order",
+      "passed": true
+    },
+    {
+      "name": "Mixed source modes preserve each candidate direction instead of appending all selected specs to the tail",
+      "passed": true
+    },
+    {
+      "name": "Adopted rows enter existing exact-raw duplicate feedback only after a later live edit creates a duplicate",
+      "passed": true
+    },
+    {
+      "name": "Restore exactly recovers original raw whitespace, duplicates, empty slices and IDs after adoption plus live edits",
+      "passed": true
+    },
+    {
+      "name": "Cancel after adoption leaves snapshot, configuration, history and revision exact and reopening has original raw rows",
+      "passed": true
+    },
+    {
+      "name": "Apply stores only current live rows including adopted and manually edited values while unclicked candidates stay excluded",
+      "passed": true
+    },
+    {
+      "name": "Adoption with undefined original distinguishes no rows from one preserved empty row",
+      "passed": true
+    },
+    {
+      "name": "Adoption with empty-string original distinguishes no rows from one preserved empty row",
+      "passed": true
+    },
+    {
+      "name": "Appending a NUL-containing candidate participates in existing validation and cannot apply",
+      "passed": true
+    },
+    {
+      "name": "Unknown and replace entry modes cannot offer an adoption action",
+      "passed": true
+    },
+    {
+      "name": "Legacy appendValues without mode stays readonly even with missing values",
+      "passed": true
+    },
+    {
+      "name": "Whole-string and replace workbench contexts do not create candidates or plus actions",
+      "passed": true
+    },
+    {
+      "name": "Empty raw selected slices remain excluded from adoption while flattened nonempty indexes retain their gaps",
+      "passed": true
+    },
+    {
+      "name": "Standalone pendingMarkup remains readonly outside editor, and omitted mode metadata remains readonly within editing markup",
+      "passed": true
+    },
+    {
+      "name": "Windows direct editing ignores mixed scheme directions and preserves scope isolation",
+      "passed": true
+    },
+    {
+      "name": "Adoption workflows emit no JSDOM runtime errors",
+      "passed": true
+    }
+  ]
+}
+{
+  "verification": "JSDOM data and interaction checks only; visual layout, native browser scrolling and Windows integration not verified",
+  "total": 14,
+  "passed": 14,
+  "failed": 0,
+  "checks": [
+    {
+      "name": "Cancelled preview and cancelled element edit leave history and page state exact",
+      "passed": true
+    },
+    {
+      "name": "Confirmed single change stores exact raw before and after values independent of later snapshot edits",
+      "passed": true
+    },
+    {
+      "name": "Whole value editor retains semicolons as one audited replacement",
+      "passed": true
+    },
+    {
+      "name": "Confirming an unchanged preview creates no operation history entry",
+      "passed": true
+    },
+    {
+      "name": "Batch confirmation records each target with its own exact before and after",
+      "passed": true
+    },
+    {
+      "name": "Batch changes to one target store one snapshot-bound result with both original requests",
+      "passed": true
+    },
+    {
+      "name": "All-unchanged batch confirmation adds no history entry",
+      "passed": true
+    },
+    {
+      "name": "Missing original and present empty original remain distinct in stored history",
+      "passed": true
+    },
+    {
+      "name": "Element editor apply records exact raw strings after duplicate, empty and markup edits",
+      "passed": true
+    },
+    {
+      "name": "History disclosure shows escaped raw strings and cannot change operational state",
+      "passed": true
+    },
+    {
+      "name": "Editor sidebar has separate app and profile groups with independent list containers",
+      "passed": true
+    },
+    {
+      "name": "Sidebar CSS assigns two constrained groups and overflow to each list",
+      "passed": true
+    },
+    {
+      "name": "Sidebar app and profile buttons select correctly while table rows select variables by mouse and keyboard",
+      "passed": true
+    },
+    {
+      "name": "History and sidebar workflows produce no JSDOM runtime errors",
+      "passed": true
+    }
+  ]
+}
+{
+  "verification": "JSDOM interaction and data checks only; browser layout and real Windows operations not verified",
+  "total": 25,
+  "passed": 25,
+  "failed": 0,
+  "checks": [
+    {
+      "name": "Search-scoped Select All chooses only visible applications",
+      "passed": true
+    },
+    {
+      "name": "Filtered Select All preserves earlier hidden selection and discloses hidden count",
+      "passed": true
+    },
+    {
+      "name": "Status filter selects only visible unmatched applications and exposes pressed state",
+      "passed": true
+    },
+    {
+      "name": "Only-mismatch retains an active input during typing, then filters it on committed change",
+      "passed": true
+    },
+    {
+      "name": "Source change that resolves mismatch filters the row and restores focus to filter control",
+      "passed": true
+    },
+    {
+      "name": "Focusing a source selector aligns Windows comparison with that variable",
+      "passed": true
+    },
+    {
+      "name": "Plan and revoke menus support arrows, endpoints and Escape focus restoration",
+      "passed": true
+    },
+    {
+      "name": "Closing an open revoke menu by outside click returns focus to its trigger",
+      "passed": true
+    },
+    {
+      "name": "Navigation keeps focus and current-page semantics through view changes",
+      "passed": true
+    },
+    {
+      "name": "Configuration inspector labels all disabled fields and explains default-source linkage",
+      "passed": true
+    },
+    {
+      "name": "Configuration default edit follows default source while saved source remains selected",
+      "passed": true
+    },
+    {
+      "name": "An intentionally empty custom value survives switching to default source and back",
+      "passed": true
+    },
+    {
+      "name": "Row revoke action is explicitly identified as a preview",
+      "passed": true
+    },
+    {
+      "name": "Matched raw list element with whitespace remains byte-for-byte unchanged on preview and confirm",
+      "passed": true
+    },
+    {
+      "name": "Adding missing front elements preserves old blanks, duplicates and order in preview, snapshot and history",
+      "passed": true
+    },
+    {
+      "name": "Adding a missing tail element preserves matched whitespace and raw empty slices",
+      "passed": true
+    },
+    {
+      "name": "Undefined and present-empty actual lists remain distinct in append preview",
+      "passed": true
+    },
+    {
+      "name": "Repeated desired slices add each missing normalized element once and preserve first raw spelling",
+      "passed": true
+    },
+    {
+      "name": "Native app selection button and batch checkbox are sibling controls with independent actions",
+      "passed": true
+    },
+    {
+      "name": "Cancelling a prepared preview leaves drafts, Windows snapshot and history exact",
+      "passed": true
+    },
+    {
+      "name": "Append preview leaves matched System PATH exact and does not mutate User PATH",
+      "passed": true
+    },
+    {
+      "name": "Replace and whole values still produce their selected raw strings",
+      "passed": true
+    },
+    {
+      "name": "Custom-order append remains blocked and Escape closes preview without mutating data",
+      "passed": true
+    },
+    {
+      "name": "Demo reset clears selection, filters and configuration draft",
+      "passed": true
+    },
+    {
+      "name": "Overall audit interactions emit no JSDOM runtime errors",
+      "passed": true
+    }
+  ]
+}
+{
+  "verification": "JSDOM offline workflow contracts; no visual rendering or Windows Registry execution",
+  "passed": 23,
+  "total": 23,
+  "checks": [
+    {
+      "name": "Python Path starts matched; ordinary Scripts1 input generates independent removal and append, never inferred replacement",
+      "passed": true
+    },
+    {
+      "name": "Workbench cached plan is the exact object used by the first preview step; preview cancel preserves actual, saved state and history",
+      "passed": true
+    },
+    {
+      "name": "Confirm removes the matched Scripts, appends Scripts1, preserves unrelated segments and freezes history",
+      "passed": true
+    },
+    {
+      "name": "An explicit duplicate Windows row replacement records its stable ID and frozen audit, without replacing its equal-valued neighbor",
+      "passed": true
+    },
+    {
+      "name": "Cancel after explicit element editing produces no mutation or history; no-change confirm produces no history",
+      "passed": true
+    },
+    {
+      "name": "Stale preview rejects same-target raw changes, preserving intervening state and history",
+      "passed": true
+    },
+    {
+      "name": "Stale preview rejects same-target existence changes, preserving intervening state and history",
+      "passed": true
+    },
+    {
+      "name": "Stale preview rejects same-target registry type changes, preserving intervening state and history",
+      "passed": true
+    },
+    {
+      "name": "Stale preview rejects same-target ABA raw with revision changes, preserving intervening state and history",
+      "passed": true
+    },
+    {
+      "name": "Stale preview rejects selected raw changes, preserving intervening state and history",
+      "passed": true
+    },
+    {
+      "name": "Stale preview rejects selected mode changes, preserving intervening state and history",
+      "passed": true
+    },
+    {
+      "name": "Stale preview rejects selected scope changes, preserving intervening state and history",
+      "passed": true
+    },
+    {
+      "name": "Stale preview rejects selected special flag changes, preserving intervening state and history",
+      "passed": true
+    },
+    {
+      "name": "Unrelated target/global revision changes do not invalidate a target-specific preview",
+      "passed": true
+    },
+    {
+      "name": "An old explicit element plan also rejects ABA revision changes without history",
+      "passed": true
+    },
+    {
+      "name": "Empty append is a no-op for both missing and existing-empty values, preserving their distinct existence states through confirmation",
+      "passed": true
+    },
+    {
+      "name": "Missing element editor cancel keeps the variable missing; explicitly adding an empty row creates an existing empty value",
+      "passed": true
+    },
+    {
+      "name": "Append preserves original whitespace, empty fields, duplicate actuals and order; normalizes only membership and inserts each missing value once",
+      "passed": true
+    },
+    {
+      "name": "Repeated missing selection counts 0/3 but projects one actual append operation and one label in each workbench representation",
+      "passed": true
+    },
+    {
+      "name": "User/System scopes are isolated, names preserve display case and lookup uses canonical name",
+      "passed": true
+    },
+    {
+      "name": "Special strings keep semicolons as one exact value, and whole replacements do not invent element identities",
+      "passed": true
+    },
+    {
+      "name": "Custom-order append remains blocked and closing its preview adds no history",
+      "passed": true
+    },
+    {
+      "name": "No JSDOM runtime errors occurred",
+      "passed": true
+    }
+  ]
+}
+{
+  "passed": 28,
+  "total": 28,
+  "checks": [
+    {
+      "name": "Original missing D cancels while matched C is removed and E/F appended",
+      "passed": true
+    },
+    {
+      "name": "Complete rewrite removes only original matched subset without guessed replacements",
+      "passed": true
+    },
+    {
+      "name": "Unrelated X/Y remain verbatim and in relative order",
+      "passed": true
+    },
+    {
+      "name": "Previously missing D changed to E cannot remove D",
+      "passed": true
+    },
+    {
+      "name": "Selection unchanged causes no actions even when actual has unrelated elements",
+      "passed": true
+    },
+    {
+      "name": "Multiple actual occurrences are retained with a nonexecutable duplicate issue",
+      "passed": true
+    },
+    {
+      "name": "Repeated desired occurrences retain existence coverage and do not delete actual copies",
+      "passed": true
+    },
+    {
+      "name": "Shared selected value is retained while unrelated missing value can still be appended",
+      "passed": true
+    },
+    {
+      "name": "Comparison is trim-sensitive only, case distinct and references unexpanded",
+      "passed": true
+    },
+    {
+      "name": "Head append applies after removals without moving kept values",
+      "passed": true
+    },
+    {
+      "name": "Existing new desired element is retained without additional insertion",
+      "passed": true
+    },
+    {
+      "name": "Blank original actual slices remain through deletion",
+      "passed": true
+    },
+    {
+      "name": "Deleting the last actual element removes the variable without inventing an empty row",
+      "passed": true
+    },
+    {
+      "name": "Absent actual plus cleared desired remains absent and distinct from empty",
+      "passed": true
+    },
+    {
+      "name": "Baseline and generated tree are immutable and copied from mutable inputs",
+      "passed": true
+    },
+    {
+      "name": "Changed baseline snapshot raw is invalid and produces no actions",
+      "passed": true
+    },
+    {
+      "name": "Changed baseline snapshot exists is invalid and produces no actions",
+      "passed": true
+    },
+    {
+      "name": "Changed baseline snapshot type is invalid and produces no actions",
+      "passed": true
+    },
+    {
+      "name": "Changed baseline snapshot revision is invalid and produces no actions",
+      "passed": true
+    },
+    {
+      "name": "Other scope/mode/special cannot reuse an old editing baseline",
+      "passed": true
+    },
+    {
+      "name": "Explicit rebase keeps original selected and computes against new actual snapshot",
+      "passed": true
+    },
+    {
+      "name": "Batch removes two disjoint original occurrences against one snapshot",
+      "passed": true
+    },
+    {
+      "name": "Batch shared final desired protects value instead of deleting then readding it",
+      "passed": true
+    },
+    {
+      "name": "Batch duplicate add and duplicate removal request each occur once",
+      "passed": true
+    },
+    {
+      "name": "Batch respects previous ordering for sequential head/tail insertions",
+      "passed": true
+    },
+    {
+      "name": "Replace mixed with append is an explicit blocked target conflict",
+      "passed": true
+    },
+    {
+      "name": "Equal whole replacements can share one frozen target result; different ones are blocked",
+      "passed": true
+    },
+    {
+      "name": "No-baseline append and explicit stable Windows editor replacement keep legacy semantics",
+      "passed": true
+    }
+  ]
+}
+{
+  "passed": 16,
+  "total": 16,
+  "checks": [
+    {
+      "name": "Baseline is captured before first real input and remains frozen through continuous edits and cancelled preview",
+      "passed": true
+    },
+    {
+      "name": "Safe matched subset deletion and independent additions agree across preview, actual result and immutable history",
+      "passed": true
+    },
+    {
+      "name": "Previously missing candidate disappears without deleting that value or leaving a stale addition",
+      "passed": true
+    },
+    {
+      "name": "Delete-only keeps new desired matched while recording pending deletion",
+      "passed": true
+    },
+    {
+      "name": "Changing back to original selection cancels removals and restore action ends the edit cycle",
+      "passed": true
+    },
+    {
+      "name": "Duplicate actual occurrences are preserved and never mislabeled as definite removals",
+      "passed": true
+    },
+    {
+      "name": "Other effective selected scheme protects shared target content even when it is not checked",
+      "passed": true
+    },
+    {
+      "name": "Two app plans for one target are merged once and duplicate additions are inserted once",
+      "passed": true
+    },
+    {
+      "name": "Related snapshot changes invalidate edit baseline, preserve current input and require explicit rebase and fresh preview",
+      "passed": true
+    },
+    {
+      "name": "Protected dependencies changed after preview invalidate even when the actual target snapshot is unchanged",
+      "passed": true
+    },
+    {
+      "name": "Unrelated snapshot changes allow safe frozen plan confirmation",
+      "passed": true
+    },
+    {
+      "name": "Clearing desired deletes only matched nonblank elements, preserving empty fields and variable existence",
+      "passed": true
+    },
+    {
+      "name": "Element candidate adoption edits live rows only, cancel preserves snapshot and selected baseline",
+      "passed": true
+    },
+    {
+      "name": "Source switch ends prior edit context while actual row editing invalidates outstanding baseline",
+      "passed": true
+    },
+    {
+      "name": "Restoring unrelated configuration changes preserves an existing selected-value edit baseline",
+      "passed": true
+    },
+    {
+      "name": "No JSDOM runtime errors",
+      "passed": true
+    }
+  ]
+}
+{
+  "passed": 20,
+  "total": 20,
+  "checks": [
+    {
+      "name": "Three labeled value panes replace candidate stacks and exact strings remain authoritative",
+      "passed": true
+    },
+    {
+      "name": "Actual removal stays at original position; After ghost is flagged and excluded from serialization",
+      "passed": true
+    },
+    {
+      "name": "+append additions are annotated at definite result positions",
+      "passed": true
+    },
+    {
+      "name": "-append additions are annotated at definite result positions",
+      "passed": true
+    },
+    {
+      "name": "Unchanged plans show every original whitespace empty and repeated occurrence",
+      "passed": true
+    },
+    {
+      "name": "Duplicate occurrences retain separate identities after preceding removal",
+      "passed": true
+    },
+    {
+      "name": "Focus links definite ADD to Desired but never to deleted similar old text",
+      "passed": true
+    },
+    {
+      "name": "Invalid plans preserve input and current snapshot but expose no definite result or operation badges",
+      "passed": true
+    },
+    {
+      "name": "Whole replacement preserves complete semicolon raw without fake element mapping",
+      "passed": true
+    },
+    {
+      "name": "Single and batch removal of last actual element produce nonexistent state",
+      "passed": true
+    },
+    {
+      "name": "Removing A from A; preserves original empty slice and existing empty value",
+      "passed": true
+    },
+    {
+      "name": "Explicit clear row and new empty row create existing empty values",
+      "passed": true
+    },
+    {
+      "name": "Explicit delete all rows removes variable even if original sole row was empty",
+      "passed": true
+    },
+    {
+      "name": "Mixed Special flags reject even identical whole replacement requests in either order",
+      "passed": true
+    },
+    {
+      "name": "Three values preview application and immutable history use the exact same final plan",
+      "passed": true
+    },
+    {
+      "name": "Last-row editor delete shows nonexistent serialization and cancel writes nothing",
+      "passed": true
+    },
+    {
+      "name": "Confirmed last-row editor delete records factual missing after without audit empty overwrite",
+      "passed": true
+    },
+    {
+      "name": "Last-element selected removal shows ghost but serialized missing through confirmation",
+      "passed": true
+    },
+    {
+      "name": "Tail additions follow original ghost position while head additions precede it",
+      "passed": true
+    },
+    {
+      "name": "No JSDOM runtime errors in all three-value and missing-state workflows",
+      "passed": true
+    }
+  ]
+}
+{
+  "passed": 22,
+  "total": 22,
+  "checks": [
+    {
+      "name": "Only suggestion region labels unadopted scheme deletes/adds, never live row or comparison",
+      "passed": true
+    },
+    {
+      "name": "Plus/minus controls explicitly describe adopting into this edit instead of applying Windows",
+      "passed": true
+    },
+    {
+      "name": "Adopting deletion keeps a green toggle and creates the original-ID ghost and summary",
+      "passed": true
+    },
+    {
+      "name": "+append addition changes live rows and exact raw, not Windows before Apply",
+      "passed": true
+    },
+    {
+      "name": "-append addition changes live rows and exact raw, not Windows before Apply",
+      "passed": true
+    },
+    {
+      "name": "append addition changes live rows and exact raw, not Windows before Apply",
+      "passed": true
+    },
+    {
+      "name": "Manual C to E is explicit REPLACE; unadopted add/delete suggestions retire without fabricated REMOVE/ADD",
+      "passed": true
+    },
+    {
+      "name": "Restore reinstates exact live IDs, suggestions and zero edit; no ghosts remain",
+      "passed": true
+    },
+    {
+      "name": "Cancel discards even adopted changes; reopening recovers current suggestions without history",
+      "passed": true
+    },
+    {
+      "name": "Apply deletion only never consumes remaining unadopted E addition",
+      "passed": true
+    },
+    {
+      "name": "Apply addition only retains unadopted C deletion; history records just one ADD",
+      "passed": true
+    },
+    {
+      "name": "Manual delete retires suggestion; detached prior suggestion control cannot mutate session again",
+      "passed": true
+    },
+    {
+      "name": "Repeated Desired requires only one actual adoption and count follows operations",
+      "passed": true
+    },
+    {
+      "name": "Existing duplicate actual occurrence never receives automatic deletion suggestion",
+      "passed": true
+    },
+    {
+      "name": "Shared protected actual remains visible as shared retention, not executable suggestion deletion",
+      "passed": true
+    },
+    {
+      "name": "Invalid suggestion baseline exposes no adoption buttons but permits independent manual editing",
+      "passed": true
+    },
+    {
+      "name": "An actual snapshot change rejects adopted edit at Apply and creates no successful history",
+      "passed": true
+    },
+    {
+      "name": "Whole/replace expectation remains plain until an explicit actual edit",
+      "passed": true
+    },
+    {
+      "name": "Result-equal duplicate identity moves produce zero operations and no misleading summary count",
+      "passed": true
+    },
+    {
+      "name": "Actual replace and move flags count separately from a pending addition suggestion",
+      "passed": true
+    },
+    {
+      "name": "Special whole string has no unadopted replacement label and applies explicit whole edit",
+      "passed": true
+    },
+    {
+      "name": "No JavaScript errors during suggestion/adoption/restore/cancel/apply workflows",
+      "passed": true
+    }
+  ]
+}
+{
+  "passed": 11,
+  "total": 11,
+  "checks": [
+    {
+      "name": "Workbench keeps Actual pending deletion distinct from the excluded After ghost and final raw result",
+      "passed": true
+    },
+    {
+      "name": "Manual deletion retains a read-only original-ID ghost outside live rows and serialization",
+      "passed": true
+    },
+    {
+      "name": "Adopting a suggested deletion creates the same original-ID read-only ghost",
+      "passed": true
+    },
+    {
+      "name": "Deleting duplicate and empty originals preserves exact IDs, values and original ghost order",
+      "passed": true
+    },
+    {
+      "name": "Visible order is explicit and live rows follow it while ghosts retain their identities",
+      "passed": true
+    },
+    {
+      "name": "Newly added then removed rows disappear without leaving an original deletion ghost",
+      "passed": true
+    },
+    {
+      "name": "Deleting all live rows keeps original ghosts while result and Apply retain nonexistent-variable semantics",
+      "passed": true
+    },
+    {
+      "name": "Restore removes all ghosts and Cancel discards the later deletion exactly",
+      "passed": true
+    },
+    {
+      "name": "Apply and History contain only the exact live-result removal operation, not ghost presentation",
+      "passed": true
+    },
+    {
+      "name": "Hovering an editor ghost highlights only its same-ID Original and Preview counterparts",
+      "passed": true
+    },
+    {
+      "name": "No JSDOM runtime errors in deletion-trace workflows",
+      "passed": true
+    }
+  ]
+}
+{
+  "passed": 16,
+  "total": 16,
+  "checks": [
+    {
+      "name": "Ghost buttons move adjacent visible positions without changing plan, raw result, history, or original pane",
+      "passed": true
+    },
+    {
+      "name": "Two ghosts can pass each other without changing live order or the serialized result",
+      "passed": true
+    },
+    {
+      "name": "Live movement crosses a ghost visually; MOVE appears only after live relative order changes",
+      "passed": true
+    },
+    {
+      "name": "Drag and drop inserts a live row before a ghost and matches button-order semantics",
+      "passed": true
+    },
+    {
+      "name": "Duplicate originals remain separate stable IDs and inline preview follows ghost movement",
+      "passed": true
+    },
+    {
+      "name": "+append adoption persists as a green pressed card and toggles its exact new ID",
+      "passed": true
+    },
+    {
+      "name": "-append adoption persists as a green pressed card and toggles its exact new ID",
+      "passed": true
+    },
+    {
+      "name": "Moving an adopted row preserves provenance and ✓ still removes that ID",
+      "passed": true
+    },
+    {
+      "name": "Editing an adopted row clears provenance permanently while retaining the edited stable row",
+      "passed": true
+    },
+    {
+      "name": "Deleting an adopted row clears its card state and leaves no original ghost",
+      "passed": true
+    },
+    {
+      "name": "A manual row satisfying a suggestion never becomes adopted",
+      "passed": true
+    },
+    {
+      "name": "Restore resets UI order and adoption provenance, and Cancel discards both",
+      "passed": true
+    },
+    {
+      "name": "Invalid suggestion and whole or special editors expose no actionable adoption toggle",
+      "passed": true
+    },
+    {
+      "name": "Apply and History serialize only live order; UI order and adoption metadata stay out of plan",
+      "passed": true
+    },
+    {
+      "name": "Detached adopted control cannot alter a new editor session",
+      "passed": true
+    },
+    {
+      "name": "No JSDOM runtime errors in order and adoption workflows",
+      "passed": true
+    }
+  ]
+}
+PASS Suggestion deletion switches to green and restores exact original ID and raw without writing Windows
+PASS Restoring a moved ghost uses its current display position and keeps unrelated edits
+PASS A same-value manual new row does not satisfy or replace adopted original identity
+PASS Two independent removals keep original suggestion order and restore only clicked ID
+PASS Manual deletion leaves a ghost without green provenance or a usable old suggestion button
+PASS Restore and Cancel clear both deletion and addition adoptions and their display state
+PASS Invalid plans, old buttons, whole mode, duplicate uncertainty and shared protection cannot adopt deletion
+PASS Applying only adopted deletion records one factual REMOVE and no session UI provenance
+PASS No JSDOM runtime errors in removal-adoption workflows
+9 removal-toggle checks passed.
+PASS Manual delete and undo retain edited value and stable ID, while Apply carries only the result
+PASS Moved ghost restores latest draft at its current location without reverting other edits
+PASS Duplicate occurrence and original empty element restore only their own draft
+PASS Restore clears deletion drafts and Cancel discards the entire editing session
+PASS Suggested delete undo still restores original value after manual edit and re-delete
+PASS LF stays LF after editing adjacent text
+PASS CRLF survives insertion after newline
+PASS CR survives insertion before newline
+PASS Mixed line endings survive replacement between boundaries
+PASS Deleting character before CRLF preserves untouched CRLF
+PASS Deleting a newline preserves the other original newline
+PASS Special whole string keeps CRLF CR LF and permits semicolon
+PASS No-op input, soft wrap and Enter preserve raw until explicit newline is input
+PASS Validation keeps plain semicolon and NUL invalid, while Special accepts semicolon but rejects NUL
+PASS Ordinary: Enter after standalone CR preserves two visible newlines persists exact Apply raw
+PASS Ordinary: Removing text between CR and LF preserves two visible newlines persists exact Apply raw
+PASS Ordinary: Delete first adjacent newline persists exact Apply raw
+PASS Ordinary: Backspace second adjacent newline persists exact Apply raw
+PASS Ordinary: Insert LF before CRLF persists exact Apply raw
+PASS Ordinary: Insert LF after CRLF persists exact Apply raw
+PASS Ordinary: Replace selected CRLF with LF despite unchanged visible value persists exact Apply raw
+PASS Ordinary: Backspace supplementary character preserves adjacent CRLF persists exact Apply raw
+PASS Special: Enter after standalone CR preserves two visible newlines persists exact Apply raw
+PASS Special: Removing text between CR and LF preserves two visible newlines persists exact Apply raw
+PASS Special: Delete first adjacent newline persists exact Apply raw
+PASS Special: Backspace second adjacent newline persists exact Apply raw
+PASS Special: Insert LF before CRLF persists exact Apply raw
+PASS Special: Insert LF after CRLF persists exact Apply raw
+PASS Special: Replace selected CRLF with LF despite unchanged visible value persists exact Apply raw
+PASS Special: Backspace supplementary character preserves adjacent CRLF persists exact Apply raw
+PASS Seam correction is local and saved raw reopens to the exact edited visible text
+PASS Synthetic input fallback also prevents CR and LF merging at a new seam
+PASS Input range is consumed once and unsupported beforeinput replaces stale metadata
+PASS Enter at standalone CR seam adjacent newline persists in workbench Apply and History
+PASS Delete text at CR/LF seam adjacent newline persists in workbench Apply and History
+PASS Delete first adjacent newline persists in workbench Apply and History
+PASS Insert before adjacent newline persists in workbench Apply and History
+PASS No JSDOM runtime errors
+38 Claude repair checks passed.
+{
+  "passed": 30,
+  "total": 30,
+  "checks": [
+    {
+      "name": "State icons stay inside their text badges across editor rows and comparison ghosts",
+      "passed": true
+    },
+    {
+      "name": "Creating a previously absent variable marks the empty manual row and preserves ADD semantics",
+      "passed": true
+    },
+    {
+      "name": "Manual origin survives editing, movement and a full row redraw",
+      "passed": true
+    },
+    {
+      "name": "Manual add then delete is a zero-change result for undefined",
+      "passed": true
+    },
+    {
+      "name": "Manual add then delete is a zero-change result for A",
+      "passed": true
+    },
+    {
+      "name": "Restore and Cancel clear manual origin before another session",
+      "passed": true
+    },
+    {
+      "name": "Scheme adoption keeps green suggestion provenance and the ordinary added label",
+      "passed": true
+    },
+    {
+      "name": "Editing an adopted row clears the toggle provenance while its original scheme source stays added",
+      "passed": true
+    },
+    {
+      "name": "Manual and scheme rows with identical raw values retain distinct origin labels",
+      "passed": true
+    },
+    {
+      "name": "Summary counts adopted scheme additions separately from manual additions",
+      "passed": true
+    },
+    {
+      "name": "Editing an adopted row keeps it in the scheme-added summary after adoption provenance clears",
+      "passed": true
+    },
+    {
+      "name": "Deleting one manual row decrements only manual-added summary count",
+      "passed": true
+    },
+    {
+      "name": "Restore resets scheme and manual summary counts for this edit session",
+      "passed": true
+    },
+    {
+      "name": "Manual addition applies one ADD and keeps presentation metadata out of History",
+      "passed": true
+    },
+    {
+      "name": "edited original: deleted list and Preview show the latest draft; Original and REMOVE before stay frozen",
+      "passed": true
+    },
+    {
+      "name": "original empty: deleted list and Preview show the latest draft; Original and REMOVE before stay frozen",
+      "passed": true
+    },
+    {
+      "name": "edited to empty: deleted list and Preview show the latest draft; Original and REMOVE before stay frozen",
+      "passed": true
+    },
+    {
+      "name": "untouched empty: deleted list and Preview show the latest draft; Original and REMOVE before stay frozen",
+      "passed": true
+    },
+    {
+      "name": "multiline raw: deleted list and Preview show the latest draft; Original and REMOVE before stay frozen",
+      "passed": true
+    },
+    {
+      "name": "Moved draft undo preserves stable ID and current visible position through repeated edit/delete cycles",
+      "passed": true
+    },
+    {
+      "name": "Deleting one duplicate uses that occurrence draft and preserves both Original identities",
+      "passed": true
+    },
+    {
+      "name": "Restore discards ghost drafts so a later deletion shows the original again",
+      "passed": true
+    },
+    {
+      "name": "Green suggested deletion undo restores the original at the current ghost position",
+      "passed": true
+    },
+    {
+      "name": "Live and ghost actions share icon-only up/down/final order and retain accessible names",
+      "passed": true
+    },
+    {
+      "name": "Action labels explain ghost movement and recovery while icon clicks invoke the same actions",
+      "passed": true
+    },
+    {
+      "name": "Suggestion buttons and paired state badges follow adopt and undo",
+      "passed": true
+    },
+    {
+      "name": "Matched row and preview use the same paired icon-caption badge as the legend",
+      "passed": true
+    },
+    {
+      "name": "Result tally belongs to its heading rather than a separate value row",
+      "passed": true
+    },
+    {
+      "name": "Empty hints use a paired badge through replacement, deletion and restore",
+      "passed": true
+    },
+    {
+      "name": "No JSDOM runtime errors in GUI feedback workflows",
+      "passed": true
+    }
+  ]
+}
+{
+  "verification": "JSDOM-only suggestion and editor routes; native browser visuals and Windows integration not covered",
+  "total": 10,
+  "passed": 10,
+  "failed": 0,
+  "checks": [
+    {
+      "name": "Manual A to B first resolves both suggestions and records one replacement",
+      "passed": true
+    },
+    {
+      "name": "Adopt B then manually replace original A with B retains separate original and adopted identities",
+      "passed": true
+    },
+    {
+      "name": "Manual deletion of edited original preserves deletion-time B ghost while adopted B stays live",
+      "passed": true
+    },
+    {
+      "name": "Manual A to B, delete original, then adopt B yields the same distinct ghost and new live B",
+      "passed": true
+    },
+    {
+      "name": "Adopt removal then ordinary ghost restore keeps the original ID and clears green provenance",
+      "passed": true
+    },
+    {
+      "name": "Green suggestion undo restores exact original raw and ID without touching another live row",
+      "passed": true
+    },
+    {
+      "name": "Manual deletion of edited B restores its latest draft with the same original ID",
+      "passed": true
+    },
+    {
+      "name": "Editing adopted B to C breaks its undo provenance and stale button cannot delete C",
+      "passed": true
+    },
+    {
+      "name": "Applying adopted removal records only the factual removal before original, never the pending B addition",
+      "passed": true
+    },
+    {
+      "name": "No JSDOM runtime errors",
+      "passed": true
+    }
+  ]
+}
+{
+  "passed": 8,
+  "total": 8,
+  "checks": [
+    {
+      "name": "Swapped originals keep both movement labels when one becomes a ghost",
+      "passed": true
+    },
+    {
+      "name": "Swapping a ghost and a live original marks both in UI without a business MOVE",
+      "passed": true
+    },
+    {
+      "name": "Returning a ghost to its baseline slot clears both display movement flags",
+      "passed": true
+    },
+    {
+      "name": "Restoring a displaced ghost at its current position recalculates live MOVE",
+      "passed": true
+    },
+    {
+      "name": "Manual and adopted additions do not shift original movement flags",
+      "passed": true
+    },
+    {
+      "name": "Move, delete, ghost move and undo cycles recalculate flags from stable IDs",
+      "passed": true
+    },
+    {
+      "name": "Duplicate raw values retain separate original identities and movement labels",
+      "passed": true
+    },
+    {
+      "name": "No JSDOM runtime errors in display movement workflows",
+      "passed": true
+    }
+  ]
+}
+{
+  "passed": 19,
+  "total": 19,
+  "checks": [
+    {
+      "name": "Moved ghosts use 幽灵移动 in list, Original and Preview while displaced live rows still use 移动",
+      "passed": true
+    },
+    {
+      "name": "Returning a ghost clears its movement badge and restoring it converts the badge to ordinary 移动",
+      "passed": true
+    },
+    {
+      "name": "Toolbar counts include duplicate and empty live elements and track remove/add/undo/restore",
+      "passed": true
+    },
+    {
+      "name": "Absent values have zero effective elements and a deleted manual addition leaves no ghost count",
+      "passed": true
+    },
+    {
+      "name": "Replace workbench removes editor semantics and clears handlers on the current-value pane",
+      "passed": true
+    },
+    {
+      "name": "Replace current-value \"dblclick\" cannot open the editor",
+      "passed": true
+    },
+    {
+      "name": "Replace current-value \"Enter\" cannot open the editor",
+      "passed": true
+    },
+    {
+      "name": "Replace current-value \" \" cannot open the editor",
+      "passed": true
+    },
+    {
+      "name": "A retained append button cannot open the editor after switching the same inspector to replace",
+      "passed": true
+    },
+    {
+      "name": "Programmatic workbench replace entry is guarded, whole=false",
+      "passed": true
+    },
+    {
+      "name": "Programmatic workbench replace entry is guarded, whole=true",
+      "passed": true
+    },
+    {
+      "name": "A null-mode argument cannot bypass the focused replace workbench restriction",
+      "passed": true
+    },
+    {
+      "name": "Replace still accepts selected-value input and previews/applies the exact replacement",
+      "passed": true
+    },
+    {
+      "name": "Switching replace back to +append restores button, pointer and keyboard editing",
+      "passed": true
+    },
+    {
+      "name": "Switching replace back to -append restores button, pointer and keyboard editing",
+      "passed": true
+    },
+    {
+      "name": "Switching replace back to append restores button, pointer and keyboard editing",
+      "passed": true
+    },
+    {
+      "name": "Windows environment page retains direct editing for a replace-mode target",
+      "passed": true
+    },
+    {
+      "name": "Windows-page null-mode direct entry and the low-level whole-string editor remain available",
+      "passed": true
+    },
+    {
+      "name": "No JSDOM runtime errors in GUI follow-up workflows",
+      "passed": true
+    }
+  ]
+}
+{
+  "passed": 25,
+  "total": 25,
+  "checks": [
+    {
+      "name": "Windows page shows escaped snapshot text with original spaces and CRLF, without scheme overlays",
+      "passed": true
+    },
+    {
+      "name": "Empty Windows string remains an existing editable value rather than a missing variable",
+      "passed": true
+    },
+    {
+      "name": "Selected app, profile, checked batch and selected-value changes leave Windows snapshot markup unchanged",
+      "passed": true
+    },
+    {
+      "name": "Real Windows \"button\" entry opens snapshot-only editor",
+      "passed": true
+    },
+    {
+      "name": "Real Windows \"double-click\" entry opens snapshot-only editor",
+      "passed": true
+    },
+    {
+      "name": "Real Windows \"Enter\" entry opens snapshot-only editor",
+      "passed": true
+    },
+    {
+      "name": "Real Windows \" \" entry opens snapshot-only editor",
+      "passed": true
+    },
+    {
+      "name": "Windows renderer and entry do not consult current scheme or selected-value planning helpers",
+      "passed": true
+    },
+    {
+      "name": "Inactive-profile Special declaration with case-insensitive same scope/name keeps command semicolons whole",
+      "passed": true
+    },
+    {
+      "name": "Consistent Special declarations across apps keep whole-string editing independent of selection",
+      "passed": true
+    },
+    {
+      "name": "Same-name Special in other scope does not make ordinary current-scope variable whole",
+      "passed": true
+    },
+    {
+      "name": "Different-name Special and ordinary replace-mode declaration do not disable element editing",
+      "passed": true
+    },
+    {
+      "name": "Undeclared snapshot variable remains editable as individual elements",
+      "passed": true
+    },
+    {
+      "name": "Untouched raw CRLF, tabs, repeated elements and empty slices survive add and Apply exactly",
+      "passed": true
+    },
+    {
+      "name": "Manual replacement, move, delete, per-row recovery and reset remain local until Apply",
+      "passed": true
+    },
+    {
+      "name": "Cancel discards direct edits and leaves workbench drafts and history unchanged",
+      "passed": true
+    },
+    {
+      "name": "Direct Apply records only manual operations and factual History while preserving workbench drafts",
+      "passed": true
+    },
+    {
+      "name": "Direct empty-element editing preserves empty-variable state and explicit last-row deletion removes it",
+      "passed": true
+    },
+    {
+      "name": "Whole Special direct manual edit applies complete string and records whole audit without draft changes",
+      "passed": true
+    },
+    {
+      "name": "Snapshot raw change rejects direct Apply and creates no successful history",
+      "passed": true
+    },
+    {
+      "name": "Snapshot revision change rejects direct Apply even when original raw is equal",
+      "passed": true
+    },
+    {
+      "name": "Workbench still exposes scheme suggestions and previews the selected-value plan",
+      "passed": true
+    },
+    {
+      "name": "Workbench batch preview still blocks incompatible Special and ordinary target requests",
+      "passed": true
+    },
+    {
+      "name": "Windows page remains independent even when selected workbench draft has stale baseline",
+      "passed": true
+    },
+    {
+      "name": "No JSDOM runtime errors in Windows snapshot and workbench regression workflows",
+      "passed": true
+    }
+  ]
+}

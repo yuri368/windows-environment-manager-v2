@@ -1,0 +1,140 @@
+- heading "ChatGPT 说：" [level=4]
+    - paragraph: 【架构顾问 → Codex】
+    - heading "V3 GUI 遗留项最终审查" [level=2]
+    - paragraph: 目前已完成源码一致性、核心差异及 CI 核对。
+    - paragraph:
+      - generic: 确认结果：
+    - list:
+      - paragraph:
+        - text: 产品提交
+        - code: 5b38b72cf273da5810c19289c55eb4d7e5034978
+        - text: 已存在于 GitHub。
+      - paragraph:
+        - text: 附件内完整
+        - code: windows-elements.js
+        - text: 的 SHA-256 与报告一致，Git Blob SHA 也与该提交一致。
+      - paragraph: JavaScript 语法检查通过。
+      - paragraph: 同一提交的两条 CI 均已成功：
+      - list:
+        - paragraph:
+          - link "V3 UI CI":
+            - /url: https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38581460877
+            - generic: V3 UI CI
+        - paragraph:
+          - link "Python CI":
+            - /url: https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38581460710
+            - generic: Python CI
+      - paragraph:
+        - text: 附件记录 primary、mirror 均为
+        - generic: 23 组脚本、443 项检查通过
+        - text: 。
+    - paragraph:
+      - text: 核心逻辑检查也已确认：
+      - code: displayMoved()
+      - text: 使用全部原始元素的稳定 ID 比较展示顺序，而实际业务 MOVE 仍通过
+      - code: editStateFor()
+      - text: 基于 live rows 计算。展示位移没有被写入 ChangePlan。
+    - heading "最终业务与展示审查" [level=3]
+    - table:
+      - rowgroup:
+        - row "审查项 核查结果":
+          - columnheader "审查项":
+            - paragraph: 审查项
+          - columnheader "核查结果":
+            - paragraph: 核查结果
+        - row "空元素组合 Badge 通过。图标与文字使用同一 Badge，空元素边框保留虚线语义":
+          - cell "空元素组合 Badge":
+            - paragraph: 空元素组合 Badge
+          - cell "通过。图标与文字使用同一 Badge，空元素边框保留虚线语义":
+            - paragraph: 通过。图标与文字使用同一 Badge，空元素边框保留虚线语义
+        - row "原始元素展示移动 通过。依据原始稳定 ID 的位置变化，不依据元素文本":
+          - cell "原始元素展示移动":
+            - paragraph: 原始元素展示移动
+          - cell "通过。依据原始稳定 ID 的位置变化，不依据元素文本":
+            - paragraph: 通过。依据原始稳定 ID 的位置变化，不依据元素文本
+        - row "Ghost 展示移动 通过。保留删除状态，可同时显示「删除」「移动」":
+          - cell "Ghost 展示移动":
+            - paragraph: Ghost 展示移动
+          - cell "通过。保留删除状态，可同时显示「删除」「移动」":
+            - paragraph: 通过。保留删除状态，可同时显示「删除」「移动」
+        - row "移动回原始位置 通过。展示移动标记及计数清除":
+          - cell "移动回原始位置":
+            - paragraph: 移动回原始位置
+          - cell "通过。展示移动标记及计数清除":
+            - paragraph: 通过。展示移动标记及计数清除
+        - row "新增元素插入 通过。不影响原始元素的展示移动基线":
+          - cell "新增元素插入":
+            - paragraph: 新增元素插入
+          - cell "通过。不影响原始元素的展示移动基线":
+            - paragraph: 通过。不影响原始元素的展示移动基线
+        - row "Original、Preview、元素列表 通过。三处使用一致的展示移动判定":
+          - cell "Original、Preview、元素列表":
+            - paragraph: Original、Preview、元素列表
+          - cell "通过。三处使用一致的展示移动判定":
+            - paragraph: 通过。三处使用一致的展示移动判定
+        - row "Audit、Apply、History 通过。未将展示移动作为实际业务 MOVE":
+          - cell "Audit、Apply、History":
+            - paragraph: Audit、Apply、History
+          - cell "通过。未将展示移动作为实际业务 MOVE":
+            - paragraph: 通过。未将展示移动作为实际业务 MOVE
+        - row "方案采纳与手动修改组合 通过。专项测试覆盖稳定 ID、同值元素和撤销隔离":
+          - cell "方案采纳与手动修改组合":
+            - paragraph: 方案采纳与手动修改组合
+          - cell "通过。专项测试覆盖稳定 ID、同值元素和撤销隔离":
+            - paragraph: 通过。专项测试覆盖稳定 ID、同值元素和撤销隔离
+    - paragraph:
+      - text: 特别核查了
+      - code: stateFor()
+      - text: 、
+      - code: displayMovementCounts()
+      - text: 、
+      - code: auditSnapshot()
+      - text: 和
+      - code: update()
+      - text: 。删除后的幽灵行可显示最新删除草稿及展示移动标记，但实际 REMOVE 仍保留原始快照信息。
+      - button "review-delta.txt":
+        - generic: review-delta.txt
+      - button "review-delta.txt":
+        - generic: review-delta.txt
+    - heading "审查范围与限制" [level=3]
+    - paragraph:
+      - text: 本次实际检查了上传的完整源码、相对基线差异、新增两套专项测试、GitHub 提交，以及浏览器验证 JSON。GitHub 中的
+      - code: step3-browser.json
+      - text: 也确认了 live 移动 1、ghost 移动 1 的展示结果。
+    - paragraph:
+      - text: 我独立完成了源码哈希及语法校验，核实了两个 CI 结果，并检查测试报告中两份目录各 23 套脚本均以退出码 0 完成。
+      - generic: 没有在本地重新执行全部 JSDOM 脚本，也没有独立进行截图像素验收。
+    - paragraph: 原生浏览器缩放没有实测。CDP 视口及 DPR 模拟不能替代它，但这不构成本轮已确认业务缺陷的阻断。
+    - heading "正式裁定" [level=2]
+    - generic: 审查通过 · 批准归档
+    - paragraph:
+      - text: 本轮未发现可确认的阻断缺陷，批准
+      - code: 5b38b72
+      - text: 作为本轮 GUI 遗留修复的归档版本。
+    - paragraph: Codex 可以完成收尾文档和证据整理，保持当前产品源码不变，不需要继续增加功能或扩大测试。
+    - paragraph:
+      - text: 继续保持不修改 V2、真实 Registry、
+      - code: main
+      - text: 和 Release 的约束。
+    - paragraph: 这轮终于可以收工了。再继续为了一个移动标签挖出十层边界条件，Windows 环境变量管理器恐怕都要发展出自己的操作系统了。👍
+    - button "复制":
+    - button "评价回复":
+    - button "分享":
+    - button "朗读":
+    - button "重新生成回复":
+    - button "更多操作":
+    - generic: ChatGPT 可能会出错。请核查重要信息。
+    - button:
+    - heading "最新一条回复" [level=4]
+    - status
+    - button "添加文件等内容":
+    - textbox "询问 ChatGPT":
+      - paragraph: 询问 ChatGPT
+    - button "选择 ChatGPT 模型":
+      - generic: 高
+    - button "听写":
+    - button "开始语音":
+- status
+- status: 回答已完成
+- status
+- status

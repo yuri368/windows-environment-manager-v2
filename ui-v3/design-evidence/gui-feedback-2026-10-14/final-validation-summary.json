@@ -1,0 +1,298 @@
+{
+  "baseline": "c43c1cb0c7b9c89574aeb18b5f7c87ced2b19d15",
+  "scope": "V3 demo UI only",
+  "runs": [
+    {
+      "directory": "H:/Yuri368/环境变量配置V3",
+      "scripts": 21,
+      "total": 424,
+      "passed": true,
+      "checks": [
+        {
+          "script": "design-evidence/verify_demo_plan.cjs",
+          "checks": 28,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_dom.cjs",
+          "checks": 11,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_elements.cjs",
+          "checks": 17,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_interactions.cjs",
+          "checks": 13,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_examples.cjs",
+          "checks": 9,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_change_states.cjs",
+          "checks": 15,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_element_feedback.cjs",
+          "checks": 21,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_append_feedback.cjs",
+          "checks": 33,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_adopt_pending.cjs",
+          "checks": 26,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_history_sidebar.cjs",
+          "checks": 14,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_overall_audit.cjs",
+          "checks": 25,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_unified_plan.cjs",
+          "checks": 23,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_matched_baseline.cjs",
+          "checks": 28,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_matched_workflow.cjs",
+          "checks": 16,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_three_value_compare.cjs",
+          "checks": 20,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_editor_suggestion_states.cjs",
+          "checks": 22,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_deletion_trace_ui.cjs",
+          "checks": 11,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_editor_order_toggle.cjs",
+          "checks": 16,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_removal_suggestion_toggle.cjs",
+          "checks": 9,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_claude_ui_repairs.cjs",
+          "checks": 38,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_gui_feedback.cjs",
+          "checks": 29,
+          "exitCode": 0
+        }
+      ]
+    },
+    {
+      "directory": "H:/Yuri368/环境变量配置V3-git/ui-v3",
+      "scripts": 21,
+      "total": 424,
+      "passed": true,
+      "checks": [
+        {
+          "script": "design-evidence/verify_demo_plan.cjs",
+          "checks": 28,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_dom.cjs",
+          "checks": 11,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_elements.cjs",
+          "checks": 17,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_interactions.cjs",
+          "checks": 13,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_examples.cjs",
+          "checks": 9,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_change_states.cjs",
+          "checks": 15,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_element_feedback.cjs",
+          "checks": 21,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_append_feedback.cjs",
+          "checks": 33,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_adopt_pending.cjs",
+          "checks": 26,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_history_sidebar.cjs",
+          "checks": 14,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_overall_audit.cjs",
+          "checks": 25,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_unified_plan.cjs",
+          "checks": 23,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_matched_baseline.cjs",
+          "checks": 28,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_matched_workflow.cjs",
+          "checks": 16,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_three_value_compare.cjs",
+          "checks": 20,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_editor_suggestion_states.cjs",
+          "checks": 22,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_deletion_trace_ui.cjs",
+          "checks": 11,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_editor_order_toggle.cjs",
+          "checks": 16,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_removal_suggestion_toggle.cjs",
+          "checks": 9,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_claude_ui_repairs.cjs",
+          "checks": 38,
+          "exitCode": 0
+        },
+        {
+          "script": "design-evidence/verify_gui_feedback.cjs",
+          "checks": 29,
+          "exitCode": 0
+        }
+      ]
+    }
+  ],
+  "sourceHashes": {
+    "windows-elements.js": {
+      "primary": "d2c6fc916acf5884892fec4573ec14605482ede4e9984a769f15a5f692887efb",
+      "mirror": "59f231df3eb37430a30a717de248440442f045fd3777ca71c1f669a63ce42e22"
+    },
+    "elements-ui.css": {
+      "primary": "7bb569a54cb9d8f4e25f265573f030884afcd5daee22c4afd83c8dc79dcdbb3d",
+      "mirror": "7bb569a54cb9d8f4e25f265573f030884afcd5daee22c4afd83c8dc79dcdbb3d"
+    },
+    "fx-ui.css": {
+      "primary": "5c7314fc72ee5a1457dfc3c9a5104573acaa1a7142df474de4d01a67440f86be",
+      "mirror": "5c7314fc72ee5a1457dfc3c9a5104573acaa1a7142df474de4d01a67440f86be"
+    },
+    "temp.html": {
+      "primary": "a0b5160f517a8e02a87e4e518ac1eb7068a067c5bf93d3fda065979d231c4109",
+      "mirror": "04e05ac4d3e50c5ec746471cbd0fa559a4703615eaae82e98ad3259fb4439e68"
+    },
+    "package.json": {
+      "primary": "87387b0a7709f2b5647ec8bb37f12ac0f5762cdca685a9975a8465b1afa95f8a",
+      "mirror": "87387b0a7709f2b5647ec8bb37f12ac0f5762cdca685a9975a8465b1afa95f8a"
+    }
+  },
+  "notes": [
+    "Both primary and task mirror were checked independently.",
+    "Primary pre-existing static stream helpers are preserved and excluded from this scoped commit; core DemoPlan bytes equal Git baseline.",
+    "CDP viewport/DPR checks simulate scaling; native browser zoom was unavailable.",
+    "Independent match circles were replaced by legend-style square check badges following latest owner feedback."
+  ],
+  "finalCssDependentVerification": [
+    {
+      "directory": "H:/Yuri368/环境变量配置V3",
+      "script": "design-evidence/verify_element_feedback.cjs",
+      "code": 0,
+      "checks": 21
+    },
+    {
+      "directory": "H:/Yuri368/环境变量配置V3",
+      "script": "design-evidence/verify_gui_feedback.cjs",
+      "code": 0,
+      "checks": 29
+    },
+    {
+      "directory": "H:/Yuri368/环境变量配置V3-git/ui-v3",
+      "script": "design-evidence/verify_element_feedback.cjs",
+      "code": 0,
+      "checks": 21
+    },
+    {
+      "directory": "H:/Yuri368/环境变量配置V3-git/ui-v3",
+      "script": "design-evidence/verify_gui_feedback.cjs",
+      "code": 0,
+      "checks": 29
+    }
+  ],
+  "fontConsistencyVerification": [
+    {
+      "directory": "H:/Yuri368/环境变量配置V3",
+      "code": 0,
+      "checks": 21
+    },
+    {
+      "directory": "H:/Yuri368/环境变量配置V3-git/ui-v3",
+      "code": 0,
+      "checks": 21
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+# Product implementation authorization — 2026-10-18
+
+- The owner accepted the V3 UI and explicitly requested an Astra implementation plan followed by a working product. This supersedes the earlier UI-only restriction for the new V3 product work; the historical demo contracts remain its required interaction semantics.
+- Build V3 independently beside the accepted web UI. The repository-root V2 `envmanager` implementation remains a reference and must not be copied into or modified for V3.
+- Production code may implement raw Windows environment adapters. Development and automated writes use a persistent file environment, mocks, or the explicitly named Sandboxie `DefaultBox`; do not execute host Registry writes during development.
+- A real environment commit must be bound to the exact reviewed plan, validate its before snapshots, retain a durable recovery record and verify the result. Host system-write acceptance requires the owner's concrete scope/backup/rollback confirmation.
+
+# Earlier browser-demo boundary
+
+- Current work is limited to the V3 browser demo and UI-only scope in docs/architecture/V3_THREE_VALUE_V3_3.txt (including its later unified-token and ghost-view revision); V3.2 still governs matched-selection edits.
+- Editor suggestion/adoption display follows docs/architecture/V3_EDITOR_STATES_V3_4.txt; suggestions do not determine an editor apply result.
+- V3.6 visible ordering and adopted-addition toggles follow docs/architecture/V3_EDITOR_ORDER_V3_6.txt; displayOrder/adoptionMap are editor session UI state only.
+- V3.7 adopted-removal toggles follow docs/architecture/V3_REMOVAL_TOGGLE_V3_7.txt; removalAdoptions is session provenance only and restores the exact original ID at its current display position.
+- Claude UI repair follows docs/architecture/CLAUDE_UI_REPAIR_CONTRACT.txt; deleted drafts are session-only and textarea mapping preserves untouched raw line endings.
+- GUI feedback follows docs/architecture/GUI_FEEDBACK_CONTRACT.txt and its latest GUI_FEEDBACK_SUPPLEMENT.txt; manual addition IDs are UI-only provenance; editor ghosts display deletion-time drafts while Original/Audit preserve original snapshots.
+- Before changing behavior, consult the corresponding contract section; use docs/architecture/README.md for document priority.
+- Do not modify main directly, access or modify the real Windows Registry, or migrate V2 code into V3.
+- Check current code and acceptance evidence before describing UI or features as complete. Draft documents are not proof of implementation.
+
+
+- 将程序拉入Sandboxie中的方法：
+方法1：通过创建快捷方式的形式拉入沙盒中，例如创建pwsh的快捷方式
+目标："C:\Program Files\Sandboxie-Plus\SandMan.exe" /box:DefaultBox "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\PowerShell\PowerShell 7 (x64).lnk"
+运行该快捷方式，则该应用自动被拉入沙盒中。
+
+该pwsh使用模拟管理员身份运行(让程序自认为自己应用管理员权限)，且沙盒中的注册表修改操作只会修改沙盒中的注册表，不会对真实的系统环境产生影响
+沙盒路径：C:\Sandbox\Yuri368\DefaultBox
+- Display movement labels/counts follow `docs/architecture/GUI_DISPLAY_MOVEMENT.txt`; business movement and Audit retain the live-original ordering contract.
+
+- Windows environment snapshot/direct-edit isolation follows `docs/architecture/WINDOWS_SNAPSHOT_BOUNDARY.txt`; scheme analysis remains in workbench and preview.
+
+- Seamless refresh follows `docs/architecture/SEAMLESS_REFRESH.txt`, superseding manual rebase requirements only; preserve original intent, deletion eligibility, draft state and version-bound confirmation.

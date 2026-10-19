@@ -1,0 +1,7 @@
+V3.5 baseline
+Branch: v3/deletion-trace-ui
+Parent: 18636d2
+Previous source: 2c3d604954a878d7195b33f462b7d101e9b2b218
+Previous validation: 321 checks / 16 suites.
+Scope: token cohesion; distinguish pending deletion from removed preview; retain display-only deleted original rows.
+No core model, registry, V2, main merge or release changes.

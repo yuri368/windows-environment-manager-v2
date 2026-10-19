@@ -1,0 +1,35 @@
+PASS bootstrap exchanges ticket, removes fragment and carries CSRF/cookie credentials
+PASS fresh tab restores CSRF from authenticated bootstrap before mutation
+PASS recovery actions precede collapsed raw audit and only request a reviewed preview
+PASS rapid selection input is ordered and preserves textarea/caret during acknowledgement
+PASS preview renders authoritative receipt; review and execute require separate clicks
+PASS review replacement plan never executes in same click
+PASS HTTP 200 rejected review remains visible and does not execute
+PASS lost execute acknowledgement reconciles by original key without resend
+PASS Ctrl+S uses managed conditional save
+PASS manual edit cancellation restores original DOM, ghost rows and draft text
+PASS async edit-session failure retains full editor and draft
+PASS manual preview follows frozen occurrence audit for duplicates, empty rows, ADD/REMOVE/REPLACE/MOVE
+PASS manual Special stays whole and scheme replace still uses whole-replacement preview
+PASS recovery and history restore receipts render exact states without scheme match metadata
+PASS manual summary describes frozen operations including MOVE and type-only without whole replacement
+PASS append ordering uses UUID permutation then rebuilds a fresh receipt
+PASS undo sends actual variable UUIDs and enables review
+PASS Unicode cache identity follows ConfigFormat canonicalization
+PASS invalid configuration draft persists exact raw without changing working tree or valid revision
+PASS acknowledged draft uses server errors once while distinct fields retain distinct diagnostics
+PASS invalid Save/Export guard does not poison runtime mutation queue or working Apply
+PASS refresh keeps invalid configuration, runtime source/raw, textarea identity and caret
+PASS valid draft correction promotes by UUID while retaining latest runtime custom value and saved baseline
+PASS restart restores invalid raw and diff against persisted configurationBaseline rather than draft
+PASS restore after restart removes invalid draft and returns to saved baseline only
+PASS prepared choice PATCH never sends invalid apps or changes draft-only parents
+PASS draft-only new nodes remain additions and are excluded from prepared plan IDs
+PASS restart also retains legal unsaved diff against saved baseline
+PASS saved baselines bind by UUID across reordered projections and new nodes remain additions after restart
+PASS unsupported actual bootstrap renders workbench as native readonly without string-rule planning
+PASS Windows native rows show native type/display and expose no edit, token or delete route
+PASS refresh from unsupported native type to supported string restores ordinary editor controls
+PASS empty workspace starts with only application name and persists naming draft
+PASS production shell preserves CSS order and contains no fixtures/inline scripts
+34 product contract checks passed (JSDOM fixtures; real backend/browser acceptance is separate).

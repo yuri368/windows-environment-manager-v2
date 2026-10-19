@@ -1,0 +1,57 @@
+{
+  "verification": "JSDOM event contracts only; browser visual rendering, native dragging and real Windows operations not tested",
+  "checks": [
+    {
+      "name": "Keyboard application selection preserves focus and current semantics",
+      "passed": true
+    },
+    {
+      "name": "Batch checkbox refresh returns focus to that checkbox",
+      "passed": true
+    },
+    {
+      "name": "Running source selector refresh retains focus and original input draft",
+      "passed": true
+    },
+    {
+      "name": "Element restore preserves original whitespace, empty and duplicate rows without applying",
+      "passed": true
+    },
+    {
+      "name": "Delete last row focuses Add and Tab remains trapped",
+      "passed": true
+    },
+    {
+      "name": "Page search/export shortcuts do not divert focus while an editor is open",
+      "passed": true
+    },
+    {
+      "name": "Unchanged missing value starts with disabled apply; restore returns to missing baseline",
+      "passed": true
+    },
+    {
+      "name": "Configuration navigation and All selector preserve their focus and current semantics",
+      "passed": true
+    },
+    {
+      "name": "All four config properties update draft count and retain field focus",
+      "passed": true
+    },
+    {
+      "name": "Diff shows all edited properties in the correct scheme; export reflects them",
+      "passed": true
+    },
+    {
+      "name": "Restore config clears all four properties while preserving runtime draft and Windows snapshot",
+      "passed": true
+    },
+    {
+      "name": "Restoring one changed value manually clears its draft count",
+      "passed": true
+    },
+    {
+      "name": "No runtime errors in the revised UI event workflows",
+      "passed": true
+    }
+  ]
+}

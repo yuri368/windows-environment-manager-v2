@@ -1,0 +1,146 @@
+# V2 格式的演示配置；不包含浏览器运行草稿或模拟 Windows 值。
+
+["Java"]
+default_option = "JDK8"
+
+["Java"."JDK8"]
+"JAVA_HOME" = { default_value = "H:\\ProgramFiles\\DevTools\\Java\\jdk1.8.0_202", scope = "User", mode = "replace", editable = true }
+"Path" = { default_value = "%JAVA_HOME%\\bin", scope = "User", mode = "+append", editable = true }
+
+["Java"."JDK17"]
+"JAVA_HOME" = { default_value = "H:\\ProgramFiles\\DevTools\\Java\\jdk-17", scope = "User", mode = "replace", editable = true }
+"Path" = { default_value = "%JAVA_HOME%\\bin", scope = "User", mode = "+append", editable = true }
+
+["Python"]
+default_option = "Python313"
+
+["Python"."Python313"]
+"PYTHON_HOME" = { default_value = "H:\\ProgramFiles\\Python313", scope = "User", mode = "replace", editable = true }
+"Path" = { default_value = "%PYTHON_HOME%;%PYTHON_HOME%\\Scripts", scope = "User", mode = "-append", editable = true }
+
+["Python"."Python311"]
+"PYTHON_HOME" = { default_value = "H:\\ProgramFiles\\Python311", scope = "User", mode = "replace", editable = true }
+"Path" = { default_value = "%PYTHON_HOME%;%PYTHON_HOME%\\Scripts", scope = "User", mode = "-append", editable = true }
+
+["Maven"]
+default_option = "3.9.11"
+
+["Maven"."3.9.11"]
+"MAVEN_HOME" = { default_value = "H:\\ProgramFiles\\DevTools\\Maven\\apache-maven-3.9.11", scope = "User", mode = "replace", editable = true }
+"Path" = { default_value = "%MAVEN_HOME%\\bin", scope = "User", mode = "+append", editable = true }
+
+["Maven"."3.3.3"]
+"MAVEN_HOME" = { default_value = "H:\\ProgramFiles\\DevTools\\Maven\\apache-maven-3.3.3", scope = "User", mode = "replace", editable = true }
+"Path" = { default_value = "%MAVEN_HOME%\\bin", scope = "User", mode = "+append", editable = true }
+
+["Hadoop"]
+default_option = "2.9.2"
+
+["Hadoop"."2.9.2"]
+"HADOOP_HOME" = { default_value = "H:\\ProgramFiles\\Hadoop\\2.9.2", scope = "User", mode = "replace", editable = true }
+"Path" = { default_value = "%HADOOP_HOME%\\bin", scope = "User", mode = "+append", editable = true }
+
+["Scala"]
+default_option = "2.12.15"
+
+["Scala"."2.12.15"]
+"SCALA_HOME" = { default_value = "H:\\ProgramFiles\\Scala\\2.12.15", scope = "User", mode = "replace", editable = true }
+"Path" = { default_value = "%SCALA_HOME%\\bin", scope = "User", mode = "+append", editable = true }
+
+["Git"]
+default_option = "Portable"
+
+["Git"."Portable"]
+"Path" = { default_value = "H:\\ProgramFiles\\PortableGit\\cmd", scope = "User", mode = "-append", editable = true }
+
+["VSCode"]
+default_option = "Insiders"
+
+["VSCode"."Insiders"]
+"Path" = { default_value = "H:\\ProgramFiles\\VSCode\\bin", scope = "User", mode = "-append", editable = true }
+
+["Node.js"]
+default_option = "团队默认"
+
+["Node.js"."团队默认"]
+"NODE_HOME" = { default_value = "C:\\Dev Tools\\Node22", scope = "User", mode = "replace", editable = true, choices = [{ label = "Node 22 · 团队便携版", value = "D:\\团队工具\\Node22;D:\\团队工具\\Node22\\bin" }, { label = "候选值 2", value = "D:\\便携工具\\Node22" }, { label = "空字符串示例", value = "" }] }
+"Path" = { default_value = "%NODE_HOME%\\bin", scope = "User", mode = "+append", editable = true }
+"NODE_OPTIONS" = { default_value = "--max-old-space-size=4096 --require \"C:\\团队工具\\初始化;本地.js\"", scope = "User", mode = "replace", editable = true, special = true }
+
+["Node.js"."实验版本"]
+"NODE_HOME" = { default_value = "C:\\Dev Tools\\Node24", scope = "User", mode = "replace", editable = true, choices = [{ label = "候选值 1", value = "C:\\Dev Tools\\Node24" }, { label = "候选值 2", value = "D:\\实验工具\\Node24" }] }
+"Path" = { default_value = "%NODE_HOME%\\bin", scope = "User", mode = "-append", editable = true }
+"NODE_OPTIONS" = { default_value = "--max-old-space-size=8192", scope = "User", mode = "replace", editable = true, special = true }
+
+["Node.js"."项目本地"]
+"NODE_HOME" = { default_value = "D:\\演示项目\\前端工作区\\.tools\\node", scope = "User", mode = "replace", editable = true }
+"Path" = { default_value = "%NODE_HOME%\\bin;D:\\演示项目\\前端工作区\\node_modules\\.bin", scope = "User", mode = "+append", editable = true }
+"NODE_OPTIONS" = { default_value = "", scope = "User", mode = "replace", editable = true, special = true }
+
+[".NET SDK"]
+default_option = "日常开发"
+
+[".NET SDK"."日常开发"]
+"DOTNET_ROOT" = { default_value = "C:\\Dev Tools\\dotnet", scope = "User", mode = "replace", editable = true, choices = [{ label = "候选值 1", value = "C:\\Dev Tools\\dotnet" }, { label = "候选值 2", value = "D:\\Portable Apps\\dotnet" }] }
+"Path" = { default_value = "%DOTNET_ROOT%", scope = "User", mode = "-append", editable = true }
+"DOTNET_CLI_TELEMETRY_OPTOUT" = { default_value = "1", scope = "User", mode = "replace", editable = true }
+
+[".NET SDK"."构建服务器"]
+"DOTNET_ROOT" = { default_value = "C:\\Build Tools\\dotnet", scope = "System", mode = "replace", editable = true }
+"Path" = { default_value = "%DOTNET_ROOT%", scope = "System", mode = "+append", editable = true }
+"DOTNET_CLI_TELEMETRY_OPTOUT" = { default_value = "1", scope = "System", mode = "replace", editable = true }
+
+["CUDA Toolkit"]
+default_option = "GPU 开发"
+
+["CUDA Toolkit"."GPU 开发"]
+"CUDA_PATH" = { default_value = "C:\\Program Files\\GPU Toolkit\\CUDA\\v12.4", scope = "System", mode = "replace", editable = true }
+"Path" = { default_value = "%CUDA_PATH%\\bin;%CUDA_PATH%\\libnvvp", scope = "System", mode = "+append", editable = true }
+"CUDA_CACHE_PATH" = { default_value = "D:\\开发缓存\\CUDA", scope = "User", mode = "replace", editable = true }
+
+["CUDA Toolkit"."兼容工具链"]
+"CUDA_PATH" = { default_value = "C:\\Program Files\\GPU Toolkit\\CUDA\\v11.8", scope = "System", mode = "replace", editable = true }
+"Path" = { default_value = "%CUDA_PATH%\\bin", scope = "System", mode = "-append", editable = true }
+"CUDA_CACHE_PATH" = { default_value = "C:\\Demo Cache\\CUDA", scope = "User", mode = "replace", editable = true }
+
+["CUDA Toolkit"."仅运行库（不调整 Path）"]
+"CUDA_PATH" = { default_value = "D:\\Portable Apps\\CUDA Runtime", scope = "System", mode = "replace", editable = true }
+
+["中文长路径工具链"]
+default_option = "团队共享目录（中文及空格）"
+
+["中文长路径工具链"."团队共享目录（中文及空格）"]
+"TEAM_TOOLS_HOME" = { default_value = "D:\\团队共享资料\\研发工程项目\\多语言构建工具链\\Release Candidates\\2026 示例版本\\工具与依赖\\便携工具集", scope = "User", mode = "replace", editable = true, choices = [{ label = "候选值 1", value = "D:\\团队工具\\稳定版" }, { label = "候选值 2", value = "E:\\备用工具\\中文 工具目录" }] }
+"Path" = { default_value = "%TEAM_TOOLS_HOME%\\bin", scope = "User", mode = "+append", editable = true }
+"TEAM_BUILD_CACHE_DIRECTORY" = { default_value = "D:\\团队共享资料\\构建缓存\\项目 Alpha 与 Beta\\本地缓存目录", scope = "User", mode = "replace", editable = true }
+"TEAM_LOG_LEVEL" = { default_value = "INFO", scope = "User", mode = "replace", editable = true, choices = [{ label = "候选值 1", value = "DEBUG" }, { label = "候选值 2", value = "TRACE" }] }
+"TEAM_BUILD_FLAGS" = { default_value = "--output \"D:\\构建结果\\项目 Alpha\" --define \"label=演示;渠道=本地\"", scope = "User", mode = "replace", editable = true, special = true }
+"TEAM_DOWNLOAD_MIRROR" = { default_value = "https://packages.example.invalid/team", scope = "User", mode = "replace", editable = true }
+
+["中文长路径工具链"."隔离项目工作区 · 不与团队目录共用工具"]
+"TEAM_TOOLS_HOME" = { default_value = "E:\\演示工作区\\项目独立工具", scope = "User", mode = "replace", editable = true }
+"Path" = { default_value = "%TEAM_TOOLS_HOME%\\bin", scope = "User", mode = "-append", editable = true }
+"TEAM_BUILD_CACHE_DIRECTORY" = { default_value = "E:\\演示工作区\\项目独立缓存", scope = "User", mode = "replace", editable = true }
+"TEAM_LOG_LEVEL" = { default_value = "DEBUG", scope = "User", mode = "replace", editable = true }
+"TEAM_BUILD_FLAGS" = { default_value = "--offline --output \"E:\\演示工作区\\输出\"", scope = "User", mode = "replace", editable = true, special = true }
+"TEAM_DOWNLOAD_MIRROR" = { default_value = "", scope = "User", mode = "replace", editable = true }
+
+["列表与空值"]
+default_option = "重复元素与空值"
+
+["列表与空值"."重复元素与空值"]
+"DEMO_SEARCH_PATH" = { default_value = "C:\\Demo\\Alpha;;C:\\Demo\\Alpha; C:\\Demo\\Beta ;", scope = "User", mode = "+append", editable = true }
+"DEMO_EMPTY_VALUE" = { default_value = "", scope = "User", mode = "replace", editable = true }
+"DEMO_UNSET_VALUE" = { default_value = "", scope = "User", mode = "replace", editable = true }
+"DEMO_COMMAND" = { default_value = "cmd /c \"echo alpha;beta\"", scope = "User", mode = "replace", editable = true, special = true }
+
+["列表与空值"."自定义排序预览"]
+"DEMO_SEARCH_PATH" = { default_value = "C:\\Demo\\Beta;C:\\Demo\\Alpha", scope = "User", mode = "append", editable = true }
+"DEMO_COMMAND" = { default_value = "cmd /c \"echo reordered;demo\"", scope = "User", mode = "replace", editable = true, special = true }
+
+["共享变量冲突示例"]
+default_option = "另一组运行时"
+
+["共享变量冲突示例"."另一组运行时"]
+"NODE_HOME" = { default_value = "D:\\Shared Runtime\\Node", scope = "User", mode = "replace", editable = true }
+"Path" = { default_value = "%NODE_HOME%\\bin", scope = "User", mode = "-append", editable = true }

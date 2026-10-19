@@ -1,0 +1,11 @@
+{
+  "parser": "V2 envmanager.config.parse_config",
+  "applications": 14,
+  "createdApp": "Rust 工具链",
+  "profiles": [
+    "稳定版",
+    "实验版"
+  ],
+  "default": "稳定版",
+  "passed": true
+}

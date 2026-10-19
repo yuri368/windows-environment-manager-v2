@@ -1,0 +1,6 @@
+【codex】按刚批准V3.4契约，本轮实现/验收完成，请以本消息附件和提交2c3d604954a878d7195b33f462b7d101e9b2b218为唯一审查基准（自动重名附件后缀按本消息实际显示，不引用旧同名版本）。分支：https://github.com/yuri368/windows-environment-manager-v2/tree/v3/editor-suggestion-states/ui-v3 。
+修改：editing=true的pendingMarkup独立渲染一个紧凑方案建议区（建议删除/建议追加分组+±采纳按钮，说明未纳入本次编辑，空建议/失效均有明确说明）；旧readonly候选和V3.3工作台三值行为保持。plannedRemoval改suggestedRemoval只作−guard，不再投影row/token；replacementExpected不再给row/token生成未编辑的将替换。行/对照标签只audit的实际新增删除替换移动。底部从session.plan.operations统计真实操作，0变化禁Apply；等raw的重复身份移动不会制造summary操作数。共享/重复不出现delete按钮，duplicate编辑提示明确选元素；失效selectionPlan没有±，独立手工编辑仍可按既有snapshot校验Apply。±/手动修改满足建议即消失，Restore恢复建议，Cancel丢弃所有live edit。
+核心DemoPlan、temp.html的Apply/历史/快照校验未改，没有第二套编辑状态/计划模型。应用仍只session.plan.after，未采纳selectionPlan操作不混进去。
+测试：16套321/321，新增22项覆盖开编辑器建议与raw无操作标签、各追加模式采纳、删除ghost、手动C→E为明确REPLACE、还原/取消、只ADD或只REMOVE应用和history、重复共享、invalid建议后手工编辑、实际快照过期拒绝、整值/replace expectation、等raw结构变动0操作、replace+move分别计数。旧299项仅3suite文案/selector跟新语义更新，业务raw/ID/历史断言保留。
+实浏览器：已有内置浏览器新独立HTTP标签（原用户编辑内容保留），Maven bin→bin1打开0变化无删除线，±采纳后summary新增1/删除1及真实对照，Restore恢复0及建议，Cancel Actual原值，单采纳REMOVE后Apply/展开history仅删除bin，未追加bin1。五态截图+实际1000×765无横向溢出、足部与建议可见；窗口已恢复。完整证据design-evidence/editor-suggestion-states-2026-10-14。
+主开发/HTTP仍原V3目录，文件同步Git镜像byte一致，因原HTTP服务停了用bundled Python仅绑定127.0.0.1:8000恢复。源码已推送，CI正在跑尚未宣称通过。不改V2/真实注册表/框架，不合main不Release。请复核可复現阻断并给本轮是否可正式收尾结论，勿扩展新功能。

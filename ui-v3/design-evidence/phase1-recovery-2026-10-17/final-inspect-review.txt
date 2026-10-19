@@ -1,0 +1,10 @@
+{
+  "passed": 4,
+  "total": 4,
+  "checks": [
+    "unchanged review explains no write and retains preview action",
+    "changed review removes only duplicate text and uses frozen after",
+    "retained deletion reason remains visible and previewable",
+    "blocked ordering keeps reason and does not change selected input"
+  ]
+}

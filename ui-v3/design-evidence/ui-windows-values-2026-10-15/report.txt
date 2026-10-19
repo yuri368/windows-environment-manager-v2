@@ -1,0 +1,27 @@
+Windows value presentation correction — 2026-10-15
+
+Owner feedback: the extra 快照结构 view duplicated the raw value. Use 元素变更对照 as the reference for element appearance and interaction. Later owner instruction freezes TOML editor functionality and styling; notify the owner before any future TOML style pass.
+
+Change:
+- Windows current values now directly use comparison plates. No second structure disclosure.
+- 原文 starts collapsed and reveals exact original text via textContent.
+- Empty and repeated values keep their order and reference badges. Special values keep internal semicolons in one plate.
+- Click an occurrence to open/focus that editor row. Arrow keys and Home/End use one roving focus position per stream. Focus highlights only that occurrence.
+- History recorded values use the same comparison presentation. Before/after/audit data remains unchanged.
+- Default staticMarkup output remains byte-for-byte equal for the frozen TOML fixtures. Config/editor functions were not changed.
+- The existing 19 navigation checks now run through npm test, resolving the prior GPT review's P2. Its optional tablist cleanup is deferred because TOML is frozen.
+
+Validation:
+- npm test: 26 scripts, 512 checks passed. Node/JSDOM scope, not native Windows/DPI acceptance.
+- Six new Windows projection/navigation checks are in verify_windows_snapshot.cjs (31 total).
+- Config visual/raw/diff DOM equals baseline a7e693e; default static markup unchanged on empty/duplicate/CRLF/Special fixtures. Evidence: toml-freeze-checks.json.
+- Browser actual CSS viewport 1280x583: verified native token click on duplicate occurrence index 2 focuses editor row 2; Cancel; Home navigation; exact demo raw disclosure toggle. Screenshots are current primary source.
+- Focused independent Sol review of three screenshots and implementation: ship, no blocking material findings in that scope. Long single-token, narrow viewport and screen-reader operation were not visually checked this round.
+- One detector run reports the existing .toast::after countdown stripe and an existing repeating-gradient advisory. No unrelated toast change made. Detector findings are not visual acceptance.
+
+GPT collaboration:
+- Earlier recovered review of a7e693e approved its UI boundary and requested adding the 19 navigation checks to npm test (implemented here); optional P3 tablist cleanup deferred.
+- Current correction report could not be sent: selected Chrome profile's ChatGPT page displays 无法加载你的账户. One retry did not resolve it. No logout or account changes performed. This round therefore has no fresh GPT web approval or delivered final report.
+
+Boundaries:
+No DemoPlan/model/matching/apply rules, real Registry or V2 code changed. Visual acceptance remains with the owner. TOML functions and styles stay frozen until the owner is reminded and provides the missing-feature context.

@@ -1,0 +1,11 @@
+V3.7 Chrome browser acceptance, 2026-10-14
+Primary localhost page tested in isolated Chrome QA tab.
+1. Suggestion − preserves adopted green card with 已采纳删除 and pressed ✓.
+2. Ghost ID 4 moved down from visual index 4 to 5; restore retains ID 4 at visual index 5 and original raw. Manual edit ID 1 retained; status replace1/move2/delete0.
+3. Restore then −/✓ with no other actual edit: Apply disabled, 0 actual changes.
+4. Manual same-value new ID10 retained while original ID4 restored; both show duplicate ×2.
+5. Manual row deletion shows no adopted-removal green card.
+6. Apply only adopted deletion: history records exactly REMOVE original index4, afterRaw excludes value.
+7. Addition and removal cards both pressed=true ✓ simultaneously. Final screenshot05 is the stable rendered proof.
+8. Requested 600x760 viewport reported CSS innerWidth750 at existing zoom; modal body has no horizontal overflow; green cards and native28px buttons remain intact. Viewport override reset.
+No real Windows Registry operations.

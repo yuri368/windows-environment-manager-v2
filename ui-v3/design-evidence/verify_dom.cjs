@@ -1,0 +1,101 @@
+/* DOM interaction checks only: no browser rendering, registry or backend. */
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const { JSDOM, VirtualConsole } = require('jsdom');
+const html = fs.readFileSync(path.join(__dirname, '../temp.html'), 'utf8');
+const elementScript = fs.readFileSync(path.join(__dirname, '../windows-elements.js'), 'utf8');
+const vm = require('node:vm');
+new vm.Script(elementScript);
+new vm.Script(html.match(/<script>([\s\S]*?)<\/script>/)[1]);
+const errors = [], results = [];
+const vc = new VirtualConsole();
+vc.on('jsdomError', e => errors.push(e.message));
+const dom = new JSDOM(html, { runScripts: 'dangerously', pretendToBeVisual: true,
+  virtualConsole: vc, beforeParse(w){ for(const configModule of ['config-format.js','config-editor.js'])w.eval(require('node:fs').readFileSync(require('node:path').resolve(__dirname,"..",configModule),'utf8'));
+    w.eval(fs.readFileSync(path.join(__dirname,'../demo-plan.js'),'utf8')); w.confirm = () => true; w.eval(fs.readFileSync(path.join(__dirname,'../demo-configs.js'),'utf8')); w.eval(elementScript); } });
+const w = dom.window, doc = w.document;
+const q = s => doc.querySelector(s);
+const all = s => [...doc.querySelectorAll(s)];
+const change = (el, value) => { el.value = value; el.dispatchEvent(new w.Event('change', { bubbles: true })); };
+const input = (el, value) => { el.value = value; el.dispatchEvent(new w.Event('input', { bubbles: true })); };
+const keyboard = (el, key, shiftKey = false) => el.dispatchEvent(new w.KeyboardEvent('keydown', {key, shiftKey, bubbles: true, cancelable: true}));
+function check(name, fn) { fn(); results.push({name, passed: true}); }
+
+check('Startup: thirteen applications and Maven current scheme', () => {
+  assert.equal(all('[data-app]').length, 13);
+  assert.equal(q('.app-title').textContent, 'Maven');
+  assert.equal(all('#varRows [data-row]').length, 2);
+});
+check('Scheme menu: arrows, Escape, focus and exact new scheme', () => {
+  const trigger = q('#planButton'); trigger.focus(); keyboard(trigger, 'ArrowDown');
+  assert.equal(trigger.getAttribute('aria-expanded'), 'true');
+  keyboard(doc.activeElement, 'End'); assert.equal(doc.activeElement.dataset.plan, '3.3.3');
+  keyboard(doc.activeElement, 'Escape'); assert.equal(trigger.getAttribute('aria-expanded'), 'false');
+  assert.equal(doc.activeElement, trigger);
+  trigger.click(); q('[data-plan="3.3.3"]').click();
+  assert.match(q('#planButton').textContent, /3\.3\.3/);
+  assert.equal(doc.activeElement.id, 'planButton');
+});
+check('Search and keyboard application selection', () => {
+  input(q('#appSearch'), 'Python'); assert.equal(all('[data-app]').length, 1);
+  keyboard(q('[data-app]'), ' '); assert.equal(q('.app-title').textContent, 'Python');
+  input(q('#appSearch'), '');
+});
+check('Exact raw custom string retained in running draft', () => {
+  const exact = '  C:\\Tools\\A;C:\\Tools\\B  ';
+  input(q('#varRows .vinput'), exact);
+  assert.equal(q('#compareDesired .selection-current').textContent, exact);
+  assert.equal(w.eval('selectionEdit(curProfile().vars[0]).beforeRaw'), 'H:\\ProgramFiles\\Python313');
+  assert.equal(q('#varRows .source').value, '自定义值');
+  assert.match(q('.footer-summary').textContent, /待应用修改/);
+});
+check('Preview cancel and keyboard trap preserve mock Windows value', () => {
+  const before = q('#compareActual').textContent;
+  const trigger = q('#previewButton'); trigger.focus(); trigger.click();
+  assert.equal(q('#modal').classList.contains('open'), true);
+  const cancel = q('#cancelDialog'), first = q('#closeDialog'), last = q('#confirmDialog');
+  last.focus(); keyboard(last, 'Tab'); assert.equal(doc.activeElement, first);
+  keyboard(first, 'Tab', true); assert.equal(doc.activeElement, last);
+  cancel.click(); assert.equal(q('#modal').classList.contains('open'), false);
+  assert.equal(q('#compareActual').textContent, before);
+  assert.equal(doc.activeElement.id, 'previewButton');
+});
+check('Batch preview contains selected app names', () => {
+  q('#selectAll').click(); assert.equal(all('.appcheck:checked').length, 13);
+  q('#previewButton').click(); const text = q('.dialogbody').textContent;
+  for (const app of ['Java','Python','Maven','Hadoop','Scala','Git','VSCode','Node.js','.NET SDK','CUDA Toolkit','中文长路径工具链','列表与空值','共享变量冲突示例']) assert.ok(text.includes(app));
+  q('#cancelDialog').click(); q('#selectNone').click();
+});
+check('Editor defaults to one scheme and All view has explicit groups', () => {
+  q('#configBtn').click(); assert.equal(q('#editorView').value, 'current');
+  assert.equal(all('.cfg-scheme-group').length, 1); assert.equal(all('[data-tableplan]').length, 2);
+  change(q('#editorView'), 'all'); assert.equal(all('.cfg-scheme-group').length, 2);
+  assert.equal(all('[data-tableplan]').length, 4);
+  q('[data-tableplan="3.3.3"]').click();
+  assert.match(q('.cfg-page-heading').textContent, /Maven/);assert.match(q('#editorInspector').getAttribute('aria-label'), /3\.3\.3/);assert.equal(q('.editor-right'),null);
+});
+check('Configuration exact string only changes selected scheme', () => {
+  const exact = '  C:\\New\\Maven;Literal\\Value  ';
+  input(q('#cfgDefault'), exact);
+  assert.equal(q('#cfgDefault').value, exact);assert.equal(w.eval('configVar().defaultValue'),exact);
+  assert.notEqual(w.eval('apps[editor.app].profiles.find(p=>p.name==="3.9.11").vars[0].defaultValue'),exact);
+});
+check('Raw TOML and differences remain available and labelled as demo', () => {
+  q('[data-edtab="diff"]').click(); assert.match(q('#sourceText').textContent, /Literal/);
+  q('[data-edtab="raw"]').click(); assert.match(q('#sourceText').textContent, /default_value/);
+  assert.match(q('.pageh').textContent, /示例 TOML/);
+});
+check('Windows and History views preserved', () => {
+  q('[data-view="windows"]').click(); assert.ok(q('#screen').textContent.includes('Windows'));
+  q('[data-view="history"]').click(); assert.ok(q('#screen').textContent.includes('历史'));
+});
+check('No runtime errors; local polish stylesheet exists', () => {
+  assert.deepEqual(errors, []);
+  assert.ok(fs.existsSync(path.join(__dirname, '../ui-polish.css')));
+  assert.match(html, /未连接系统/);
+});
+const report = { verification: 'JSDOM interactions; visual rendering and real backend not verified', checks: results };
+fs.writeFileSync(path.join(__dirname, 'dom-report.json'), JSON.stringify(report, null, 2) + '\n');
+console.log(JSON.stringify(report, null, 2));
+w.close();

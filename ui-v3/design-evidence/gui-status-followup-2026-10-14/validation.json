@@ -1,0 +1,39 @@
+{
+  "date": "2026-10-14",
+  "baseCommit": "67dd311",
+  "tests": {
+    "primary": {
+      "scripts": 24,
+      "checks": 462,
+      "passed": true
+    },
+    "mirror": {
+      "scripts": 24,
+      "checks": 462,
+      "passed": true
+    }
+  },
+  "files": {
+    "temp.html": {
+      "primary": "994539d41b519c925799b3db4d24bff81a302e2b7e2d15fbae544b7375f0a14c",
+      "mirror": "b23a322cf883e3977d611d2c254296cffbf0f93ac9cd1dc9d7b54f204e8f05d2"
+    },
+    "windows-elements.js": {
+      "primary": "224e8e99636c9974ef755652f68be1776f0c001bef0b3f0565c4d0228550c120",
+      "mirror": "8b6a4a3749b2f7e114e4ba0a27ff7a91acb923be2850d69d28d63cb58622c092"
+    },
+    "elements-ui.css": {
+      "primary": "708d27af03c76b167c2613f7ebd6588c865ae56509b507afa2ecfb6d6ea7ba74",
+      "mirror": "708d27af03c76b167c2613f7ebd6588c865ae56509b507afa2ecfb6d6ea7ba74"
+    },
+    "shell-ui.css": {
+      "primary": "180c0987749fa7a666522076e4b3cbc07f33fc1e53d46d9cb88bcb9d521e14c6",
+      "mirror": "180c0987749fa7a666522076e4b3cbc07f33fc1e53d46d9cb88bcb9d521e14c6"
+    },
+    "demo-plan.js": {
+      "primary": "950e4f532eaa9a43444ef10ff8b2ba819981ccbbc32202a6a19bf06f669d4bc4",
+      "mirror": "950e4f532eaa9a43444ef10ff8b2ba819981ccbbc32202a6a19bf06f669d4bc4"
+    }
+  },
+  "nativeZoom": "Not tested; viewport/DPR simulation only"
+}

@@ -1,0 +1,15 @@
+{
+  "productCommit": "69f2d0f65b8ae5a449341c5786c139583f35be1c",
+  "runs": [
+    {
+      "name": "V3 UI prototype checks",
+      "url": "https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38592890855",
+      "status": "success"
+    },
+    {
+      "name": "Python tests",
+      "url": "https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38592890772",
+      "status": "success"
+    }
+  ]
+}

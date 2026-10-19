@@ -1,0 +1,14 @@
+{
+  "command": "npm test",
+  "exitCode": 0,
+  "scripts": 33,
+  "creationChecks": {
+    "passed": 35,
+    "total": 35
+  },
+  "editorChecks": {
+    "passed": 14,
+    "total": 14
+  },
+  "rawLog": "full-test.log (local evidence; ignored by Git)"
+}

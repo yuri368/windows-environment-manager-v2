@@ -1,0 +1,31 @@
+2026-10-15 配置行内编辑与重复悬停
+
+修改
+- 新增 ConfigEditor 展示模块与 ConfigFormat V2 导出/校验模块；移除独立右侧属性栏。
+- choices 标签和值直接编辑、增删、调序；补齐 editable 与 V2 导出字段/格式。
+- 候选重排还原关联、工作台多行保真及 TOML DEL 转义已修复。
+- 独立重复组高亮与稳定 ID 联动共存，跨原值/新值/编辑行，范围内精确原文相等。
+
+测试
+- npm test：29 个脚本，556 项检查通过（481 个 JSON 布尔检查 + 75 个 PASS 检查）；完整日志 npm-final.txt。
+- verify_duplicate_hover.cjs：16/16；verify_config_editor.cjs：14/14。
+- Chrome profile sa 独立 QA 标签页 821062805，复用已有 QA 页；未重置用户另一个演示标签。
+- 实际鼠标（CDP Input mouseMoved，经 CUA）原值 Alpha 组：编辑行2/原值2/新值2，共6；将一个 Alpha 改 Gamma 后，从新值 Gamma 悬停：编辑行2/原值1/新值2，共5。身份对应仍3处；移出重复组0，恢复焦点身份3。
+- desktop 配置默认值与候选并列，两个候选均可见；600x740 CSS 像素下 documentWidth=600，无横向页面溢出，表单556，主画布600，无 editor-right；收起导航可直接编辑候选。
+- 实际编辑候选 label/value，添加空标签时导出禁用，补标签后可导出；raw 页同步显示更改和空候选字符串。
+- browser-edited-v2.toml 用只读 V2 envmanager.config.parse_config 解析：13 应用、23 方案、60 变量；候选中文标签、多路径分号与空字符串均保留。见 v2-parser-result.json。
+
+证据
+config-desktop.png / config-600.png / duplicate-before.png / duplicate-after.png。
+ChatGPT 网页协作范围咨询已发送；回复“无法加载此回复”，未取得可读批准。实现按负责人明确新需求限定在配置/展示/导出，不进行核心模型或计划重构。
+
+限制
+当前仍为离线浏览器演示；没有验证真实 Windows 环境写入，也没有新增原 TOML 文件导入/覆盖能力。截图与实际鼠标检查证明所列场景，不等于全部浏览器、系统缩放或原生拖拽验收。
+
+收尾：同一 sa 浏览器连接在最终汇报前断开/重连超时，最终网页版汇报未发送成功；本地实现和记录已保留，不声称审查通过。
+
+2026-10-15 标签语义收尾
+- 配置 tablist 现在只包含可视化/示例 TOML/修改差异三项 tab；文件名与修改徽标为相邻信息，避免辅助技术误把它们归入标签导航。
+- 保留标签组名称、tabpanel 引用、单一 Tab 入口、左右键/Home/End、原生点击和原间距。19 项导航与14项配置检查通过；直接 DOM 核对得到三个 tab、metadataOutside=true、singleTabStop=1。
+- 浏览器当前无法建立调试连接，因此本次小改的真实浏览器视觉/辅助技术复核待连接恢复，不用 DOM 结果替代。
+- aca6c6b 远端 UI 检查成功：https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38736237942 。同 SHA 的 Python run 38736238150 在首次查询时 in_progress；后续 API 触发403限流，最终状态未知。

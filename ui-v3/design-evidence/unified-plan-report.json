@@ -1,0 +1,60 @@
+{
+  "stage": "V3 browser demo only",
+  "coreChecks": 28,
+  "domChecks": 207,
+  "totalChecks": 235,
+  "allPassed": true,
+  "browser": {
+    "reusedUserChromeTab": true,
+    "url": "http://127.0.0.1:8000/temp.html",
+    "viewport": "default 1600x800",
+    "verified": [
+      "Python matched default to Scripts1 selected edit: 1/2, actual old Scripts preserved",
+      "preview shows append 1 preserving originals; cancel/Escape retains raw and returns focus",
+      "confirmation produces 2/2 and history retains Scripts + new Scripts1",
+      "explicit Windows element row replacement and exact position old/new history",
+      "related focus paints original/preview/editor row with same elementId",
+      "config sidebar has only applications/profiles; both visible; middle ArrowDown selects Path and inspector",
+      "candidate duplicate targets project one insertion and one label (DOM tests)"
+    ],
+    "hover": "pointer hover handlers tested by JSDOM; real browser focus linkage verified",
+    "notVerified": [
+      "Windows registry/backend integration",
+      "installed native GUI/UAC behavior"
+    ]
+  },
+  "files": {
+    "temp.html": "eec98bdc477a28acd9ce5f5f730136b9ea46fc9cffa517468288fbfd9e5a2d20",
+    "demo-plan.js": "3166a83786dfd268df2fcd2b274fd4a30ab17868ca613e39b7a99648368e6d3d",
+    "windows-elements.js": "3b3a5a761bf0d36e2be71ad24e8385738cf0cfd69ffce27f055d738432a5a29a",
+    "elements-ui.css": "b469f0571a5e6165af5bdac583b7ddba0a63b6a6d8b1ab02eccbd819dafb3fbf",
+    "ui-polish.css": "d7c5ca31b076de4e54f1ae1ee541176942d7b4fe023921923fab1d4cc2926cd6"
+  },
+  "ci": {
+    "sourceCommit": "7dace9bd27f7039dc595348e38df6e83284f6743",
+    "ui": {
+      "conclusion": "success",
+      "url": "https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38405919179"
+    },
+    "python": {
+      "conclusion": "success",
+      "url": "https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38405919627"
+    },
+    "verification": "Read signed-in GitHub Actions branch listing; both runs completed successfully for same source commit",
+    "evidenceCommit": "a68d2e4ed52fc26e7e25fc00149cf7fe5318d846",
+    "evidenceUi": {
+      "conclusion": "success",
+      "url": "https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38408312489"
+    },
+    "evidencePython": {
+      "conclusion": "success",
+      "url": "https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38408312545"
+    }
+  },
+  "architectReview": {
+    "source": "https://chatgpt.com/c/6acd102d-6d38-83e9-8e74-331dc72146cf",
+    "reviewedSourceCommit": "7dace9bd27f7039dc595348e38df6e83284f6743",
+    "result": "No independently reproducible blocking defect found for the bounded V3.1 browser demo; proceed to user GUI acceptance.",
+    "archive": "unified-plan-2026-10-13/chatgpt-review-complete.txt"
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "Scope": "C-only native child-VHDX acceptance; not a clean VM",
+  "Date": "2026-10-19",
+  "BaselineCommit": "47651a79d80e72d0270a10f179cf360937f43998",
+  "Evidence": {
+    "mixed-cancel-verification.json": {
+      "Timestamp": "2026-10-19T10:45:30.2056691+08:00",
+      "OperationId": "933c481c718541f3878b858603c88802",
+      "Status": "cancelled",
+      "ErrorCodes": [
+        "UAC_CANCELLED"
+      ],
+      "TargetCount": 2,
+      "TargetStatuses": [
+        {
+          "scope": "User",
+          "name": "V3_ACCEPTANCE_20261019_USER",
+          "status": "pending"
+        },
+        {
+          "scope": "System",
+          "name": "V3_ACCEPTANCE_20261019_SYSTEM",
+          "status": "pending"
+        }
+      ],
+      "ExactEnvironmentUnchanged": true,
+      "DisposableTargetsAbsent": true
+    },
+    "environment-restored-verification.json": {
+      "Timestamp": "2026-10-19T10:43:34.3369644+08:00",
+      "BootLocation": "\\Device\\HarddiskVolume5\\ventoy\\boot\\Win11_2.vhdx",
+      "BaselineCount": 28,
+      "CurrentCount": 28,
+      "ExactRawTypeInventoryMatch": true,
+      "DifferenceCount": 0,
+      "DisposableTargetsAbsent": true,
+      "SystemCleanupOperation": "e42c853ee4d24da08acfde116705c12d",
+      "SystemCleanupStatus": "committed"
+    },
+    "machine-in-use-verification.json": {
+      "ExitCode": 7,
+      "ProgramHashUnchanged": true,
+      "BlockedInUse": true,
+      "ProgramProcessStillRunning": true,
+      "Timestamp": "2026-10-19T10:45:49.5916578+08:00"
+    },
+    "machine-upgrade-verification.json": {
+      "Timestamp": "2026-10-19T10:46:28.3122407+08:00",
+      "ExitCode": 7,
+      "SameVersionReinstall": true,
+      "PreservedFiles": 7,
+      "AllDataAndReceiptsUnchanged": true,
+      "FinishAcknowledged": false,
+      "NoAccessViolation": true
+    },
+    "machine-longpath-upgrade-verification.json": {
+      "Timestamp": "2026-10-19T10:55:52.6671215+08:00",
+      "ExitCode": 0,
+      "SameVersionReinstall": true,
+      "PreservedFiles": 7,
+      "AllDataAndReceiptsUnchanged": true,
+      "FinishAcknowledged": true,
+      "NoAccessViolation": true,
+      "InstalledExeSHA256": "4B11C2B840A6D7CAC8CC3649EE178F4B30DEC3CA3031393726A985A3950F4F79",
+      "CandidateExeSHA256": "4B11C2B840A6D7CAC8CC3649EE178F4B30DEC3CA3031393726A985A3950F4F79"
+    },
+    "post-upgrade-database-readonly.json": {
+      "integrity": "ok",
+      "historyCount": 3,
+      "executionStatuses": {
+        "cancelled": 2,
+        "committed": 3
+      },
+      "settingsCount": 5,
+      "readOnly": true,
+      "immutable": true
+    },
+    "machine-uninstall-verification.json": {
+      "Timestamp": "2026-10-19T10:57:19.8028695+08:00",
+      "ExitCode": 0,
+      "ProgramExeRemoved": true,
+      "PreservedFileCount": 7,
+      "AllDataAndReceiptsUnchanged": true
+    },
+    "machine-reinstall-verification.json": {
+      "Timestamp": "2026-10-19T10:58:27.7980141+08:00",
+      "ExitCode": 0,
+      "FinishAcknowledged": true,
+      "PreservedFileCount": 7,
+      "AllDataAndReceiptsUnchanged": true,
+      "InstalledExeSHA256": "4B11C2B840A6D7CAC8CC3649EE178F4B30DEC3CA3031393726A985A3950F4F79",
+      "ProgramOwner": "BUILTIN\\Administrators",
+      "ProgramDaclProtected": true,
+      "ReceiptOwner": "BUILTIN\\Administrators",
+      "ReceiptDaclProtected": true
+    },
+    "post-lifecycle-environment-verification.json": {
+      "Timestamp": "2026-10-19T10:59:19.0841535+08:00",
+      "BaselineCount": 28,
+      "CurrentCount": 28,
+      "ExactRawTypeInventoryMatch": true,
+      "DisposableTargetsAbsent": true,
+      "LongPathsEnabled": 0,
+      "ProductInstalled": true,
+      "ProductServiceRunning": false
+    }
+  }
+}

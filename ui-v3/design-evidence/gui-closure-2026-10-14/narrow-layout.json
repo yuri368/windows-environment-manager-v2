@@ -1,0 +1,53 @@
+{
+  "badges": [
+    {
+      "iconInside": true,
+      "nowrap": "nowrap",
+      "text": "移动"
+    },
+    {
+      "iconInside": true,
+      "nowrap": "nowrap",
+      "text": "匹配"
+    },
+    {
+      "iconInside": true,
+      "nowrap": "nowrap",
+      "text": "移动"
+    },
+    {
+      "iconInside": true,
+      "nowrap": "nowrap",
+      "text": "移动"
+    },
+    {
+      "iconInside": true,
+      "nowrap": "nowrap",
+      "text": "匹配"
+    },
+    {
+      "iconInside": true,
+      "nowrap": "nowrap",
+      "text": "移动"
+    },
+    {
+      "iconInside": true,
+      "nowrap": "nowrap",
+      "text": "移动"
+    },
+    {
+      "iconInside": true,
+      "nowrap": "nowrap",
+      "text": "移动"
+    },
+    {
+      "iconInside": true,
+      "nowrap": "nowrap",
+      "text": "匹配"
+    }
+  ],
+  "dialogWidth": 609,
+  "legend": "本次变更新增0手动新增0替换0移动2幽灵移动0删除0提示重复0空元素0匹配1",
+  "scrollWidth": 609,
+  "width": 640
+}

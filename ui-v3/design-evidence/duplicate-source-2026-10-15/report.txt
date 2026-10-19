@@ -1,0 +1,15 @@
+Duplicate source visual feedback - 2026-10-15
+
+Scope: browser demo UI only. Baseline: 6b36c5b.
+
+Feedback 1: repeated elements appeared to have floating frames/backgrounds.
+Cause: duplicate tokens and inputs drew a second white frame 3px down/right through --st-stack. Removed that decoration and its extra input margin. Duplicate badges remain; change-state stripes remain.
+
+Feedback 2: hovered source and equal-value duplicate peers were too similar.
+Change: source uses a solid #173f32 surface and white value text; status plates and badges remain readable. Same-ID peers retain solid green outlines; equal-raw peers retain graphite dashed outlines. Source input and order use the same filled treatment, without a white-on-white transition. History source gets a filled order cell. No renderer, identity, plan or matching changes.
+
+Manual browser verification: reused independent in-app QA tab 2 at 1707x960; did not reload or reset user tab 1. Opened User PATH and changed original items 3 and 4 to %PYTHON_HOME%, producing three equal values and two replacements, matching the reported case. Native CDP pointer movement confirmed one source, distinct source fill and duplicate peer outlines. Input shadows are none, token shadow has no offset frame. Pointer leave cleared source and duplicate classes. Source-row and source-token screenshots included. No live Windows data is used or written by this demo.
+
+Regression: npm test exited 0; 29 scripts, 482 JSON passed checks plus 75 PASS checks = 557; no failed checks. Final source-row transition adjustment was also verified in the browser.
+
+Baseline question: inspected temp.html beginSelectedEdit/rebaseSelectedValue/confirmRebase and V3_SELECTION_DIFF_V3_2.txt. Display/plan evaluation already reads current simulated snapshots. Frozen matched baseline retains original selected raw, target/mode, snapshot and removal eligibility. Snapshot changes invalidate it. Explicit rebase preserves current input and original selected raw while checking matches against the new snapshot; preview confirmation is still required. Automatic baseline replacement could silently make an ambiguous duplicate eligible for deletion. No auto-rebase behavior was implemented in this UI repair.

@@ -1,0 +1,6 @@
+【codex】Claude 审查问题已按批准契约修复，请核对源码、测试与浏览器证据并给最终收尾裁定，不扩展 UI 功能。
+Claude 基线5b05e998；产品修复cfd83f7；补交测试同步49805386d11b2cf91a5756ea2745aee4fd4d4e4c，已push v3/claude-ui-fixes，Git干净。产品只改windows-elements.js/shell-ui.css；DemoPlan/temp/fx/elements-ui/ui-polish保留Claude基线。
+删除前保存latest deletedDrafts，仅会话cache。普通ghost撤销恢复删除前草稿同ID/ghost当前位置；绿色建议撤销仍original，Restore/Cancel清cache，cache不进plan/audit/history。普通和Special textarea都用显式UTF16边界映射，normalize旧raw为LF比较，prefix/suffix不重叠，映射回原始索引保留未触CRLF/CR/LF，新换行LF，无全局去换行/Enter拦截，semicolon/NUL规则不改。
+原项目和Git目录都20脚本372/372通过；新15场景包括draft/二次删/空重复/restorecancel/cache隔离/normalSpecial换行及插删/noop/softwrap/Enter/validation。初次CI失败由我遗漏同步5份已适配textarea/inline-flex旧测试引起，4980538已补齐。现GitHub UI #33 Success https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38527604847 ，Python #79 Success https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38527604882 ，均是4980538。
+实际IAB：原ID4改完整三行，删除、ghost下移、取消，恢复ID4三行第五位；Apply历史REPLACE1 MOVE2且三行保留。浏览器fixture普通和whole原raw甲CRLF乙CR丙LF丁，末尾!后仍保留三种原换行。实际CSS innerWidth600，两列Grid/max150/无横溢；source/test/package与Git目录逐字节一致。
+附件产品源码和20组报告即本次版本。Claude视觉、FLIP、碎片、拖放、焦点设计保留；无V2/真实Registry/main/Release。请只指出本轮可确认阻断，若无则批准归档。此前两次页面Unknown error，负责人已完成人机验证后重发此条，未把失败发送当批准。

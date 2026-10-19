@@ -1,0 +1,14 @@
+{
+  "passed": 8,
+  "total": 8,
+  "checks": [
+    "Structural markup preserves CRLF, standalone CR, tabs, duplicates, empty slices and HTML text",
+    "Whole command remains one exact token, including semicolon and CRLF",
+    "Absent and existing empty remain distinct",
+    "Windows structure is independent of scheme drafts and carries no plan relationships",
+    "Config input updates token count and edited marker without losing input focus or changing snapshot/history",
+    "Preview markup does not mutate frozen authoritative plan and links only within each target",
+    "Revoke preview remains a disabled factual explanation",
+    "No UI runtime errors"
+  ]
+}

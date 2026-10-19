@@ -1,0 +1,43 @@
+{
+  "sourceCommit": "def2775",
+  "validatedCommit": "b5d759ce3e8d7d166e3261bf09cbc97022e3ef7b",
+  "tests": {
+    "passed": 279,
+    "total": 279
+  },
+  "ci": [
+    {
+      "workflow": "V3 UI prototype checks",
+      "url": "https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38425640651",
+      "conclusion": "success"
+    },
+    {
+      "workflow": "Python tests",
+      "url": "https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38425640659",
+      "conclusion": "success"
+    }
+  ],
+  "browser": {
+    "surface": "Chrome",
+    "mainUserTabPreserved": true,
+    "newAcceptanceTab": true,
+    "viewport": {
+      "width": 1600,
+      "height": 729
+    },
+    "verified": [
+      "Maven matched bin removal plus bin1 head addition",
+      "minus/plus edits live rows and cancel preserves actual",
+      "preview focus wrap and Escape returns focus",
+      "actual before/after and history agree",
+      "explicit Actual change invalidates baseline",
+      "explicit rebase retains duplicate occurrences"
+    ]
+  },
+  "architect": {
+    "contract": "V3.2 approved before implementation",
+    "implementationReport": "uploaded six current files and acknowledged after refresh/retry",
+    "postImplementationReview": "in progress, no conclusion claimed"
+  },
+  "scope": "Browser demonstration only; no real Registry or V2 changes"
+}

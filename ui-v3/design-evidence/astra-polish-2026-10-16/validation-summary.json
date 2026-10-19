@@ -1,0 +1,42 @@
+{
+  "baseCommit": "56dbf6030aa11a33f192d91761e7063803d9c350",
+  "branch": "v3/astra-interaction-polish-20261016",
+  "baseline": {
+    "command": "npm test",
+    "exitCode": 0,
+    "groups": 31,
+    "passed": 583,
+    "failed": 0
+  },
+  "final": {
+    "command": "npm test",
+    "exitCode": 0,
+    "groups": 32,
+    "passed": 606,
+    "failed": 0,
+    "newWorkflowChecks": 23
+  },
+  "browser": {
+    "engine": "Chromium 134.0.6998.35 headless",
+    "platform": "Linux",
+    "passed": 13,
+    "failed": 0,
+    "runtimeErrors": 0,
+    "viewports": [
+      "1360x900",
+      "600x640"
+    ],
+    "font": "QA-only Noto Sans SC injected for Chinese glyphs; no production font dependency"
+  },
+  "limitations": [
+    "No Win11/Registry/UAC/native desktop verification",
+    "No real environment monitoring or backend bridge",
+    "Browser tests use demo fixtures in memory; no real environment data"
+  ],
+  "unchangedCoreFiles": [
+    "ui-v3/demo-plan.js",
+    "ui-v3/windows-elements.js",
+    "ui-v3/config-format.js",
+    "ui-v3/config-editor.js"
+  ]
+}

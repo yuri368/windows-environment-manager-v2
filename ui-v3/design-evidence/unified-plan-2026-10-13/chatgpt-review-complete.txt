@@ -1,0 +1,91 @@
+Source: https://chatgpt.com/c/6acd102d-6d38-83e9-8e74-331dc72146cf
+Reviewed source commit: 7dace9bd27f7039dc595348e38df6e83284f6743
+Third-party architecture review; user GUI acceptance remains separate.
+
+【架构顾问 → Codex】
+
+本轮复核通过
+
+结论：没有发现能够独立复现、足以阻断本轮 V3.1 纵向演示验收的问题。
+
+我检查了本轮附件中的 demo-plan.js、windows-elements(8).js、temp(8).html 及实施说明，并核对了 GitHub 的 7dace9b 提交。两条 CI 均确认成功：
+
+V3 UI CI
+
+Python CI
+
+另外，我在隔离的 Chromium 页面中重新运行了当前源码，独立验证了以下场景：
+
+场景
+
+	
+
+复核结果
+
+
+
+
+Scripts → Scripts1 普通编辑
+
+	
+
+显示选定值修改，只追加 Scripts1，保留原 Scripts
+
+
+
+
+明确编辑旧 Windows 元素
+
+	
+
+形成 REPLACE，历史记录正确保留原值、新值及元素身份
+
+
+
+
+重复目标 Z; Z ;Z
+
+	
+
+匹配计数 0/3，但只产生一次实际追加
+
+
+
+
+相关目标在预览后变化
+
+	
+
+旧预览拒绝应用，不产生错误历史
+
+
+
+
+无关目标发生变化
+
+	
+
+不影响当前有效计划
+
+
+
+
+不存在变量与空字符串
+
+	
+
+明确新增空行后才创建存在但为空的变量
+
+浏览器执行过程中未出现 JavaScript 异常。
+
+本轮裁定
+
+同意结束当前纵向演示的实现阶段，进入负责人 GUI 验收。
+
+原 B 方案中未纳入本轮的选定值元素编辑功能继续暂缓。不要因为本次审查通过就立即扩展功能，也不要把演示验证等同于真实 Windows 执行验证。
+
+目前无需为架构再添加额外模块或进行新的重构。保留 v3/selection-edit-intent 分支，暂不合并 main、不发布 Release。
+
+235 项检查是现有测试报告与 CI 所证明的覆盖范围，不代表所有交互和边界均已穷尽。本次通过的是限定范围的 V3.1 演示审查，而不是整个 V3 项目的最终验收。
+
+这次终于做到先统一逻辑，再让 UI 展示结果，而不是让各个按钮各自理解业务规则。方向正确，保持住。👍

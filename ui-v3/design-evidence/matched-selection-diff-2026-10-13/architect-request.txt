@@ -1,0 +1,14 @@
+【codex】我是本项目的 Codex 执行工程师。请参考本会话以前关于“存储已匹配值→用户编辑后差异”的讨论。负责人刚纠正了历史顺序：其最初请求“待修改”的聊天在前，后来解释应该记录已匹配元素，并接受你的“不猜意图、拆成增删”的回答在后。最新直接指示：根据 GPT 设计来，不猜测替换关系；对比原已匹配值与编辑后的选定值；不用“待修改”，统一显示“待删除”“待追加”。这覆盖上一轮 V3.1 的普通输入只追加/保留旧值的收窄解释。
+
+当前真实代码（主目录 H:/Yuri368/环境变量配置V3；Git 分支 v3/selection-edit-intent，HEAD bd12355，纯源码7dace9b）仍是浏览器演示。DemoPlan.build({target,mode,snapshot,selectedRaw}) 返回不可变 before/after/operations/matchResult。append 只向原Actual追加缺失项，无删除。setSelectedValue 只设custom/source/dirty，selectionChange只保存baselineValue→当前value，并没有Actual匹配基线。工作台/预览/历史已经统一读同一计划；实际Windows行编辑有稳定elementId审计和REPLACE。235项检查覆盖的是这个收窄实现，不能证明最新需求完成。
+
+我拟做最小修正：普通选定输入编辑开始时，捕获目标+Actual快照(exists/raw/type/revision)+原Selected及明确匹配的Actual子集；后续输入不刷新这一基线。把基线已匹配子集与新的Desired比较，不做C→E/F配对，不显示推测替换。移除已匹配且Desired不再需要的旧项作为REMOVE；新增且当前Actual没有的Desired项作为ADD。其他Actual元素保持，追加位置遵循+append头/-append尾，普通append原排序确认限制保持。一个纯计划生成器负责增删、after、标签、编辑器候选、预览和历史。取消不写入，相关快照变化拒绝旧计划，应用成功/恢复编辑才清理基线。
+
+精确案例：
+1 Actual A;B;C，初始Selected A;B;C;D：D待追加；Selected改成A;B;E;F：待删除C，待追加E/F，保留A/B；D不再存在于新Selected所以取消D候选。
+2 相同基线Selected改成E;F;G;H：只删除基线匹配A/B/C，追加E/F/G/H，不猜替换关系。
+3 Actual X;A;B;C;Y，原Selected A;B;C，改成A;E：删B/C，加E，X/Y保留。
+4 原Selected缺失D，改E：只追加E，无待删除，因为D从未在Actual匹配。
+5 Actual同值重复、跨app共享PATH：当前匹配是trim+区分大小写的存在式覆盖，重复Desired各计比例但只插一份missing。需要明确记录哪些Actual occurrence可删除，不应凭文本猜归属，也不能删除其他仍选择方案需要的共享元素。
+
+请确认最新理解，给本次最小明确契约：基线捕获/清理时机、重复occurrence/共享保护、同目标批量计划冲突、相关快照变化后的用户处理。请明确标签与实际增删一致；如果上面普通编辑删除逻辑与你当时回答不同，请指出并给不猜意图且满足负责人的具体做法。保留现有原生紧凑UI、无框架/大重构/真实注册表接入。确认前我不改核心模型。

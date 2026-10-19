@@ -1,10 +1,29 @@
+# Windows 环境变量方案管理器 V3
+
+**按应用与方案管理环境变量；先预览、再审阅执行，保留历史与恢复记录。**
+
+Windows 10 / 11 x64 · 紧凑浏览器界面 · 用户与系统变量 · TOML 配置编辑
+
+[**下载 V3.0.0 正式版**](https://github.com/yuri368/windows-environment-manager-v2/releases/tag/v3.0.0) · [运行与使用说明](ui-v3/docs/product-v3/RUNNING.md) · [构建与 SHA256](ui-v3/docs/product-v3/BUILD.md) · [验收范围](ui-v3/docs/product-v3/RELEASE_READINESS_2026-10-19.md)
+
+安装包包含 Python/Node 运行时，启动后打开本机浏览器界面。通常选择 **setup-user-x64.exe**；全机安装使用 **setup-machine-x64.exe**；便携使用 **windows-x64.zip**，解压后运行 `EnvManagerV3.exe`，保留整个目录。
+
+- 按应用 → 方案 → 变量组织 TOML，可先命名，再补充属性；配置、未完成草稿与工作输入分别持久保存。
+- 保留原文、重复项、空元素和稳定身份；整行上下拖动排序，普通行、幽灵行与前后对照同步反馈。
+- 执行绑定已审阅的计划与环境快照；系统写入按需提权，保留历史及中断恢复记录。
+- 安装 V3 不自动迁移 V2 数据；从界面导入 TOML，原始导入文件保持独立。V3 默认数据目录为 `%LOCALAPPDATA%\EnvManagerV3`。
+
+隔离试用：`EnvManagerV3.exe --backend file --data-dir .\v3-isolated`，不会修改 Windows 环境。正式版未作代码签名；当前原生验收来自 Windows 11 差分系统，干净虚拟机、多用户、另一管理员凭据和真实断电实验的覆盖边界见验收记录。
+
+下面保留 V2 使用说明与 [V2.0.1 下载入口](https://github.com/yuri368/windows-environment-manager-v2/releases/tag/v2.0.1)。V2 与 V3 的运行实现、安装目录和数据彼此独立。
+
 # Windows 环境变量方案管理器 V2
 
 **把环境变量按应用整理好。重装系统、切换 Windows 或更换软件版本时，少一点重复配置。**
 
 Windows 10 / 11 · 中文图形界面 · 支持用户变量与系统变量 · 开源免费
 
-[**⬇️ 下载 Windows 安装包**](https://github.com/yuri368/windows-environment-manager-v2/releases/latest) · [查看使用方法](#三步上手) · [配置示例](env.example.toml) · [反馈问题](https://github.com/yuri368/windows-environment-manager-v2/issues)
+[**⬇️ 下载 Windows 安装包**](https://github.com/yuri368/windows-environment-manager-v2/releases/tag/v2.0.1) · [查看使用方法](#三步上手) · [配置示例](env.example.toml) · [反馈问题](https://github.com/yuri368/windows-environment-manager-v2/issues)
 
 ![Windows 环境变量方案管理器主界面](docs/images/main-window.png)
 
@@ -70,7 +89,7 @@ Windows 自带的编辑器、[PowerToys 环境变量工具](https://learn.micros
 
 ### 1. 下载并安装
 
-前往 [Releases 下载页面](https://github.com/yuri368/windows-environment-manager-v2/releases/latest)，选择 Windows x64 安装包（文件名以 `windows-x64-setup.exe` 结尾）。
+前往 [Releases 下载页面](https://github.com/yuri368/windows-environment-manager-v2/releases/tag/v2.0.1)，选择 Windows x64 安装包（文件名以 `windows-x64-setup.exe` 结尾）。
 
 双击安装，随后从桌面或开始菜单启动。**安装版已包含所需运行环境，不需要额外安装 Python 或 Qt，也不用打开命令行。**
 

@@ -1,0 +1,106 @@
+{
+  "badges": [
+    {
+      "height": 22,
+      "text": "新增0",
+      "whiteSpace": "nowrap"
+    },
+    {
+      "height": 22,
+      "text": "手动新增0",
+      "whiteSpace": "nowrap"
+    },
+    {
+      "height": 22,
+      "text": "替换0",
+      "whiteSpace": "nowrap"
+    },
+    {
+      "height": 22,
+      "text": "移动1",
+      "whiteSpace": "nowrap"
+    },
+    {
+      "height": 22,
+      "text": "幽灵移动1",
+      "whiteSpace": "nowrap"
+    },
+    {
+      "height": 22,
+      "text": "删除1",
+      "whiteSpace": "nowrap"
+    },
+    {
+      "height": 22,
+      "text": "重复0",
+      "whiteSpace": "nowrap"
+    },
+    {
+      "height": 22,
+      "text": "空元素0",
+      "whiteSpace": "nowrap"
+    },
+    {
+      "height": 22,
+      "text": "匹配0",
+      "whiteSpace": "nowrap"
+    },
+    {
+      "height": 22,
+      "text": "移动",
+      "whiteSpace": "nowrap"
+    },
+    {
+      "height": 22,
+      "text": "本次编辑已移除",
+      "whiteSpace": "nowrap"
+    },
+    {
+      "height": 22,
+      "text": "幽灵移动",
+      "whiteSpace": "nowrap"
+    },
+    {
+      "height": 22,
+      "text": "建议追加",
+      "whiteSpace": "nowrap"
+    },
+    {
+      "height": 22,
+      "text": "删除",
+      "whiteSpace": "nowrap"
+    },
+    {
+      "height": 22,
+      "text": "幽灵移动",
+      "whiteSpace": "nowrap"
+    },
+    {
+      "height": 22,
+      "text": "移动",
+      "whiteSpace": "nowrap"
+    },
+    {
+      "height": 22,
+      "text": "移动",
+      "whiteSpace": "nowrap"
+    },
+    {
+      "height": 22,
+      "text": "删除",
+      "whiteSpace": "nowrap"
+    },
+    {
+      "height": 22,
+      "text": "幽灵移动",
+      "whiteSpace": "nowrap"
+    }
+  ],
+  "count": "有效元素 8 · 已移除 1",
+  "dialog": {
+    "client": 609,
+    "scroll": 609
+  },
+  "height": 1067,
+  "width": 640
+}

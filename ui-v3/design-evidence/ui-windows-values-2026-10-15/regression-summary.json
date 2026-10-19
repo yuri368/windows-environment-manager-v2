@@ -1,0 +1,7 @@
+{
+  "scripts": 26,
+  "passed": 512,
+  "failed": 0,
+  "scope": "Node/JSDOM regression, not visual or native Windows acceptance",
+  "total": 512
+}

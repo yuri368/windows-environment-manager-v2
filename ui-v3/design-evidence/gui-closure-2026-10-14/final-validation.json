@@ -1,0 +1,39 @@
+{
+  "productCommit": "5b38b72cf273da5810c19289c55eb4d7e5034978",
+  "date": "2026-10-14",
+  "tests": {
+    "primary": {
+      "scripts": 23,
+      "checks": 443,
+      "passed": true
+    },
+    "mirror": {
+      "scripts": 23,
+      "checks": 443,
+      "passed": true
+    }
+  },
+  "ci": [
+    {
+      "url": "https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38581460877",
+      "name": "V3 UI prototype checks",
+      "status": "success",
+      "commit": "5b38b72"
+    },
+    {
+      "url": "https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38581460710",
+      "name": "Python tests",
+      "status": "success",
+      "commit": "5b38b72"
+    }
+  ],
+  "nativeZoom": "not tested; viewport/DPR simulations only",
+  "files": {
+    "windows-elements.js": "f15ad786a1420a0cd59470f058be70659c50c053c050eff5110d8d20a0984e4a",
+    "elements-ui.css": "d7535f475b73c43de5d7a3f791c924bc0cbbf2872a3790c5d0af825ee256e25c",
+    "fx-ui.css": "5c7314fc72ee5a1457dfc3c9a5104573acaa1a7142df474de4d01a67440f86be",
+    "temp.html": "04e05ac4d3e50c5ec746471cbd0fa559a4703615eaae82e98ad3259fb4439e68",
+    "demo-plan.js": "950e4f532eaa9a43444ef10ff8b2ba819981ccbbc32202a6a19bf06f669d4bc4",
+    "package.json": "4df4bee4f87c6fcf485224f4d2d3b67fc10d51d2f275b70ac8ceb6f8a7ebfd37"
+  }
+}

@@ -1,0 +1,198 @@
+- heading "ChatGPT 说：" [level=4]
+    - paragraph: 【架构顾问 → Codex】
+    - heading "Windows 快照边界最终审查" [level=2]
+    - paragraph:
+      - text: 已核实产品提交
+      - link "0aa41e6":
+        - /url: https://github.com/yuri368/windows-environment-manager-v2/commit/0aa41e613bbdd077c7c199c18389725fa12fedaf
+        - generic: 0aa41e6
+      - text: ，其父提交确实为
+      - code: 13d87d5
+      - text: ，与本轮批准的实施基线一致。
+    - paragraph: 两条 GitHub CI 也已确认成功，且均对应本轮产品提交：
+    - list:
+      - paragraph:
+        - link "V3 UI prototype checks：成功":
+          - /url: https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38678221383
+          - generic: V3 UI prototype checks：成功
+      - paragraph:
+        - link "Python tests：成功":
+          - /url: https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38678221325
+          - generic: Python tests：成功
+    - paragraph:
+      - text: GitHub 变更文件集中在 V3 页面、元素编辑器、测试及证据文档。
+      - code: demo-plan.js
+      - text: 的 Git Blob 未发生变化，没有发现涉及 V2 或真实注册表模块的修改。
+    - heading "一、源码与契约审查" [level=2]
+    - table:
+      - rowgroup:
+        - row "审查项目 结果":
+          - columnheader "审查项目":
+            - paragraph: 审查项目
+          - columnheader "结果":
+            - paragraph: 结果
+        - row "Windows 页仅显示当前快照 通过":
+          - cell "Windows 页仅显示当前快照":
+            - paragraph: Windows 页仅显示当前快照
+          - cell "通过":
+            - paragraph:
+              - text: 通过
+        - row "删除方案高亮、追加/删除提示和冲突展示 通过":
+          - cell "删除方案高亮、追加/删除提示和冲突展示":
+            - paragraph: 删除方案高亮、追加/删除提示和冲突展示
+          - cell "通过":
+            - paragraph:
+              - text: 通过
+        - row "原始空白、CRLF、重复元素、空字符串 通过":
+          - cell "原始空白、CRLF、重复元素、空字符串":
+            - paragraph: 原始空白、CRLF、重复元素、空字符串
+          - cell "通过":
+            - paragraph:
+              - text: 通过
+        - row "Special 跨全部方案声明读取 通过":
+          - cell "Special 跨全部方案声明读取":
+            - paragraph: Special 跨全部方案声明读取
+          - cell "通过":
+            - paragraph:
+              - text: 通过
+        - row "未声明变量按普通元素编辑 通过":
+          - cell "未声明变量按普通元素编辑":
+            - paragraph: 未声明变量按普通元素编辑
+          - cell "通过":
+            - paragraph:
+              - text: 通过
+        - row "直接编辑手动操作与 Audit/History 通过":
+          - cell "直接编辑手动操作与 Audit/History":
+            - paragraph: 直接编辑手动操作与 Audit/History
+          - cell "通过":
+            - paragraph:
+              - text: 通过
+        - row "工作台方案建议和预览 通过":
+          - cell "工作台方案建议和预览":
+            - paragraph: 工作台方案建议和预览
+          - cell "通过":
+            - paragraph:
+              - text: 通过
+        - row "DemoPlan 核心 未修改":
+          - cell "DemoPlan 核心":
+            - paragraph: DemoPlan 核心
+          - cell "未修改":
+            - paragraph:
+              - text: 未修改
+    - paragraph:
+      - code: renderWindows()
+      - text: 已去掉原有方案计划汇总，使用
+      - code: textContent
+      - text: 写入原始快照；已有
+      - code: ".codevalue { white-space: pre-wrap; }"
+      - text: 提供空白显示支持。
+      - button "source-review.txt":
+        - generic: source-review.txt
+    - paragraph:
+      - code: Special
+      - text: 通过所有应用、方案声明判断，不再读取当前方案选择。对于同键声明不一致的情况，继续依赖项目既有配置不变量，本轮不增加新的冲突处理模型。
+    - paragraph:
+      - text: 直接编辑采用
+      - code: showSuggestions=false
+      - text: ，隐藏方案建议与匹配图例，但保留正常变更状态。
+      - button "source-review.txt":
+        - generic: source-review.txt
+    - paragraph:
+      - text: 另外，我对附件提取出的
+      - code: windows-elements.js
+      - text: 和新增专项测试进行了独立 JavaScript 语法检查，均通过。
+    - heading "二、测试与浏览器证据" [level=2]
+    - paragraph: 主项目回归报告
+    - heading "487 / 487" [level=1]
+    - generic: 25 套脚本，全部退出成功
+    - paragraph: Git 镜像回归报告
+    - heading "487 / 487" [level=1]
+    - generic: 25 套脚本，全部退出成功
+    - paragraph: 我检查了 GitHub 中的完整回归 JSON，确认两份目录各 25 套脚本、487 项通过，新增的 25 项 Windows 快照专项测试也在其中。
+    - paragraph: 提供的两张截图与浏览器证据一致：Windows 页不再出现方案叠加信息，PATH 直接编辑器也不显示方案建议。工作台草稿独立保留的行为有专项测试及浏览器记录支持。
+    - paragraph:
+      - generic: 验证限制：
+      - text: 我没有独立重跑全部 487 项测试，也没有重新操作浏览器或做像素验收。原生浏览器缩放和 Windows DPI 仍未实测。
+    - heading "三、发现一项归档证据不一致" [level=2]
+    - paragraph:
+      - text: 这里有一个需要 Codex 核对的小问题，属于
+      - generic: 证据一致性
+      - text: ，不是已确认的产品功能缺陷。
+    - paragraph:
+      - text: 我从上传附件中提取了完整
+      - code: temp.html
+      - text: ，计算结果如下：
+    - table:
+      - rowgroup:
+        - row "项目 SHA-256":
+          - columnheader "项目":
+            - paragraph: 项目
+          - columnheader "SHA-256":
+            - paragraph: SHA-256
+        - row "附件中的 temp.html 0aa25c95bd7a54d2…":
+          - cell "附件中的 temp.html":
+            - paragraph:
+              - text: 附件中的
+              - code: temp.html
+          - cell "0aa25c95bd7a54d2…":
+            - paragraph:
+              - code: 0aa25c95bd7a54d2…
+        - row "GitHub 产品文件 与附件完全一致":
+          - cell "GitHub 产品文件":
+            - paragraph: GitHub 产品文件
+          - cell "与附件完全一致":
+            - paragraph: 与附件完全一致
+        - row "source-hashes.json 记录的镜像文件 a3f103aa07246c84…":
+          - cell "source-hashes.json 记录的镜像文件":
+            - paragraph:
+              - code: source-hashes.json
+              - text: 记录的镜像文件
+          - cell "a3f103aa07246c84…":
+            - paragraph:
+              - code: a3f103aa07246c84…
+    - paragraph:
+      - text: 附件源码和 GitHub 产品提交的
+      - generic: Git Blob SHA 完全一致
+      - text: ，因此当前提交本身是可追溯的。
+    - paragraph:
+      - text: 但归档证据中的镜像
+      - code: temp.html
+      - text: 哈希与实际提交不同。可能是哈希记录生成后又更新了 HTML，也可能是本地镜像确实存在差异。现有证据不足以确认原因。
+    - paragraph: 请 Codex 在最终归档材料中核对并说明这一项。如果只是记录过时，使用纯证据提交修正即可；不需要修改产品源码。
+    - heading "四、最终裁定" [level=2]
+    - generic: 产品审查通过
+    - paragraph:
+      - generic: 产品功能阻断项：0。
+    - paragraph:
+      - generic: 归档证据待核对项：1。
+    - paragraph:
+      - text: 批准将
+      - code: 0aa41e6
+      - text: 冻结为本轮 Windows 快照边界的产品版本。正式宣布证据归档全部完成前，应先核对上述
+      - code: temp.html
+      - text: 哈希差异。
+    - paragraph: 这不影响本轮的架构结论，也不需要重新设计功能或修改 DemoPlan。
+    - paragraph:
+      - generic: 最终意见：产品可以归档；补正证据一致性后完成归档收尾。
+    - button "查看分析":
+    - button "复制":
+    - button "评价回复":
+    - button "分享":
+    - button "朗读":
+    - button "重新生成回复":
+    - button "更多操作":
+    - generic: ChatGPT 可能会出错。请核查重要信息。
+    - button "滚动到底部":
+    - heading "最新一条回复" [level=4]
+    - status
+    - button "添加文件等内容":
+    - textbox "询问 ChatGPT":
+      - paragraph: 询问 ChatGPT
+    - button "选择 ChatGPT 模型":
+      - generic: 高
+    - button "听写":
+    - button "开始语音":
+- status
+- status: 回答已完成
+- status
+- status

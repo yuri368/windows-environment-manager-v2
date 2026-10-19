@@ -1,0 +1,46 @@
+{
+  "date": "2026-10-14",
+  "status": "Implementation, local/browser validation and final defect review complete; archived.",
+  "primary": "H:/Yuri368/环境变量配置V3",
+  "gitMirror": "H:/Yuri368/环境变量配置V3-git/ui-v3",
+  "branch": "v3/claude-ui-fixes",
+  "baseline": "5b05e99894abc412f611f7482352649afe0dcaf4",
+  "productCommit": "cfd83f71570aaea0dc81d5b1e3efb5037add4e8e",
+  "testSyncCommit": "49805386d11b2cf91a5756ea2745aee4fd4d4e4c",
+  "changes": [
+    "Restore deletion-time edited drafts by stable original ID at current ghost display position.",
+    "Preserve untouched LF/CRLF/CR for ordinary and special textarea edits.",
+    "Restore two-column mobile application grid at the existing max-width 620px breakpoint.",
+    "Maintain assertions for Claude source classes, textarea controls, inline-flex tokens and suggestion-button focus.",
+    "Use validated beforeinput edit ranges to distinguish original adjacent CRLF from newly inserted LF."
+  ],
+  "validation": {
+    "primary": "20 scripts / 395 checks pass",
+    "gitMirror": "20 scripts / 395 checks pass",
+    "browser": [
+      "Same ID and draft restored after ghost move; Apply History preserves full three-line draft.",
+      "Normal and special mixed LF/CRLF/CR retained after actual browser typing.",
+      "CSS innerWidth 600px: two grid columns, max-height 150px, no horizontal overflow.",
+      "Native Delete/Enter in ordinary and Special editors: all four adjacent newline cases preserve correct raw after Apply.",
+      "Standalone CR seam native Enter/Delete in normal/Special: saved raw and reopened visible text both preserve three lines."
+    ],
+    "sourceCoherence": "Product files, all test scripts and package files are byte-identical in primary and mirror.",
+    "ci": [
+      "UI #35 success at 0665e00",
+      "Python #81 success at 0665e00"
+    ]
+  },
+  "notes": [
+    "First UI CI failed because five already-updated primary tests were omitted in Git synchronization; 4980538 corrects this.",
+    "GPT final review initially returned two Unknown errors and then required Cloudflare verification. The user completed verification; final request resubmitted with success CI.",
+    "No real Windows Registry integration or release acceptance is claimed.",
+    "Adjacent CRLF provenance and standalone CR/LF concatenation addressed in e8d90e6 and 0665e00. Only a conflicting seam is minimally adjusted; normalized saved content must equal current textarea content."
+  ],
+  "boundaryCommit": "e8d90e69ea6ff22f04cfaa24580a2ea1937d5310",
+  "sourceCommit": "0665e0050c642ba7f7613625f161232431ee865b",
+  "architectReview": {
+    "status": "Confirmed final P2 fixed; no remaining reproducible same-class blocker.",
+    "evidence": "architect-final-review.txt",
+    "limitation": "GPT response ended with Cloudflare challenge after explicit data-fidelity pass; at that instant it reported Python CI running. Codex subsequently verified both Python jobs succeeded and archived final CI separately."
+  }
+}

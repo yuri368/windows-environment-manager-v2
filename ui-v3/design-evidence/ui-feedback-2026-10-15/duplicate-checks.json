@@ -1,0 +1,71 @@
+{
+  "verification": "DOM-only events, classes, stable occurrence identity and data immutability; native pointer and visual layout not verified",
+  "passed": 16,
+  "total": 16,
+  "checks": [
+    {
+      "name": "Hovering a repeated Original value highlights every equal raw occurrence across Original, Preview and rows",
+      "passed": true
+    },
+    {
+      "name": "Original and Preview with the same ID but changed raw text select their own duplicate groups",
+      "passed": true
+    },
+    {
+      "name": "Pointer transitions among value, duplicate badge and icon keep the duplicate group highlighted",
+      "passed": true
+    },
+    {
+      "name": "Pointerleave clears duplicate highlighting and restores focused occurrence identity only",
+      "passed": true
+    },
+    {
+      "name": "Repeated empty slices link as empty raw values without including whitespace",
+      "passed": true
+    },
+    {
+      "name": "Editing a hovered row refreshes duplicate metadata without changing Original snapshots",
+      "passed": true
+    },
+    {
+      "name": "Ghosts can receive the raw duplicate highlight while retaining deletion-time text and live duplicate counts",
+      "passed": true
+    },
+    {
+      "name": "An unchanged deleted duplicate remains a highlighted ghost but does not gain a duplicate badge",
+      "passed": true
+    },
+    {
+      "name": "Hover is display-only: model, plan result, node identities and rendered values remain unchanged",
+      "passed": true
+    },
+    {
+      "name": "Read-only streams preserve exact raw equality, case, whitespace, CRLF and escaped markup",
+      "passed": true
+    },
+    {
+      "name": "Read-only comparison linkage is symmetric, independently scoped and restores keyboard focus",
+      "passed": true
+    },
+    {
+      "name": "History without recorded element audit links duplicate text without inventing occurrence correspondence",
+      "passed": true
+    },
+    {
+      "name": "Workbench and application preview markup link duplicates without mutating their frozen plan",
+      "passed": true
+    },
+    {
+      "name": "Static display tokens can link their duplicate group and whole strings never infer internal duplicates",
+      "passed": true
+    },
+    {
+      "name": "Actual Windows inventory streams reuse duplicate hover and remain isolated by variable",
+      "passed": true
+    },
+    {
+      "name": "Duplicate hover workflows produce no JSDOM runtime errors",
+      "passed": true
+    }
+  ]
+}

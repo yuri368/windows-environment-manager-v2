@@ -1,0 +1,476 @@
+藏文字。
+      - paragraph: 在 Grid 布局中，这可能产生额外的布局子项，影响伪元素的实际位置。
+      - paragraph:
+        - strong: 此原因尚未通过真实浏览器布局测量最终确认，不能直接视为已证实。
+      - paragraph: Codex 应首先检查：
+      - list:
+        - paragraph: 图标容器实际尺寸。
+        - paragraph:
+          - code: ::before
+          - text: 盒模型。
+        - paragraph: Grid/Flex 对齐。
+        - paragraph: 伪元素是否产生额外网格行。
+        - paragraph: CSS mask 的绘制框是否居中。
+        - paragraph: SVG 图形本身的视觉重心。
+        - paragraph: 不同缩放下是否有像素取整偏差。
+      - heading "修复原则" [level=3]
+      - list:
+        - paragraph: 优先修复共同的布局原因。
+        - paragraph:
+          - text: 不要简单为四个图标分别增加
+          - code: translateY()
+          - text: 。
+        - paragraph: 只有 SVG 自身视觉中心偏移时，才允许少量光学校正。
+        - paragraph: 不改变圆圈整体大小、颜色、Hover、Focus 或采纳动效。
+        - paragraph: 保留 aria-label 与键盘访问能力。
+        - paragraph: 不改变采纳、撤销及匹配逻辑。
+      - heading "验收" [level=3]
+      - list:
+        - paragraph:
+          - code: ＋
+          - text: 、
+          - code: −
+          - text: 、
+          - code: ↶
+          - text: 、
+          - code: ✓
+          - text: 均在圆圈中央。
+        - paragraph: 普通、Hover、Focus、已采纳状态均无明显偏移。
+        - paragraph: 100%、125%、150%、200% 缩放下稳定。
+        - paragraph: 采纳与撤销操作正常。
+        - paragraph: 匹配图标不污染实际值。
+        - paragraph: 其他同类圆形图标若存在相同问题，可做同因修复，但不扩大为整个图标系统重构。
+      - separator
+      - heading "六、实施范围与工程纪律" [level=2]
+      - heading "允许修改" [level=3]
+      - paragraph: 优先限定：
+      - list:
+        - paragraph:
+          - code: windows-elements.js
+        - paragraph:
+          - code: elements-ui.css
+        - paragraph:
+          - code: fx-ui.css
+      - paragraph: 确有必要可修改其他直接相关的 UI 样式，但必须说明原因。
+      - paragraph: 允许补充：
+      - list:
+        - paragraph: 自动化测试。
+        - paragraph: 浏览器验收报告。
+        - paragraph: 变更说明及截图证据。
+      - heading "禁止修改" [level=3]
+      - list:
+        - paragraph:
+          - code: demo-plan.js
+          - text: 核心业务规则。
+        - paragraph: V2 核心源码。
+        - paragraph: Windows Registry 操作。
+        - paragraph: Apply/History 的既有执行契约。
+        - paragraph: Claude 无关的界面布局。
+        - paragraph: 已验收的 FLIP、碎片和拖放动画设计。
+      - paragraph: 未经负责人授权：
+      - list:
+        - paragraph: 不合并 main。
+        - paragraph: 不发布 Release。
+        - paragraph: 不引入新框架。
+        - paragraph: 不进行额外功能开发。
+      - heading "实施流程" [level=3]
+      - list:
+        - paragraph: 确认当前基线和 Git 工作区状态。
+        - paragraph: 修改前提交或建立可追溯备份。
+        - paragraph: 按四项需求执行最小修改。
+        - paragraph: 更新必要的测试。
+        - paragraph: 运行全部既有回归测试。
+        - paragraph: 使用真实浏览器检查视觉与交互。
+        - paragraph: 记录修改的文件、测试结果、截图及提交号。
+        - paragraph: 向 ChatGPT 架构顾问提交审查。
+        - paragraph: 通过审查后再正式归档。
+      - paragraph: 不得因为部分旧测试断言依赖旧 UI 结构，就回退负责人确认的新交互；应区分测试过时与实际功能失败。
+      - separator
+      - heading "七、最终验收标准" [level=2]
+      - paragraph:
+        - strong: 功能正确：
+      - list:
+        - paragraph: 手动新增与方案新增能区分。
+        - paragraph: 手动新增删除后直接消失。
+        - paragraph: 原始元素删除后幽灵显示最后编辑值。
+        - paragraph: 普通取消删除恢复最后草稿。
+        - paragraph: 建议删除撤销保持原值语义。
+        - paragraph: 稳定 ID、顺序、序列化和历史记录正确。
+      - paragraph:
+        - strong: 视觉正确：
+      - list:
+        - paragraph: 普通行与幽灵行按钮完全对齐。
+        - paragraph: 删除与恢复使用同一操作位置。
+        - paragraph: 两种按钮状态有颜色及动效区别。
+        - paragraph: 建议按钮与匹配图标居中。
+        - paragraph: 整体保持 Claude 现有紧凑、优雅的视觉设计。
+      - paragraph:
+        - strong: 工程正确：
+      - list:
+        - paragraph: 核心 DemoPlan 不变。
+        - paragraph: 无真实 Windows 注册表修改。
+        - paragraph: 全部现有及新增回归测试通过。
+        - paragraph: 提供真实浏览器验收证据。
+        - paragraph: 无未经授权的功能扩展。
+      - heading "最终原则" [level=2]
+      - paragraph:
+        - strong: 这轮不是重新设计 UI，而是让现有界面在状态表达、内容展示和交互位置上更加一致。
+      - paragraph: 只处理这四项负责人已确认的需求，禁止借机扩大开发范围。
+    - paragraph: 这份文档已经明确锁定了几个最容易被搞混的决定：手动新增删除后直接消失、普通幽灵恢复最新草稿、绿色建议删除撤销恢复原值、两个新增来源的标记不同。
+    - paragraph: 目前 4 项待修复，0 项已授权实施。这份任务书保留在当前对话里，Codex 恢复后以它为准，之前那些相互冲突的零散版本可以忽略。
+    - button "复制":
+    - button "评价回复":
+    - button "分享":
+    - button "朗读":
+    - button "重新生成回复":
+    - button "更多操作":
+    - heading "你说：" [level=4]
+    - generic: "1"
+    - button "复制消息":
+    - button "共享提示":
+    - button "查看版本":
+    - button "编辑消息":
+    - heading "ChatGPT 说：" [level=4]
+    - paragraph: 你是想先处理任务书中的第 1 项：区分“手动新增”和“方案建议新增”的标记，还是有其他意思？
+    - button "复制":
+    - button "评价回复":
+    - button "分享":
+    - button "朗读":
+    - button "重新生成回复":
+    - button "更多操作":
+    - separator "今天 19:53":
+      - time: 今天 19:53
+    - heading "你说：" [level=4]
+    - generic: 【codex】负责人现在已明确授权开始统一任务书的全部四项，误发的“1”忽略。当前产品基线0665e005，Git归档HEAD5942d02。正在建立v3/gui-feedback修复分支。 拟最小实现：会话manualAddedIds Set只记手动按钮创建ID，编辑/移动不清除，删除/Restore/Cancel清理；label及淡蓝色UI区分，Audit仍ADD，方案采纳编辑后依然“新增”，不依赖会清空的adoptionMap。幽灵list与编辑后的preview使用deletedDrafts最新草稿，Original pane和Audit REMOVE.before继续original。普通与ghost复用同一↑↓第三槽trash/undo图标按钮渲染，无长文字，保持稳定ID/当前位置/原恢复契约与ClaudeFX。 圆形图标先实测baseline Grid/pseudo盒，再将隐藏字符包为display:none span.icon-fallback，CSS图标固定同一cell居中，保留文字textContent/aria/原尺寸颜色动画，不用逐图标translateY。实际100/125/150/200缩放及键盘复核。产品局限windows-elements.js/elements-ui.css/fx-ui.css，demo-plan不改，无Registry/V2/main/Release。请指出明确契约冲突；任务书已有设计确认，按此实现后提交完整回归和browser证据给你最后审查。
+    - button "复制消息":
+    - button "共享提示":
+    - button "编辑消息":
+    - heading "ChatGPT 说：" [level=4]
+    - paragraph: 【架构顾问 → Codex】
+    - paragraph:
+      - generic: 方案审查通过，批准按计划实施全部四项 GUI 修复。
+      - text: ✅
+    - paragraph:
+      - text: 当前实现方向与负责人最新确认的任务书没有实质性冲突。尤其是使用
+      - code: manualAddedIds
+      - text: 区分新增来源、复用
+      - code: deletedDrafts
+      - text: 展示幽灵草稿，以及统一三按钮布局，这些方向都正确。
+    - paragraph:
+      - text: 不过，实施时有
+      - generic: 4 个细节必须明确
+      - text: ，避免修复视觉问题时引入状态回归。
+    - heading "1. manualAddedIds 只记录来源，不参与业务判断" [level=3]:
+      - text: "1."
+      - code: manualAddedIds
+      - text: 只记录来源，不参与业务判断
+    - paragraph:
+      - text: 同意使用
+      - code: Set<ElementId>
+      - text: 。
+    - list:
+      - paragraph: 手动新增时加入 Set。
+      - paragraph: 手动新增元素被删除时，仅移除对应 ID。
+      - paragraph: 编辑、移动、重绘均不得清除来源标记。
+      - paragraph: 方案采纳新增即使后来手动修改，也不能变成“手动新增”。
+      - paragraph: Restore 清空，Cancel 随会话销毁。
+    - paragraph:
+      - generic: 注意：
+      - text: 普通原始元素被删除时，不得顺带清空其他元素的
+      - code: manualAddedIds
+      - text: 。
+    - paragraph: “手动新增”只改变 UI 文字和样式，底层仍为 ADD。
+    - heading "2. 幽灵显示草稿与建议删除撤销必须区分" [level=3]
+    - paragraph: 这是最重要的业务边界。
+    - table:
+      - rowgroup:
+        - row "操作 恢复内容":
+          - columnheader "操作":
+            - paragraph: 操作
+          - columnheader "恢复内容":
+            - paragraph: 恢复内容
+        - row "普通幽灵行点击恢复 删除前最新草稿":
+          - cell "普通幽灵行点击恢复":
+            - paragraph: 普通幽灵行点击恢复
+          - cell "删除前最新草稿":
+            - paragraph: 删除前最新草稿
+        - row "绿色建议删除卡片点击 ✓ 撤销 原始快照值":
+          - cell "绿色建议删除卡片点击 ✓ 撤销":
+            - paragraph: 绿色建议删除卡片点击 ✓ 撤销
+          - cell "原始快照值":
+            - paragraph: 原始快照值
+    - paragraph:
+      - text: 幽灵行可以显示
+      - code: deletedDrafts
+      - text: 中的最新内容，但
+      - code: Audit REMOVE.before
+      - text: 必须继续引用原始值。
+    - paragraph:
+      - text: 另外，普通幽灵直接恢复时，如果存在相关的
+      - code: removalAdoptions
+      - text: ，必须同步清理，避免建议卡片仍错误显示“已采纳删除”。
+    - heading "3. 操作栏统一，但不能统一掉行为差异" [level=3]
+    - paragraph: 三个按钮槽位固定为：
+    - paragraph:
+      - code: ↑ ↓ 删除/恢复
+    - paragraph: 普通行与幽灵行在宽度、顺序、位置上必须完全一致。
+    - paragraph: 但：
+    - list:
+      - paragraph: 普通行删除原始元素，产生幽灵。
+      - paragraph: 普通行删除本次新增元素，直接消失。
+      - paragraph: 幽灵行移动只改变展示顺序。
+      - paragraph: 幽灵恢复后，若 live 顺序变化，仍按原有规则产生 MOVE。
+    - paragraph: 事件处理最好继续使用明确的状态判断，不要单纯根据按钮图标决定执行删除还是恢复。
+    - heading "4. 图标居中优先修布局，不调整视觉重心来掩盖结构问题" [level=3]
+    - paragraph: 同意先检查 Grid、伪元素盒模型，再处理隐藏文字。
+    - paragraph:
+      - code: "span.icon-fallback { display:none }"
+      - text: 可以作为实现方式，但必须确保：
+    - list:
+      - paragraph:
+        - text: 按钮仍有准确的
+        - code: aria-label
+        - text: 。
+      - paragraph: CSS mask 图标拥有唯一、明确的居中位置。
+      - paragraph: 图标在 Hover、Focus 和已采纳状态下不发生布局跳动。
+      - paragraph:
+        - text: 匹配
+        - code: ✓
+        - text: 与采纳按钮
+        - code: ＋/−/↶
+        - text: 分别测试。
+      - paragraph: 保留原尺寸及 Claude 现有动画效果。
+    - paragraph:
+      - text: 不需要逐个使用
+      - code: translateY()
+      - text: 补丁。
+    - heading "最终执行裁定" [level=3]
+    - generic: 批准实施
+    - table:
+      - rowgroup:
+        - row "项目 结论":
+          - columnheader "项目":
+            - paragraph: 项目
+          - columnheader "结论":
+            - paragraph: 结论
+        - row "手动新增来源标记 批准":
+          - cell "手动新增来源标记":
+            - paragraph: 手动新增来源标记
+          - cell "批准":
+            - paragraph: 批准
+        - row "幽灵显示最新草稿 批准":
+          - cell "幽灵显示最新草稿":
+            - paragraph: 幽灵显示最新草稿
+          - cell "批准":
+            - paragraph: 批准
+        - row "普通/幽灵统一操作栏 批准":
+          - cell "普通/幽灵统一操作栏":
+            - paragraph: 普通/幽灵统一操作栏
+          - cell "批准":
+            - paragraph: 批准
+        - row "圆形图标居中修正 批准":
+          - cell "圆形图标居中修正":
+            - paragraph: 圆形图标居中修正
+          - cell "批准":
+            - paragraph: 批准
+        - row "修改 DemoPlan 或核心业务 不批准":
+          - cell "修改 DemoPlan 或核心业务":
+            - paragraph: 修改 DemoPlan 或核心业务
+          - cell "不批准":
+            - paragraph: 不批准
+        - row "扩展其他 UI 功能 不批准":
+          - cell "扩展其他 UI 功能":
+            - paragraph: 扩展其他 UI 功能
+          - cell "不批准":
+            - paragraph: 不批准
+    - paragraph:
+      - text: Codex 可以继续在
+      - code: v3/gui-feedback
+      - text: 分支执行，无需等待第二次方案确认。
+    - paragraph: 完成后提交本轮源码、完整回归结果、浏览器截图与实际交互证据，由我进行最终审查。
+    - paragraph:
+      - generic: 此次以负责人 GUI 体验为验收依据，以原有数据与业务契约为约束。保持小范围修复，不要再把一个按钮对齐问题发展成第四代 UI 架构。
+    - button "复制":
+    - button "评价回复":
+    - button "分享":
+    - button "朗读":
+    - button "重新生成回复":
+    - button "更多操作":
+    - heading "你说：" [level=4]
+    - generic: 【codex】四项修复已实现，两份目录21脚本各422项检查通过；真实页面验证ghost显示删除时草稿、Original/audit保留原值、按当前位置恢复、3按钮槽位对齐、圆形mask单Grid行。负责人新反馈两项已明确授权：1 汇总必须单列“手动新增”，与方案“新增”分计数（已补，稳定来源Set，图例/footer同源）；2 移动、重复、删除等图标与文字分离，要求参考汇总栏把图标+文字放同一badge。计划只改展示：统一statusBadge(kind,text)复用现有st-cell/CSS mask，替换散落diff-label生成；去除状态图标单独放元素左侧的重复铭牌；保留空元素指示、匹配圆圈、+/-/撤销动作按钮、stable ID/raw/audit/FX。多状态各有完整badge，可整体换行，图标文字不拆。核心demo-plan不变。请指出最小实现约束；不增加新状态或业务模型。完成后一次给源码/422+新增回归/截图/提交审查。另100/125/150/200是CDP尺寸+DPR模拟；本IAB原生zoom快捷键无效，不能声称原生缩放验收完成。
+    - button "复制消息":
+    - button "共享提示":
+    - button "编辑消息":
+    - heading "ChatGPT 说：" [level=4]
+    - paragraph: 【架构顾问 → Codex】
+    - paragraph:
+      - generic: 方案审查通过，批准继续实施这两项补充修改。
+      - text: ✅
+    - paragraph: 从你描述的实现方向看，没有发现与此前 V3 架构契约冲突的地方。将状态统一为「图标 + 文字」的 Badge，比让图标和标签各占一个位置更合理，也能减少视觉噪声。
+    - paragraph: 但必须遵守以下最小约束。
+    - heading "一、实现约束" [level=3]
+    - paragraph:
+      - text: "1."
+      - generic: 手动新增与方案新增分别统计。
+      - code: manualAddedIds
+      - text: 只作为 UI 来源标记。汇总应满足
+      - code: 新增总数 = 手动新增 + 方案新增
+      - text: ，不得把同一个元素重复计数。编辑、移动不改变来源，删除后不再计数。Audit 中仍统一为 ADD。
+    - paragraph:
+      - text: "2."
+      - generic: 统一状态 Badge，但不改变状态含义。
+      - code: statusBadge(kind, text)
+      - text: 应复用现有
+      - code: st-cell
+      - text: 图标系统，生成一个包含图标和文字的整体标签。
+      - code: 新增
+      - text: 、
+      - code: 手动新增
+      - text: 、
+      - code: 替换
+      - text: 、
+      - code: 移动
+      - text: 、
+      - code: 删除
+      - text: 、
+      - code: 重复
+      - text: 等保留各自语义和色系。
+    - paragraph:
+      - text: "3."
+      - generic: 多个状态独立显示，不合并业务状态。
+      - text: 例如同一元素既有替换又有移动，应显示两个完整 Badge。重复只是原始文本一致性的提示，不得进入 Audit 变更计数。
+    - paragraph:
+      - text: "4."
+      - generic: 图标文字不能拆行。
+      - text: Badge 内部使用
+      - code: inline-flex
+      - text: 、居中对齐及
+      - code: "white-space: nowrap"
+      - text: ；容器允许不同 Badge 之间换行。不要通过固定宽度强制挤压长标签。
+    - paragraph:
+      - text: "5."
+      - generic: 只去除冗余的状态铭牌。
+      - text: 元素左侧重复的状态图标可以移除，但必须保留空元素指示、匹配圆圈、方案采纳/撤销按钮、幽灵行操作按钮。状态 Badge 不得成为可点击控件，也不参与业务计算。
+    - paragraph:
+      - text: "6."
+      - generic: 保留已有 CSS 与 DOM 契约。
+      - text: 可使用现有
+      - code: diff-label
+      - text: 语义类兼容测试和样式，避免一刀切删除导致幽灵、建议卡片、对照区的其他标签丢失效果。动态文案继续转义，装饰图标设为
+      - code: aria-hidden
+      - text: ，文字本身可被辅助技术读取。
+    - heading "二、特别注意一个容易发生的回归" [level=3]
+    - paragraph:
+      - text: 原始元素
+      - code: A
+      - text: 修改为
+      - code: B
+      - text: 再删除后：
+    - list:
+      - paragraph:
+        - text: 幽灵行显示
+        - code: B
+        - text: 。
+      - paragraph: 状态展示为删除。
+      - paragraph:
+        - text: 原始对照仍为
+        - code: A
+        - text: 。
+      - paragraph:
+        - text: Audit 的 REMOVE.before 仍为
+        - code: A
+        - text: 。
+      - paragraph:
+        - text: 普通恢复仍恢复
+        - code: B
+        - text: 。
+    - paragraph:
+      - generic: 新的 Badge 只能改变最后的状态呈现，不能因为重组 DOM 而重新从 Original 推导展示值。
+    - paragraph: 此外，来源标记要检查三个地方是否一致：元素行、变更汇总、底部 Footer。不要出现行上显示「手动新增 1」，汇总又把它算进普通「新增 1」的情况。
+    - heading "三、验收要求" [level=3]
+    - table:
+      - rowgroup:
+        - row "验收项目 要求":
+          - columnheader "验收项目":
+            - paragraph: 验收项目
+          - columnheader "要求":
+            - paragraph: 要求
+        - row "手动新增/方案新增 分别计数，总数一致":
+          - cell "手动新增/方案新增":
+            - paragraph: 手动新增/方案新增
+          - cell "分别计数，总数一致":
+            - paragraph: 分别计数，总数一致
+        - row "元素状态 图标和文字位于同一 Badge":
+          - cell "元素状态":
+            - paragraph: 元素状态
+          - cell "图标和文字位于同一 Badge":
+            - paragraph: 图标和文字位于同一 Badge
+        - row "多状态元素 各 Badge 完整，允许整体换行":
+          - cell "多状态元素":
+            - paragraph: 多状态元素
+          - cell "各 Badge 完整，允许整体换行":
+            - paragraph: 各 Badge 完整，允许整体换行
+        - row "删除幽灵 最新草稿、恢复和审计不变":
+          - cell "删除幽灵":
+            - paragraph: 删除幽灵
+          - cell "最新草稿、恢复和审计不变":
+            - paragraph: 最新草稿、恢复和审计不变
+        - row "状态来源 编辑、移动、采纳后不混淆":
+          - cell "状态来源":
+            - paragraph: 状态来源
+          - cell "编辑、移动、采纳后不混淆":
+            - paragraph: 编辑、移动、采纳后不混淆
+        - row "交互 键盘、拖放、FX 与原有功能不回归":
+          - cell "交互":
+            - paragraph: 交互
+          - cell "键盘、拖放、FX 与原有功能不回归":
+            - paragraph: 键盘、拖放、FX 与原有功能不回归
+        - row "回归 现有 422 项及新增检查通过":
+          - cell "回归":
+            - paragraph: 回归
+          - cell "现有 422 项及新增检查通过":
+            - paragraph: 现有 422 项及新增检查通过
+    - paragraph:
+      - text: 你主动说明了缩放验收的限制，这一点是正确的。
+      - generic: CDP 的视口尺寸与 DPR 模拟不能等同于浏览器原生 100%～200% 缩放实测。
+      - text: 最终报告如实写明即可，不必为了补一项无法执行的验证而影响本轮收尾。
+    - heading "最终指令" [level=3]
+    - generic: 批准实施
+    - paragraph:
+      - text: 保留
+      - code: demo-plan.js
+      - text: 和现有业务状态模型不变，仅收敛状态展示与计数呈现。
+    - paragraph:
+      - text: 完成后一次性提交源码、测试、截图和提交号，我再进行最终审查。此前报告的
+      - generic: 21 脚本、422 项通过
+      - text: 目前属于 Codex 提供的验证结果，最终仍以提交对应的证据为准。
+    - paragraph:
+      - text: 这轮目标很明确：
+      - generic: 统一视觉语言，而不是重新发明状态系统。
+    - button "复制":
+    - button "评价回复":
+    - button "分享":
+    - button "朗读":
+    - button "重新生成回复":
+    - button "更多操作":
+    - generic: ChatGPT 可能会出错。请核查重要信息。
+    - button "滚动到底部":
+    - heading "最新一条回复" [level=4]
+    - status
+    - button "添加文件等内容":
+    - textbox "询问 ChatGPT":
+      - paragraph: 询问 ChatGPT
+    - button "选择 ChatGPT 模型":
+      - generic: 高
+    - button "听写":
+    - button "开始语音":
+- status
+- status: 回答已完成
+- status
+- status
+- button "⋮⋮"
+- button "⋮⋮"
+- button "⋮⋮"
+- button "⋮⋮"
+- button "⋮⋮"
+- button "⋮⋮"

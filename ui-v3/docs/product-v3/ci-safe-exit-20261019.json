@@ -1,0 +1,34 @@
+{
+  "testedCommit": "f9e411c1c42d16c2150ebc181a3957bc5b8fa3c6",
+  "runId": 39198412005,
+  "conclusion": "success",
+  "jobs": [
+    {
+      "job": {
+        "id": 117886084484,
+        "name": "V3 product (windows-latest)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      "lines": [
+        "2026-10-19T04:15:59.5238645Z Ran 504 tests in 95.683s\r",
+        "2026-10-19T04:15:59.5239055Z OK (skipped=1)\r",
+        "2026-10-19T04:16:02.8694372Z 43 product contract checks passed (JSDOM fixtures; real backend/browser acceptance is separate).\r"
+      ]
+    },
+    {
+      "job": {
+        "id": 117886084693,
+        "name": "V3 product (ubuntu-latest)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      "lines": [
+        "2026-10-19T04:15:00.7706189Z Ran 504 tests in 44.278s",
+        "2026-10-19T04:15:00.7706803Z OK (skipped=10)",
+        "2026-10-19T04:15:03.6271986Z 43 product contract checks passed (JSDOM fixtures; real backend/browser acceptance is separate)."
+      ]
+    }
+  ],
+  "scope": "504 backend tests and 43 production JSDOM contracts on each platform. Subsequent full-size drag-preview change is not covered."
+}

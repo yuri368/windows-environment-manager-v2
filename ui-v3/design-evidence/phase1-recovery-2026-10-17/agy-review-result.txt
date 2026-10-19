@@ -1,0 +1,4 @@
+warning: --mode plan has no effect while slash command expansion is disabled.
+error: FAILED_PRECONDITION (code 400): User location is not supported for the API use.
+{"conversation_id":"aa3b2758-ce6d-45de-a9bb-efe2e9d66d04","status":"ERROR","response":"","error":"FAILED_PRECONDITION (code 400): User location is not supported for the API use.","duration_seconds":0,"num_turns":1,"usage":{"input_tokens":0,"output_tokens":0,"thinking_tokens":0,"cache_read_tokens":0,"total_tokens":0}}
+AGY_ERROR: {"short_error":"FAILED_PRECONDITION (code 400): User location is not supported for the API use.","status":"INVALID_ARGUMENT","error_code":400,"code_kind":"http","retryable":false,"error_id":"02931023-ecf4-47b6-82eb-61b6824a9f72-1"}

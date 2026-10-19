@@ -1,0 +1,108 @@
+{
+  "verification": "JSDOM interaction and data checks only; browser layout and real Windows operations not verified",
+  "total": 25,
+  "passed": 25,
+  "failed": 0,
+  "checks": [
+    {
+      "name": "Search-scoped Select All chooses only visible applications",
+      "passed": true
+    },
+    {
+      "name": "Filtered Select All preserves earlier hidden selection and discloses hidden count",
+      "passed": true
+    },
+    {
+      "name": "Status filter selects only visible unmatched applications and exposes pressed state",
+      "passed": true
+    },
+    {
+      "name": "Only-mismatch retains an active input during typing, then filters it on committed change",
+      "passed": true
+    },
+    {
+      "name": "Source change that resolves mismatch filters the row and restores focus to filter control",
+      "passed": true
+    },
+    {
+      "name": "Focusing a source selector aligns Windows comparison with that variable",
+      "passed": true
+    },
+    {
+      "name": "Plan and revoke menus support arrows, endpoints and Escape focus restoration",
+      "passed": true
+    },
+    {
+      "name": "Closing an open revoke menu by outside click returns focus to its trigger",
+      "passed": true
+    },
+    {
+      "name": "Navigation keeps focus and current-page semantics through view changes",
+      "passed": true
+    },
+    {
+      "name": "Configuration shows concise facts and page guidance explains default-source linkage",
+      "passed": true
+    },
+    {
+      "name": "Configuration default edit follows default source while saved source remains selected",
+      "passed": true
+    },
+    {
+      "name": "An intentionally empty custom value survives switching to default source and back",
+      "passed": true
+    },
+    {
+      "name": "Row revoke action is explicitly identified as a preview",
+      "passed": true
+    },
+    {
+      "name": "Matched raw list element with whitespace remains byte-for-byte unchanged on preview and confirm",
+      "passed": true
+    },
+    {
+      "name": "Adding missing front elements preserves old blanks, duplicates and order in preview, snapshot and history",
+      "passed": true
+    },
+    {
+      "name": "Adding a missing tail element preserves matched whitespace and raw empty slices",
+      "passed": true
+    },
+    {
+      "name": "Undefined and present-empty actual lists remain distinct in append preview",
+      "passed": true
+    },
+    {
+      "name": "Repeated desired slices add each missing normalized element once and preserve first raw spelling",
+      "passed": true
+    },
+    {
+      "name": "Native app selection button and batch checkbox are sibling controls with independent actions",
+      "passed": true
+    },
+    {
+      "name": "Cancelling a prepared preview leaves drafts, Windows snapshot and history exact",
+      "passed": true
+    },
+    {
+      "name": "Append preview leaves matched System PATH exact and does not mutate User PATH",
+      "passed": true
+    },
+    {
+      "name": "Replace and whole values still produce their selected raw strings",
+      "passed": true
+    },
+    {
+      "name": "Custom-order append remains blocked and Escape closes preview without mutating data",
+      "passed": true
+    },
+    {
+      "name": "Demo reset clears selection, filters and configuration draft",
+      "passed": true
+    },
+    {
+      "name": "Overall audit interactions emit no JSDOM runtime errors",
+      "passed": true
+    }
+  ]
+}

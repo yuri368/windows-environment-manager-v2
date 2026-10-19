@@ -1,0 +1,6 @@
+V3.6 baseline
+Parent: 6d66c60
+Previous source: 4a19204da3a7ee2757ec639066eb20b97c5c98e5
+Previous checks: 332/332 in 17 suites.
+Scope: visual row order including ghosts; reversible retained add suggestions; concise removal display; inline removed tokens; stronger removal effect.
+No source edits before architect confirmation.

@@ -1,0 +1,22 @@
+{
+  "passed": 4,
+  "total": 4,
+  "checks": [
+    {
+      "name": "Frozen TOML visual DOM equals b2d6897",
+      "passed": true
+    },
+    {
+      "name": "Frozen TOML raw DOM equals b2d6897",
+      "passed": true
+    },
+    {
+      "name": "Frozen TOML diff DOM equals b2d6897",
+      "passed": true
+    },
+    {
+      "name": "Default markup remains byte-for-byte equal on frozen fixtures",
+      "passed": true
+    }
+  ]
+}

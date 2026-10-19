@@ -1,0 +1,22 @@
+未访问真实注册表。
+修改：DemoPlan新增冻结captureBaseline，build从首次编辑前Actual+OriginalSelected确定唯一未共享occurrence的REMOVE及缺失ADD，无普通输入REPLACE推测。重复Actual旧项保留并issue=duplicate，其他有效选定方案保护issue=shared。无基线append仍只补项，replace/special/显式Windows稳定ID编辑保持原逻辑。buildBatch按同target从同snapshot统一删增，独立request需要的旧项保护，ADD/REMOVE去重，沿原request顺序前置/后置，replace混append/不同replace结果阻止确认，customappend仍限制。
+输入前捕获一次，连续输入/空值/取消预览不刷新。恢复编辑/成功应用结束基线；浏览别的方案保留未应用草稿；来源/targetmode上下文结束旧基线。过期相关exists/raw/type/revision禁operations和确认，保留输入并展示原新快照，明确按钮确认后重新以OriginalSelected核对新Actual，再需新预览。预览同时核对共享保护依赖，配置还原不清除不相关编辑基线。
+工作台Current、Actual和候选消费统一operations。元素编辑器给确定删除候选原stableID行“待删除”和−按钮；−/＋仅编辑live rows，取消不写Actual。确认显式Windows编辑会令旧selectedbaseline失效，必须重新检测。history冻结实际前后/同target唯一plan，不事后推测。
+验证：14组Node/JSDOM共279/279，含新增28纯baseline/batch及16完整workflow；旧追加only、同target逐条history断言按V3.2更新，其他回归通过。真实Chrome走通Maven匹配bin→bin1：待删旧/待追加新；候选−/+采纳与取消；预览的最终raw确实去旧加新；ShiftTab环绕/Escape回焦点；确认与展开history一致。另在Chrome实际加重复旧项触发baseline失效，明确rebase后保留重复两项并提示删除需确认。截图在design-evidence/matched-selection-diff-2026-10-13。
+CI已现场核对def2775和b5d759c两工作流success。最新UI：https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38425640651 ；Python：https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38425640659 。
+影响/限制：仅页面演示数据；共享范围是本演示管理的有效selectedschemes，不声称识别整机所有权。真实Windows/UAC/安装版未验证。源码及测试已完成，现进入负责人交互验收。请据本轮V3.2检查并指出可复现阻断问题，勿以旧V3.1只追加规则否定本次最新需求，不扩展为真实Windows或架构迁移。
+…
+显示更多
+审查设计文件并验证可复现阻塞因素
+审查设计文件并验证可复现阻塞因素
+ChatGPT 说：
+
+我会以这次上传的 V3.2 源码为准，重点复核“已匹配基线 → 待删除/待追加 → 批量计划 → 预览确认 → 历史”是否始终一致，并尝试构造现有 279 项测试可能漏掉的反例。只报告能定位、可复现、影响本轮演示的阻断问题。
+
+ChatGPT 可能会出错。请核查重要信息。
+最新一条回复
+
+
+
+
+高

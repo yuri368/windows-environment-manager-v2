@@ -1,0 +1,13 @@
+GUI feedback supplement - 2026-10-14
+
+User-authorized updates after the four-item contract:
+1. The change legend and footer must show scheme 新增 and 手动新增 separately; their sum equals ADD element count. Provenance remains session-only and survives edit/move.
+2. State icons and their captions belong in the same noninteractive status badge, matching the existing legend composition. Preserve semantic classes, escaped raw values, empty indicators, circular match marks and action buttons. Multiple states get independent whole badges; badges may wrap but icon and caption may not split.
+3. Unadopted suggestions are suggestions, not editor changes. Do not label them as already pending list changes.
+4. Latest ghost draft, Original/audit snapshot, ordinary restore versus suggested deletion undo, stable ID/displayOrder and Apply/History contracts remain unchanged. Keep existing FLIP, fracture and recovery effects.
+
+GPT supplemental approval is archived in design-evidence/gui-feedback-2026-10-14/architect-supplement-plan.txt. Native browser zoom was unavailable; CDP viewport/DPR results are simulations and must not be reported as native zoom acceptance.
+
+Latest owner correction: match captions in editor rows and Original/Preview reuse the legend square green check-cell + text badge. This supersedes the earlier requirement to preserve independent match circles. The +/-/undo action circles remain. Result tally moves into the 应用后的值 heading row (responsive wrapping is allowed when genuinely needed).
+
+Final consistency correction: every status-badge shares the legend base style (22px height, 11.5px typography, 21px icon cell, 12px icon, 5px corners); only state color/icon differ. This includes moved/replaced/duplicate/deleted/added/manual-added/match and suggestion state captions.

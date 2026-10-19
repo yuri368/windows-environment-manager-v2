@@ -1,0 +1,22 @@
+[
+  {
+    "file": "temp.html",
+    "status": 200,
+    "exact": true
+  },
+  {
+    "file": "demo-plan.js",
+    "status": 200,
+    "exact": true
+  },
+  {
+    "file": "windows-elements.js",
+    "status": 200,
+    "exact": true
+  },
+  {
+    "file": "elements-ui.css",
+    "status": 200,
+    "exact": true
+  }
+]

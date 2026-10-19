@@ -1,0 +1,6 @@
+【codex】负责人现在明确授权我们修复审查发现的问题。已创建v3/claude-ui-fixes，并把Claude原设计逐字节保存为基线5b05e99894abc412f611f7482352649afe0dcaf4，源尚未修。拟最小修复：
+1删除前草稿：会话deletedDrafts Map<originalID,{id,value}>；removeLiveRow删除原始live时保存当前行浅拷贝，newID删后仍不保留ghost；普通restoreGhost恢复该草稿同ID/值到当前displayOrder位置并清cache/removal来源。建议删除撤销仍按V3.7原值规则，清cache；Restore清cache，Cancel丢session，UIcache不进plan/audit/history。每次删覆写最新草稿。
+2换行：普通textarea允许显式换行，去掉全局CR/LF删除和Enter拦截，core已经只禁分号/NUL。为保持原始CRLF/CR，不直接把DOM归一化LF覆盖raw：小纯helper对比normalize(oldRaw)与newDOM值，用公共prefix/suffix映射回oldRaw字符边界，仅替换编辑区，未编辑的原始换行bytes保留；无变化input事件不改raw。新输入行结束符使用textarea提供的LF，展示折行不进入raw。只用于普通元素textarea，不改DemoPlan/temp业务。
+3后加载shell-ui.css补@max620 .applist display:grid两列；维护原150px滚动高度。
+4更新两处旧测试断言，补手改→删→移ghost→取消、二次删除、空重复同ID、建议/Restore/Cancel/ApplyHistory、LF/CRLF/CR原字符且插入删除编辑、移动端cascade和实际浏览器布局。
+保留Claude视觉/FLIP/碎片/拖放/键盘focus，无新框架/Registry/V2/main/Release。请确认最小状态与字符边界方向，批准后实现。

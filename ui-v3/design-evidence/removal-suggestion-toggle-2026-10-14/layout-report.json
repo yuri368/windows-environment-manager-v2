@@ -1,0 +1,20 @@
+{
+  "bodyOverflow": false,
+  "cards": [
+    {
+      "buttonWidth": 27.998046875,
+      "buttonY": 691.318359375,
+      "labelY": 697.1875,
+      "text": "%MAVEN_HOME%\\bin\n已采纳删除\n✓",
+      "width": 222.421875
+    },
+    {
+      "buttonWidth": 27.998046875,
+      "buttonY": 728.5546875,
+      "labelY": 734.423828125,
+      "text": "%MAVEN_HOME%\\bin1\n已加入本次编辑\n✓",
+      "width": 249.296875
+    }
+  ],
+  "width": 750
+}

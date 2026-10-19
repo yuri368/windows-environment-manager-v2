@@ -1,0 +1,74 @@
+[
+  {
+    "case": "delete-normal",
+    "result": {
+      "raw": "A\nB",
+      "after": "A\nB",
+      "operations": [
+        {
+          "type": "replace",
+          "action": "REPLACE",
+          "elementId": 1,
+          "before": "A\r\n\nB",
+          "after": "A\nB",
+          "beforeIndex": 0,
+          "afterIndex": 0
+        }
+      ]
+    }
+  },
+  {
+    "case": "insert-normal",
+    "result": {
+      "raw": "A\n\r\nB",
+      "after": "A\n\r\nB",
+      "operations": [
+        {
+          "type": "replace",
+          "action": "REPLACE",
+          "elementId": 2,
+          "before": "A\r\nB",
+          "after": "A\n\r\nB",
+          "beforeIndex": 0,
+          "afterIndex": 0
+        }
+      ]
+    }
+  },
+  {
+    "case": "delete-special",
+    "result": {
+      "raw": "A\nB",
+      "after": "A\nB",
+      "operations": [
+        {
+          "type": "replace",
+          "action": "REPLACE",
+          "elementId": 3,
+          "before": "A\r\n\nB",
+          "after": "A\nB",
+          "beforeIndex": 0,
+          "afterIndex": 0
+        }
+      ]
+    }
+  },
+  {
+    "case": "insert-special",
+    "result": {
+      "raw": "A\n\r\nB",
+      "after": "A\n\r\nB",
+      "operations": [
+        {
+          "type": "replace",
+          "action": "REPLACE",
+          "elementId": 4,
+          "before": "A\r\nB",
+          "after": "A\n\r\nB",
+          "beforeIndex": 0,
+          "afterIndex": 0
+        }
+      ]
+    }
+  }
+]

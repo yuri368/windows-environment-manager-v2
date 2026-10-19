@@ -1,0 +1,25 @@
+{
+  "sourceCommit": "0665e0050c642ba7f7613625f161232431ee865b",
+  "initialFailure": {
+    "commit": "cfd83f71570aaea0dc81d5b1e3efb5037add4e8e",
+    "workflow": "V3 UI prototype checks",
+    "run": 38526856929,
+    "url": "https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38526856929",
+    "correction": "Five primary test updates were omitted from Git synchronization; fixed in 4980538."
+  },
+  "runs": [
+    {
+      "workflow": "V3 UI prototype checks",
+      "run": 38531436094,
+      "status": "success",
+      "url": "https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38531436094"
+    },
+    {
+      "workflow": "Python tests",
+      "run": 38531436204,
+      "status": "success",
+      "url": "https://github.com/yuri368/windows-environment-manager-v2/actions/runs/38531436204"
+    }
+  ],
+  "verification": "GitHub rendered workflow summary/list status observed via IAB; full remote logs unavailable in logged-out browser; local reports archived separately."
+}

@@ -1,0 +1,179 @@
+- heading "ChatGPT 说：" [level=4]
+    - paragraph: 【架构顾问 → Codex】
+    - heading "Windows 快照归档证据复核" [level=2]
+    - paragraph:
+      - text: 已核实归档提交
+      - link "d76e0d8":
+        - /url: https://github.com/yuri368/windows-environment-manager-v2/commit/d76e0d810245b9d8a02dcc2835bbe8c372c49807
+        - generic: d76e0d8
+      - text: ：
+    - list:
+      - paragraph:
+        - text: 父提交确实是已审查通过的产品版本
+        - code: 0aa41e6
+        - text: 。
+      - paragraph: 本次变更仅新增 7 份归档证据及说明文件。
+      - paragraph:
+        - code: temp.html
+        - text: 、
+        - code: windows-elements.js
+        - text: 、DemoPlan 和其他产品源码均未修改。
+    - paragraph:
+      - text: 新增的
+      - code: git-source-hashes.json
+      - text: 已将 Git Blob 哈希与 SHA-256 明确对应；
+      - code: line-ending-proof.json
+      - text: 则单独记录本地文件换行格式、字节数和转换后的相等性。
+    - paragraph: 两份证据在记录内容上没有相互矛盾。
+    - heading "独立核验结果" [level=2]
+    - paragraph:
+      - text: 我进一步从 GitHub 读取产品提交
+      - code: 0aa41e6
+      - text: 的原始文件内容，重新计算了 SHA-256，并核对 Git Blob。
+    - table:
+      - rowgroup:
+        - row "Git 文件 SHA-256 独立核验 Git Blob":
+          - columnheader "Git 文件":
+            - paragraph: Git 文件
+          - columnheader "SHA-256 独立核验":
+            - paragraph: SHA-256 独立核验
+          - columnheader "Git Blob":
+            - paragraph: Git Blob
+        - row "temp.html 完全一致 一致":
+          - cell "temp.html":
+            - paragraph:
+              - code: temp.html
+          - cell "完全一致":
+            - paragraph:
+              - text: 完全一致
+          - cell "一致":
+            - paragraph:
+              - text: 一致
+        - row "windows-elements.js 完全一致 一致":
+          - cell "windows-elements.js":
+            - paragraph:
+              - code: windows-elements.js
+          - cell "完全一致":
+            - paragraph:
+              - text: 完全一致
+          - cell "一致":
+            - paragraph:
+              - text: 一致
+        - row "demo-plan.js 完全一致 一致":
+          - cell "demo-plan.js":
+            - paragraph:
+              - code: demo-plan.js
+          - cell "完全一致":
+            - paragraph:
+              - text: 完全一致
+          - cell "一致":
+            - paragraph:
+              - text: 一致
+        - row "elements-ui.css 完全一致 一致":
+          - cell "elements-ui.css":
+            - paragraph:
+              - code: elements-ui.css
+          - cell "完全一致":
+            - paragraph:
+              - text: 完全一致
+          - cell "一致":
+            - paragraph:
+              - text: 一致
+    - paragraph:
+      - text: 对
+      - code: temp.html
+      - text: 的核验尤其明确：
+    - list:
+      - paragraph:
+        - text: Git 文件实际大小：
+        - generic: 79,491 字节
+        - text: 。
+      - paragraph:
+        - text: 实际包含：
+        - generic: 447 个 LF、0 个 CR
+        - text: 。
+      - paragraph: 本地证据记录：423 个 CRLF + 24 个独立 LF，合计恰好 447 个换行。
+      - paragraph:
+        - text: 字节差：79,914 − 79,491 =
+        - generic: 423 字节
+        - text: ，与 CRLF 归一化时减少的字节数完全吻合。
+      - paragraph:
+        - text: Git 仓库
+        - code: ui-v3/.gitattributes
+        - text: 实际内容：
+        - code: "* text eol=lf"
+        - text: 。
+    - paragraph:
+      - text: 因此，
+      - generic: 本地工作区文件和 Git 文件因换行符不同而拥有不同 SHA-256，解释成立。
+    - paragraph: 需要保留一个精确的验证边界：我独立核验了 Git 文件的内容哈希、字节数和换行数量；本地 CRLF 文件的原始字节及归一化相等断言来自 Codex 提交的证据，未在其 Windows 工作站重新执行。
+    - heading "最终归档裁定" [level=2]
+    - generic: 证据问题已关闭 · 归档完成
+    - table:
+      - rowgroup:
+        - row "项目 最终状态":
+          - columnheader "项目":
+            - paragraph: 项目
+          - columnheader "最终状态":
+            - paragraph: 最终状态
+        - row "产品版本 0aa41e6 已审查通过，保持冻结":
+          - cell "产品版本 0aa41e6":
+            - paragraph:
+              - text: 产品版本
+              - code: 0aa41e6
+          - cell "已审查通过，保持冻结":
+            - paragraph: 已审查通过，保持冻结
+        - row "纯归档提交 d76e0d8 已核实":
+          - cell "纯归档提交 d76e0d8":
+            - paragraph:
+              - text: 纯归档提交
+              - code: d76e0d8
+          - cell "已核实":
+            - paragraph: 已核实
+        - row "产品代码差异 无":
+          - cell "产品代码差异":
+            - paragraph: 产品代码差异
+          - cell "无":
+            - paragraph: 无
+        - row "Git / 本地哈希差异 原因明确，证据一致":
+          - cell "Git / 本地哈希差异":
+            - paragraph: Git / 本地哈希差异
+          - cell "原因明确，证据一致":
+            - paragraph: 原因明确，证据一致
+        - row "遗留证据问题 0":
+          - cell "遗留证据问题":
+            - paragraph: 遗留证据问题
+          - cell "0":
+            - paragraph:
+              - generic: "0"
+        - row "功能阻断项 0":
+          - cell "功能阻断项":
+            - paragraph: 功能阻断项
+          - cell "0":
+            - paragraph:
+              - generic: "0"
+    - paragraph:
+      - generic: 正式关闭此前唯一的归档证据待核对项。
+      - text: 不需要修改源码，也不需要再次补交相同证据。
+    - paragraph: Codex 可以直接向负责人报告：Windows 快照边界任务的产品审查和证据归档均已完成。✅
+    - button "复制":
+    - button "评价回复":
+    - button "分享":
+    - button "朗读":
+    - button "重新生成回复":
+    - button "更多操作":
+    - generic: ChatGPT 可能会出错。请核查重要信息。
+    - button:
+    - heading "最新一条回复" [level=4]
+    - status
+    - button "添加文件等内容":
+    - textbox "询问 ChatGPT":
+      - paragraph: 询问 ChatGPT
+    - button "选择 ChatGPT 模型":
+      - generic: 高
+    - button "听写":
+    - button "开始语音":
+- status
+- status: 回答已完成
+- status
+- status

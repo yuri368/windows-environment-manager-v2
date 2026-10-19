@@ -1,0 +1,14 @@
+
+H:\Yuri368\环境变量配置V3\temp.html
+  [side-tab] .toast::after — absolute 3px pseudo-element stripe (bottom: 0)
+    → Thick colored border on one side of a card — the most recognizable tell of AI-generated UIs. Use a subtler accent or remove it entirely.
+
+1 anti-pattern found.
+
+── Advisory (not counted as failures) ──
+
+H:\Yuri368\环境变量配置V3\temp.html
+  [repeating-stripes-gradient] repeating-gradient decorative stripes
+    → Repeating-gradient stripes used as surface decoration are a recurring generated-UI signature. Reach for a deliberate texture or leave the surface plain.
+
+1 advisory note. Suppress with --no-advisory.

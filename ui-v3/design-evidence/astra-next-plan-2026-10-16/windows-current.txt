@@ -1,0 +1,312 @@
+- banner:
+  - generic: ≋
+  - strong: 环境变量方案管理器
+  - generic: Compact UI · 交互演示
+  - generic: 本地演示 · 未连接系统
+- navigation:
+  - generic: 环境方案
+  - button "工作台"
+  - button "Windows 环境" [active]
+  - button "历史"
+  - button "↻刷新检测"
+  - button "⚙配置编辑器"
+  - button "重置演示"
+- heading "Windows 环境" [level=2]
+- paragraph: 点击元素直接编辑 · 方向键定位元素
+- generic: 18 项变量
+- table:
+  - rowgroup:
+    - row "作用域 变量 模拟当前值 操作":
+      - columnheader "作用域"
+      - columnheader "变量"
+      - columnheader "模拟当前值"
+      - columnheader "操作"
+  - rowgroup:
+    - row "系统 CUDA_PATH CUDA_PATH 当前值 编辑 原文":
+      - cell "系统":
+        - generic: 系统
+      - cell "CUDA_PATH":
+        - strong: CUDA_PATH
+      - cell "CUDA_PATH 当前值":
+        - group "CUDA_PATH 当前值":
+          - button "编辑当前值的第 1 个元素":
+            - generic: C:\Program Files\GPU Toolkit\CUDA\v11.8
+      - cell "编辑 原文":
+        - button "编辑"
+        - button "原文"
+    - row "系统 DOTNET_CLI_TELEMETRY_OPTOUT DOTNET_CLI_TELEMETRY_OPTOUT 当前值 编辑 原文":
+      - cell "系统":
+        - generic: 系统
+      - cell "DOTNET_CLI_TELEMETRY_OPTOUT":
+        - strong: DOTNET_CLI_TELEMETRY_OPTOUT
+      - cell "DOTNET_CLI_TELEMETRY_OPTOUT 当前值":
+        - group "DOTNET_CLI_TELEMETRY_OPTOUT 当前值":
+          - button "编辑当前值的第 1 个元素":
+            - generic: "1"
+      - cell "编辑 原文":
+        - button "编辑"
+        - button "原文"
+    - row "系统 DOTNET_ROOT DOTNET_ROOT 当前值 编辑 原文":
+      - cell "系统":
+        - generic: 系统
+      - cell "DOTNET_ROOT":
+        - strong: DOTNET_ROOT
+      - cell "DOTNET_ROOT 当前值":
+        - group "DOTNET_ROOT 当前值":
+          - button "编辑当前值的第 1 个元素":
+            - generic: C:\Build Tools\dotnet
+      - cell "编辑 原文":
+        - button "编辑"
+        - button "原文"
+    - row "系统 PATH PATH 当前值 编辑 原文":
+      - cell "系统":
+        - generic: 系统
+      - cell "PATH":
+        - strong: PATH
+      - cell "PATH 当前值":
+        - group "PATH 当前值":
+          - button "编辑当前值的第 1 个元素":
+            - generic: C:\Windows\System32
+            - generic "此栏有 2 个原始文本完全相同的元素；仅提示，不自动去重": 重复 ×2
+          - text: ;
+          - button "编辑当前值的第 2 个元素":
+            - generic: （空元素）
+            - generic: 空元素
+            - generic "此栏有 2 个原始文本完全相同的元素；仅提示，不自动去重": 重复 ×2
+          - text: ;
+          - button "编辑当前值的第 3 个元素":
+            - generic: "%CUDA_PATH%\\bin"
+          - text: ;
+          - button "编辑当前值的第 4 个元素":
+            - generic: "%CUDA_PATH%\\libnvvp"
+          - text: ;
+          - button "编辑当前值的第 5 个元素":
+            - generic: C:\Windows\System32
+            - generic "此栏有 2 个原始文本完全相同的元素；仅提示，不自动去重": 重复 ×2
+          - text: ;
+          - button "编辑当前值的第 6 个元素":
+            - generic: "%DOTNET_ROOT%"
+          - text: ;
+          - button "编辑当前值的第 7 个元素":
+            - generic: （空元素）
+            - generic: 空元素
+            - generic "此栏有 2 个原始文本完全相同的元素；仅提示，不自动去重": 重复 ×2
+      - cell "编辑 原文":
+        - button "编辑"
+        - button "原文"
+    - row "用户 CUDA_CACHE_PATH CUDA_CACHE_PATH 当前值 编辑 原文":
+      - cell "用户":
+        - generic: 用户
+      - cell "CUDA_CACHE_PATH":
+        - strong: CUDA_CACHE_PATH
+      - cell "CUDA_CACHE_PATH 当前值":
+        - group "CUDA_CACHE_PATH 当前值":
+          - button "编辑当前值的第 1 个元素":
+            - generic: C:\Demo Cache\CUDA
+      - cell "编辑 原文":
+        - button "编辑"
+        - button "原文"
+    - row "用户 DEMO_COMMAND DEMO_COMMAND 当前值 编辑 原文":
+      - cell "用户":
+        - generic: 用户
+      - cell "DEMO_COMMAND":
+        - strong: DEMO_COMMAND
+      - cell "DEMO_COMMAND 当前值":
+        - group "DEMO_COMMAND 当前值":
+          - button "编辑当前完整字符串":
+            - generic: cmd /c "echo alpha;beta"
+      - cell "编辑 原文":
+        - button "编辑"
+        - button "原文"
+    - row "用户 DEMO_EMPTY_VALUE DEMO_EMPTY_VALUE 当前值 编辑 原文":
+      - cell "用户":
+        - generic: 用户
+      - cell "DEMO_EMPTY_VALUE":
+        - strong: DEMO_EMPTY_VALUE
+      - cell "DEMO_EMPTY_VALUE 当前值":
+        - group "DEMO_EMPTY_VALUE 当前值":
+          - button "编辑当前值的第 1 个元素":
+            - generic: （空元素）
+            - generic: 空元素
+      - cell "编辑 原文":
+        - button "编辑"
+        - button "原文"
+    - row "用户 DEMO_SEARCH_PATH DEMO_SEARCH_PATH 当前值 编辑 原文":
+      - cell "用户":
+        - generic: 用户
+      - cell "DEMO_SEARCH_PATH":
+        - strong: DEMO_SEARCH_PATH
+      - cell "DEMO_SEARCH_PATH 当前值":
+        - group "DEMO_SEARCH_PATH 当前值":
+          - button "编辑当前值的第 1 个元素":
+            - generic: C:\Demo\Alpha
+            - generic "此栏有 2 个原始文本完全相同的元素；仅提示，不自动去重": 重复 ×2
+          - text: ;
+          - button "编辑当前值的第 2 个元素":
+            - generic: （空元素）
+            - generic: 空元素
+            - generic "此栏有 2 个原始文本完全相同的元素；仅提示，不自动去重": 重复 ×2
+          - text: ;
+          - button "编辑当前值的第 3 个元素":
+            - generic: C:\Demo\Alpha
+            - generic "此栏有 2 个原始文本完全相同的元素；仅提示，不自动去重": 重复 ×2
+          - text: ;
+          - button "编辑当前值的第 4 个元素":
+            - generic: C:\Demo\Gamma
+          - text: ;
+          - button "编辑当前值的第 5 个元素":
+            - generic: （空元素）
+            - generic: 空元素
+            - generic "此栏有 2 个原始文本完全相同的元素；仅提示，不自动去重": 重复 ×2
+      - cell "编辑 原文":
+        - button "编辑"
+        - button "原文"
+    - row "用户 DOTNET_CLI_TELEMETRY_OPTOUT DOTNET_CLI_TELEMETRY_OPTOUT 当前值 编辑 原文":
+      - cell "用户":
+        - generic: 用户
+      - cell "DOTNET_CLI_TELEMETRY_OPTOUT":
+        - strong: DOTNET_CLI_TELEMETRY_OPTOUT
+      - cell "DOTNET_CLI_TELEMETRY_OPTOUT 当前值":
+        - group "DOTNET_CLI_TELEMETRY_OPTOUT 当前值":
+          - button "编辑当前值的第 1 个元素":
+            - generic: "1"
+      - cell "编辑 原文":
+        - button "编辑"
+        - button "原文"
+    - row "用户 DOTNET_ROOT DOTNET_ROOT 当前值 编辑 原文":
+      - cell "用户":
+        - generic: 用户
+      - cell "DOTNET_ROOT":
+        - strong: DOTNET_ROOT
+      - cell "DOTNET_ROOT 当前值":
+        - group "DOTNET_ROOT 当前值":
+          - button "编辑当前值的第 1 个元素":
+            - generic: D:\Portable Apps\dotnet
+      - cell "编辑 原文":
+        - button "编辑"
+        - button "原文"
+    - row "用户 JAVA_HOME JAVA_HOME 当前值 编辑 原文":
+      - cell "用户":
+        - generic: 用户
+      - cell "JAVA_HOME":
+        - strong: JAVA_HOME
+      - cell "JAVA_HOME 当前值":
+        - group "JAVA_HOME 当前值":
+          - button "编辑当前值的第 1 个元素":
+            - generic: H:\ProgramFiles\DevTools\Java\jdk1.8.0_202
+      - cell "编辑 原文":
+        - button "编辑"
+        - button "原文"
+    - row "用户 MAVEN_HOME MAVEN_HOME 当前值 编辑 原文":
+      - cell "用户":
+        - generic: 用户
+      - cell "MAVEN_HOME":
+        - strong: MAVEN_HOME
+      - cell "MAVEN_HOME 当前值":
+        - group "MAVEN_HOME 当前值":
+          - button "编辑当前值的第 1 个元素":
+            - generic: H:\ProgramFiles\DevTools\Maven\apache-maven-3.9.11
+      - cell "编辑 原文":
+        - button "编辑"
+        - button "原文"
+    - row "用户 NODE_HOME NODE_HOME 当前值 编辑 原文":
+      - cell "用户":
+        - generic: 用户
+      - cell "NODE_HOME":
+        - strong: NODE_HOME
+      - cell "NODE_HOME 当前值":
+        - group "NODE_HOME 当前值":
+          - button "编辑当前值的第 1 个元素":
+            - generic: C:\Dev Tools\Node22
+      - cell "编辑 原文":
+        - button "编辑"
+        - button "原文"
+    - row "用户 NODE_OPTIONS NODE_OPTIONS 当前值 编辑 原文":
+      - cell "用户":
+        - generic: 用户
+      - cell "NODE_OPTIONS":
+        - strong: NODE_OPTIONS
+      - cell "NODE_OPTIONS 当前值":
+        - group "NODE_OPTIONS 当前值":
+          - button "编辑当前完整字符串":
+            - generic: "--max-old-space-size=4096 --require \"C:\\团队工具\\初始化;本地.js\""
+      - cell "编辑 原文":
+        - button "编辑"
+        - button "原文"
+    - row "用户 PATH PATH 当前值 编辑 原文":
+      - cell "用户":
+        - generic: 用户
+      - cell "PATH":
+        - strong: PATH
+      - cell "PATH 当前值":
+        - group "PATH 当前值":
+          - button "编辑当前值的第 1 个元素":
+            - generic: "%JAVA_HOME%\\bin"
+          - text: ;
+          - button "编辑当前值的第 2 个元素":
+            - generic: "%PYTHON_HOME%"
+          - text: ;
+          - button "编辑当前值的第 3 个元素":
+            - generic: "%PYTHON_HOME%\\Scripts"
+          - text: ;
+          - button "编辑当前值的第 4 个元素":
+            - generic: "%MAVEN_HOME%\\bin"
+          - text: ;
+          - button "编辑当前值的第 5 个元素":
+            - generic: H:\ProgramFiles\PortableGit\cmd
+          - text: ;
+          - button "编辑当前值的第 6 个元素":
+            - generic: H:\ProgramFiles\VSCode\bin
+          - text: ;
+          - button "编辑当前值的第 7 个元素":
+            - generic: "%NODE_HOME%\\bin"
+          - text: ;
+          - button "编辑当前值的第 8 个元素":
+            - generic: "%DOTNET_ROOT%"
+          - text: ;
+          - button "编辑当前值的第 9 个元素":
+            - generic: "%TEAM_TOOLS_HOME%\\bin"
+      - cell "编辑 原文":
+        - button "编辑"
+        - button "原文"
+    - row "用户 PYTHON_HOME PYTHON_HOME 当前值 编辑 原文":
+      - cell "用户":
+        - generic: 用户
+      - cell "PYTHON_HOME":
+        - strong: PYTHON_HOME
+      - cell "PYTHON_HOME 当前值":
+        - group "PYTHON_HOME 当前值":
+          - button "编辑当前值的第 1 个元素":
+            - generic: H:\ProgramFiles\Python313
+      - cell "编辑 原文":
+        - button "编辑"
+        - button "原文"
+    - row "用户 TEAM_LOG_LEVEL TEAM_LOG_LEVEL 当前值 编辑 原文":
+      - cell "用户":
+        - generic: 用户
+      - cell "TEAM_LOG_LEVEL":
+        - strong: TEAM_LOG_LEVEL
+      - cell "TEAM_LOG_LEVEL 当前值":
+        - group "TEAM_LOG_LEVEL 当前值":
+          - button "编辑当前值的第 1 个元素":
+            - generic: INFO
+      - cell "编辑 原文":
+        - button "编辑"
+        - button "原文"
+    - row "用户 TEAM_TOOLS_HOME TEAM_TOOLS_HOME 当前值 编辑 原文":
+      - cell "用户":
+        - generic: 用户
+      - cell "TEAM_TOOLS_HOME":
+        - strong: TEAM_TOOLS_HOME
+      - cell "TEAM_TOOLS_HOME 当前值":
+        - group "TEAM_TOOLS_HOME 当前值":
+          - button "编辑当前值的第 1 个元素":
+            - generic: D:\团队工具\稳定版
+      - cell "编辑 原文":
+        - button "编辑"
+        - button "原文"
+- contentinfo:
+  - strong: Windows 环境（演示）
+  - generic: 直接编辑当前值 · 确认后仅更新演示数据
+  - button "返回工作台"
+- status: ✓

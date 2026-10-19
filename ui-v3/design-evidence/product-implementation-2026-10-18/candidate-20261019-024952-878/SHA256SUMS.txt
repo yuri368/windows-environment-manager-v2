@@ -1,0 +1,4 @@
+01356d64d85ad86e32df5829e898d042f94cd290779436ce814d100dea6e707f  EnvManagerV3-3.0.0-dev1-windows-x64.zip
+0738bfc8431f45485782ade445e969d5aa8fc187fe571dd3b60a5fe586336910  EnvManagerV3/EnvManagerV3.exe
+fb212e43c48fc220295a0839ab216e54704220763fb23802897917fc4c79d5d7  EnvManagerV3-3.0.0-dev1-setup-user-x64.exe
+1f60ab96cbebf4654ec0e2cc6204492fc730eb37c2cdef295c9c5ed9cc06accb  EnvManagerV3-3.0.0-dev1-setup-machine-x64.exe

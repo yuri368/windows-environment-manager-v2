@@ -1,0 +1,10 @@
+{
+  "sha": "6bf913595d30539d24fc7588199408ed0e921e44",
+  "branch": "v3/gui-feedback",
+  "demoPlan": {
+    "primary": "950e4f532eaa9a43444ef10ff8b2ba819981ccbbc32202a6a19bf06f669d4bc4",
+    "mirror": "950e4f532eaa9a43444ef10ff8b2ba819981ccbbc32202a6a19bf06f669d4bc4"
+  },
+  "workingTree": "",
+  "scope": "UI presentation only; real registry untouched"
+}

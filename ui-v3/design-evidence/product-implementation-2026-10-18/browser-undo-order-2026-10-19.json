@@ -1,0 +1,42 @@
+[
+  {
+    "kind": "variable",
+    "text": "单项撤销\n\n1 个环境目标 · 预览版本 1\n\n×\n\n1 个目标\n·\n1 个有实际变更\n·\n尚未应用\n\nV3_SCOPE_X\n用户\n有实际变更\n· 后置\nWindows 当前\nB\n;\nC\n;\nA\n待删除\n;\nX\n目标结果 · 尚未应用\nB\n;\nC\n;\nA\n结果排除\n;\nX\n应用后预览。划线元素不计入最终写入值，当前尚未应用。\n完整原始字符串\nWindows 当前\nB;C;A;X\n目标结果\nB;C;X\n\n删除 1 项 · 保留其他元素\n\n请核对全部目标，再点击审阅；审阅不会写入环境。\n\n取消\n审阅此计划"
+  },
+  {
+    "kind": "profile",
+    "text": "撤销当前方案\n\n2 个环境目标 · 预览版本 1\n\n×\n\n2 个目标\n·\n2 个有实际变更\n·\n尚未应用\n\n按目标定位\n1\nV3_SCOPE_X\n用户\n有实际变更\n2\nV3_SCOPE_Y\n用户\n有实际变更\nV3_SCOPE_X\n用户\n有实际变更\n· 后置\nWindows 当前\nB\n;\nC\n;\nA\n待删除\n;\nX\n目标结果 · 尚未应用\nB\n;\nC\n;\nA\n结果排除\n;\nX\n应用后预览。划线元素不计入最终写入值，当前尚未应用。\n完整原始字符串\nWindows 当前\nB;C;A;X\n目标结果\nB;C;X\n\n删除 1 项 · 保留其他元素\n\nV3_SCOPE_Y\n用户\n有实际变更\n· 后置\nWindows 当前\nQ\n待删除\n;\nZ\n目标结果 · 尚未应用\nQ\n结果排除\n;\nZ\n应用后预览。划线元素不计入最终写入值，当前尚未应用。\n完整原始字符串\nWindows 当前\nQ;Z\n目标结果\nZ\n\n删除 1 项 · 保留其他元素\n\n请核对全部目标，再点击审阅；审阅不会写入环境。\n\n取消\n审阅此计划"
+  },
+  {
+    "kind": "application_all_profiles",
+    "text": "撤销当前应用全部方案\n\n2 个环境目标 · 预览版本 1\n\n×\n\n2 个目标\n·\n2 个有实际变更\n·\n尚未应用\n\n按目标定位\n1\nV3_SCOPE_X\n用户\n有实际变更\n2\nV3_SCOPE_Y\n用户\n有实际变更\nV3_SCOPE_X\n用户\n有实际变更\n· batch\nWindows 当前\nB\n;\nC\n待删除\n;\nA\n待删除\n;\nX\n目标结果 · 尚未应用\nB\n;\nC\n结果排除\n;\nA\n结果排除\n;\nX\n应用后预览。划线元素不计入最终写入值，当前尚未应用。\n完整原始字符串\nWindows 当前\nB;C;A;X\n目标结果\nB;X\n\n删除 2 项 · 保留其他元素\n\nV3_SCOPE_Y\n用户\n有实际变更\n· 后置\nWindows 当前\nQ\n待删除\n;\nZ\n目标结果 · 尚未应用\nQ\n结果排除\n;\nZ\n应用后预览。划线元素不计入最终写入值，当前尚未应用。\n完整原始字符串\nWindows 当前\nQ;Z\n目标结果\nZ\n\n删除 1 项 · 保留其他元素\n\n请核对全部目标，再点击审阅；审阅不会写入环境。\n\n取消\n审阅此计划"
+  },
+  {
+    "kind": "checked_profiles",
+    "text": "撤销已勾选方案\n\n2 个环境目标 · 预览版本 1\n\n×\n\n2 个目标\n·\n2 个有实际变更\n·\n尚未应用\n\n按目标定位\n1\nV3_SCOPE_X\n用户\n有实际变更\n2\nV3_SCOPE_Y\n用户\n有实际变更\nV3_SCOPE_X\n用户\n有实际变更\n· batch\nWindows 当前\nB\n待删除\n;\nC\n;\nA\n待删除\n;\nX\n目标结果 · 尚未应用\nB\n结果排除\n;\nC\n;\nA\n结果排除\n;\nX\n应用后预览。划线元素不计入最终写入值，当前尚未应用。\n完整原始字符串\nWindows 当前\nB;C;A;X\n目标结果\nC;X\n\n删除 2 项 · 保留其他元素\n\nV3_SCOPE_Y\n用户\n有实际变更\n· 后置\nWindows 当前\nQ\n待删除\n;\nZ\n目标结果 · 尚未应用\nQ\n结果排除\n;\nZ\n应用后预览。划线元素不计入最终写入值，当前尚未应用。\n完整原始字符串\nWindows 当前\nQ;Z\n目标结果\nZ\n\n删除 1 项 · 保留其他元素\n\n请核对全部目标，再点击审阅；审阅不会写入环境。\n\n取消\n审阅此计划"
+  },
+  {
+    "kind": "checked_profiles_committed",
+    "text": "应用\n已选 2 / 3\n⌕\n全部 3\n已匹配 0\n需配置 3\n批量选择\n全选可见清空\n显示 3 / 3\nSc\nScopeA\nCurrent\n!\n0/2\n需配置\nSc\nScopeB\nCurrent\n!\n0/1\n需配置\nOr\nOrdering\nCurrent\n!\n0/2\n需配置\nSc\nScopeA\n!\nWindows · 未匹配 0/2\n最近应用：Other\n默认：Current\n准备方案\nCurrent\n⌄\n环境变量 2 项\n仅看未匹配\n收起 Windows 对照\n变量\t作用域 / 模式\t值来源\t当前选定值\t检测\t操作\n\nV3_SCOPE_X\nWindows 值对比\n\t用户\n· 前置\n\t\n默认值\n已保存值\n自定义值\n\t\n\t\n!\n不匹配 0/1\n\t撤销预览\n\nV3_SCOPE_Y\nWindows 值对比\n\t用户\n· 前置\n\t\n默认值\n已保存值\n自定义值\n\t\n\t\n!\n不匹配 0/1\n\t撤销预览\nWindows 值对照 · V3_SCOPE_X\n元素编辑 · 当前快照\n有实际变更\n查看批量预览 →\n当前选定值\n用户 · 前置 · 默认值\nA\n待追加\nWindows 当前值\n编辑元素\nC\n;\nX\n应用后的值\n保留\n2\n新增\n1\n删除\n0\n服务端预览 · 尚未应用\nA\n待追加\n;\nC\n;\nX\n最终写入字符串 · 不含删除项\nA;C;X\n! 不匹配 0/1\n在开头追加 1 项 · 保留其他元素\n\n当前触碰\n同项前后\n重复同值\nTab 切换区域，方向键浏览元素\n\n输入与配置不会直接写入环境。执行前请审阅服务端冻结计划。"
+  },
+  {
+    "kind": "ordering_two_blocked",
+    "text": "单应用方案预览\n\n2 个环境目标 · 预览版本 1\n\n×\n!\n本次暂不能应用\n\n请先检查标记的目标；本批次不会执行任何变更。\n\n2 个目标\n0 个有实际变更\n0 个值不变\n2 个阻塞\n按目标定位\n1\nV3_ORDER_U\n用户\n暂不能应用\n2\nV3_ORDER_T\n用户\n暂不能应用\nV3_ORDER_U\n用户\n暂不能应用\nOrdering / Current · 自定义排序\n\n请先确认此目标的自定义排序，再重新审阅服务端计划。\n\n返回工作台检查 →\nWindows 当前\nBASE\n;\nV\n目标结果 · 尚未应用\nBASE\n;\nV\n;\nU\n待追加\n完整原始字符串\n\n在末尾追加 1 项 · 保留其他元素\n\n调整并确认排序\nV3_ORDER_T\n用户\n暂不能应用\nOrdering / Current · 自定义排序\n\n请先确认此目标的自定义排序，再重新审阅服务端计划。\n\n返回工作台检查 →\nWindows 当前\nBASE\n;\nW\n目标结果 · 尚未应用\nBASE\n;\nW\n;\nT\n待追加\n完整原始字符串\n\n在末尾追加 1 项 · 保留其他元素\n\n调整并确认排序\n\n请处理目标冲突或完成自定义排序。\n\n取消\n审阅此计划"
+  },
+  {
+    "kind": "ordering_first_confirmed_still_blocked",
+    "text": "单应用方案预览\n\n2 个环境目标 · 预览版本 1\n\n预览已更新，请重新审阅。\n×\n!\n本次暂不能应用\n\n请先检查标记的目标；本批次不会执行任何变更。\n\n预览已更新至版本 1，尚未应用。\n\n2 个目标\n1 个有实际变更\n0 个值不变\n1 个阻塞\n按目标定位\n1\nV3_ORDER_U\n用户\n有实际变更\n2\nV3_ORDER_T\n用户\n暂不能应用\nV3_ORDER_U\n用户\n有实际变更\nOrdering / Current · 自定义排序\nWindows 当前\nBASE\n;\nV\n目标结果 · 尚未应用\nV\n;\nBASE\n;\nU\n完整原始字符串\n\n在末尾追加 1 项 · 保留其他元素\n\nV3_ORDER_T\n用户\n暂不能应用\nOrdering / Current · 自定义排序\n\n请先确认此目标的自定义排序，再重新审阅服务端计划。\n\n返回工作台检查 →\nWindows 当前\nBASE\n;\nW\n目标结果 · 尚未应用\nBASE\n;\nW\n;\nT\n待追加\n完整原始字符串\n\n在末尾追加 1 项 · 保留其他元素\n\n调整并确认排序\n\n请处理目标冲突或完成自定义排序。\n\n取消\n审阅此计划"
+  },
+  {
+    "kind": "ordering_both_confirmed",
+    "text": "单应用方案预览\n\n2 个环境目标 · 预览版本 1\n\n预览已更新，请重新审阅。\n×\n↻\n预览已更新，请重新核对\n\n本次尚未应用。查看更新后，需要再次确认。\n\n2 个目标\n2 个有实际变更\n0 个值不变\n按目标定位\n1\nV3_ORDER_U\n用户\n有实际变更\n2\nV3_ORDER_T\n用户\n有实际变更\nV3_ORDER_U\n用户\n有实际变更\nOrdering / Current · 自定义排序\nWindows 当前\nBASE\n;\nV\n目标结果 · 尚未应用\nV\n;\nBASE\n;\nU\n完整原始字符串\nWindows 当前\nBASE;V\n目标结果\nV;BASE;U\n\n在末尾追加 1 项 · 保留其他元素\n\nV3_ORDER_T\n用户\n有实际变更\nOrdering / Current · 自定义排序\nWindows 当前\nBASE\n;\nW\n目标结果 · 尚未应用\nBASE\n;\nT\n;\nW\n完整原始字符串\nWindows 当前\nBASE;W\n目标结果\nBASE;T;W\n\n在末尾追加 1 项 · 保留其他元素\n\n请核对全部目标，再点击审阅；审阅不会写入环境。\n\n取消\n审阅此计划"
+  },
+  {
+    "kind": "history_after_both_commits",
+    "text": "操作历史\n\n持久操作记录 · 展开查看修改前后与元素变化\n\n5 条记录\n时间\n操作\n描述与详情\n时间：\n2026-10-18T18:20:56.858322+00:00\n操作：\n应用环境方案\n描述：\n已执行并核验\n查看详情\n恢复历史前值\n时间：\n2026-10-18T18:18:55.481297+00:00\n操作：\n撤销配置贡献\n描述：\n已执行并核验\n查看详情\n恢复历史前值\n时间：\n2026-10-18T18:17:02.004705+00:00\n操作：\n应用环境方案\n描述：\n已执行并核验\n查看详情\n恢复历史前值\n时间：\n2026-10-18T18:17:00.483694+00:00\n操作：\n应用环境方案\n描述：\n已执行并核验\n查看详情\n恢复历史前值\n时间：\n2026-10-18T18:16:59.366365+00:00\n操作：\n应用环境方案\n描述：\n已执行并核验\n查看详情\n恢复历史前值"
+  },
+  {
+    "kind": "corrected_order_history",
+    "text": "操作历史\n\n持久操作记录 · 展开查看修改前后与元素变化\n\n5 条记录\n时间\n操作\n描述与详情\n时间：\n2026-10-18T18:20:56.858322+00:00\n操作：\n应用环境方案\n描述：\n已执行并核验\n收起详情\n用户 / V3_ORDER_U\n元素列表\n\n按已确认顺序排列元素 · 新增 1 项\n\n修改前 · 记录快照\nBASE\n;\nV\n修改后 · 记录快照\nV\n;\nBASE\n;\nU\n完整原始字符串\n用户 / V3_ORDER_T\n元素列表\n\n按已确认顺序排列元素 · 新增 1 项\n\n修改前 · 记录快照\nBASE\n;\nW\n修改后 · 记录快照\nBASE\n;\nT\n;\nW\n完整原始字符串\n\n恢复前需要审阅新的环境计划。\n\n恢复历史前值\n时间：\n2026-10-18T18:18:55.481297+00:00\n操作：\n撤销配置贡献\n描述：\n已执行并核验\n查看详情\n恢复历史前值\n时间：\n2026-10-18T18:17:02.004705+00:00\n操作：\n应用环境方案\n描述：\n已执行并核验\n查看详情\n恢复历史前值\n时间：\n2026-10-18T18:17:00.483694+00:00\n操作：\n应用环境方案\n描述：\n已执行并核验\n查看详情\n恢复历史前值\n时间：\n2026-10-18T18:16:59.366365+00:00\n操作：\n应用环境方案\n描述：\n已执行并核验\n查看详情\n恢复历史前值"
+  }
+]

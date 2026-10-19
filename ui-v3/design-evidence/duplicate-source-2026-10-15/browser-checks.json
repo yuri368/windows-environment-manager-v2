@@ -1,0 +1,54 @@
+{
+  "inputs": [
+    {
+      "shadow": "none",
+      "value": "%PYTHON_HOME%"
+    },
+    {
+      "shadow": "none",
+      "value": "%PYTHON_HOME%"
+    },
+    {
+      "shadow": "none",
+      "value": "%PYTHON_HOME%"
+    }
+  ],
+  "sources": [
+    {
+      "classes": "diff-token is-replaced is-duplicate is-related-highlight is-duplicate-highlight is-link-source",
+      "parent": "elementPreview",
+      "raw": "%PYTHON_HOME%"
+    }
+  ],
+  "tokens": [
+    {
+      "bg": "rgb(255, 255, 255)",
+      "classes": "diff-token is-duplicate is-duplicate-highlight",
+      "color": "rgb(66, 89, 75)",
+      "outline": "rgb(95, 111, 123) dashed 0.666667px",
+      "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+    },
+    {
+      "bg": "rgb(23, 63, 50)",
+      "classes": "diff-token is-replaced is-duplicate is-related-highlight is-duplicate-highlight is-link-source",
+      "color": "rgb(255, 255, 255)",
+      "outline": "rgb(23, 63, 50) solid 2px",
+      "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+    },
+    {
+      "bg": "rgb(255, 248, 233)",
+      "classes": "diff-token is-replaced is-duplicate is-duplicate-highlight",
+      "color": "rgb(111, 67, 6)",
+      "outline": "rgb(95, 111, 123) dashed 0.666667px",
+      "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+    }
+  ],
+  "viewport": {
+    "height": 960,
+    "width": 1707
+  },
+  "afterLeave": {
+    "duplicateCount": 0,
+    "sourceCount": 0
+  }
+}

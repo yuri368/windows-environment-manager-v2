@@ -1,0 +1,78 @@
+{
+  "date": "2026-10-19",
+  "candidate": "20261019-130846-568",
+  "runtimeSourceCommit": "c37a73217074d7b163120fbe3a5247ea04a96b60",
+  "installation": {
+    "Candidate": "20261019-130846-568",
+    "InstallerExitCode": 0,
+    "PreservedFiles": 26,
+    "MissingFiles": 0,
+    "ChangedFiles": 0,
+    "InstalledExeSHA256": "38322e9aba2df26b92537db749740b791235f58df6c82f272f11cc836f8eca65",
+    "InstalledElementsSHA256": "be5fa81239c58e647a86d47c84718d8d157cc747f1a7125d2de128405a7d969d",
+    "InstalledFxSHA256": "943b7b66e151e5d9e578392032e3f110eb24690298cd0ac6ca0e133bba75ccf6",
+    "ProgramFilesOwner": "BUILTIN\\Administrators",
+    "ProgramFilesDaclProtected": true,
+    "ReceiptOwner": "BUILTIN\\Administrators",
+    "ReceiptDaclProtected": true,
+    "preservationCheckStage": "After installer exit and before the first new product launch"
+  },
+  "runtime": {
+    "status": "passed",
+    "candidate": "20261019-130846-568",
+    "backend": "windows",
+    "installedExeSha256": "38322e9aba2df26b92537db749740b791235f58df6c82f272f11cc836f8eca65",
+    "health": {
+      "status": "ok",
+      "product": "EnvManagerV3"
+    },
+    "historyCount": 7,
+    "recoveryCount": 0,
+    "engineHash": "e7444cc31ff5845adcf0ebae1169f69c2e863cf9224d28fe4f7c2ec6f8118732",
+    "acceptedSourceAssetsServed": true,
+    "elementsSha256": "be5fa81239c58e647a86d47c84718d8d157cc747f1a7125d2de128405a7d969d",
+    "fxSha256": "943b7b66e151e5d9e578392032e3f110eb24690298cd0ac6ca0e133bba75ccf6",
+    "developerPathRemoved": true,
+    "launchDriverAdmin": false,
+    "environmentBeforeCount": 28,
+    "environmentAfterCount": 28,
+    "exactRawTypeInventoryMatch": true,
+    "plansPreparedOrExecuted": 0,
+    "authenticatedQuit": "closing",
+    "processExitCode": 0,
+    "scope": "Installed native startup, authenticated read-only bootstrap/assets and quit; no environment mutation requests."
+  },
+  "manualInteraction": {
+    "result": "owner-accepted",
+    "feedback": "现在直接落在目标位置，正常",
+    "page": "http://127.0.0.1:8798/",
+    "backend": "file",
+    "method": "Owner native mouse operation in Chrome; source page, not an automated mouse test",
+    "acceptedElementsSHA256": "be5fa81239c58e647a86d47c84718d8d157cc747f1a7125d2de128405a7d969d",
+    "installedHttpAssetMatchesAcceptedSource": true,
+    "installedPackageNativeMouseRepeated": false
+  },
+  "cleanWindowsVmValidated": false,
+  "deferredByOwner": [
+    "Multiple user accounts",
+    "Alternative administrator credentials",
+    "Real power loss"
+  ],
+  "publicReleaseCreated": false,
+  "permissionVerification": [
+    {
+      "area": "program files",
+      "owner": "BUILTIN\\Administrators",
+      "protectedDacl": true,
+      "authenticatedUsersRights": "ReadAndExecute, Synchronize",
+      "unexpectedWritablePrincipals": 0
+    },
+    {
+      "area": "system receipts",
+      "owner": "BUILTIN\\Administrators",
+      "protectedDacl": true,
+      "authenticatedUsersRights": "Read, Synchronize",
+      "unexpectedWritablePrincipals": 0
+    }
+  ]
+}

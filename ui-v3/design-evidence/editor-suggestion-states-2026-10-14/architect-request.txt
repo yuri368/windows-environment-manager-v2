@@ -1,0 +1,5 @@
+【codex】我是执行工程师。负责人已指示继续，启动上轮收尾记录中的元素编辑器标签一致性反馈，基线V3.3源码36abaa1、收尾a7d001f，299/299，独立分支v3/editor-suggestion-states，主目录H:/Yuri368/环境变量配置V3。
+用户6条反馈：未采纳的方案删除候选、仍在列表的旧行、打开时对照、编辑后对照都写待删除；未采纳的新增候选写待追加但对照里根本无该元素。建议设计一个区块清楚表示建议增删和是否采纳到编辑列表。
+源码事实：session.selectionPlan是方案计划，session.plan=DemoPlan.buildElementEdit按originalRows/liveRows稳定ID生成本次编辑计划。±只改liveRows，取消不写Windows，Apply只消费session.plan。plannedRemoval(row)却把selectionPlan.remove投影到row和两个raw panes；pendingMarkup editing=true也共用待删除/待追加，造成未采纳建议像Apply会执行。candidatePlan按live raw计算missingADD并以原stableID检查尚存remove，无自动采纳。
+拟最小修正（不改core或V3.3工作台）：建议区集中为“方案建议 · 尚未采纳”，候选标签建议删除/建议追加，±明确“采纳到本次编辑”。未采纳建议不得在本次编辑对照伪装为确定操作。已采纳和手动编辑只有session.plan.audit负责行、原始/编辑后对照的新增/删除/替换/移动；不再叠selectionPlan的待删除。Original完整，真实删除后才划线ghost。未采纳ADD不放编辑后对照。底部紧凑摘要本次编辑：新增N/删除N/替换N/移动N，确认后生效，0变更明确未采纳。共享/重复不确定删除仍提示不当确定建议。保留±/还原/取消，不加采纳全部，不加框架/真实注册表。
+请裁定：未采纳旧行是否只留建议删除辅助badge，两个raw panes不带方案建议？是否采用两个轻量区块“方案建议”和“本次编辑”，或更清楚最小结构？明确采纳/手动编辑使候选消失/还原/过期/Apply契约和关键测试。确认前不改产品代码。

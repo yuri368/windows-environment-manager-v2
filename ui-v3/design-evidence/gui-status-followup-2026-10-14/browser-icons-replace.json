@@ -1,0 +1,234 @@
+{
+  "icons": [
+    {
+      "align": "center",
+      "delta": -0.0052089691162109375,
+      "display": "flex",
+      "pseudo": {
+        "bottom": "0px",
+        "height": "10px",
+        "marginBottom": "3px",
+        "marginTop": "3px",
+        "position": "absolute",
+        "top": "0px",
+        "width": "10px"
+      },
+      "text": "✓ 2/2"
+    },
+    {
+      "align": "center",
+      "delta": -0.0052089691162109375,
+      "display": "flex",
+      "pseudo": {
+        "bottom": "0px",
+        "height": "10px",
+        "marginBottom": "3px",
+        "marginTop": "3px",
+        "position": "absolute",
+        "top": "0px",
+        "width": "10px"
+      },
+      "text": "✓ 2/2"
+    },
+    {
+      "align": "center",
+      "delta": -0.0052089691162109375,
+      "display": "flex",
+      "pseudo": {
+        "bottom": "0px",
+        "height": "10px",
+        "marginBottom": "3px",
+        "marginTop": "3px",
+        "position": "absolute",
+        "top": "0px",
+        "width": "10px"
+      },
+      "text": "! 1/2"
+    },
+    {
+      "align": "center",
+      "delta": -0.0052089691162109375,
+      "display": "flex",
+      "pseudo": {
+        "bottom": "0px",
+        "height": "10px",
+        "marginBottom": "3px",
+        "marginTop": "3px",
+        "position": "absolute",
+        "top": "0px",
+        "width": "10px"
+      },
+      "text": "! 0/2"
+    },
+    {
+      "align": "center",
+      "delta": -0.0052089691162109375,
+      "display": "flex",
+      "pseudo": {
+        "bottom": "0px",
+        "height": "10px",
+        "marginBottom": "3px",
+        "marginTop": "3px",
+        "position": "absolute",
+        "top": "0px",
+        "width": "10px"
+      },
+      "text": "! 0/2"
+    },
+    {
+      "align": "center",
+      "delta": -0.0052089691162109375,
+      "display": "flex",
+      "pseudo": {
+        "bottom": "0px",
+        "height": "10px",
+        "marginBottom": "3px",
+        "marginTop": "3px",
+        "position": "absolute",
+        "top": "0px",
+        "width": "10px"
+      },
+      "text": "✓ 1/1"
+    },
+    {
+      "align": "center",
+      "delta": -0.0052089691162109375,
+      "display": "flex",
+      "pseudo": {
+        "bottom": "0px",
+        "height": "10px",
+        "marginBottom": "3px",
+        "marginTop": "3px",
+        "position": "absolute",
+        "top": "0px",
+        "width": "10px"
+      },
+      "text": "✓ 1/1"
+    },
+    {
+      "align": "center",
+      "delta": -0.0052089691162109375,
+      "display": "flex",
+      "pseudo": {
+        "bottom": "0px",
+        "height": "10px",
+        "marginBottom": "3px",
+        "marginTop": "3px",
+        "position": "absolute",
+        "top": "0px",
+        "width": "10px"
+      },
+      "text": "✓ 3/3"
+    },
+    {
+      "align": "center",
+      "delta": -0.0052089691162109375,
+      "display": "flex",
+      "pseudo": {
+        "bottom": "0px",
+        "height": "10px",
+        "marginBottom": "3px",
+        "marginTop": "3px",
+        "position": "absolute",
+        "top": "0px",
+        "width": "10px"
+      },
+      "text": "! 2/3"
+    },
+    {
+      "align": "center",
+      "delta": -0.0052089691162109375,
+      "display": "flex",
+      "pseudo": {
+        "bottom": "0px",
+        "height": "10px",
+        "marginBottom": "3px",
+        "marginTop": "3px",
+        "position": "absolute",
+        "top": "0px",
+        "width": "10px"
+      },
+      "text": "! 1/3"
+    },
+    {
+      "align": "center",
+      "delta": -0.0052089691162109375,
+      "display": "flex",
+      "pseudo": {
+        "bottom": "0px",
+        "height": "10px",
+        "marginBottom": "3px",
+        "marginTop": "3px",
+        "position": "absolute",
+        "top": "0px",
+        "width": "10px"
+      },
+      "text": "! 2/6"
+    },
+    {
+      "align": "center",
+      "delta": -0.0052089691162109375,
+      "display": "flex",
+      "pseudo": {
+        "bottom": "0px",
+        "height": "10px",
+        "marginBottom": "3px",
+        "marginTop": "3px",
+        "position": "absolute",
+        "top": "0px",
+        "width": "10px"
+      },
+      "text": "! 2/4"
+    },
+    {
+      "align": "center",
+      "delta": -0.0052089691162109375,
+      "display": "flex",
+      "pseudo": {
+        "bottom": "0px",
+        "height": "10px",
+        "marginBottom": "3px",
+        "marginTop": "3px",
+        "position": "absolute",
+        "top": "0px",
+        "width": "10px"
+      },
+      "text": "! 1/2"
+    },
+    {
+      "align": "center",
+      "delta": 0.000011444091796875,
+      "display": "flex",
+      "pseudo": {
+        "bottom": "0px",
+        "height": "11px",
+        "marginBottom": "3.5px",
+        "marginTop": "3.5px",
+        "position": "absolute",
+        "top": "0px",
+        "width": "11px"
+      },
+      "text": "! 不匹配 0/1"
+    },
+    {
+      "align": "center",
+      "delta": 0,
+      "display": "flex",
+      "pseudo": {
+        "bottom": "0px",
+        "height": "11px",
+        "marginBottom": "3.5px",
+        "marginTop": "3.5px",
+        "position": "absolute",
+        "top": "0px",
+        "width": "11px"
+      },
+      "text": "✓ 匹配 1/1"
+    }
+  ],
+  "replace": {
+    "caption": "整值替换 · 离线演示",
+    "hidden": true,
+    "role": null
+  }
+}
