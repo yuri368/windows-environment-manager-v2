@@ -1,0 +1,86 @@
+{
+  "date": "2026-10-19",
+  "scope": "C-only child VHDX; installed Windows backend; two explicitly disposable acceptance variables only",
+  "candidate": "20261019-122936-875",
+  "installedExeSHA256": "05e81e84671d41338dc23beebad2a76faab1209af2e934f701f97a2534d70f98",
+  "machineUpgradeExitCode": 0,
+  "preservedFiles": 20,
+  "preservedFileHashesMatch": true,
+  "programFiles": {
+    "owner": "BUILTIN\\Administrators",
+    "daclProtected": true,
+    "authenticatedUsers": "read and execute",
+    "administrators": "full",
+    "system": "full"
+  },
+  "systemReceipts": {
+    "owner": "BUILTIN\\Administrators",
+    "daclProtected": true,
+    "authenticatedUsers": "read",
+    "administrators": "full",
+    "system": "full"
+  },
+  "operations": [
+    {
+      "operationId": "1db33a8b7c924170bb7a1aea9c3a279e",
+      "status": "committed",
+      "errors": 0,
+      "warnings": 0,
+      "targets": [
+        {
+          "scope": "User",
+          "name": "V3_ACCEPTANCE_20261019_USER",
+          "status": "verified",
+          "verifiedAfterMatchesReviewedAfter": true,
+          "afterExists": true,
+          "afterType": "REG_EXPAND_SZ"
+        },
+        {
+          "scope": "System",
+          "name": "V3_ACCEPTANCE_20261019_SYSTEM",
+          "status": "verified",
+          "verifiedAfterMatchesReviewedAfter": true,
+          "afterExists": true,
+          "afterType": "REG_EXPAND_SZ"
+        }
+      ]
+    },
+    {
+      "operationId": "abf462e0992f4a7791688de3826a3966",
+      "status": "committed",
+      "errors": 0,
+      "warnings": 0,
+      "targets": [
+        {
+          "scope": "User",
+          "name": "V3_ACCEPTANCE_20261019_USER",
+          "status": "verified",
+          "verifiedAfterMatchesReviewedAfter": true,
+          "afterExists": false,
+          "afterType": null
+        },
+        {
+          "scope": "System",
+          "name": "V3_ACCEPTANCE_20261019_SYSTEM",
+          "status": "verified",
+          "verifiedAfterMatchesReviewedAfter": true,
+          "afterExists": false,
+          "afterType": null
+        }
+      ]
+    }
+  ],
+  "history": {
+    "before": 5,
+    "after": 7,
+    "bothNewOperationIdsPresent": true
+  },
+  "recoveryAfter": 0,
+  "environmentRestored": {
+    "beforeCount": 28,
+    "afterCount": 28,
+    "exactRawTypeInventoryMatch": true,
+    "disposableTargetsAbsent": true
+  },
+  "uiLimitation": "This installed bundle predates the vertical pointer drag and ghost drag changes; those changes still require manual acceptance."
+}
