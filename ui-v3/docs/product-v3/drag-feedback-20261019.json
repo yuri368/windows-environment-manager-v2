@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-19",
+  "nativeDragImageAttempt": {
+    "commit": "4a8e742",
+    "implementation": "Replace mini-card native setDragImage with measured current-row clone.",
+    "automated": "Full npm test exit 0; element checks 19 passed; production runtime contracts 43 passed.",
+    "manualResult": "rejected",
+    "ownerFeedback": "还是老样子，没变化",
+    "evidence": "native-drag-ghost-rejected-20261019.png",
+    "interpretation": "The browser's translucent native ghost does not meet the requested opaque full-row pick-up appearance. Automated DOM sizing checks were insufficient to establish native appearance."
+  },
+  "opaqueOverlayAttempt": {
+    "commit": "aab1f625ae0d4d2698a935afa21038982956bf71",
+    "implementation": "Keep HTML5 drop ordering; move an opaque measured page overlay from document dragover and source drag coordinates. A transparent 1px canvas suppresses the native ghost.",
+    "automated": "Full npm test exit 0; element checks 20 passed; production runtime contracts 43 passed; git diff --check passed.",
+    "freshPage": "http://127.0.0.1:8796/",
+    "servedSourceSha256": "f2b6fd65149ca26115f0d9612803514f43c6b814f89e68fe22431ba436d3d301",
+    "sourceDeploymentChecked": true,
+    "manualResult": "further-changes-requested",
+    "ownerFeedback": "仍不符合，请继续改",
+    "evidence": "opaque-drag-followup-20261019.png",
+    "observed": "Screenshot shows an opaque full-row overlay. Remaining expected behavior is being clarified; do not claim native acceptance.",
+    "scope": "Isolated File backend. DOM sizing and cleanup tests do not prove native mouse tracking appearance."
+  }
+}

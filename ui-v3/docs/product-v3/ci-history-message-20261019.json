@@ -1,0 +1,26 @@
+{
+  "testedCommit": "b81c8427f1f8fa6ff8c494138795e738dd15a122",
+  "runId": 39196447885,
+  "conclusion": "success",
+  "jobs": [
+    {
+      "jobId": 117880158257,
+      "platform": "ubuntu",
+      "resultLines": [
+        "2026-10-19T03:49:48.9837357Z Ran 491 tests in 38.194s",
+        "2026-10-19T03:49:48.9837673Z OK (skipped=10)",
+        "2026-10-19T03:49:51.0719292Z 34 product contract checks passed (JSDOM fixtures; real backend/browser acceptance is separate)."
+      ]
+    },
+    {
+      "jobId": 117880158437,
+      "platform": "windows",
+      "resultLines": [
+        "2026-10-19T03:51:16.9917974Z Ran 491 tests in 105.448s\r",
+        "2026-10-19T03:51:16.9918229Z OK (skipped=1)\r",
+        "2026-10-19T03:51:19.3256689Z 34 product contract checks passed (JSDOM fixtures; real backend/browser acceptance is separate).\r"
+      ]
+    }
+  ],
+  "scope": "Full backend File/mock suite and 34 product JSDOM contracts on both platforms; single-instance reopen implemented after this commit is not covered by this run."
+}

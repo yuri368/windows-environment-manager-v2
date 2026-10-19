@@ -1,5 +1,18 @@
 # V3 Windows x64 打包与隔离启动检查
 
+最新交互候选为 **`packaging_v3/output/20261019-122936-875`**，对应生产代码 `aab1f62`，包含单实例重开、安全退出及不透明整行拖动浮层。完整构建 exit 0，两类 Setup、独立 File 启停、升级 helper、115 包文件、15 生产资源、30 许可证以及源码/stage 一致性核对均通过。负责人对拖动手感继续提出修改，本包尚未作为最终交付安装，不能描述为已经通过原生拖动验收。过程见 `drag-feedback-20261019.json`。
+
+| 最新交互候选产物 | SHA256 |
+| --- | --- |
+| `dist/EnvManagerV3/EnvManagerV3.exe`，须整目录分发 | `05e81e84671d41338dc23beebad2a76faab1209af2e934f701f97a2534d70f98` |
+| `EnvManagerV3-3.0.0-dev1-windows-x64.zip` | `dcac21234997a8ed81f1d6012eb3175d6e961e2089c37c981a8785eca52f6dfd` |
+| `EnvManagerV3-3.0.0-dev1-setup-user-x64.exe` | `166e75ac98b6be9e6d6c931f232ba95a34eb947598359df10ef60ed1bf6eac86` |
+| `EnvManagerV3-3.0.0-dev1-setup-machine-x64.exe` | `494ba202bbad1c0d475993fec89075e641978655a6ca99c29480ca505826eb3a` |
+
+`20261019-120050-220`、`121349-557` 和 `122200-881` 为同日中间构建，均保留真实构建结果；前两者的冻结重开/退出证据见 `frozen-lifecycle-20261019.json`，`122200-881` 的原生拖影已被负责人否定。后续候选不沿用旧包哈希冒充同一 binary。
+
+## 已完成原生生命周期的较早候选
+
 当前原生修复候选为 **`packaging_v3/output/20261019-105247-728`**，本次只在 C 盘副本构建，完整路径为 `C:\EnvManagerV3Acceptance\20261019-child-native\source\packaging_v3\output\20261019-105247-728`。修复 machine 安装器 ACL 参数 ABI、控制邮箱身份和升级备份长路径。两类安装包、独立 File 启动、升级 helper、frozen 长路径回归及源码/stage 一致性核对均通过；真实 machine 同版本重装已通过。验收边界及失败记录见 [原生验收报告](NATIVE_ACCEPTANCE_2026-10-19.md)。它仍是未签名候选，尚不代表全部生产门槛完成。
 
 | 当前原生产物 | SHA256 |

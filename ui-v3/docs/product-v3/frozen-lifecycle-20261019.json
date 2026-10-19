@@ -1,0 +1,26 @@
+{
+  "safeExit": {
+    "candidate": "20261019-121349-557",
+    "exeSha256": "1ec132749763cec353f8cff536ed5ac24520299ed7ad113d6c54697900adef48",
+    "backend": "file",
+    "pid": 21088,
+    "page": "http://127.0.0.1:8796/",
+    "confirmation": "Owner clicked confirm; cancellation was intended but not performed. This is a successful normal exit observation, not a native cancellation test.",
+    "observedHeading": "应用已退出",
+    "processStopped": true,
+    "stderrEmpty": true,
+    "screenshotLocal": "C:/EnvManagerV3Acceptance/20261019-child-native/final-ui/quit-confirmed.png"
+  },
+  "earlierFrozenReopen": {
+    "candidate": "20261019-120050-220",
+    "backend": "file",
+    "originalPid": 10800,
+    "duplicateExitCode": 0,
+    "reply": {
+      "status": "reopened",
+      "backend": "file"
+    },
+    "originalStillRunning": true
+  },
+  "scope": "These candidates precede the full-size drag-preview change. No environment plans executed by these lifecycle checks."
+}
