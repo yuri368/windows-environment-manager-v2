@@ -70,9 +70,10 @@
     "productContractChecks": 43
   },
   "frozenProductLifecycle": "frozen-product-lifecycle-20261019.json",
-  "nativeVisualAcceptance": "Pending owner feedback on the continuous drop landing revision; earlier pointer/ghost feedback was normal except release replay.",
-  "installed": false,
+  "nativeVisualAcceptance": "Owner accepted source File-page pointer/ghost dragging and continuous landing; installed native backend serves the exact accepted JS/CSS bytes. Native mouse test was not repeated against the installed server.",
+  "installed": true,
   "cleanWindowsVmValidated": false,
   "publicReleaseCreated": false,
-  "scope": "Build and tests write only C. Lifecycle executes the frozen EXE using FileEnvironment; no host environment mutations."
+  "scope": "Build and tests write only C. Lifecycle executes the frozen EXE using FileEnvironment; no host environment mutations.",
+  "installedEvidence": "installed-20261019-130846.json"
 }

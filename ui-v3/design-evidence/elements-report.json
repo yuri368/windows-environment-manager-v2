@@ -1,6 +1,6 @@
 {
   "verification": "JSDOM UI event checks only; native dragging, visual rendering and Windows integration not verified",
-  "nativeAcceptance": "Owner reported vertical rail roughly met the intended motion but still jittered; pointer capture, shared movement feedback and ghost dragging await manual verification.",
+  "nativeAcceptance": "Versioned owner mouse acceptance is recorded separately in docs/product-v3/drag-feedback-20261019.json; this verifier does not perform native dragging.",
   "checks": [
     {
       "name": "Highlight preserves exact raw text, empty and duplicate elements, and escapes markup",

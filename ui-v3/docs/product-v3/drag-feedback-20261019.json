@@ -50,7 +50,8 @@
     "servedSourceSha256": "be5fa81239c58e647a86d47c84718d8d157cc747f1a7125d2de128405a7d969d",
     "servedCssSha256": "943b7b66e151e5d9e578392032e3f110eb24690298cd0ac6ca0e133bba75ccf6",
     "sourceDeploymentChecked": true,
-    "manualResult": "pending-owner-feedback",
-    "scope": "File backend; JSDOM animation keyframe verification is not native visual acceptance."
+    "manualResult": "owner-accepted",
+    "scope": "File backend; JSDOM animation keyframe verification is not native visual acceptance.",
+    "ownerFeedback": "现在直接落在目标位置，正常"
   }
 }

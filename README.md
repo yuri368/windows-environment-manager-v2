@@ -1,3 +1,11 @@
+# V3 候选版本
+
+当前分支包含独立 V3 产品：紧凑浏览器界面、持久 TOML 工作区、User/System 环境计划审阅与执行，以及 Windows 用户/机器安装包。包内包含运行时，启动后自动打开本地界面。
+
+[V3 运行与隔离试用](ui-v3/docs/product-v3/RUNNING.md) · [候选包、构建结果与 SHA256](ui-v3/docs/product-v3/BUILD.md) · [验收记录与未验证项](ui-v3/docs/product-v3/RELEASE_READINESS_2026-10-19.md)
+
+V3 当前为 `3.0.0-dev1` 候选，尚未公开发布。下方保留 V2 使用说明与原有正式版下载入口；V3 的配置和数据使用独立目录。
+
 # Windows 环境变量方案管理器 V2
 
 **把环境变量按应用整理好。重装系统、切换 Windows 或更换软件版本时，少一点重复配置。**

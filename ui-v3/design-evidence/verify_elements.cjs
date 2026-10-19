@@ -417,6 +417,6 @@ check('Shared component and additional stylesheet are local; no UI runtime error
   assert.match(html, /src="windows-elements\.js(?:\?v=[a-f0-9]{12})?"/);
   assert.match(html, /href="elements-ui\.css(?:\?v=[a-f0-9]{12})?"/);
 });
-const report = { verification: 'JSDOM UI event checks only; native dragging, visual rendering and Windows integration not verified', nativeAcceptance: 'Owner reported vertical rail roughly met the intended motion but still jittered; pointer capture, shared movement feedback and ghost dragging await manual verification.', checks };
+const report = { verification: 'JSDOM UI event checks only; native dragging, visual rendering and Windows integration not verified', nativeAcceptance: 'Versioned owner mouse acceptance is recorded separately in docs/product-v3/drag-feedback-20261019.json; this verifier does not perform native dragging.', checks };
 fs.writeFileSync(path.join(__dirname, 'elements-report.json'), JSON.stringify(report, null, 2) + '\n');
 console.log(JSON.stringify(report, null, 2)); w.close();
