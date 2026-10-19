@@ -1,6 +1,6 @@
 {
   "verification": "JSDOM UI event checks only; native dragging, visual rendering and Windows integration not verified",
-  "nativeAcceptance": "Previous native full-row bitmap failed user verification; the opaque DOM overlay awaits new manual verification.",
+  "nativeAcceptance": "Owner reported vertical rail roughly met the intended motion but still jittered; pointer capture, shared movement feedback and ghost dragging await manual verification.",
   "checks": [
     {
       "name": "Highlight preserves exact raw text, empty and duplicate elements, and escapes markup",
@@ -75,7 +75,55 @@
       "passed": true
     },
     {
+      "name": "Vertical rail previews a full slot, moves neighbours and commits only the selected occurrence on drop",
+      "passed": true
+    },
+    {
+      "name": "Dragging down opens an end slot and cancellation preserves raw order and row identities",
+      "passed": true
+    },
+    {
+      "name": "Fast cross-list moves ignore stale source samples and keep a stationary landing slot quiet",
+      "passed": true
+    },
+    {
+      "name": "A small slot boundary dead band prevents rapid reverse shuffling without blocking a deliberate move",
+      "passed": true
+    },
+    {
+      "name": "Scrolled list bounds and landing slots use the same current viewport coordinates",
+      "passed": true
+    },
+    {
+      "name": "The empty space opened by neighbours accepts a drop on the list itself",
+      "passed": true
+    },
+    {
       "name": "Overlay document/source tracking detaches on external drop, next drag, render, dragend and dismiss",
+      "passed": true
+    },
+    {
+      "name": "Pointer release outside the list commits the same row, baseline/preview badges and counts as move buttons",
+      "passed": true
+    },
+    {
+      "name": "Dragging identical occurrences produces movement feedback in both comparison panes even when raw result is unchanged",
+      "passed": true
+    },
+    {
+      "name": "Pointer cancellation and click-only gestures preserve both comparison panes and release capture",
+      "passed": true
+    },
+    {
+      "name": "Fast pointer reversals settle on frozen slots without repeated neighbour mutations or stale native samples",
+      "passed": true
+    },
+    {
+      "name": "Dropping back into the same slot does not redraw the list or pretend a move occurred",
+      "passed": true
+    },
+    {
+      "name": "A ghost can be pointer-dragged with both comparison markers while its deletion draft stays out of the result",
       "passed": true
     },
     {

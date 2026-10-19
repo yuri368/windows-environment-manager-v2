@@ -3,29 +3,35 @@ var WindowsElements = (() => {
   const escape = text => String(text ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const escapeRaw = value => escape(value).replace(/\r/g,'&#13;');
   let session = null, sequence = 0;
-  let dragPreview=null,dragSource=null,dragNativeImage=null,dragHotspot=null;
+  let dragPreview=null,dragSource=null,dragNativeImage=null,dragHotspot=null,dragLayout=null,pointerCleanup=null;
   function moveDragPreview(event){
     if(!dragPreview||!Number.isFinite(event.clientX)||!Number.isFinite(event.clientY))return;
     // Some engines emit a final source drag sample at (0,0). Do not jump there.
     if(event.clientX===0&&event.clientY===0)return;
     dragPreview.hidden=false;
-    dragPreview.style.left=(event.clientX-dragHotspot.x)+'px';
-    dragPreview.style.top=(event.clientY-dragHotspot.y)+'px';
+    // Keep the row on its list's horizontal rail. Only its vertical offset
+    // follows the pointer; the CSS transition gives the lift a gentle weight.
+    const listTop=dragSource.parentElement.getBoundingClientRect().top;
+    const top=Math.max(listTop,Math.min(listTop+dragHotspot.extent-dragHotspot.height,event.clientY-dragHotspot.y));
+    dragPreview.style.setProperty('--drag-y',(top-dragHotspot.top)+'px');
+    dragLayout?.preview(top,listTop);
   }
   function leaveDragPreview(event){
     if(dragPreview&&!event.relatedTarget&&[document,document.documentElement,document.body].includes(event.target))dragPreview.hidden=true;
   }
   function clearDragPreview(){
+    const cleanup=pointerCleanup;pointerCleanup=null;cleanup?.();
+    dragLayout?.clear();dragLayout=null;
     document.removeEventListener('dragover',moveDragPreview,true);
     document.removeEventListener('dragleave',leaveDragPreview,true);
     document.removeEventListener('drop',clearDragPreview,true);
     document.removeEventListener('dragend',clearDragPreview,true);
     dragPreview?.remove();dragPreview=null;
     dragNativeImage?.remove();dragNativeImage=null;dragHotspot=null;
-    if(dragSource){dragSource.removeEventListener('drag',moveDragPreview);dragSource.classList.remove('is-dragging');dragSource.parentElement?.classList.remove('is-dragging-list');dragSource=null;}
+    if(dragSource){dragSource.classList.remove('is-dragging');dragSource.parentElement?.classList.remove('is-dragging-list');dragSource=null;}
   }
   function startRowDragPreview(element,event){
-    if(typeof event.dataTransfer.setDragImage!=='function')return;
+    if(event.dataTransfer&&typeof event.dataTransfer.setDragImage!=='function')return;
     const rect=element.getBoundingClientRect(),preview=element.cloneNode(true);
     const sourceNodes=[element,...element.querySelectorAll('*')],nodes=[preview,...preview.querySelectorAll('*')];
     nodes.forEach((node,index)=>{
@@ -47,15 +53,20 @@ var WindowsElements = (() => {
     Object.assign(preview.style,{left:rect.left+'px',top:rect.top+'px',width:rect.width+'px',minWidth:rect.width+'px',maxWidth:rect.width+'px',height:rect.height+'px',minHeight:rect.height+'px',maxHeight:rect.height+'px'});
     preview.classList.add('element-drag-preview');preview.setAttribute('aria-hidden','true');preview.setAttribute('inert','');
     document.body.appendChild(preview);dragPreview=preview;
-    dragHotspot={x:Math.max(0,Math.min(rect.width,event.clientX-rect.left)),y:Math.max(0,Math.min(rect.height,event.clientY-rect.top))};
+    const list=element.parentElement,listRect=list.getBoundingClientRect();
+    const last=[...list.querySelectorAll(':scope > [data-element-id]')].at(-1);
+    const bottom=last?.getBoundingClientRect().bottom||listRect.bottom;
+    dragHotspot={y:Math.max(0,Math.min(rect.height,event.clientY-rect.top)),top:rect.top,height:rect.height,extent:Math.max(rect.height,bottom-listRect.top)};
     dragSource=element;
+    if(!event.dataTransfer)return;
     // Suppress the OS/browser's translucent drag bitmap. The opaque DOM row
-    // above the modal is the only visible lifted row; ordering stays native DND.
+    // above the modal is the only visible lifted row for the native fallback.
     const blank=document.createElement('canvas');blank.width=blank.height=1;blank.className='element-drag-native';blank.setAttribute('aria-hidden','true');blank.setAttribute('inert','');
     document.body.appendChild(blank);dragNativeImage=blank;
     try{event.dataTransfer.setDragImage(blank,0,0);}catch{clearDragPreview();return;}
     document.addEventListener('dragover',moveDragPreview,true);
-    element.addEventListener('drag',moveDragPreview);
+    // Use one coordinate stream. Source `drag` samples can lag behind
+    // document `dragover`, making fast moves alternate old and new positions.
     document.addEventListener('dragleave',leaveDragPreview,true);
     document.addEventListener('drop',clearDragPreview,true);
     document.addEventListener('dragend',clearDragPreview,true);
@@ -750,7 +761,7 @@ var WindowsElements = (() => {
   }
   function ghostRowMarkup(row,displayIndex,total) {
     const beforeIndex=session.originalRows.findIndex(original=>original.id===row.id);
-    return `<div class="element-ghost-row${displayMoved(row.id)?' is-moved':''}" data-element-id="${row.id}" data-duplicate-value="${escapeRaw(row.value)}"><span class="element-order" title="原始位置：第 ${beforeIndex+1} 项">${displayIndex+1}</span><span class="element-ghost-body"><span class="element-ghost-value" data-raw-value="${escape(row.value)}">${row.value===''?'<span class="empty-element">（空元素）</span>':escape(row.value)}</span><span class="element-ghost-state">${valueHint(row.value,session.whole)}${statusBadge('removed','本次编辑已移除')}${displayMoved(row.id)?statusBadge('moved','幽灵移动'):''}<span class="element-ghost-note">仅展示痕迹 · 不写入结果</span></span></span>${elementActionsMarkup(row.id,displayIndex,total,true)}</div>`;
+    return `<div class="element-ghost-row${displayMoved(row.id)?' is-moved':''}" data-element-id="${row.id}" draggable="${!session.whole}" data-duplicate-value="${escapeRaw(row.value)}"><span class="element-order" title="原始位置：第 ${beforeIndex+1} 项">${displayIndex+1}</span><span class="element-ghost-body"><span class="element-ghost-value" data-raw-value="${escape(row.value)}">${row.value===''?'<span class="empty-element">（空元素）</span>':escape(row.value)}</span><span class="element-ghost-state">${valueHint(row.value,session.whole)}${statusBadge('removed','本次编辑已移除')}${displayMoved(row.id)?statusBadge('moved','幽灵移动'):''}<span class="element-ghost-note">仅展示痕迹 · 不写入结果</span></span></span>${elementActionsMarkup(row.id,displayIndex,total,true)}</div>`;
   }
   function renderRows(focusId) {
     clearDragPreview();
@@ -786,50 +797,123 @@ var WindowsElements = (() => {
     root.querySelectorAll('[data-delete]').forEach(button=>button.onclick=()=>{const deletedId=Number(button.dataset.delete),index=session.rows.findIndex(row=>row.id===deletedId),keepsGhost=session.originalById.has(deletedId);session.fx=keepsGhost?{kind:'remove',id:deletedId}:{kind:'none'};removeLiveRow(deletedId);renderRows(session.rows[Math.min(index,session.rows.length-1)]?.id);if(!session.rows.length)root.querySelector('#addElement').focus();});
     root.querySelectorAll('[data-restore-ghost]').forEach(button=>button.onclick=()=>restoreGhost(Number(button.dataset.restoreGhost)));
     const list=root.querySelector('#elementList');
+    let dragPositions=[],dragHeight=0,dragSlot=-1;
     const clearDrop=()=>{
       list.querySelectorAll('.drop-target').forEach(row=>row.classList.remove('drop-target','is-noop'));
       list.querySelectorAll('.will-shift-up,.will-shift-down').forEach(row=>row.classList.remove('will-shift-up','will-shift-down'));
       const pill=list.querySelector('.drop-pill');if(pill)pill.hidden=true;
+      const gap=list.querySelector('.element-drop-gap');if(gap)gap.hidden=true;
+      list.querySelectorAll('[data-element-id]').forEach(row=>row.style.removeProperty('--reorder-y'));
     };
-    // Drop preview (display only): a pill names the landing position, rows that would slide get a nudge hint. No layout shift, so hit-testing stays stable.
+    // Preview a complete row-sized slot. Original geometry drives hit-testing,
+    // so the animated neighbours cannot change the target under the pointer.
     const markDrop=(zone,targetId)=>{
       const order=session.displayOrder,from=order.indexOf(session.dragging);if(from<0)return;
       const rest=order.filter(id=>id!==session.dragging),to=targetId===null?rest.length:rest.indexOf(targetId);if(to<0)return;
       const noop=to===from;clearDrop();zone.classList.add('drop-target');zone.classList.toggle('is-noop',noop);
       if(!noop){
         const [lo,hi,cls]=to<from?[to,from-1,'will-shift-down']:[from+1,to,'will-shift-up'];
-        order.slice(lo,hi+1).forEach(id=>list.querySelector(`[data-element-id="${id}"]`)?.classList.add(cls));
+        order.slice(lo,hi+1).forEach(id=>{
+          const row=list.querySelector(`[data-element-id="${id}"]`);if(!row)return;
+          row.classList.add(cls);row.style.setProperty('--reorder-y',(to<from?dragHeight:-dragHeight)+'px');
+        });
       }
+      const remaining=dragPositions.filter(row=>row.id!==session.dragging);
+      const gapTop=remaining.slice(0,to).reduce((sum,row)=>sum+row.height,0);
+      let gap=list.querySelector('.element-drop-gap');
+      if(!gap){gap=document.createElement('div');gap.className='element-drop-gap';gap.setAttribute('aria-hidden','true');list.appendChild(gap);}
+      gap.hidden=false;gap.style.top=gapTop+'px';gap.style.height=dragHeight+'px';
       let pill=list.querySelector('.drop-pill');
       if(!pill){pill=document.createElement('div');pill.className='drop-pill';pill.setAttribute('aria-hidden','true');list.appendChild(pill);}
       pill.hidden=false;pill.classList.toggle('is-noop',noop);
       pill.textContent=noop?'位置不变':`${to<from?'↑':'↓'} ${targetId===null?'放到末尾 · 第 ':'放到第 '}${to+1} 位`;
-      pill.style.top=Math.max(zone.offsetTop-11,2)+'px';
+      pill.style.top=Math.max(gapTop-11,2)+'px';
     };
-    root.querySelectorAll('.element-row').forEach(element=>{
+    root.querySelectorAll('.element-row,.element-ghost-row').forEach(element=>{
       const id=Number(element.dataset.elementId);
-      element.ondragstart=e=>{if(session.whole||e.target.matches('input,textarea,button')){e.preventDefault();return;}clearDragPreview();clearDrop();session.dragging=id;e.dataTransfer.setData('text/plain',String(id));e.dataTransfer.effectAllowed='move';
-        startRowDragPreview(element,e);dragSource=element;element.classList.add('is-dragging');list.classList.add('is-dragging-list');};
+      const beginDrag=(e,preservePointer=false)=>{if(!preservePointer)clearDragPreview();clearDrop();session.dragging=id;if(e.dataTransfer){e.dataTransfer.setData('text/plain',String(id));e.dataTransfer.effectAllowed='move';}
+        list.querySelectorAll('[data-element-id]').forEach(row=>{row.getAnimations?.().forEach(animation=>animation.cancel());row.classList.remove('fx-move');});
+        dragPositions=[...list.querySelectorAll(':scope > [data-element-id]')].map(row=>({id:Number(row.dataset.elementId),height:row.getBoundingClientRect().height}));
+        dragHeight=element.getBoundingClientRect().height;dragSlot=session.displayOrder.indexOf(id);session.dragTarget=undefined;
+        startRowDragPreview(element,e);dragSource=element;
+        dragLayout={clear:clearDrop,preview:(top,listTop)=>{
+          const remaining=dragPositions.filter(row=>row.id!==id),relativeTop=top-listTop;
+          let cursor=0,index=0;
+          for(const row of remaining){if(relativeTop<cursor+row.height/2)break;cursor+=row.height;index++;}
+          // A small dead band stops pointer noise from reversing the gap at
+          // a boundary while its neighbours are still easing into place.
+          if(Math.abs(index-dragSlot)===1){
+            const boundaryIndex=Math.min(index,dragSlot),boundary=remaining.slice(0,boundaryIndex).reduce((sum,row)=>sum+row.height,0)+remaining[boundaryIndex].height/2;
+            if((index>dragSlot&&relativeTop<boundary+6)||(index<dragSlot&&relativeTop>boundary-6))index=dragSlot;
+          }
+          const target=remaining[index]?.id??null;
+          if(session.dragTarget===target)return;
+          dragSlot=index;session.dragTarget=target;
+          const zone=target===null?list.querySelector('.element-drop-end'):list.querySelector(`[data-element-id="${target}"]`);
+          if(zone)markDrop(zone,target);
+        }};
+        element.classList.add('is-dragging');list.classList.add('is-dragging-list');};
+      element.ondragstart=e=>{if(pointerCleanup||session.whole||e.target.matches('input,textarea,button')){e.preventDefault();return;}beginDrag(e);};
       element.ondragend=()=>{if(session)session.dragging=null;clearDragPreview();clearDrop();};
+      const handle=element.querySelector('.element-order');
+      handle.addEventListener('pointerdown',down=>{
+        if(session.whole||down.button!==0||down.isPrimary===false)return;
+        down.preventDefault();clearDragPreview();
+        const editingSession=session,pointerId=down.pointerId;let started=false;
+        const finish=(event,cancel=false)=>{
+          if(event?.pointerId!==undefined&&event.pointerId!==pointerId)return;
+          if(!session||session!==editingSession){clearDragPreview();return;}
+          if(started&&!cancel&&event)moveDragPreview(event);
+          const target=session.dragTarget;
+          if(started)session.dragging=null;
+          clearDragPreview();clearDrop();
+          if(started&&!cancel&&target!==undefined&&target!==id)dropBefore(id,target);
+        };
+        const pointerMove=event=>{
+          if(event.pointerId!==pointerId)return;
+          event.preventDefault();
+          if(!started){if(Math.hypot(event.clientX-down.clientX,event.clientY-down.clientY)<4)return;started=true;beginDrag(down,true);}
+          moveDragPreview(event);
+        };
+        const pointerUp=event=>finish(event),pointerCancel=event=>finish(event,true),blur=()=>finish(null,true);
+        const escape=event=>{if(event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();finish(null,true);}};
+        document.addEventListener('pointermove',pointerMove,{capture:true,passive:false});
+        document.addEventListener('pointerup',pointerUp,true);document.addEventListener('pointercancel',pointerCancel,true);
+        document.addEventListener('keydown',escape,true);window.addEventListener('blur',blur);
+        handle.addEventListener('lostpointercapture',pointerCancel);
+        pointerCleanup=()=>{
+          document.removeEventListener('pointermove',pointerMove,true);document.removeEventListener('pointerup',pointerUp,true);
+          document.removeEventListener('pointercancel',pointerCancel,true);document.removeEventListener('keydown',escape,true);window.removeEventListener('blur',blur);
+          handle.removeEventListener('lostpointercapture',pointerCancel);
+          try{if(handle.hasPointerCapture?.(pointerId))handle.releasePointerCapture(pointerId);}catch{}
+        };
+        try{handle.setPointerCapture?.(pointerId);}catch{}
+      });
     });
     // Dropping always inserts the dragged element before the target (V3.6); the end strip appends after the last visible row.
     const dropBefore=(dragged,targetId)=>{
       const from=session.displayOrder.indexOf(dragged);if(from<0)return false;
-      session.displayOrder.splice(from,1);
-      const to=targetId===null?session.displayOrder.length:session.displayOrder.indexOf(targetId);if(to<0)return false;
-      session.displayOrder.splice(to,0,dragged);syncRowsToDisplayOrder();session.fx={kind:'move',id:dragged};renderRows(dragged);return true;
+      const order=session.displayOrder.filter(id=>id!==dragged);
+      const to=targetId===null?order.length:order.indexOf(targetId);if(to<0||to===from)return false;
+      order.splice(to,0,dragged);session.displayOrder=order;syncRowsToDisplayOrder();session.fx={kind:'move',id:dragged};renderRows(dragged);return true;
+    };
+    // Animated neighbours expose empty list space. It remains a valid drop
+    // surface even when no row is directly underneath the lifted element.
+    list.ondragover=e=>{if(session.dragging!==null)e.preventDefault();};
+    list.ondrop=e=>{
+      if(session.dragging===null||session.dragTarget===undefined)return;
+      e.preventDefault();const dragged=session.dragging,target=session.dragTarget;
+      session.dragging=null;clearDragPreview();clearDrop();dropBefore(dragged,target);
     };
     root.querySelectorAll('.element-row,.element-ghost-row').forEach(element=>{
       const id=Number(element.dataset.elementId);
-      element.ondragover=e=>{if(session.dragging!==null){e.preventDefault();if(session.dragging===id)clearDrop();else if(!element.classList.contains('drop-target'))markDrop(element,id);}};
-      element.ondragleave=e=>{if(!element.contains(e.relatedTarget))element.classList.remove('drop-target');};
-      element.ondrop=e=>{if(session.dragging===null)return;e.preventDefault();const dragged=session.dragging;session.dragging=null;clearDragPreview();clearDrop();if(dragged===id)return;dropBefore(dragged,id);};
+      element.ondragover=e=>{if(session.dragging!==null)e.preventDefault();};
+      element.ondrop=e=>{if(session.dragging===null)return;e.preventDefault();const dragged=session.dragging,target=session.dragTarget===undefined?id:session.dragTarget;session.dragging=null;clearDragPreview();clearDrop();if(dragged===target)return;dropBefore(dragged,target);};
     });
     const endZone=root.querySelector('.element-drop-end');
     if(endZone){
-      endZone.ondragover=e=>{if(session.dragging!==null){e.preventDefault();if(!endZone.classList.contains('drop-target'))markDrop(endZone,null);}};
-      endZone.ondragleave=()=>endZone.classList.remove('drop-target');
-      endZone.ondrop=e=>{if(session.dragging===null)return;e.preventDefault();const dragged=session.dragging;session.dragging=null;clearDragPreview();clearDrop();if(session.displayOrder[session.displayOrder.length-1]===dragged)return;dropBefore(dragged,null);};
+      endZone.ondragover=e=>{if(session.dragging!==null)e.preventDefault();};
+      endZone.ondrop=e=>{if(session.dragging===null)return;e.preventDefault();const dragged=session.dragging,target=session.dragTarget===undefined?null:session.dragTarget;session.dragging=null;clearDragPreview();clearDrop();if(target===null&&session.displayOrder[session.displayOrder.length-1]===dragged)return;dropBefore(dragged,target);};
     }
     update();
     playLayoutFx(root,before,fx);

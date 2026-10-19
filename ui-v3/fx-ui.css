@@ -26,12 +26,19 @@
 .element-ghost-row.fx-remove > .element-ghost-body .element-ghost-value { animation: strikeIn .5s .34s ease-out backwards; }
 
 /* ---------- ② 拖放 ---------- */
-/* A full-size opaque DOM row follows native DND coordinates without easing.
+/* The original-size row stays on the list's rail and softly follows vertically.
    The 1px transparent canvas suppresses the browser's translucent drag bitmap. */
-.element-row.element-drag-preview { position: fixed; z-index: 450; margin: 0; box-sizing: border-box; pointer-events: none; opacity: 1; transform: none !important; box-shadow: inset 4px 0 0 var(--rail), 0 3px 9px #203c291a; }
+.element-row.element-drag-preview, .element-ghost-row.element-drag-preview { position: fixed; z-index: 450; margin: 0; box-sizing: border-box; pointer-events: none; opacity: 1; transform: translateY(var(--drag-y, 0px)); transition: transform .12s cubic-bezier(.2,.65,.3,1) !important; outline: 1px solid var(--line2); box-shadow: inset 4px 0 0 var(--rail), 0 5px 14px #203c2926; }
 .element-drag-preview[hidden] { display: none; }
 .element-drag-native { position: fixed; left: 0; top: 0; width: 1px; height: 1px; pointer-events: none; }
-.element-drag-preview, .element-drag-preview * { animation: none !important; transition: none !important; }
+.element-drag-preview, .element-drag-preview * { animation: none !important; }
+.element-drag-preview * { transition: none !important; }
+.element-list.is-dragging-list > [data-element-id] { transform: translateY(var(--reorder-y,0px)); transition: transform .2s cubic-bezier(.2,.75,.25,1); }
+.element-drop-gap { position: absolute; left: 0; right: 0; z-index: 0; pointer-events: none; border: 1px dashed var(--green); background: var(--green-soft); transition: top .18s cubic-bezier(.2,.75,.25,1); }
+.element-drop-gap[hidden] { display: none; }
+.element-list.is-dragging-list > [data-element-id]:not(.is-dragging) { z-index: 1; }
+.element-list.is-dragging-list > .is-dragging { opacity: .12; }
+.element-list.is-dragging-list .drop-target::after { display: none; }
 
 /* 原位：变成一个虚线“空穴”，内容淡出，表示“这里空出来了” */
 .element-row.is-dragging { opacity: 1; background: repeating-linear-gradient(135deg, #f1f6f3 0 6px, #fafcfb 6px 12px); outline: 1.5px dashed #86b69d; outline-offset: -5px; }
@@ -55,9 +62,11 @@
 .will-shift-down > .element-order::after { content: '↓'; }
 
 /* 抓手提示：悬停时序号左侧浮出六点握把 */
-.element-row[draggable="true"] > .element-order::before { content: ''; position: absolute; left: -9px; top: 50%; width: 4px; height: 14px; margin-top: -7px; background: radial-gradient(circle, #8da699 1.1px, transparent 1.5px) 0 0 / 4px 4.67px; opacity: 0; transition: opacity .12s; }
-.element-row[draggable="true"]:hover > .element-order::before { opacity: 1; }
-.element-row.is-dragging > .element-order::before { opacity: 0; }
+:is(.element-row,.element-ghost-row)[draggable="true"] > .element-order::before { content: ''; position: absolute; left: -9px; top: 50%; width: 4px; height: 14px; margin-top: -7px; background: radial-gradient(circle, #8da699 1.1px, transparent 1.5px) 0 0 / 4px 4.67px; opacity: 0; transition: opacity .12s; }
+:is(.element-row,.element-ghost-row)[draggable="true"]:hover > .element-order::before { opacity: 1; }
+:is(.element-row,.element-ghost-row).is-dragging > .element-order::before { opacity: 0; }
+:is(.element-row,.element-ghost-row)[draggable="true"] > .element-order { touch-action: none; user-select: none; cursor: grab; }
+:is(.element-row,.element-ghost-row).is-dragging > .element-order { cursor: grabbing; }
 
 /* 落下：轻微“落座”后停稳（与既有落点环叠加） */
 .element-row.fx-move { animation: landRing .8s ease-out, dropSettle .36s var(--ease-out); }
@@ -66,6 +75,7 @@
 @media (prefers-reduced-motion: reduce) {
   .break-fx { display: none; }
   .drop-pill, .element-order { animation: none !important; transition: none !important; }
+  .element-row.element-drag-preview, .element-ghost-row.element-drag-preview, .element-list.is-dragging-list > [data-element-id], .element-drop-gap { transition: none !important; }
 }
 
 /* ---------- 键盘流：焦点停在建议按钮上时，整张建议卡亮环 + 一行操作提示 ---------- */

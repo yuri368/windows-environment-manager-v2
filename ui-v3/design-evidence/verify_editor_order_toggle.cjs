@@ -89,7 +89,7 @@ check('Drag and drop inserts a live row before a ghost and matches button-order 
   rowFor(b).querySelector('[data-delete]').click();
   dragBefore(d,b);
   assertVisibleOrder(['A','D','B','C']);assert.deepEqual(values(),['A','D','C']);assert.equal(serialized(),'A;D;C');
-  assert.equal(ghostFor(b).getAttribute('draggable'),null);
+  assert.equal(ghostFor(b).getAttribute('draggable'),'true');
   assert.deepEqual(ids(live()),[a,d,c]);
 });
 check('Duplicate originals remain separate stable IDs and inline preview follows ghost movement',()=>{

@@ -21,5 +21,25 @@
     "evidence": "opaque-drag-followup-20261019.png",
     "observed": "Screenshot shows an opaque full-row overlay. Remaining expected behavior is being clarified; do not claim native acceptance.",
     "scope": "Isolated File backend. DOM sizing and cleanup tests do not prove native mouse tracking appearance."
+  },
+  "verticalRailAttempt": {
+    "implementation": "Fixed horizontal alignment, original-size vertical follow, full-height neighbour displacement using frozen row heights.",
+    "ownerFeedback": "算是达到预期了，但是快速拖动会异常抖动；初次修复后仅缓解了一些。",
+    "manualResult": "further-changes-requested",
+    "additionalDefects": [
+      "Mouse reorder lacked movement labels",
+      "Opening and edited comparison panes lacked corresponding feedback",
+      "Ghost row could not be dragged"
+    ]
+  },
+  "pointerAndGhostRevision": {
+    "implementation": "Pointer-captured order handles; shared stable-ID displayOrder commit and existing row/comparison feedback; ghost dragging retains deleted draft and omission from serialized result; frozen slots and boundary dead band; no fake move on no-op.",
+    "automated": "Full UI npm test exit 0; 32 element checks; 43 product runtime contract checks; git diff --check passed.",
+    "freshPage": "http://127.0.0.1:8798/",
+    "servedSourceSha256": "1206f8982b3dc8198ca83633b3afd1c2b9c7ad2d0ab8ca17bec59904d12ccece",
+    "servedCssSha256": "cf19a54f6f80b4ba3cde37c6524856243ce8ac32756e286558a5bb61abf95756",
+    "sourceDeploymentChecked": true,
+    "manualResult": "pending-owner-feedback",
+    "scope": "Isolated File backend; automated checks do not prove native drag smoothness or visual appearance."
   }
 }
