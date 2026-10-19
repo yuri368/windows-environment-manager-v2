@@ -130,6 +130,53 @@ check('All schemes copy is simple and group headings separate name, count and fl
   assert.match(q('.cfg-scheme-heading > span').textContent, /2 项变量.*默认方案/);
   assert.equal(q('[data-tableplan="3.9.11"][aria-current="true"]').getAttribute('aria-expanded'),'true');
 });
+function dragFixture(test){
+  const root=q('#modal'),before=w.eval('JSON.stringify({apps,windows,history})');
+  const style=doc.createElement('style');style.textContent=fs.readFileSync(path.join(rootPath(),'fx-ui.css'),'utf8');doc.head.append(style);
+  const original=' A ;A;;中文\r\n值';
+  w.WindowsElements.open({container:root,name:'Path',scope:'User',raw:original,registryType:'REG_SZ',whole:false,selectedValues:['A'],close:()=>w.WindowsElements.dismiss(),onApply:()=>false});
+  const rows=()=>[...root.querySelectorAll('.element-row')],ids=()=>rows().map(row=>row.dataset.elementId);
+  const start=(row,x=43,y=31)=>{
+    const rect={left:120,top:80,width:724.5,height:132.25};row.getBoundingClientRect=()=>rect;
+    let image;const data={effectAllowed:'',setData(type,value){this.payload=[type,value];},setDragImage(node,hotX,hotY){image={node,x:hotX,y:hotY};}};
+    const event=new w.MouseEvent('dragstart',{bubbles:true,cancelable:true,clientX:rect.left+x,clientY:rect.top+y});Object.defineProperty(event,'dataTransfer',{value:data});row.dispatchEvent(event);
+    return {...image,data,rect};
+  };
+  try{test({root,rows,ids,start,original});assert.equal(w.eval('JSON.stringify({apps,windows,history})'),before);}
+  finally{w.WindowsElements.dismiss();root.classList.remove('open');root.replaceChildren();style.remove();}
+}
+function rootPath(){return path.resolve(__dirname,'..');}
+check('Native drag image keeps the measured full row, live multiline value, badges, controls and mouse grab point',()=>dragFixture(({root,rows,ids,start,original})=>{
+  const source=rows()[3],input=source.querySelector('textarea'),beforeIds=ids(),beforeMarkup=source.innerHTML;
+  input.id='live-drag-control';input.name='original-control';input.value=' 当前输入\n A;;A; 中文 ';input.style.height='94px';
+  source.classList.add('is-replaced','is-link-source','fx-move');
+  const states=source.querySelector('.element-states').textContent,buttons=[...source.querySelectorAll('button')].map(b=>({title:b.title,disabled:b.disabled}));
+  const {node,x,y,data,rect}=start(source,71,65);
+  assert.equal(x,71);assert.equal(y,65);assert.deepEqual(data.payload,['text/plain',source.dataset.elementId]);assert.equal(data.effectAllowed,'move');
+  assert(node.classList.contains('element-row'));assert(node.classList.contains('element-drag-preview'));assert(node.classList.contains('is-replaced'));assert(!node.matches('.is-dragging,.is-link-source,.fx-move'));
+  assert.equal(node.style.width,rect.width+'px');assert.equal(node.style.height,rect.height+'px');assert.equal(node.style.minWidth,node.style.width);assert.equal(node.style.maxWidth,node.style.width);assert.equal(node.style.minHeight,node.style.height);assert.equal(node.style.maxHeight,node.style.height);
+  assert.equal(w.getComputedStyle(node).boxSizing,'border-box');assert.equal(w.getComputedStyle(node).transform,'none');assert.equal(w.getComputedStyle(node).pointerEvents,'none');
+  assert.equal(node.querySelector('textarea').value,input.value);assert.equal(node.querySelector('textarea').textContent,input.value);assert.equal(node.querySelector('textarea').style.height,'94px');
+  assert.equal(node.querySelector('.element-order').textContent,source.querySelector('.element-order').textContent);assert.equal(node.querySelector('.element-states').textContent,states);
+  assert.deepEqual([...node.querySelectorAll('button')].map(b=>({title:b.title,disabled:b.disabled})),buttons);
+  assert.equal(node.getAttribute('aria-hidden'),'true');assert(node.hasAttribute('inert'));assert.equal(node.draggable,false);
+  assert([node,...node.querySelectorAll('*')].every(el=>[...el.attributes].every(a=>a.name!=='id'&&!a.name.startsWith('data-')&&!a.name.startsWith('on'))));
+  assert([...node.querySelectorAll('button,textarea')].every(el=>el.tabIndex===-1&&el.onclick===null&&el.oninput===null));assert.equal(doc.querySelectorAll('#live-drag-control').length,1);
+  assert.strictEqual(rows()[3],source);assert(source.classList.contains('is-dragging'));assert.equal(source.getBoundingClientRect().width,rect.width);assert.equal(source.getBoundingClientRect().height,rect.height);assert.deepEqual(ids(),beforeIds);
+  assert.equal(root.querySelector('#elementSerialized').textContent,original);assert.equal(root.querySelector('#applyElements').disabled,true);
+  source.dispatchEvent(new w.Event('dragend',{bubbles:true}));assert(!doc.querySelector('.element-drag-preview'));assert(!source.classList.contains('is-dragging'));assert(!root.querySelector('#elementList').classList.contains('is-dragging-list'));
+  assert.notEqual(source.innerHTML,beforeMarkup);assert.equal(input.value,' 当前输入\n A;;A; 中文 ');
+}));
+check('Drag image cleanup covers replacement, normal/no-op row drops, end drops and dismiss without changing occurrence identity',()=>dragFixture(({root,rows,ids,start,original})=>{
+  const before=ids(),first=rows()[0],second=rows()[1],old=start(first).node,current=start(second).node;
+  assert(!old.isConnected);assert(current.isConnected);assert.equal(doc.querySelectorAll('.element-drag-preview').length,1);assert(!first.classList.contains('is-dragging'));
+  second.dispatchEvent(new w.Event('drop',{bubbles:true,cancelable:true}));assert(!current.isConnected);assert(!second.classList.contains('is-dragging'));assert.deepEqual(ids(),before);
+  const last=rows().at(-1),endImage=start(last).node;root.querySelector('.element-drop-end').dispatchEvent(new w.Event('drop',{bubbles:true,cancelable:true}));assert(!endImage.isConnected);assert.deepEqual(ids(),before);
+  const moved=start(rows()[0]).node;rows()[3].dispatchEvent(new w.Event('drop',{bubbles:true,cancelable:true}));assert(!moved.isConnected);assert.deepEqual(ids(),[before[1],before[2],before[0],before[3]]);
+  start(rows().find(row=>row.dataset.elementId===before[0]));rows()[0].dispatchEvent(new w.Event('drop',{bubbles:true,cancelable:true}));assert.deepEqual(ids(),before);assert.equal(root.querySelector('#elementSerialized').textContent,original);
+  const ending=start(rows()[0],999,-20);assert.equal(ending.x,ending.rect.width);assert.equal(ending.y,0);
+  w.WindowsElements.dismiss();assert(!ending.node.isConnected);assert(!root.querySelector('.is-dragging'));assert(!root.querySelector('#elementList').classList.contains('is-dragging-list'));assert(!doc.querySelector('.drag-card'));
+}));
 check('Shared component and additional stylesheet are local; no UI runtime errors', () => {
   assert.deepEqual(errors, []);
   for (const name of ['windows-elements.js', 'elements-ui.css']) assert.ok(fs.existsSync(path.join(root, name)));

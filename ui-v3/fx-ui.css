@@ -26,9 +26,10 @@
 .element-ghost-row.fx-remove > .element-ghost-body .element-ghost-value { animation: strikeIn .5s .34s ease-out backwards; }
 
 /* ---------- ② 拖放 ---------- */
-.drag-card { position: fixed; left: -9999px; top: -9999px; display: flex; align-items: center; gap: 9px; max-width: 360px; padding: 7px 14px 7px 7px; background: #fff; border: 1px solid #7fb497; border-radius: 10px; box-shadow: 0 12px 26px #1d583f45; font: 12.5px/1.4 var(--mono); color: var(--ink); transform: rotate(-1.6deg); }
-.drag-card b { display: grid; place-items: center; flex: none; width: 24px; height: 24px; border-radius: 7px; background: var(--green); color: #fff; font: 700 11.5px/1 var(--mono); }
-.drag-card span { max-width: 290px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+/* Native setDragImage captures the current full row at its measured size.
+   Keep the paint-only copy offscreen; the browser moves its image with the mouse. */
+.element-row.element-drag-preview { position: fixed; left: -9999px; top: 0; margin: 0; box-sizing: border-box; pointer-events: none; transform: none !important; box-shadow: inset 4px 0 0 var(--rail), 0 3px 9px #203c291a; }
+.element-drag-preview, .element-drag-preview * { animation: none !important; transition: none !important; }
 
 /* 原位：变成一个虚线“空穴”，内容淡出，表示“这里空出来了” */
 .element-row.is-dragging { opacity: 1; background: repeating-linear-gradient(135deg, #f1f6f3 0 6px, #fafcfb 6px 12px); outline: 1.5px dashed #86b69d; outline-offset: -5px; }

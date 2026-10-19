@@ -3,6 +3,37 @@ var WindowsElements = (() => {
   const escape = text => String(text ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const escapeRaw = value => escape(value).replace(/\r/g,'&#13;');
   let session = null, sequence = 0;
+  let dragPreview=null,dragSource=null;
+  function clearDragPreview(){
+    dragPreview?.remove();dragPreview=null;
+    if(dragSource){dragSource.classList.remove('is-dragging');dragSource.parentElement?.classList.remove('is-dragging-list');dragSource=null;}
+  }
+  function setRowDragImage(element,event){
+    if(typeof event.dataTransfer.setDragImage!=='function')return;
+    const rect=element.getBoundingClientRect(),preview=element.cloneNode(true);
+    const sourceNodes=[element,...element.querySelectorAll('*')],nodes=[preview,...preview.querySelectorAll('*')];
+    nodes.forEach((node,index)=>{
+      const source=sourceNodes[index];
+      // This is a paint-only copy: no duplicate identities, delegated actions,
+      // form associations or focus stops. Keep control appearance unchanged.
+      for(const {name} of [...node.attributes])if(name==='id'||name==='name'||name==='for'||name==='form'||name.startsWith('data-')||name.startsWith('on'))node.removeAttribute(name);
+      for(const name of [...node.classList])if(name.startsWith('fx-')||['is-dragging','drop-target','is-noop','will-shift-up','will-shift-down','is-related-highlight','is-duplicate-highlight','is-link-source','is-focus'].includes(name))node.classList.remove(name);
+      node.removeAttribute('draggable');
+      if('value' in source){node.value=source.value;if(source.tagName==='TEXTAREA')node.textContent=source.value;}
+      if('checked' in source)node.checked=source.checked;
+      if(source.tagName==='SELECT')[...source.options].forEach((option,i)=>{node.options[i].selected=option.selected;});
+      if(node.matches('input,textarea,select,button,a,[tabindex]'))node.tabIndex=-1;
+    });
+    // Snapshot inherited type and the resolved grid tracks before the source
+    // becomes a placeholder. Inline textarea sizing is already cloned above.
+    const style=getComputedStyle(element);
+    for(const property of ['font-family','font-size','font-weight','font-style','line-height','letter-spacing','color','grid-template-columns','grid-template-rows','border-bottom-width','border-bottom-style','border-bottom-color'])preview.style.setProperty(property,style.getPropertyValue(property));
+    Object.assign(preview.style,{width:rect.width+'px',minWidth:rect.width+'px',maxWidth:rect.width+'px',height:rect.height+'px',minHeight:rect.height+'px',maxHeight:rect.height+'px'});
+    preview.classList.add('element-drag-preview');preview.setAttribute('aria-hidden','true');preview.setAttribute('inert','');
+    document.body.appendChild(preview);dragPreview=preview;
+    const x=Math.max(0,Math.min(rect.width,event.clientX-rect.left)),y=Math.max(0,Math.min(rect.height,event.clientY-rect.top));
+    try{event.dataTransfer.setDragImage(preview,x,y);}catch{preview.remove();dragPreview=null;}
+  }
   const normalized = value => value.trim();
   const matches = (raw,values,whole) => DemoPlan.matches(raw,values,whole);
   // State icons are decorative; badge text supplies the accessible state name.
@@ -696,6 +727,7 @@ var WindowsElements = (() => {
     return `<div class="element-ghost-row${displayMoved(row.id)?' is-moved':''}" data-element-id="${row.id}" data-duplicate-value="${escapeRaw(row.value)}"><span class="element-order" title="原始位置：第 ${beforeIndex+1} 项">${displayIndex+1}</span><span class="element-ghost-body"><span class="element-ghost-value" data-raw-value="${escape(row.value)}">${row.value===''?'<span class="empty-element">（空元素）</span>':escape(row.value)}</span><span class="element-ghost-state">${valueHint(row.value,session.whole)}${statusBadge('removed','本次编辑已移除')}${displayMoved(row.id)?statusBadge('moved','幽灵移动'):''}<span class="element-ghost-note">仅展示痕迹 · 不写入结果</span></span></span>${elementActionsMarkup(row.id,displayIndex,total,true)}</div>`;
   }
   function renderRows(focusId) {
+    clearDragPreview();
     const root=session.container;
     const fx=session.fx,prefer=session.focusPrefer||'up',before=fx?layoutSnapshot(root,fx):null;
     // Adopting/undoing a suggestion keeps keyboard focus on that suggestion's button (re-created by update()).
@@ -750,13 +782,9 @@ var WindowsElements = (() => {
     };
     root.querySelectorAll('.element-row').forEach(element=>{
       const id=Number(element.dataset.elementId);
-      element.ondragstart=e=>{if(session.whole||e.target.matches('input,textarea,button')){e.preventDefault();return;}session.dragging=id;e.dataTransfer.setData('text/plain',String(id));e.dataTransfer.effectAllowed='move';element.classList.add('is-dragging');list.classList.add('is-dragging-list');
-        // Lifted-card drag image instead of the browser's flat screenshot of the row.
-        const card=document.createElement('div'),source=session.rows.find(row=>row.id===id);card.className='drag-card';card.setAttribute('aria-hidden','true');
-        const number=document.createElement('b'),text=document.createElement('span');number.textContent=String(session.displayOrder.indexOf(id)+1);text.textContent=source?.value||'（空元素）';card.append(number,text);document.body.appendChild(card);
-        try{e.dataTransfer.setDragImage(card,22,18);}catch{}
-        setTimeout(()=>card.remove(),0);};
-      element.ondragend=()=>{if(session)session.dragging=null;element.classList.remove('is-dragging');list.classList.remove('is-dragging-list');clearDrop();};
+      element.ondragstart=e=>{if(session.whole||e.target.matches('input,textarea,button')){e.preventDefault();return;}clearDragPreview();clearDrop();session.dragging=id;e.dataTransfer.setData('text/plain',String(id));e.dataTransfer.effectAllowed='move';
+        setRowDragImage(element,e);dragSource=element;element.classList.add('is-dragging');list.classList.add('is-dragging-list');};
+      element.ondragend=()=>{if(session)session.dragging=null;clearDragPreview();clearDrop();};
     });
     // Dropping always inserts the dragged element before the target (V3.6); the end strip appends after the last visible row.
     const dropBefore=(dragged,targetId)=>{
@@ -769,13 +797,13 @@ var WindowsElements = (() => {
       const id=Number(element.dataset.elementId);
       element.ondragover=e=>{if(session.dragging!==null){e.preventDefault();if(session.dragging===id)clearDrop();else if(!element.classList.contains('drop-target'))markDrop(element,id);}};
       element.ondragleave=e=>{if(!element.contains(e.relatedTarget))element.classList.remove('drop-target');};
-      element.ondrop=e=>{if(session.dragging===null)return;e.preventDefault();const dragged=session.dragging;session.dragging=null;list.classList.remove('is-dragging-list');if(dragged===id)return;dropBefore(dragged,id);};
+      element.ondrop=e=>{if(session.dragging===null)return;e.preventDefault();const dragged=session.dragging;session.dragging=null;clearDragPreview();clearDrop();if(dragged===id)return;dropBefore(dragged,id);};
     });
     const endZone=root.querySelector('.element-drop-end');
     if(endZone){
       endZone.ondragover=e=>{if(session.dragging!==null){e.preventDefault();if(!endZone.classList.contains('drop-target'))markDrop(endZone,null);}};
       endZone.ondragleave=()=>endZone.classList.remove('drop-target');
-      endZone.ondrop=e=>{if(session.dragging===null)return;e.preventDefault();const dragged=session.dragging;session.dragging=null;list.classList.remove('is-dragging-list');if(session.displayOrder[session.displayOrder.length-1]===dragged)return;dropBefore(dragged,null);};
+      endZone.ondrop=e=>{if(session.dragging===null)return;e.preventDefault();const dragged=session.dragging;session.dragging=null;clearDragPreview();clearDrop();if(session.displayOrder[session.displayOrder.length-1]===dragged)return;dropBefore(dragged,null);};
     }
     update();
     playLayoutFx(root,before,fx);
@@ -787,6 +815,7 @@ var WindowsElements = (() => {
     if(focusId)(root.querySelector(`[data-element-input="${focusId}"]`)||root.querySelector(`.element-ghost-row[data-element-id="${focusId}"] [data-move-${prefer}]:not(:disabled)`)||root.querySelector(`.element-ghost-row[data-element-id="${focusId}"] [data-move-up]:not(:disabled)`)||root.querySelector(`.element-ghost-row[data-element-id="${focusId}"] [data-move-down]:not(:disabled)`))?.focus();
   }
   function dismiss() {
+    clearDragPreview();
     if (session) {
       session.container.querySelectorAll('.is-related-highlight,.is-duplicate-highlight,.is-link-source').forEach(element=>element.classList.remove('is-related-highlight','is-duplicate-highlight','is-link-source'));
       for (const [type, handler] of Object.entries(session.relatedHandlers || {})) session.container.removeEventListener(type, handler);

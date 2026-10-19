@@ -66,6 +66,14 @@
       "passed": true
     },
     {
+      "name": "Native drag image keeps the measured full row, live multiline value, badges, controls and mouse grab point",
+      "passed": true
+    },
+    {
+      "name": "Drag image cleanup covers replacement, normal/no-op row drops, end drops and dismiss without changing occurrence identity",
+      "passed": true
+    },
+    {
       "name": "Shared component and additional stylesheet are local; no UI runtime errors",
       "passed": true
     }
